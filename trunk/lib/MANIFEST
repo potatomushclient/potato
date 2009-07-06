@@ -1,0 +1,23 @@
+File                       Desc
+-------------------------  -------------------------------------
+potato.tcl                 The main code for Potato
+potato-version.tcl         [return]s the current Potato version
+potato-font.tcl            Potato's font dialog
+potato-help.tcl            Code for parsing and displaying help-files
+potato-help.txt            The help-files, in an internal format containing markup
+potato-skin.tcl            GUI-related code
+potato-telnet.tcl          Telnet parsing code
+potato-proxy.tcl           Base Proxy support code
+potato-proxy-SOCKS4.tcl    SOCKS4-specific Proxy code
+MANIFEST                   This file
+
+images/                    A numer of image files used by Potato
+
+app-potato/                Addition libraries/extensions
+ pkgIndex.tcl              The pkgIndex for all the Tcl extensions in Potato
+ windows/                  Contains MS Windows-specific extensions
+  potato-winflash.tcl      'package provides' winflash extension
+  flash85.dll              The dll library file for the winflash extension
+  Winico06.dll             The dll library file for the winico extension
+  stpotato.ico             New icon used in the systray by winico
+  potato2.ico              Old icon used in the systray by winico
