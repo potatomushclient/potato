@@ -1,0 +1,676 @@
+name:TOC
+title:Table of Contents
+   * [intro//]
+   ** [intro,license//]
+   ** [intro,contact//]
+   ** [intro,whatis//]
+   *** [intro,whatis,mush//]
+   *** [intro,whatis,elendor//]
+   ** [intro,features//]
+   ** [intro,credits//]
+   * [worldconfig//]
+   ** [worldconfig,basics//]
+   ** [worldconfig,conn//]
+   *** [worldconfig,conn,telnet//]
+   ** [worldconfig,display//Display]
+   *** [worldconfig,display,colours//]
+   *** [worldconfig,display,misc//]
+   ** [worldconfig,misc//]
+   ** [worldconfig,notes//]
+   ** [worldconfig,timers//]
+   ** [worldconfig,fcmds//]
+   * [appconfig//]
+   ** [appconfig,act//]
+   ** [appconfig,misc//]
+   *** [appconfig,misc,clock//]
+   * [events//]
+   ** [events,patterns//]
+   ** [events,continue//]
+   ** [events,runwhen//] 
+   ** [events,recolour//]
+   ** [events,omit//]
+   ** [events,spawn//]
+   ** [events,send//]
+   ** [events,input//]
+   ** Examples
+   *** A WHO window capture (/cls who ; "/addspawn who" in an event at when first line is received, "/delspawn who" in event when the last line is received)
+   *** More?
+   * [tech//]
+   ** [tech,tcl//]
+   ** [tech,win//]
+   * Other stuff to add:
+   ** [/commands//]
+   ** [Keyboard Shortcuts] (write me)
+   ** [Logging] (write me)
+   ** [Uploading Files] (write me)
+   ** [???//Quick Connect]
+   ** [???//Command-Line Options]
+   ** [Making Potato the default Telnet Client on Windows] (write me)
+   * [changes//]
+   ** [changes,2.0.0b5//]
+   ** [changes,2.0.0b4//]
+   ** [changes,2.0.0b3//]
+   ** [changes,2.0.0b2//]
+   ** [changes,2.0.0b1//]
+   ** [changes,2.0.0a15//]
+   ** [changes,2.0.0a14//]
+   ** [changes,2.0.0a13//]
+   ** [changes,2.0.0a12//]
+   ** [changes,2.0.0a11//]
+   * [Search]
+
+-----------------------------
+name:intro
+title:Welcome to Potato!
+Potato is a MU* client written in Tcl/Tk 8.5. This is version $::potato::potato(version) of Potato.
+
+The help-files are still being written (and most of those which are written already are just a very, very rough first draft), but if you need any help, feel free to [intro,contact//contact me]. Bug reports, fixes, suggestions, etc, are also very welcome (by email, or via a ticket on the website).
+
+-- ''Mike''
+
+Get the latest version of Potato online now, at [w:$::potato::potato(webpage)]
+-----------------------------
+name:intro,license
+title:License
+You are welcome to use and distribute Potato freely for non-commerical purposes. Permission must be obtained [intro,contact//from the author] for commerical use of any kind.
+
+THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+If you find the program useful and would like to make a donation to the author to help further fund it's development, you can do so on the Potato website, [w:$::potato::potato(webpage)]. (Thanks!)
+-----------------------------
+name:intro,contact
+title:Contact Me
+Bug reports and feature requests can be made on the "Support" section of the Potato website at $::potato::potato(webpage). You can also email me (Mike Griffiths) at $::potato::potato(contact). All contributions will be fully credited.
+
+If you're reporting a bug, please include the following information along with a description of the bug, and anything else you think might be relevant:
+
+  * '''Version of Potato''':   $::potato::potato(version)
+  * '''Version of Tcl''':   $::tcl_patchLevel
+  * '''Byte Order''':   $::tcl_platform(byteOrder)
+  * '''Machine''':   $::tcl_platform(machine)
+  * '''Operating System''':   $::tcl_platform(os) ($::tcl_platform(platform) $::tcl_platform(osVersion))
+  * '''Windowing System''':   $::potato::potato(windowingsystem)
+  * '''Current Skin''':   $::potato::potato(skin) $::potato::potato(skin,version)
+-----------------------------
+name:intro,whatis
+title:What is a MUSH/MUD/MU*?
+MUSHes and MUDs (collectively known as MU*s) are text-based games which can be played by many players together at the same time. The players can interact with each other, and with the text-based world created in the game. MU*s are often used for role-playing, social gathering, and also for hack'n'slash combat games.
+
+You can use Telnet for connecting to MU*s (most operating systems come with a basic telnet client), but it lacks many features which are helpful or useful for playing MU*s, so a specialised client like Potato is often preferred. As well as supporting the basics of the Telnet protocol which MU*s use, Potato has a large number of other features which make playing MU*s easier and more enjoyable.
+----------------------------------
+name:intro,whatis,mush
+title:M*U*S*H
+M*U*S*H is an eclectic community of artists, experimenters, learners, and teachers. Here, players can create things that will move others intellectually or emotionally, explore uncharted territories in interactive text-based environments, and freely share knowledge and skills in a constructive and friendly setting.
+
+M*U*S*H is also the development, demonstration, and test site for the current development version of PennMUSH.
+
+'''Host:''' mush.pennmush.org
+
+'''Port:''' 4201
+----------------------------------
+name:intro,whatis,elendor
+title:Elendor
+Elendor MUSH is the oldest continuously running Tolkien role-playing game on the internet. Elendor MUSH has been continuously running since 1991 and now boasts over 2000 players and a huge world of over 5000 completely unique locations to explore. New players can choose from 5 different species (human, elf, hobbit, dwarf, or orc) and join one of over 20 different cultures.
+
+'''Host:''' mush.elendor.net
+
+'''Port:''' 1892, 1893, 53 or 443
+----------------------------------
+name:intro,features
+title:Potato's Features
+Below is a partial list of features currently supported by Potato. Those marked with (*) are not yet fully implemented.
+
+   * Full [worldconfig,conn//Unicode] support 
+   * Runs on Windows, Linux and MacOS X(*)
+   * Unlimited number of connections 
+   * Unlimited number of worlds, each fully customizable 
+   * [worldconfig,display,colours//ANSI Colour] support, customizable per-world 
+   * Logging support 
+   * Upload files (code, etc) directly to the game 
+   * Customizable [events//Events] which are triggered run when certain output is received from the game: 
+   ** Regexp, glob (wildcard) or exact-string matching 
+   ** Recolour string (foreground or background) in output window 
+   ** Omit strings from the display 
+   ** Omit strings from log files 
+   ** Spawn to an extra output window, useful for separating channel chat and pages from RP. Spawn windows can be shared by several connections.
+   ** Send a string back to the MUSH 
+   ** Place a string in an input window (can be used for decompiling code from the MUSH directly to the input window) 
+   * [worldconfig,timers//Timers] (send a command repeatedly at a specific interval) 
+   * Automatic Reconnect when booted, or when connection fails 
+   * Unlimited, searchable output buffer (though you can choose to limit it) 
+   * Unlimited command history (though you can choose to limit it) 
+   * Easy install and uninstall (download to install, and delete to uninstall) 
+   * Customizable keyboard bindings
+   * Connection stats (number of connects, total time connected, etc) per-game (*)
+   * Clickable web-links 
+   * More... 
+
+The following protocols are also supported:
+   * Telnet
+   ** '''TERM (24)''' - Potato can identify itself to the server. 
+   ** '''NAWS (31)''' - Potato can tell the server the linewidth it's been configured to. 
+   ** '''CHARSET (42)''' - Potato can negotiate a new character set (to use Unicode in MUX). 
+   * ANSI Colours - Support for normal/highlighted ANSI colours, ANSI flash and ANSI underline. Colours can be customized (and flash/highlight disabled) on a per-world basis
+----------------------------------
+name:intro,credits
+title:Credits and Contributions
+$::potato::potato(name) $::potato::potato(version) was written by Mike Griffiths ($::potato::potato(contact)). Based loosely on earlier code which was originally written by Keith Vetter (Brinli@ElendorMUSH).
+
+   * Some ideas for the telnet processing code were taken from code written by Todd Martin, available from [w:http://wiki.tcl.tk/5644]
+   * The [tech,win//Winflash] library used on MS Windows was written by Youness El Alaoui (KaKaRoTo).
+   * Potato uses the [tech,win//Winico] extension on MS Windows to display an icon in the system tray.
+   * The Font Selection and Help dialogs are based heavily on code written by (a different) Keith Vetter, and are available from [w:http://wiki.tcl.tk/16074] and [w:http://wiki.tcl.tk/19649] respectively.
+
+Special thanks to Evelyn K. Vides for help and support, bug finding, and much much more. Eve also designed the Potato logo.
+
+Comments, suggestions, ideas, bug fixes or code were previously provided by the following people, listed in no particular order:
+   * Benigo@ElendorMUSH
+   * Jobrand@ElendorMUSH
+   * Karen Reynolds
+   * Larry Virden
+   * Tokeli@M*U*S*H
+   * Alex Liebowitz (FW)
+as well as a number of other people mentioned in the [changes//change log].
+
+Potato is powered by the [tech,tcl//Tcl/Tk] programming language and several extensions to it, and would not be possible without them.
+-----------------------------
+name:worldconfig
+title:Adding and Configuring Worlds
+Worlds can be created and modified through the Manage Worlds window; select "Manage Worlds" from the File menu to open it. Click the "New World" button to add a world, then enter a name for the world and it's host/port. This will add the world, and open a window where you can [worldconfig,basics//begin configuring the settings].
+
+You can also Group worlds with the Manage Worlds window. Use the "New Group" button to create groups, then right-click a world in the list to assign it to groups. (There are three Groups which always exist - "All Worlds" lists all the worlds, "Ungrouped" lists all the worlds you haven't assigned to a group, and "Temp/Deleted" lists worlds which won't be saved when the program is closed.)
+
+When you "Delete" a world, it will stay until you close the program. Deleted worlds are shown in red (and can be undeleted by selecting them and clicking the "Delete" button again).
+
+The "Edit World" button lets you [worldconfig,basics//change the settings] for a world. You can also do this by clicking the Glove icon on the toolbar when you're connected to the world.
+-----------------------------
+name:worldconfig,basics
+title:Basic Settings
+The Basic Settings screen allows you to change the most basic settings for a world: it's name, the host and port to connect to, and the game type (MUSH or MUD). You can also optionally enter a description for the world, which is shown when Potato is opened, and your character's user-name and password. If the user-name and password are given, they will automatically be sent to the world after you connect.
+-----------------------------
+name:worldconfig,conn
+title:Connection Settings
+This screen allows you to change how Potato connects to the world. If "Attempt Telnet Negotiation" is on, Potato will watch for the Telnet control character and attempt to use Telnet commands to communicate with the MU* about certain options.
+
+You can also tell Potato to automatically attempt to reconnect to the MU* if you're disconnected, or if it fails to connect, and choose how long (in seconds) you'd like it to wait between attempts.
+
+Potato also includes support for UTF-8 encoding (Unicode), which some MU*s use to enable a greater number of characters (including accented characters, symbols, and non-Roman alphabets). UTF-8 support is usually activated via a Telnet command sent from the MU* if it supports it - selecting "When available" will let Potato switch to UTF-8 mode if the MU* asks it to. "Always" forces Potato into UTF-8 mode without the MU* asking it to do so, and "Never" tells Potato not to switch to UTF-8 mode, even if the MU* requests it.
+
+The "Login Format" controls the format in which the character name and password are sent to the MU*. The first '%s' in the login format will be replaced with the character name, and the second '%s' with the password. (If you need to put a literal % symbol, use '%%'.) If you need to put the password before the username, you can use '%1${DOLLAR}s' for the username and '%2${DOLLAR}s' for the password.
+
+"Send Login Details after (seconds)" controls the number of seconds Potato will wait after successfully connecting to the MU* before it sends the login details.
+-----------------------------
+name:worldconfig,conn,telnet
+title:Telnet Protocols
+Potato supports the following Telnet protocols for communicating with MU*s:
+
+   * '''TERM (24)''' - Potato can identify itself to the server. 
+   * '''NAWS (31)''' - Potato can tell the server the linewidth it's been configured to. 
+   * '''CHARSET (42)''' - Potato can negotiate a new character set (to use [worldconfig,conn//Unicode]/UTF-8)
+-----------------------------
+name:worldconfig,display
+title:Display Settings
+There are two sub-screens for configuring the display settings: [worldconfig,display,colours//ANSI, Colours and Fonts], and [worldconfig,display,misc//Misc Display Options].
+-----------------------------
+name:worldconfig,display,colours
+title:ANSI, Colours and Fonts
+Using this window you can change all the colours used for the world. At the top, a mock-up of the output and input windows are shown; the background colours can be changed by clicking on the backgrounds, and the foreground and ansi colours by clicking on the appropriate letter ('''N'''ormal foreground, and ANSI '''R'''ed, '''G'''reen, '''Bl'''ue, '''C'''yan, '''M'''agenta, '''Y'''ellow, '''B'''lac'''k''' and '''W'''hite. You can also change the colours for the '''Sys'''tem messages ("Connecting", "Disconnected", etc), '''Echo'''ed commands, and '''Links'''.
+
+You can also use the buttons further down to change the fonts for the input and output windows, as well as changing the way ANSI colours work: you can disable all colouring of text via ANSI, and also disable flashing and underlined text.
+
+"Force ANSI Normal" will turn off all ANSI colours at the end of a line, so the next line always starts in the normal colours. You should only need to use this if the world you're connecting to has a faulty ANSI implementation, and it's recommended you leave it off wherever possible.
+-----------------------------
+name:worldconfig,display,misc
+title:Misc Display Options
+Use the "Wrap Text at" option to set the number of characters text should be wrapped at. MU*s tradionally use a 78-character width, as the original Telnet client was 78 chars wide, but some MU*s use a larger length, and some can adapt the linewidth to match the width your client uses.
+
+Wrapped lines will be indented by the number of characters given at "Indent By", to show they are wrapped.
+
+"Echo Sent Commands?" causes every command you send to the MU* to be printed in the output window in the [worldconfig,display,colours//Echo colour].
+
+If "Ignore Empty Lines?" is on, blank lines will not be shown in the output window.
+
+"Spawn System Messages?" causes system messages (Connection, Disconnection, etc) to be shown in spawn windows as well as  the main output window.
+-----------------------------
+name:worldconfig,misc
+title:Misc Options
+The Miscellaneous Options window allows you to turn on Line Limits for the output window, spawn windows, and the input command history buffer. You can also choose to split commands in the input history buffer. This means that if you enter two commands at the same time, they will be added to the input history buffer as two separate entries, instead of as one.
+-----------------------------
+name:worldconfig,timers
+title:Timers
+Timers are instructions to send a certain command to the MU* at certain intervals. Current timers are listed at the top, and can be edited or deleted by clicking the timer and pressing the Edit Timer or Delete Timer buttons. To add a new timer, press Add Timer.
+
+When you add or edit a timer, a window is popped up allowing you to select the settings for the timer. At the top, you can choose how long (in seconds) Potato should wait after successfully connecting to the MU* before it begins to run the timer. You can then enter the commands to be sent in the text box (separate multiple commands with returns). This can include [/commands].
+
+You then select the interval at which the commands should be repeated, also in seconds, and choose how many times the commands should be sent (either continuously, or a fixed number of times). There is also a checkbox which can be used to temporarily disable a timer without deleting it.
+
+New timers will begin running immediately after they are added. Changes to existing timers will take effect at the next scheduled time.
+-----------------------------
+name:worldconfig,notes
+title:Notes
+The Notes section allows you to store any information you wish for a particular world. This information isn't used by Potato in any way, it's purely for your reference.
+-----------------------------
+name:appconfig
+title:Configuring Potato
+There are two sets of options you can configure which apply to the program as a whole, rather than to a specific world: the Default World Settings, and the Program Settings. The Default World Settings allow you to set the options which are applied to new worlds. The screens are the same as the [worldconfig,basics//Configure World] screens.
+
+The Program Settings allow you to change certain aspects of how Potato works which aren't related to worlds, as well as set up Global Timers. Program Settings are split into two sections, [appconfig,act//] and [appconfig,misc//]. Global Timers are set up the same way as [worldconfig,timers//Per-World Timers], and work exactly the same, but they're run for all worlds automatically.
+-----------------------------
+name:appconfig,act
+title:Activity Settings
+Activity Settings control what Potato does when there is new activity. The "Flash Taskbar" option flashes Potato's icon on the taskbar, and "Flash SysTray" animates the icon shown in the System Tray. The System Tray icon must be turned on in the [appconfig,misc//] (this is currently only available on MS Windows).
+
+If something happens in a world other than the one you're currently viewing, Potato can print an 'Activity in <World>' message to let you know. It can also print a 'New Activity' message between text you've seen and text which arrived when you stopped looking at a world (either by bringing another world to the front, or switching from Potato to another program). If you tick the "Clear Previous 'New Activity'?" box, old 'New Activity' messages will be removed when a new one is added.
+-----------------------------
+name:appconfig,misc
+title:Misc Settings
+Potato turns any links it recognises in text received from a game into hyperlinks. When you click a link, Potato will try and open the webpage the link points to in your default browser. If Potato can't find a browser on your system, or if you'd like to use a program other than the default, you can enter it in the "Browser Command" box. The string "%1" will be replaced with the URL being visited. If the browser command contains any spaces, please enclose it in "quotes". For example, on Windows XP the command to launch Internet Explorer is something like:
+
+   "C:\Program Files\Internet Explorer\iexplore.exe" %1
+
+(If Potato can't find the default browser on your computer, please [intro,contact//let me know].
+
+You can also change the format that the date and time are displayed in with the "Clock Format" box. The valid formats are explained [appconfig,misc,clock//here].
+
+Potato can display an icon in the System Tray (this is only available on MS Windows at present). You can also [appconfig,act//animate the icon] when there's new activity.
+
+If you have no connections open, you can stop Potato from prompting you when you exit the program by turning the "Confirm Exit" option off.
+
+When "Allow Partial Names" is on, Potato will accept abbreviated world names (in, for example, the /connect [/command]), and will connect to the first world which matches the name you give. When the option is off, non-unique abbreviations cannot be used.
+
+"External Requests" are requests for Potato to connect to an address from an outside source (such as on the [???-Command Line Options//command line] or via [???default-client//DDE on Windows]). If the address given matches a site in Potato's address book, there are three things it can do: treat the connection as a [Quick Connection], and use the default settings, connect to the world saved in the Address Book and use it's settings (including login details), or ask you which to do.
+-----------------------------
+name:appconfig,misc,clock
+title:Valid Clock Formats
+The Clock Format can contain a number of special strings which begin with a percent sign (%). These are replaced with a part of the current date and time. The most common ones are listed below. All other text is left unchanged.
+
+%a - Abbreivated day of week (eg, Mon)
+
+%A - Full day of week (eg, Monday)
+
+%b - Abbreviated month name (eg, Jan)
+
+%B - Full month name (eg, January)
+
+%c - The date and time, formatted by your computer
+
+%C - The number of the century in Indo-Arabic numerals
+
+%d - Two-digit day of month
+
+%D - Same as %m/%d/%Y
+
+%e - Number of day of month, with a leading space for one-digit numbers
+
+%k, %H - One- and Two-digit hour in 24-hour time, respectively (0-23 and 00-23)
+
+%l, %I - One- and Two-digit hour in 12-hour time, respectively (12-11)
+
+%j - Three-digit day of year (001-366)
+
+%m - Month of the year (01-12)
+
+%M - Minutes past the hour (00-59)
+
+%N - Month of the year (1-12)
+
+%p - "AM" or "PM"
+
+%P - "am" or "pm"
+
+%r - Time of day (12-hour clock)
+
+%R - Time of day (24-hour clock)
+
+%S - Seconds past the minute (00-59)
+
+%T - Same as %H:%M:%S
+
+%x - Current date, generated by the system
+
+%X - Current time, generated by the system
+
+%y - Two-digit year
+
+%Y - Four-digit year
+
+%z - Current timezone, in +hhmm or -hhmm format
+
+%Z - Name of the current time zone
+
+%% A literal percent sign (%)
+
+%+ Same as "%a %b %e %H:%M:%S %Z %Y"
+
+For example, "%T on %A, %B %d, %Y" might be "16:52:28 on Tuesday, January 01, 2008".
+-----------------------------
+name:worldconfig,fcmds
+title:F-Commands
+For each world, you can have up to 11 custom commands, which can be sent to the MUSH with the F2-F12 keys by default. The commands will be parsed for [/commands//].
+-----------------------------
+name:events
+title:Events
+When Potato receives a line of text from a MUSH, it can perform a number of Events. These can be set up via "Configure Events" in the Options menu, or with "Global Events" in the Options menu if you want them to apply to all worlds.
+
+When a line of text is received, it's matched against each Event's [events,pattern//pattern] for that world, from top to bottom, and then each of the Global Events from top to bottom. If the text matches the pattern for that event, Potato can do a number of things:
+   * [events,recolour//Change the colour] of the text (foreground, background or both)
+   * Omit it from the [events,omit//display]
+   * Omit it from [events,omit//log files]
+   * Copy the text into a [events,spawn//Spawn window]
+   * [events,send//Send a command] back to the MUSH
+   * Place a string in one of the [events,input//input windows]
+You can also set whether Potato should [events,continue//continue matching the text] against other Events, or whether it should stop.
+-----------------------------
+name:events,patterns
+title:Event Patterns
+The pattern to match for the Event should be typed in the 'Pattern' box at the top. Event patterns can be wildcards, regular expressions, or a literal string to be contained in the text; this can be set in the 'Type' pulldown menu. You can also make the pattern case-sensitive using the 'Case' checkbox. 
+-----------------------------
+name:events,continue
+title:Processing Order
+Events are matched from top to bottom for the world the text was received in, and then Global Events are matched from top to bottom. Potato will normally stop matching further Events when a match is found, and use the settings for the first Event matched. However, if you tick the 'Continue' box, Potato will continue matching against other Events, even after a match is made.
+
+However, subsequent Events will only add to the settings of previous matches, not override them. For example, if the first Event matched changes the foreground colour to "Red", but does not change the background colour, and the second event matched changes the foreground colour to "Blue" and the background colour to "Green", the text will be displayed in Red on a Green background.
+
+The same applies for other options; for example, if the first match omits the text from the display or log files, subsequent matches cannot override that. (However, if the first match did not omit the text, subsequent matches can.)
+
+If you don't want Global Events to be matched for a particular world, add an Event at the very end of that world which matches everything (with the wildcard pattern "*", for instance), set it to make no changes, and make sure the "Continue" box is not checked.
+-----------------------------
+name:events,runwhen
+title:When to run Events
+Events can be set to run only at specific times: at all times (Always), only when another world is currently on the screen (Not Up), only when another application is being used (No Focus), or only when the world is on screen, but another application is currently being used (Inactive). For instance, you may wish to only have messages from the Public channel spawned when you're using another program, so you can read them easily when you go back to Potato.
+-----------------------------
+name:events,recolour
+title:Recolouring Matched Text
+You can change the Foreground or Background colours of matched text to any of the defined ANSI colours, or choose not to recolour the text. You cannot currently use any other colours.
+-----------------------------
+name:events,omit
+title:Omitting from Display/Logs
+To stop text showing up on screen, tick the "Omit from Display" box. To stop text from being logged (to keep chat channels out of RP logs, for instance), tick "Omit from Logs".
+
+Text will still show up in Spawn windows, even if when "Omit from Display" is ticked.
+-----------------------------
+name:events,spawn
+title:Spawning
+Pending due to a planned re-write of spawns.
+-----------------------------
+name:events,send
+title:Sending a Command
+Enter text in the Send box to have it automatically sent back to the MUSH when text is received. For regular expression matches, you can use %0 to refer to the first matched subpattern, %1 for the second, etc, up to %9. For wildcard matches, %0 through %9 refer to the strings matched by the first ten wildcards. In both cases, you should use %% to get a literal percent-sign in the text.
+
+A common use for this is in Newbie Greeting, with a pattern of "<Newbie> * has joined the MUSH." and an auto-send of "+newbie Welcome, %0!".
+-----------------------------
+name:events,input
+title:Placing text in an Input Window
+Potato can automatically place a string into the input window when an Event is matched. Using the pull-down menu, you can select whether it should go into the top input window, the bottom one, or the window which currently has the focus. As with [events,send], you can use the %0 through %9 to get the first ten matched subpatterns, or the first ten matched wildcards, for regular expression and wildcard matches, respectively. Use %% for a literal percent-sign.
+
+This is commonly used with something like the @decompile/tf MUSH command, to inline editing of attributes. It's used in the /grab slash-command.
+-----------------------------
+name:tech
+title:Technology Behind Potato
+   * [tech,tcl//]
+   * [tech,win//]
+-----------------------------
+name:tech,tcl
+title:Tcl/Tk
+Potato is written in Tcl/Tk (Tool Command Language/ToolKit), a scripting language which runs on Windows, Linux and MacOS X. Binaries of Tcl/Tk are available from [w:www.activestate.com]. The Tcler's Wiki is at [w:http://wiki.tcl.tk], and you can find more information about the language there, or at [w:www.tcl.tk].
+
+Potato is distributed using TclKit, a standalone Tcl/Tk runtime from [w:www.equi4.com/tclkit/] / [w:code.google.com/p/tclkit/].
+-----------------------------
+name:tech,win
+title:Winico & Winflash
+On MS Windows, Potato includes the Winico extension for Tk, which is available from SourceForge ([w:http://tktable.sourceforge.net/]). Winico is used to place an icon in the system tray, and is Copyright © 1997-1998, Brueckner&Jarosch.
+
+The Winflash extension is also used, for flashing windows on the taskbar to show activity. Winflash was written by Youness El Alaoui (KaKaRoTo - kakaroto@users.sourceforge.net), and the version used in Potato was compiled by Evelyn K. Vides.
+-----------------------------
+name:changes
+title:Changes
+Please select a version:
+   * [changes,2.0.0b5//]
+   * [changes,2.0.0b4//]
+   * [changes,2.0.0b3//]
+   * [changes,2.0.0b2//]
+   * [changes,2.0.0b1//]
+   * [changes,2.0.0a15//]
+   * [changes,2.0.0a14//]
+   * [changes,2.0.0a13//]
+   * [changes,2.0.0a12//]
+   * [changes,2.0.0a11//]
+-----------------------------
+name:changes,2.0.0b5
+title:Version 2.0.0b5
+''Released ?????? ?? 2009.''
+
+  * Closing the program with no worlds saved would raise an error.
+  * The website address, shown in the Helpfiles and used by the "Visit Website" help menu entry, hadn't been updated.
+  * Potato mistakently sent a newline after some Telnet subnegotiation commands. Found after reports from Kimiko Muffin and Brazil.
+  * When using Unicode/UTF-8 character encoding on MUX, Telnet commands were accidentally encoded as UTF-8, which stopped them working. Many thanks to Brazil for tracking down this issue.
+  * Removed some debugging statements left in from code changes in the previous version.
+  * Added a new debugging package which can be used for monitoring packets sent to/received from connections.
+  * You can now filter the Command History window with a wildcard pattern.
+  * It's now possible to Copy a world in the Manage Worlds window, to create a new world with all the same initial settings. Requested by Mercutio.
+  * Spawn windows weren't correctly destroyed when a connection was closed. Reported by Mercutio.
+  * Currently, if you're viewing a Spawn window, toggle to another connection, and toggle back, the spawn is still shown, instead of the main text widget. You can now change that with the "Toggle to Main Window" option (Options -> Configure Global Settings -> Program Settings -> Misc Settings). Requested by Mercutio.
+  * The number of Input Windows is now configurable per-world. Requested by Tulioz. Also, the "Show Two Input Windows?" option in the View menu only effects the current connection; to change the default for the world (which is used every time you connect to the world), you must edit the World Settings.
+  * Activity Settings (whether to flash the taskbar, display "New Activity" notices, etc) are now configurable per-world, rather than applying to the program as a whole. Requested by Mr L.
+  * Fixed some bugs in /cls.
+  * Old "Activity in <world>" notices are now deleted when a new one is inserted.
+  * Events now only recolour the portion of the received text which matched the event pattern. For instance, in the regexp "foo..r" and the string "This is a foobar", only the word "foobar" would be recoloured. (Use "^.*foo..r.*$" if you want the entire line recoloured.)
+  * Potato is now built against Tcl/Tk 8.5.7.
+-----------------------------
+name:changes,2.0.0b4
+title:Version 2.0.0b4
+''Released June 01 2009.''
+  * Custom /commands (of which /grab was the only one) were broken. Reported by Whiskey. You can now also set up your own custom /commands through the Options menu.
+  * On Linux, the "Flash Taskbar on Activity" option should actually work, now, like it does on Windows. Just download "linflash" from the website and extract it into ~/.potato/lib before you open Potato. (Source included incase you need to compile it yourself for any reason.) Many thanks to the aMSN devs, who wrote the "linflash" library and were kind enough to let me use it too, and to Sketch who tested it for me.
+  * When you save the contents of a Text Editor, if you don't specify a file extension it now uses ".txt" by default on Windows. Requested by Jobrand.
+  * Too many mistakes to list in the Custom Keyboard Shortcuts code (hopefully all) fixed, from reports by Bryon Burgan.
+  * You can now tell Potato to connect automatically to certain worlds when the program starts, via the Auto Connects option in the File menu. Requested by Tulioz.
+  * The View->Spawns menu didn't work if you had a spawn window name beginning with an uppercase letter. Reported by AnneLions.
+  * Updated the appearance of the scrollbars, and a few other widgets, most noticable on non-Windows systems.
+  * The top input window didn't always stay the size you'd left it. Hopefully fixed, now. Reported by Jobrand.
+  * You can no longer use the 'Tab' key to move the focus to the toolbar buttons, they have to be clicked. This makes Tab much more useful for navigating the input/output windows. (If you want to run tasks using the keyboard, you can access them via the menus.)
+  * For each world, you can have 11 custom commands, which are sent to the MUSH with F2-F12. (Current users will need to set up these keyboard shortcuts in Options->Customize Keyboard Shortcuts, Run F<num> Command. It works now, honest!). Requested by Crimmy.
+  * Custom Keyboard Shortcuts did not work if the keyboard cursor/input focus was in the Output window, rather than an Input window. Now they do.
+  * You can now use the "Upload File" feature to upload code formatted with MPP (MUSHcode Pretty Printer). Potato will automatically unformat it as it uploads.
+  * Wrapping is no longer optional; Potato will now always wrap text at a set number of characters. If you previously had wrap turned off, just set it to wrap at however wide your window is. Fixes some complications and annoyances.
+  * Spawn Windows have been completely rewritten (again). Spawn windows can no longer be shared between connections (as several people had said this was no real use), which fixes several problems with them. Spawns are also no longer shown to the right of the main output window, which proved impractical - instead, to view the contents of a spawn window, click it's name on the new Spawns toolbar, or select it from the View->Spawns menu. (Select "Main Window" from View->Spawns, or click the world's button on the World toolbar again, to return to the main window.) Thanks to AnneLions, among others, for feedback on the old system's problems.
+  * The main output window for a world is now referred to as "_main", rather than "main" in the /log command. Use "_none" (previously "none") to exclude buffered text. This should be less confusing, since spawn window names cannot start with underscores.
+  * We only set up fonts for worlds when we first connect, now, instead of setting up the font for every world in the address book on startup. This saves a small amount of memory.
+  * The World toolbar now uses better looking buttons. Also, instead of changing color, the buttons show a colored circle indicating world status (disconnected, new activity, currently being viewed).
+  * Some small bugs in world configuration fixed.
+  * Added support for connecting to games through a SOCKS4/4a proxy server. More proxy types to follow. Requested by Time and Mercutio.
+  * /see has been renamed to /print
+  * Added /show
+  * Updated the system tray icon on Windows to use the new Potato, rather than the old Bomb icon.
+-----------------------------
+name:changes,2.0.0b3
+title:Version 2.0.0b3
+''Released January 31st 2009.''
+
+  * A bug in the Login Details code caused an error message on connection if you'd set a Character Name for a world. Reported by Trelane.
+  * You can now put Tcl code in a "potato.custom" file, which will be sourced when the program starts. On Windows, it should be in the same directory as the Potato executable. On other platforms, it should be in ~/.potato/ . A "potato.startup" file can be placed in the same location. The contents of this file will be sent, line by line, as if you'd typed it into the input window as soon as the program started.
+  * If a partial line had been received before disconnection, it was shown at the beginning of the first line received after a reconnect. Found by Mercutio.
+  * The "Connect To" menu was disabled when no worlds were defined, making it impossible to access the "Add New World" entry at the bottom. Reported by Sigc.
+  * The Input History window now uses Tile, and shows an ID number next to the command.
+  * You can now scroll the Input History in the Input Window using Control+Up and Control+Down. Pressing Escape clears the input history commands from the input window. Requested by Paige, Mercutio, Sigc and Bryon Burgan.
+  * When an Event places text in the second input window, Potato automatically reshows the window. Suggested by Paige.
+  * Added "Help" menu entry to launch the Potato website.
+  * Spawn Window names must now begin with a letter (but can still contain numbers, hyphens and underscores after that).
+  * If the /cls slash command is passed a number, it will attempt to delete the backscroll for the connection with that number. Requested by Paige.
+  * Right-clicking an Input Window displays a menu with "Copy", "Cut" and "Paste" options. Suggested by Paige.
+  * The Timers pane of the Configure World window now uses Tile.
+  * When you created a new world, the Global timers were mistakenly copied to it (so they ended up being run twice for that world).
+  * New /input slash command.
+  * Spawn Windows weren't working correctly. Reported by Colputt.
+  * Minor bug that caused the text selection background to bleed fixed. Reported by Paige.
+  * Control+Backspace now deletes the previous word. Suggested by Tulioz.
+  * Added internal code for customizable, user-defined /commands. (There is currently no way to define them from inside the program, however.) A default one, /grab, is included.
+  * You can now recall a previous command directly into the input window with [/commands///history]. Requested by Paige.
+  * It's now possible to specify "the input window with focus", where one is given, with the number 3 (ie, "/input 3 Foo" places "Foo" in whichever input window has the focus).
+  * If connection failed because of invalid connection details (no host, port wasn't a number, etc), or because you weren't connected to the internet, rather than automatically disconnecting and auto-reconnecting, Potato would incorrectly give the "Do you wish to disconnect?" prompt.
+  * When you reopen Potato, the input windows come up at the same size they were when the program was last closed. Requested by Jobrand.
+  * Added a new "Send Mail" window, which allows you to type up an in-game mail and send it, in a variety of command formats.
+  * Added a "Tools" menu. The Input History is now accessed from here, and menu entries for the Mail Window and Text Editor have been added.
+  * When you add a new Event, it is now Enabled by default.
+  * If you add a new Event, but click Discard instead of Save, it's deleted.
+  * Pressing F1 in the Configure Global Settings window didn't bring up the correct helpfiles due to a typo.
+  * You can now Manage Worlds through a new option in the File menu, which also allows you to configure a world without having to be connected to it. It's also possible to sort worlds into Groups (requested by Paige).
+  * The Mail window now has an "Escape Special Characters" option, like the Text Editor window.
+  * The Mail and Text Editors now have Undo/Redo.
+  * You can now open a file into the Text Editor, and save it's contents back to a file. Requested by Jobrand.
+  * When you clicked an 'https://' link, it would mistakenly get changed to 'http://https//'.
+  * The "Search" option in the help files didn't work correctly.
+  * Some help file additions/improvements/updates. (They still suck, and there's still loads missing, but slightly less than before.)
+-----------------------------
+name:changes,2.0.0b2
+title:Version 2.0.0b2
+  * You can now choose between having 1 or 2 input windows. Requested by Paige and Mercutio.
+  * ANSI Flashing could not be re-enabled after you'd turned it off. Found by Mercutio.
+  * When there are multiple URLs on a line, they all become hyperlinks now. URLs can also now include ':portNum', like 'http://potato.talvo.com:80'.
+  * When the background colour for a world was changed, the colour was only half updated unless you switched to another world and switched back.
+  * Changing the name of a world didn't update the Potato title bar if that world was currently being shown.
+  * You can now close the Font dialog (accepting any changes) by pressing Return.
+  * When you select an Event in the Events Config window, you now see a preview of it's settings before you choose to edit it.
+  * When a [worldconfig,act//New Activity] notice is shown, the previous ones can now be cleared. Requested by Sketch.
+  * Each world now has a [worldconfig,notes//Notes] section for storing random information.
+  * On Windows, the icon in the system tray can now be hidden by right-clicking it, as well as through the [appconfig,misc//Configuration Screen]. Requested by Mercutio.
+  * Even if a Character Name was given for a world, connection info isn't sent. It is now, and you can also [worldconfig,conn//configure the way] in which it's sent.
+  * New /all [/commands//slash command]. Suggested by Javelin.
+  * Right-clicking on a button the World Bar now pops up a menu, allowing you to reconnect, disconnect, or close the connection for that button without having to view the connection first. Requested by Mercutio.
+  * The Status Bar can now be hidden.
+  * Added internal representation of "Tasks". Most menu entries, toolbar buttons and many /commands now simply run a given task, rather than having large pieces of code associated with them. As well as keeping track of the code to be run, each Task also knows it's name, associated keyboard shortcut, and whether it's currently enabled or disabled, making it easier to update the accelerators in menus, etc, as required.
+  * Added more menu entries, so most things can be accessed via a menu.
+  * You can now customize the keyboard shortcuts for any Task.
+  * The Browser Command option was not properly displayed in the Configuration Window due to a typo.
+  * Remove the Console code, which didn't work and wasn't available anyway.
+  * Windows-specific code files are now removed from the Linux binary to reduce size.
+  * Windows binaries are now UPX'd to reduce file size.
+-----------------------------
+name:changes,2.0.0b1
+title:Version 2.0.0b1
+  * Initial public release.
+-----------------------------
+name:changes,2.0.0a15
+title:Version 2.0.0a15
+  * The Upload dialog now correctly checks the size of a newline, to report the number of bytes uploaded/remaining correctly.
+  * Gags/Triggers/Highlights/Spawns are now collectively known as "Events". This has reduced the overall size of Potato by 25% ;)
+  * Added the "/addspawn", "/delspawn", "/cls" and "/see" slash commands.
+  * If you had a "Quick Connect" world open when you closed the program, you weren't given the chance to save it.
+  * Unlike other system messages, "Disconnected from host." now flashes the taskbar to attract attention if the app doesn't have focus.
+  * Bug when double-clicking a timer in the Configure World dialog fixed.
+  * Typing "/" with no command name would give duplicate error messages.
+  * Small bug in logging fixed.
+  * Several minor bugs around adding and starting timers fixed.
+  * The dialog box when you close the program now mentions if you're still connected somewhere.
+  * The code that parses Telnet addresses is more forgiving of extra whitespace.
+  * The 'Connected For:' counter in the status bar only went up to 24 hours, then reset to 0. Now shows times of 25 hours or more.
+  * Spawn windows can now be "docked" into the main window, "undocked" to make them toplevels, and "hidden" (which, unlike closing them, keeps them hidden until you manually unhide them).
+  * Many widgets in the following places converted to use Tile:
+  ** Default 'Potato' skin
+  ** Configure World dialog
+  ** Configure Timer dialog
+  ** Font dialog
+  ** Upload File dialog
+  ** Log dialog
+  ** Event dialog
+  ** Find dialog
+  ** About dialog
+  ** Text Editor
+  * The Tile buttons no longer take focus when clicked.
+-----------------------------
+name:changes,2.0.0a14
+title:Version 2.0.0a14
+  * Re-write of spawns to allow named (and shared) spawn windows.
+  * All the code for outputting messages has been re-written, with a slight speed increase.
+  * Several procedures which were handled by individual skins are now handled centrally by Potato itself.
+  * Input windows are now managed by Potato rather than by individual skins.
+  * Bug in Gags/Triggers/Hilights using * wildcard matches fixed.
+  * The list of procs that skins must define has been rewritten, and is now checked via a version number to make sure a skin is compatible with the current version of Potato.
+  * The Tcl console included for non-Windows platforms was broken. (It still is, but hey, now you know.) Removed again for the time being.
+  * The file structure for storing skins is now slightly altered, and the filename of the default skin has been changed to have a .tcl extension.
+  * The default Potato skin now saves it's preferences.
+-----------------------------
+name:changes,2.0.0a13
+title:Version 2.0.0a13
+  * Better checking for leading 'http://' on links, so that launching the browser works better. Reported by Chris.
+  * Negotiated protocols (like telnet) weren't being cleared on a disconnect.
+  * A Tcl console is now included in non-Windows distributions. (It was already available on Windows.)
+  * Added user-defined variables and associated /commands: set, setglobal, unset, unsetglobal.
+  * Added /send and /speedwalk.
+  * All World settings are now saved whenever a world's settings are changed.
+  * Tabs are now a special character to the Text Editor, and are converted to '%t'.
+-----------------------------
+name:changes,2.0.0a12
+title:Version 2.0.0a12
+  * Bug in timers fixed.
+  * Added DDE support for making Potato the default telnet app on Windows, and "-world <name>" and "-addr <host>:<port>" command line options for automatically connecting to a world when the app is launched. If only a single argument is passed on the command line, it's taken to be a single <host>:<port> which will be connected to.
+  * Added a 48x48 icon for Windows Vista.
+  * Bug in help searching that caused matching topics to be shown incorrectly fixed.
+  * Fixed a bug in the loading of the Winflash dll on Windows when Potato was stored in a directory with spaces in it's name.
+  * Improvements to the procs used for flashing the taskbar, and for animating the sys tray icon.
+  * Program config options moved to the proper 'Config' screen, rather than hiding in the 'Options' menu.
+  * Some changes to the help parsing code, some of which actually had an effect.
+-----------------------------
+name:changes,2.0.0a11
+title:Version 2.0.0a11
+  * Passwords are now elided in the Basic Settings world config screen. By Eve.
+  * On Linux and Mac OS X, configuration files and world/skin data are now stored in ~/.potato/ instead of in ./
+  * First version to be tested successfully on MacOS X (thanks, Walker!)
+-----------------------------
+name:/commands
+title:/commands
+A "/command" is a special command you can type into the input box (or anywhere else that sends text to the MU*). Rather than being sent to the MU*, the command will be executed by Potato. (If you want to send something to the game beginning with a /, use two, like "//foo".) Arguments to /commands are parsed for [/commandVars//variables]. The following is a list of available commands, with terse descriptions:
+
+   * '''/addspawn ''<spawn1> [[<spawn2> [[<spawnN]]]]''''' - Start spawning all output (regardless of events) for this connection to each of the given spawn windows.
+   * '''/all ''<str>'' ''' - Send ''<str>'' to all connections.
+   * '''/close''' - Close the current connection
+   * '''/connect ''[[<worldname>]'' ''' - If a ''<worldname>'' is given, connect to that world. If not, reconnect the current connection.
+   * '''/cls ''<spawn>''''' - Clear all output from the spawn window <spawn>.
+   * '''/cls ''<number>''''' - Clear all the output from connection <number>. You can use the '''${DOLLAR}_c${DOLLAR}''' variable to refer to the current connection (ie, /cls ${DOLLAR}_c${DOLLAR}).
+   * '''/delspawn ''<spawn1> [[<spawn2> [[<spawnN]]]]''''' - Stop automatically spawning all output from the current connection to each of the given spawn windows. (Spawning by events to these windows still occurs.)
+   * '''/disconnect''' - Disconnect the current connection
+   * '''/edit''' - Open the Edit Settings window for the current connection's world
+   * '''/exit''' - Exit Potato
+   * '''/history [[''<num>'']''' - If no <num> is given, open the History window for the current connection. If <num> is greater than 0, recalls the command with id <num> from the history window directly into the input window. If <num> is less than 1, recalls the command <num> from the last in the history window directly to the input window.
+   * '''/input ''<window>'' ''<str>''''' - Places <str> into the <window>th input window for the connection. <window> must be 1 or 2, for the first or second input windows, or 3 for the input window with focus. If there is already text in the input window, a newline will be added between it and <str>.
+   * '''/log''' - Show the Log window for this connection
+   * '''/log -close''' - Close a currently open logfile for this connection
+   * '''/log [[-append ''<bool>''] [[-leave ''<bool>''] [[-buffer ''<type>''] ''<file>'' ''' - Begin logging. If -append is given with a false value, <file> will be overwritten if it exists, otherwise it will be appended to. If -leave is given with a true value, the log file will be left open and future output will also be logged, otherwise it will be closed after logging the selected buffers. If -buffer is given, ''<type>'' must be one of "none" to include no buffer, "_main" to include the buffer from the output window, or the name of a spawn window to include it's contents.
+   * '''/print ''<str>''''' - Print <str> in the output window. Allows you to print a string for reference, see the value of a variable, etc.
+   * '''/quick ''<address>''''' - Connect to the given host and port.
+   * '''/reconnect''' - Reconnect the current connection
+   * '''/set ''<varName>''=''<value>''''' - Set the variable ''<varName>'' for the current connection to ''<value>''.
+   * '''/setglobal ''<varName>''=''<value>''''' - Set the global variable ''<varName>'' to ''<value>''.
+   * '''/show ''<connectionID>''''' - Show connection ''<connectionID>''
+   * '''/show [[''<connectionID>''.]]''<spawn>''''' - Show the spawn ''<spawn>'' in the current connection, or in ''<connectionID>'' if given. If ''<spawn>'' is empty or "_main" it shows the main window.
+   * '''/slash''' - List available /commands
+   * '''/send ''<str>''''' - Send <str> to the world. This is the same as entering ''<str>'' directly, with two exceptions: The ''<str>'' is not matched against other /commands (similar to using //string) and, because <str> is the argument to the "send" /command, it's parsed for [/commandVars//variables].
+   * '''/speedwalk ''<dirs>''''' - <dirs> is a list of directions, in the form <number><direction>, where <direction> can be one of n, s, w, e, nw, ne, sw, se, u, d, or o. Each <direction> will be sent to the game <number> times. For instance, "2n1d1o" would send "north", "north", "down", "out".
+   * '''/sw''' - Alias for '''/speedwalk'''
+   * '''/tcl''' - Open a Tcl command console (Windows)
+   * '''/toggle ''[[<direction>]''''' - Toggle to a different open connection. If ''<direction>'' is "down" or "-1" it will toggle backwards to the previous connection, otherwise it will go forwards to the next.
+   * '''/unset ''<varName>''''' - Unset the variable ''<varName>'' for this connection.
+   * '''/unsetglobal ''<varName>''''' - Unset the global variable ''<varName>''.
+   * '''/web ''<address>''''' - Launch the web page <address>
+-----------------------------
+name:/commandVars
+title:User-Defined Variables
+You can define variables, and use their values later in /commands. Variables can be global (in which case they can be accessed from any connection), or local, in which case they're only available to the connection they were created in.
+
+A variable name must start with a letter, and can only contain letters, numbers and underscores (up to 30 characters long). Variables are accessed via ${DOLLAR}-substitutions in /commands, in the form ${DOLLAR}varName${DOLLAR}. For example:
+
+  /set test=Hello
+  /send say ${DOLLAR}test${DOLLAR}, everyone!
+
+would send the string "say Hello, everyone!" to the connection. To get a literal ${DOLLAR} sign, use ${DOLLAR}${DOLLAR}.
+
+There are some pre-defined variables available. All pre-defined variables start with an underscore, to separate them from user-defined variabes. They are:
+
+   * '''_c''' - The connection id
+   * '''_w''' - The world id
+   * '''_name''' - The world name
+   * '''_host''' - The world's host
+   * '''_port''' - The world's port number
+   * '''_char''' - The character name given for the world
+
+
