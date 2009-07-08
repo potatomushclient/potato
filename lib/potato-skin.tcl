@@ -1174,21 +1174,45 @@ proc ::skin::potato::activeTextWidget {{c ""}} {
 
 };# ::skin::potato::activeTextWidget
 
+#: proc ::skin::potato::linkCopy
+#: arg t text widget
+#: arg index index of click
+#: desc Copy the weblink from text widget $t at index $index to the clipboard
+#: return nothing
+proc ::skin::potato::linkCopy {t index} {
+
+  if { ![catch {set data [$t get {*}[$t tag prevrange "weblink" "$index + 1 char"]]} foo] } {
+       clipboard clear -displayof $t
+       clipboard append -displayof $t $data
+     } else {
+       bell -displayof .
+     }
+
+  return;
+
+};# ::skin::potato::linkCopy
+
 #: proc ::skin::potato::rightclickOutput 
 #: arg c connection id
-#: arg atX x-coord
-#: arg atY y-coord
-#: desc Handle a right-click in connection $c, at coordinates $atX,$atY. Update the right-click menu and then post it.
+#: arg t text widget, or "" for active text widget
+#: arg evx %x event substitution
+#: arg evy %y event substitution
+#: arg evX %X event substitution
+#: arg evY %Y event substitution
+#: desc Handle a right-click in text widget $t (or connection $c's active text widget, if $t is ""), at coordinates $atX,$atY. Update the right-click menu and then post it.
 #: return nothing
-proc ::skin::potato::rightclickOutput {c atX atY} {
+proc ::skin::potato::rightclickOutput {c t evx evy evX evY} {
   variable widgets;
 
   set menu $widgets(rightclickOutputMenu)
   $menu delete 0 end
   $menu add command -label "Toggle World" -command [list ::potato::toggleConn 1]
   $menu add command -label "Copy Selected Text"
+  $menu add command -label "Copy Hyperlink"
   $menu add command -label "Edit Settings"
-  set t [activeTextWidget $c]
+  if { $t eq "" } {
+       set t [activeTextWidget $c]
+     }
   set conns [lsort -integer -index 0 [::potato::connList]]
   if { $c == 0 || [llength $conns] < 2 } {
        $menu entryconfigure 0 -state disabled
@@ -1200,10 +1224,15 @@ proc ::skin::potato::rightclickOutput {c atX atY} {
      } else {
        $menu entryconfigure 1 -state normal -command [list event generate $t <<Copy>>]
      }
-  if { $c == 0 } {
-       $menu entryconfigure 2 -label "Edit Global Settings" -command [list ::potato::configureWorld -1]
+  if { "weblink" in [$t tag names @$evx,$evy] } {
+       $menu entryconfigure 2 -state normal -command [list ::skin::potato::linkCopy $t [$t index @$evx,$evy]]
      } else {
-       $menu entryconfigure 2 -command [list ::potato::configureWorld [::potato::connInfo $c world]]
+       $menu entryconfigure 2 -state disabled
+     }
+  if { $c == 0 } {
+       $menu entryconfigure 3 -label "Edit Global Settings" -command [list ::potato::configureWorld -1]
+     } else {
+       $menu entryconfigure 3 -command [list ::potato::configureWorld [::potato::connInfo $c world]]
      }
   if { $c != 0 } {
        $menu add separator
@@ -1213,7 +1242,7 @@ proc ::skin::potato::rightclickOutput {c atX atY} {
        }
      }
 
-  tk_popup $menu $atX $atY
+  tk_popup $menu $evX $evY
 
   return;
 
@@ -1244,9 +1273,9 @@ proc ::skin::potato::import {c} {
   pack $widgets(conn,$c,txtframe,sb) -side right -fill y -anchor ne
 
   bind $widgets(conn,$c,txtframe) <MouseWheel> [list ::skin:: potato::scrollActiveTextWidget $c %D]
-  bind $widgets(conn,$c,txtframe) <Button-3> [list ::skin::potato::rightclickOutput $c %X %Y]
+  bind $widgets(conn,$c,txtframe) <Button-3> [list ::skin::potato::rightclickOutput $c "" %x %y %X %Y]
 
-  bind $t <Button-3> [list ::skin::potato::rightclickOutput $c %X %Y]
+  bind $t <Button-3> [list ::skin::potato::rightclickOutput $c $t %x %y %X %Y]
 
   foreach x [::potato::connInfo $c spawns] {
     addSpawn $c $x
@@ -1370,7 +1399,7 @@ proc ::skin::potato::addSpawn {c name} {
      }
 
   set t $::potato::conn($c,spawns,$name)
-  bind $t <Button-3> [list ::skin::potato::rightclickOutput $c %X %Y]
+  bind $t <Button-3> [list ::skin::potato::rightclickOutput $c $t %x %y %X %Y]
 
   return;
 
