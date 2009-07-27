@@ -473,6 +473,7 @@ title:Version 2.0.0b5
   * Old "Activity in <world>" notices are now deleted when a new one is inserted.
   * Events now only recolour the portion of the received text which matched the event pattern. For instance, in the regexp "foo..r" and the string "This is a foobar", only the word "foobar" would be recoloured. (Use "^.*foo..r.*$" if you want the entire line recoloured.)
   * The "beep" character, as returned by PennMUSH's beep() function, now causes Potato to play a sound, and is omitted from the display (but is used in matching events). The sound is not currently configurable, but may become so in the future. Requested by Paige.
+  * /cls with no argument now clears the backlog of the current connection's main window, instead of doing nothing. Requested by Paige.
   * Potato is now built against Tcl/Tk 8.5.7.
 -----------------------------
 name:changes,2.0.0b4
@@ -643,8 +644,7 @@ A "/command" is a special command you can type into the input box (or anywhere e
    * '''/all ''<str>'' ''' - Send ''<str>'' to all connections.
    * '''/close''' - Close the current connection
    * '''/connect ''[[<worldname>]'' ''' - If a ''<worldname>'' is given, connect to that world. If not, reconnect the current connection.
-   * '''/cls ''<spawn>''''' - Clear all output from the spawn window <spawn>.
-   * '''/cls ''<number>''''' - Clear all the output from connection <number>. You can use the '''${DOLLAR}_c${DOLLAR}''' variable to refer to the current connection (ie, /cls ${DOLLAR}_c${DOLLAR}).
+   * '''/cls ''[[<connection>]][[.<window>]]''' - Clear all output from the given <window> in <connection>. <connection> defaults to the connection the command was sent from, and <window> defaults to "_main" (the main output window).
    * '''/delspawn ''<spawn1> [[<spawn2> [[<spawnN]]]]''''' - Stop automatically spawning all output from the current connection to each of the given spawn windows. (Spawning by events to these windows still occurs.)
    * '''/disconnect''' - Disconnect the current connection
    * '''/edit''' - Open the Edit Settings window for the current connection's world
