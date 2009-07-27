@@ -175,7 +175,10 @@ proc ::potato::setPrefs {readfile} {
      }
 
   if { $readfile } {
-       catch {source $path(preffile)}
+       array set prefFlags [prefFlags]
+       if { ![catch {source $path(preffile)} retval] } {
+            managePrefVersion $retval
+          }
      }
 
   # Check the theme we're using is available. Important if, for instance,
@@ -236,9 +239,33 @@ proc ::potato::savePrefs {} {
   }
 
   puts $fid "\n"
+  puts $fid [list return [prefFlags 1]]
   close $fid
 
 };# ::potato::savePrefs
+
+#: proc ::potato::managePrefVersion
+#: arg version The version of the pref file, or an empty string if none was present (ie, the pref file pre-dates versions)
+#: desc Prefs were loaded from a version $version pref  file; make any changes necessary to bring it up to date with a current pref file. NOTE: This manages the default world (-1) as well, manageWorldVersion is NOT used for that.
+#: return nothing
+proc ::potato::managePrefVersion {version} {
+  variable misc;
+  variable world;
+
+  array set pf [prefFlags];# array of all current pref flags
+
+  if { ![string is integer -strict $version] } {
+       set version 0
+     }
+
+  # Example:
+  # if { !($version & $pf(foo_removed)) } {
+  #      unset misc(foo_var)
+  #    }
+
+  return;       
+
+};# potato::managePrefVersion
 
 #: proc ::potato::loadWorlds
 #: desc load all the stored world info from the files
@@ -253,13 +280,14 @@ proc ::potato::loadWorlds {} {
   if { [llength $files] != 0 } {
        foreach x [lsort -dictionary $files] {
          unset -nocomplain newWorld
-         if { ![catch {source $x} return] && $return eq "World Loaded Successfully" } {
+         if { ![catch {source $x} return] && [lrange [split $return " "] 0 2] eq [list World Loaded Successfully] } {
               set w $potato(worlds)
               incr potato(worlds)
               foreach opt [array names newWorld] {
                  set world($w,$opt) $newWorld($opt)
               }
               set world($w,id) $w
+              manageWorldVersion $w [lindex [split $return " "] 3]
             }
        }
      }
@@ -270,6 +298,29 @@ proc ::potato::loadWorlds {} {
   return $potato(worlds);
 
 };# ::potato::loadWorlds
+
+#: proc ::potato::manageWorldVersion
+#: arg w world id
+#: arg version The version of the world file, or an empty string if none was present (ie, the world file pre-dates versions)
+#: desc World $w was loaded from a version $version world file; make any changes necessary to bring it up to date with a current world file. NOTE: This does NOT manage the default world (-1), managePrefVersion is used for that.
+#: return nothing
+proc ::potato::manageWorldVersion {w version} {
+  variable world;
+
+  array set wf [worldFlags];# array of all current world flags
+
+  if { ![string is integer -strict $version] } {
+       set version 0
+     }
+
+  # Example:
+  # if { ! ($version & $wf(some_new_feature)) } {
+  #      set world($w,new_features_var) foobar
+  #    }
+
+  return;       
+
+};# potato::manageWorldVersion
 
 #: proc ::potato::loadWorldDefaults
 #: arg w world id
@@ -363,7 +414,7 @@ proc ::potato::saveWorlds {} {
            }
         puts $fid [list set newWorld($opt) $world($w,$opt)]
      }
-     puts $fid [list return "World Loaded Successfully"]
+     puts $fid [list return "World Loaded Successfully [worldFlags 1]"]
      close $fid
      incr i
   }
@@ -371,6 +422,46 @@ proc ::potato::saveWorlds {} {
   return 1;
 
 };# ::potato::saveWorlds
+
+#: proc ::potato::worldFlags
+#: arg total Return a total of the flags, instead of a list of name/value pairs? Defaults to 0
+#: desc Return a list (suitable for [array set]) of name/value pairs of world flags, used in the world config file. If $total is true, return the total of all flags instead.
+#: return list of name/value pairs, or total of all flags
+proc ::potato::worldFlags {{total 0}} {
+
+  set f(has_world_flags) 1    ;# world file uses flags
+
+  if { !$total } {
+       return [array get f];
+     } else {
+       set num 0
+       foreach x [array names f] {
+         set num [expr {$num | $f($x)}]
+       }
+       return $num;
+     }
+
+};# ::potato::worldFlags
+
+#: proc ::potato::prefFlags
+#: arg total Return a total of the flags, instead of a list of name/value pairs? Defaults to 0
+#: desc Return a list (suitable for [array set]) of name/value pairs of Potato preference file flags. If $total is true, return the total of all flags instead.
+#: return list of name/value pairs, or total of all flags
+proc ::potato::prefFlags {{total 0}} {
+
+  set f(has_pref_flags) 1    ;# pref file uses flags
+
+  if { !$total } {
+       return [array get f]
+     } else {
+       set num 0
+       foreach x [array names f] {
+         set num [expr {$num | $f($x)}]
+       }
+       return $num;
+     }
+
+};# ::potato::prefFlags
 
 #: proc ::potato::mailWindow
 #: arg c connection id. Defaults to "".
