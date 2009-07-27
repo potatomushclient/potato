@@ -21,3 +21,5 @@ app-potato/                Addition libraries/extensions
   Winico06.dll             The dll library file for the winico extension
   stpotato.ico             New icon used in the systray by winico
   potato2.ico              Old icon used in the systray by winico
+
+../LICENSE                 The MIT License. This file MUST be distributed with all copies of the source.
