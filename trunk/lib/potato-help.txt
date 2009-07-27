@@ -472,6 +472,7 @@ title:Version 2.0.0b5
   * Fixed some bugs in /cls.
   * Old "Activity in <world>" notices are now deleted when a new one is inserted.
   * Events now only recolour the portion of the received text which matched the event pattern. For instance, in the regexp "foo..r" and the string "This is a foobar", only the word "foobar" would be recoloured. (Use "^.*foo..r.*$" if you want the entire line recoloured.)
+  * The "beep" character, as returned by PennMUSH's beep() function, now causes Potato to play a sound, and is omitted from the display (but is used in matching events). The sound is not currently configurable, but may become so in the future. Requested by Paige.
   * Potato is now built against Tcl/Tk 8.5.7.
 -----------------------------
 name:changes,2.0.0b4

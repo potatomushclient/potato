@@ -2189,6 +2189,9 @@ proc ::potato::get_mushageProcess {c line} {
   # set matchLinks {\m((https?://)|www\.)(([a-zA-Z_\.0-9%+/@~=&,;-]*))?([a-zA-Z_\.0-9%+/@~=&,;-]*)(\?([a-zA-Z_\.0-9%+/@~=&,;:-]*))?(#[a-zA-Z_\.0-9%+/@~=&,;:-]*)?}
   set matchLinks {\m(?:(?:(?:f|ht)tps?://)|www\.)(?:(?:[a-zA-Z_\.0-9%+/@~=&,;-]*))?(?::[0-9]+/)?(?:[a-zA-Z_\.0-9%+/@~=&,;-]*)(?:\?(?:[a-zA-Z_\.0-9%+/@~=&,;:-]*))?(?:#[a-zA-Z_\.0-9%+/@~=&,;:-]*)?}
   set tmp [regexp -all -inline -indices -- $matchLinks $lineNoansi]
+  # '\a' is the beep char defined in PennMUSH in ansi.h. If a game has changed this, or another codebase uses something
+  # else, you can change it by.. hrm, nope, you're just screwed.
+  set beeps [regsub -all -- \a $line {} line]
   set len [string length $lineNoansi]
   set urlIndices [list]
   foreach x $tmp {
@@ -2380,6 +2383,8 @@ proc ::potato::get_mushageProcess {c line} {
           }
      }
 
+  beepNumTimes $beeps
+
   skinStatus $c
 
   update idletasks
@@ -2387,6 +2392,24 @@ proc ::potato::get_mushageProcess {c line} {
   return;
 
 };# ::potato::get_mushageProcess
+
+#: proc ::potato::beepNumTimes
+#: arg num Number of remaining times to beep
+#: desc Beep $num times, with a brief delay between each beep. To avoid locking up the app, this proc calls itself recursively to perform each subsequent beep, using [after]
+#: return nothing
+proc ::potato::beepNumTimes {num} {
+
+  if { $num == 0 } {
+       return;
+     }
+
+  bell -displayof .
+
+  after 125 [list ::potato::beepNumTimes [expr {$num - 1}]];
+
+  return;
+
+};# ::potato::beepNumTimes
 
 #: proc ::potato::parseSpawnList
 #: arg spawns A list of spawn window names, supplied by the user
