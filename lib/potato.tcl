@@ -8989,12 +8989,20 @@ proc ::potato::slash_cmd_cls {c full str} {
        return;# too risky to allow an abbreviation
      }
 
-  if { ![regexp -nocase {^(?:([0-9]+)\.)?(_main|[a-zA-Z][a-zA-Z0-9_-]{0,49})$} $str {} c2 window] } {
+  if { $str eq "" } {
+       set window "_main"
+     } elseif { [string is integer -strict $str] } {
+       set c $str
+       set window "_main"
+     } elseif { [regexp -nocase {^(?:([0-9]+)\.)?\.?(_main|[a-zA-Z][a-zA-Z0-9_-]{0,49})?$} $str {} c2 window] } {
+       # (Yes, this regexp actually allows for two '.'s between world num and window name. This is because I'm
+       #  too lazy to rewrite it more neatly at present to match 'X.Y', 'X.', '.Y' or 'Y'. Maybe later.) #abc
+       if { $c2 ne "" } {
+            set c $c2
+          }
+     } else {
        bell -displayof .
        return;# invalid window name
-     }
-  if { $c2 ne ""} {
-       set c $c2
      }
 
   if { ![info exists conn($c,textWidget)] } {
@@ -9002,11 +9010,11 @@ proc ::potato::slash_cmd_cls {c full str} {
        return;# bad connection
      }
 
-  if { $window eq "_main" } {
+  if { $window eq "_main" || $window eq "" } {
        $conn($c,textWidget) delete 1.0 end
-       if { $conn($num,connected) == 1 } {
+       if { $conn($c,connected) == 1 } {
             set status "Connected."
-          } elseif { $conn($num,connected) == -1 } {
+          } elseif { $conn($c,connected) == -1 } {
             set status "Reconnecting..."
           } elseif { [connInfo $c autoreconnect] && [connInfo $c autoreconnect,time] > 0 } {
             set status "Disconnected. Auto-reconnect in [timeFmt [connInfo $c autoreconnect,time] 0]."
@@ -9014,7 +9022,7 @@ proc ::potato::slash_cmd_cls {c full str} {
             set status "Disconnected."
           }
        outputSystem $c $status
-       $conn($c,textWidget) delete 1.0 2.0;# remove trailing newline 
+       $conn($c,textWidget) delete 1.0 2.0;# remove leading newline 
      } elseif { [info exists conn($c,spawns,$window)] } {
        $conn($c,spawns,$window) delete 1.0 end
      } else {
