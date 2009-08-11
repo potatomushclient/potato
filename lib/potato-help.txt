@@ -474,6 +474,8 @@ title:Version 2.0.0b5
   * Events now only recolour the portion of the received text which matched the event pattern. For instance, in the regexp "foo..r" and the string "This is a foobar", only the word "foobar" would be recoloured. (Use "^.*foo..r.*$" if you want the entire line recoloured.)
   * The "beep" character, as returned by PennMUSH's beep() function, now causes Potato to play a sound, and is omitted from the display (but is used in matching events). The sound is not currently configurable, but may become so in the future. Requested by Paige.
   * /cls with no argument now clears the backlog of the current connection's main window, instead of doing nothing. Requested by Paige.
+  * Worlds can now have two separate addresses defined; if connection to the first fails, Potato will try to connect to the second immediately. If that fails, the normal auto-reconnect behaviour occurs as before. Useful for keeping the domain and IP address of the game. Requested by Paige.
+  * The scrollbar in the "Configure World" dialog would sometimes be the wrong size to scroll the window.
   * Potato is now built against Tcl/Tk 8.5.7.
 -----------------------------
 name:changes,2.0.0b4
