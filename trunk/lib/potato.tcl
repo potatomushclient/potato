@@ -50,6 +50,8 @@ proc ::potato::setPrefs {readfile} {
   set world(-1,id) -1
   set world(-1,host) ""
   set world(-1,port) "4201"
+  set world(-1,host2) ""
+  set world(-1,port2) "4201"
   set world(-1,charName) ""
   set world(-1,charPass) ""
   set world(-1,description) ""
@@ -1674,6 +1676,22 @@ proc ::potato::connZero {} {
 
 };# ::potato::connZero
 
+#: proc ::potato::!set
+#: arg _varname Variable to set
+#: arg value Value to set
+#: desc Set the variable whose name is in $_varname to $value, if it doesn't exist already
+#: return Value of variable named in $_varname
+proc ::potato::!set {_varname value} {
+
+  upvar 1 $_varname varname
+  if { ![info exists varname] } {
+       set varname $value
+     }
+
+  return $varname;
+
+};# ::potato::!set
+
 #: proc ::potato::reconnect
 #: arg c connection id. Defaults to currently displayed connection.
 #: desc reconnect connection id $c, or the currently displayed connection. Wrapper for use by skins, etc.
@@ -1697,15 +1715,18 @@ proc ::potato::reconnect {{c ""}} {
 #: proc ::potato::connect
 #: arg c the connection to connect
 #: arg first is this the first time we've tried to connect here? Affects messages, etc.
-#: desc start connecting to a world. This doesn't handle the full connection, as we connect -async and wait for a response. This connection may be to a proxy server, not the actual game.
+#: arg hostlist List of hosts to attempt to connect to; some combination of "host" and "host2", or "". Defaults to "".
+#: desc start connecting to a world. This doesn't handle the full connection, as we connect -async and wait for a response. This connection may be to a proxy server, not the actual game. $hostlist contains a list telling us whether to attempt to connect to the primary host ("host"), the secondary host ("host2"), or both ("").
 #: return nothing
-proc ::potato::connect {c first} {
+proc ::potato::connect {c first {hostlist ""}} {
   variable conn;
   variable world;
 
   if { $conn($c,connected) != 0 || $c == 0 } {
        return;# already connected or trying to connect
      }
+
+  set w $conn($c,world)
 
   after cancel $conn($c,reconnectId)
   set conn($c,reconnectId) ""
@@ -1720,12 +1741,24 @@ proc ::potato::connect {c first} {
        taskState disconnect 1
      }
 
-  set w $conn($c,world)
+  if { ![llength $hostlist] } {
+       lappend hostlist host
+       if { [string length $world($w,host2)] && [string length $world($w,port2)] } {
+            lappend hostlist host2
+          }
+       set thishost host
+       set thisport port
+     } else {
+       set thishost [lindex $hostlist 0]
+       set thisport [expr {$thishost eq "host" ? "port" : "port2"}]
+       set message "Connecting to secondary host $world($w,$thishost):$world($w,$thisport)..."
+     }
+
   if { $world($w,proxy) eq "None" } {
        # No proxy, a straight connection to the game
-       set host $world($w,host)
-       set port $world($w,port)
-       set message "Connecting to $host:$port..."
+       set host $world($w,$thishost)
+       set port $world($w,$thisport)
+       !set message "Connecting to $host:$port..."
      } else {
        # connect through a proxy. Sigh.
        set host $world($w,proxy,host)
@@ -1734,7 +1767,7 @@ proc ::potato::connect {c first} {
      }
   if { !$first } {
        # Generic reconnect message
-       set message "Attempting to reconnect..."
+       !set message "Attempting to reconnect..."
      }
 
   outputSystem $c $message
@@ -1753,7 +1786,7 @@ proc ::potato::connect {c first} {
      }
 
   set conn($c,id) $fid
-  fileevent $fid writable [list ::potato::connectVerify $c]
+  fileevent $fid writable [list ::potato::connectVerify $c $hostlist]
 
   return;
 
@@ -1761,27 +1794,36 @@ proc ::potato::connect {c first} {
 
 #: proc ::potato::connectVerify
 #: arg c connection id
+#: arg hostlist The hostlist, passed from ::potato::connect. List containing a combination of "host" and "host2", or an empty string, telling us which hosts to attempt connection to.
 #: desc Verify whether the newly made connection for conn $c has worked or not. If we're connected, and it's through a proxy, verify the proxy is working correctly. (If not through a proxy, we're connected successfully.)
 #: return nothing
-proc ::potato::connectVerify {c} {
+proc ::potato::connectVerify {c hostlist} {
   variable conn;
   variable world;
 
   set id $conn($c,id)
   catch {fileevent $id writable {}}
 
+  set w $conn($c,world)
   if { [catch {fconfigure $id -error} err] || $err ne "" } {
+       # The connection failed. If we were attempting to connect through a proxy, or
+       # we were connecting to the last host we have, run boot_reconnect to start over
        outputSystem $c "Connection failed: $err"
        disconnect $c 0
-       boot_reconnect $c
-       skinStatus $c
-       return;
+       if { $world($w,proxy) ne "None" || [llength $hostlist] == 1 } {
+            boot_reconnect $c
+            skinStatus $c
+            return;
+          } else {
+            # Not connecting through a proxy, and we have another host to attempt
+            connect $c 0 [lrange $hostlist 1 end]
+            return;
+          }
      }
 
-  set w $conn($c,world)
 
   if { $world($w,proxy) ne "None" } {
-       connectVerifyProxy $c
+       connectVerifyProxy $c $hostlist
      } else {
        connectVerifyComplete $c
      }
@@ -1792,15 +1834,14 @@ proc ::potato::connectVerify {c} {
 
 #: proc ::potato::connectVerifyProxy
 #: arg c connection id
+#: arg hostlist List of hosts ("host", "host2") we should attempt to connect to through the proxy
 #: desc Called when a connection has been successfully established to connection $c's proxy host; do the required work to negotiate with the proxy to establish a connection to the end game server. Call connectVerifyComplete on success, or abort, [close] the connection and do standard reconnect if the proxy doesn't play nice.
 #: return nothing
-proc ::potato::connectVerifyProxy {c} {
+proc ::potato::connectVerifyProxy {c hostlist} {
   variable conn;
   variable world;
 
-  #abc WRITE ME
-  #connectVerifyComplete $c
-  ::potato::proxy::$world($conn($c,world),proxy)::start $c
+  ::potato::proxy::$world($conn($c,world),proxy)::start $c $hostlist
 
   return;
 
@@ -1809,10 +1850,11 @@ proc ::potato::connectVerifyProxy {c} {
 #: proc ::potato::connectVerifyProxyFail
 #: arg c connection id
 #: arg proxy The proxy type (SOCKS4, SOCKS5, HTTP)
+#: arg hostlist List of hosts ("host"/"host2") we're attempting to connect to.
 #: arg err A string containing the error encountered. Defaults to ""
-#: desc Called when we've connected to a proxy server, but failed to negotiate for it to handle our connection to a MUSH. Do the "failed connect" stuff like print a message (including $err, or a default fail message if $err is ""), set up auto-reconnect, etc
+#: desc Called when we've connected to a proxy server, but failed to negotiate for it to handle our connection to a MUSH. If we have multiple hosts to try, reconnect to the proxy and try the next. Else, do the "failed connect" stuff like print a message (including $err, or a default fail message if $err is ""), set up auto-reconnect, etc
 #: return nothing
-proc ::potato::connectVerifyProxyFail {c proxy err} {
+proc ::potato::connectVerifyProxyFail {c proxy hostlist err} {
   variable conn;
 
   if { $err eq "" } {
@@ -1820,9 +1862,17 @@ proc ::potato::connectVerifyProxyFail {c proxy err} {
      }
   outputSystem $c "Connection failed: $err"
   disconnect $c 0
-  boot_reconnect $c
-  skinStatus $c
-  return;
+
+  if { [llength $hostlist] == 1 } {
+       # No more hosts to try, do a failed connect
+       boot_reconnect $c
+       skinStatus $c
+       return;
+     } else {
+       # Try remaining hosts
+       connect $c 0 [lrange $hostlist 1 end]
+       return;
+     }
 
 };# ::potato::connectVerifyProxyFail
 
@@ -1902,6 +1952,8 @@ proc ::potato::sendLoginInfoSub {c} {
   # Don't check for pw being blank, as some games allow empty passwords
   if { [string length $world($w,charName)] && \
        ![catch {format $world($w,loginStr) $world($w,charName) $world($w,charPass)} str] } {
+       # At some point, we may want to print a message if the [format] fails, to let the user know
+       # it's incorrect and needs fixing. #abc
        send_to_real $c $str
      }
   if { [string length $world($w,autosend,login)] } {
@@ -2101,6 +2153,11 @@ proc ::potato::disconnect {{c ""} {prompt 1}} {
   catch {close $conn($c,id)}
   set conn($c,id) ""
   set prevState $conn($c,connected)
+  if { $conn($c,connected) == 1 } {
+       # Only print message if we were fully connected, otherwise the "failed to connect" message is sufficient, and
+       # we don't need to spam.
+       outputSystem $c "Disconnected from host."
+     }
   set conn($c,connected) 0
   timersStop $c
   set conn($c,protocols) [list]
@@ -2113,7 +2170,6 @@ proc ::potato::disconnect {{c ""} {prompt 1}} {
      }
   set conn($c,stats,connAt) -1
   set conn($c,stats,formatted) ""
-  outputSystem $c "Disconnected from host."
   if { [focus -displayof .] eq "" && $prevState == 1 } {
        flash $w
      }
@@ -4572,12 +4628,22 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,name) -width 50] -side left -padx 3
 
   pack [set sub [::ttk::frame $frame.host]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text "Host Address:" -width 17 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::label $sub.label -text "1st Address:" -width 17 -justify left -anchor w] -side left -padx 3
   pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,host) -width 50] -side left -padx 3  
 
   pack [set sub [::ttk::frame $frame.port]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text "Host Port:" -width 17 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::label $sub.label -text "1st Port:" -width 17 -justify left -anchor w] -side left -padx 3
   pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,port) -width 50] -side left -padx 3
+
+  pack [set sub [::ttk::frame $frame.host2]] -side top -pady 5 -anchor nw
+  pack [::ttk::label $sub.label -text "2nd Address:" -width 17 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,host2) -width 50] -side left -padx 3  
+
+  pack [set sub [::ttk::frame $frame.port2]] -side top -pady 5 -anchor nw
+  pack [::ttk::label $sub.label -text "2nd Port:" -width 17 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,port2) -width 50] -side left -padx 3
+
+  pack [::ttk::separator $frame.sep1 -orient horizontal] -fill x -padx 20 -pady 5
 
   pack [set sub [::ttk::frame $frame.charname]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text "Character Name:" -width 17 -justify left -anchor w] -side left -padx 3
@@ -4597,6 +4663,8 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [::ttk::label $sub.label -text "Description:" -width 17 -justify left -anchor w] -side left -padx 3
   pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,desc) -width 50] -side left -padx 3
 
+  pack [::ttk::separator $frame.sep2 -orient horizontal] -fill x -padx 20 -pady 5
+
   pack [set sub [::ttk::frame $frame.proxyType]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text "Proxy Type:" -width 17 -justify left -anchor w] -side left -padx 3
   pack [::ttk::combobox $sub.cb -textvariable ::potato::worldconfig($w,proxy) \
@@ -4611,8 +4679,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [::ttk::label $sub.label -text "Proxy Port:" -width 17 -justify left -anchor w] -side left -padx 3
   pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,proxy,port) -width 50] -side left -padx 3
 
-
-#zzz
+  pack [::ttk::separator $frame.sep3 -orient horizontal] -fill x -padx 20 -pady 5
 
   pack [set mainsub [::ttk::frame $frame.btm]] -side top -pady 5 -anchor nw -fill x
   pack [set subsub [::ttk::frame $mainsub.left]] -side left -fill x
@@ -4627,14 +4694,6 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [::ttk::label $sub.mud.label -text "MUD" -width 5 -justify left -anchor w] -side left
   bind $sub.mud.label <1> [list $sub.mud.rb invoke]
 
-  #if { $world($w,temp) } {
-  #     pack [set subsub [::ttk::frame $mainsub.right]] -side left -expand 1 -fill x
-  #     pack [set sub [::ttk::labelframe $subsub.temp -text "Important!" -relief groove -borderwidth 2 -padding 10]] \
-  #          -side top -pady 5 -anchor center
-  #     pack [::ttk::label $sub.label -text "This world will not be saved!\nTick this box to save it."] -side left
-  #     pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,temp) -onvalue 0 -offvalue 1 \
-  #                -command [list destroy $sub]] -side left -padx 5 -pady 5
-  #   }
 
   # Connection page
   set frame [configureFrame $canvas "Connection Settings"]
@@ -5668,6 +5727,9 @@ proc ::potato::configureShow {canvas tree} {
   catch {bind [$canvas itemcget 1 -window] <Configure> {}}
   $canvas itemconfigure 1 -window $frame
   bind $frame <Configure> "$canvas configure -scrollregion \"0 0 250 \[winfo reqheight $frame\]\""
+  #after idle "$canvas xview moveto 0 ; $canvas yview moveto 1 ; $canvas yview moveto 0"
+  #after idle "[$canvas cget -yscrollcommand] \{*\}\[$canvas yview\]"
+  $canvas configure -scrollregion [list 0 0 250 [winfo reqheight $frame]]
   return;
 
 };# ::potato::configureShow

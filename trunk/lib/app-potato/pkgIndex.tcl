@@ -5,10 +5,10 @@
   package ifneeded potato-skin 2.0.0 [list source [file join $dir .. potato-skin.tcl]]
   package ifneeded potato-font 1.0 [list source [file join $dir .. potato-font.tcl]]
 
-  package ifneeded potato-proxy-SOCKS4 1.0 [list source [file join $dir .. potato-proxy-SOCKS4.tcl]]
-  package ifneeded potato-proxy-SOCKS5 1.0 [list source [file join $dir .. potato-proxy-SOCKS5.tcl]]
-  package ifneeded potato-proxy-HTTP 1.0 [list source [file join $dir .. potato-proxy-HTTP.tcl]]
-  package ifneeded potato-proxy 1.0 [list source [file join $dir .. potato-proxy.tcl]]
+  package ifneeded potato-proxy-SOCKS4 1.1 [list source [file join $dir .. potato-proxy-SOCKS4.tcl]]
+  package ifneeded potato-proxy-SOCKS5 1.1 [list source [file join $dir .. potato-proxy-SOCKS5.tcl]]
+  package ifneeded potato-proxy-HTTP 1.1 [list source [file join $dir .. potato-proxy-HTTP.tcl]]
+  package ifneeded potato-proxy 1.1 [list source [file join $dir .. potato-proxy.tcl]]
 
   # Windows-specific
   package ifneeded potato-winflash 1.0 "[list load [file join $dir windows flash85.dll]] ; [list source [file join $dir windows potato-winflash.tcl]]"
