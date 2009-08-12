@@ -1975,8 +1975,8 @@ proc ::potato::timersStart {c} {
   timersStop $c; # cancel any already-running timers
 
   foreach w [list -1 $conn($c,world)] {
-    foreach timerStr [array names world -regexp "^$w,timer,\[^,\]+\$"] {
-      scan $timerStr %*d,timer,%d timerId
+    foreach timerStr [array names world -regexp "^$w,timer,\[^,\]+,cmds\$"] {
+      scan $timerStr %*d,timer,%d,cmds timerId
       timersStartOne $c $w $timerId
     }
   }
@@ -4938,8 +4938,8 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   # Now we need to populate the list.
   set worldconfig($w,timer) -1
   set worldconfig($w,timer,active) {}
-  foreach x [array names world -regexp "$w,timer,\[0-9\]+\$"] {
-    scan $x $w,timer,%d timerId
+  foreach x [array names world -regexp "$w,timer,\[0-9\]+\,cmds$"] {
+    scan $x $w,timer,%d,cmds timerId
     set worldconfig($w,timer,$timerId,delay) $world($w,timer,$timerId,delay)
     set worldconfig($w,timer,$timerId,every) $world($w,timer,$timerId,every)
     set worldconfig($w,timer,$timerId,cmds) [string map [list "\n" " \b "] $world($w,timer,$timerId,cmds)]
@@ -5553,8 +5553,8 @@ proc ::potato::configureWorldCommit {w win} {
   array unset worldconfig $w,timer,*
   array unset worldconfig $w,timer
 
-  foreach x [array names timers -regexp "^$w,timer,\[^,\]+\$"] {
-    scan $x $w,timer,%d timerId
+  foreach x [array names timers -regexp "^$w,timer,\[^,\]+,cmds\$"] {
+    scan $x $w,timer,%d,cmds timerId
     if { $timerId > 0 } {
          lappend timersPos $timerId
        } else {
@@ -5563,10 +5563,10 @@ proc ::potato::configureWorldCommit {w win} {
   }
 
   # Generate list of timers
-  foreach x [array names world -regexp "^$w,timer,\[^,\]+\$"] {
+  foreach x [array names world -regexp "^$w,timer,\[^,\]+,cmds\$"] {
     if { ![info exists timers($x)] } {
          # cancel deleted timer
-         scan $x $w,timer,%d timerId
+         scan $x $w,timer,%d,cmds timerId
          timerCancel $w $timerId
        }
   }
@@ -6930,7 +6930,7 @@ proc ::potato::build_menu_options {m} {
 
   $m delete 0 end
 
-  createMenuTask $m globalConfig
+  createMenuTask $m programConfig
   createMenuTask $m globalEvents
   createMenuTask $m globalSlashCmds
 
@@ -9264,7 +9264,7 @@ proc ::potato::slash_cmd_edit {c full str} {
   variable conn;
 
   if { $c == 0 } {
-       taskRun globalConfig
+       taskRun programConfig
      } else {
        taskRun config $c
      }
@@ -10164,8 +10164,8 @@ proc ::potato::tasksInit {} {
        prevConn,cmd        [list ::potato::toggleConn -1] \
        config,name         "Configure &World" \
        config,cmd          "::potato::configureWorld" \
-       globalConfig,name   "Configure Global &Settings" \
-       globalConfig,cmd    [list ::potato::configureWorld -1] \
+       programConfig,name  "Configure Program &Settings" \
+       programConfig,cmd   [list ::potato::configureWorld -1] \
        events,name         "Configure &Events" \
        events,cmd          "::potato::eventConfig" \
        globalEvents,name   "&Global Events" \
@@ -10231,7 +10231,7 @@ proc ::potato::tasksInit {} {
   ]
 
   # Set initial task states
-  foreach x [list exit about help globalEvents globalConfig globalSlashCmds \
+  foreach x [list exit about help globalEvents programConfig globalSlashCmds \
              textEd twoInputWins customKeyboard connectMenu \
              prevHistCmd nextHistCmd escHistCmd manageWorlds autoConnects \
              fcmd2 fcmd3 fcmd4 fcmd5 fcmd6 fcmd7 fcmd8 fcmd9 fcmd10 fcmd11 fcmd12] {
