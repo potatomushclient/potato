@@ -57,7 +57,7 @@ proc ::potato::setPrefs {readfile} {
   set world(-1,description) ""
   set world(-1,loginStr) {connect %s %s}
   set world(-1,loginDelay) 1.5
-  set world(-1,type) 1 ;# 0 = MUD, 1 = MUSH
+  set world(-1,type) "MUSH"
   set world(-1,telnet) 1
   set world(-1,unicode) -1
   set world(-1,groups) [list]
@@ -175,11 +175,14 @@ proc ::potato::setPrefs {readfile} {
        # X11
        set misc(tileTheme) alt
      }
+  set defaultTheme $misc(tileTheme)
 
   if { $readfile } {
        array set prefFlags [prefFlags]
        if { ![catch {source $path(preffile)} retval] } {
-            managePrefVersion $retval
+            set retval [split $retval .]
+            managePrefVersion [lindex $retval 0]
+            manageWorldVersion -1 [lindex $retval 1]
           }
      }
 
@@ -187,7 +190,11 @@ proc ::potato::setPrefs {readfile} {
   # a config file is copied from Windows or MacOS to another platform
   # (where 'winnative' or 'aqua' won't be available any more).
   if { ![catch {set styles [::ttk::style theme names]}] && $misc(tileTheme) ni $styles } {
-       set misc(tileTheme) [lindex $styles 0]
+       if { $defaultTheme in $styles } {
+            set misc(tileTheme) $defaultTheme;# use what should be a native look, if the user-chosen theme is unavailable
+          } else {
+            set misc(tileTheme) [lindex $styles 0];# default to the first available theme, let user configure later
+          }
      }
 
   if { ![info exists world(-1,top,font,created)] } {
@@ -241,18 +248,17 @@ proc ::potato::savePrefs {} {
   }
 
   puts $fid "\n"
-  puts $fid [list return [prefFlags 1]]
+  puts $fid [list return "[prefFlags 1].[worldFlags 1]"]
   close $fid
 
 };# ::potato::savePrefs
 
 #: proc ::potato::managePrefVersion
 #: arg version The version of the pref file, or an empty string if none was present (ie, the pref file pre-dates versions)
-#: desc Prefs were loaded from a version $version pref  file; make any changes necessary to bring it up to date with a current pref file. NOTE: This manages the default world (-1) as well, manageWorldVersion is NOT used for that.
+#: desc Prefs were loaded from a version $version pref  file; make any changes necessary to bring it up to date with a current pref file. NOTE: Does not manage "world -1", the default world settings, as they're generally identical to normal world settings
 #: return nothing
 proc ::potato::managePrefVersion {version} {
   variable misc;
-  variable world;
 
   array set pf [prefFlags];# array of all current pref flags
 
@@ -304,7 +310,7 @@ proc ::potato::loadWorlds {} {
 #: proc ::potato::manageWorldVersion
 #: arg w world id
 #: arg version The version of the world file, or an empty string if none was present (ie, the world file pre-dates versions)
-#: desc World $w was loaded from a version $version world file; make any changes necessary to bring it up to date with a current world file. NOTE: This does NOT manage the default world (-1), managePrefVersion is used for that.
+#: desc World $w was loaded from a version $version world file; make any changes necessary to bring it up to date with a current world file.
 #: return nothing
 proc ::potato::manageWorldVersion {w version} {
   variable world;
@@ -313,6 +319,10 @@ proc ::potato::manageWorldVersion {w version} {
 
   if { ![string is integer -strict $version] } {
        set version 0
+     }
+
+  if { ! ($version & $wf(verbose_mu_type)) } {
+       set world($w,type) [lindex [list MUD MUSH] $world($w,type)]
      }
 
   # Example:
@@ -432,6 +442,7 @@ proc ::potato::saveWorlds {} {
 proc ::potato::worldFlags {{total 0}} {
 
   set f(has_world_flags) 1    ;# world file uses flags
+  set f(verbose_mu_type) 2    ;# Uses "MUD" and "MUSH" (not 0 and 1) for world($w,type)
 
   if { !$total } {
        return [array get f];
@@ -4577,7 +4588,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
      }
   toplevel $win
   if { $w == -1 } {
-       wm title $win "Global Configuration Options for $potato(name)";
+       wm title $win "Program Configuration for $potato(name)";
      } else {
        wm title $win "Configuration Options for '$world($w,name)'"
      }
@@ -4681,19 +4692,10 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
 
   pack [::ttk::separator $frame.sep3 -orient horizontal] -fill x -padx 20 -pady 5
 
-  pack [set mainsub [::ttk::frame $frame.btm]] -side top -pady 5 -anchor nw -fill x
-  pack [set subsub [::ttk::frame $mainsub.left]] -side left -fill x
-  pack [set sub [::ttk::labelframe $subsub.type -text "MU* Type" -relief groove -borderwidth 2]] \
-         -side top -pady 5 -anchor center
-  pack [::ttk::frame $sub.mush] -side top -pady 2
-  pack [::ttk::radiobutton $sub.mush.rb -variable ::potato::worldconfig($w,type) -value 1] -side left
-  pack [::ttk::label $sub.mush.label -text "MUSH" -width 5 -justify left -anchor w] -side left
-  bind $sub.mush.label <1> [list $sub.mush.rb invoke]
-  pack [::ttk::frame $sub.mud] -side top -pady 2
-  pack [::ttk::radiobutton $sub.mud.rb -variable ::potato::worldconfig($w,type) -value 0] -side left
-  pack [::ttk::label $sub.mud.label -text "MUD" -width 5 -justify left -anchor w] -side left
-  bind $sub.mud.label <1> [list $sub.mud.rb invoke]
-
+  pack [set sub [::ttk::frame $frame.mushType]] -side top -pady 5 -anchor nw
+  pack [::ttk::label $sub.label -text "MU* Type:" -width 17 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::combobox $sub.cb -textvariable ::potato::worldconfig($w,type) \
+             -values [list MUD MUSH] -width 20 -state readonly] -side left -padx 3
 
   # Connection page
   set frame [configureFrame $canvas "Connection Settings"]
@@ -4713,20 +4715,12 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [spinbox $sub.spin -textvariable ::potato::worldconfig($w,autoreconnect,time) -from 0 -to 3600 \
              -validate all -validatecommand {string is integer %P} -width 6] -side left
 
-  pack [set sub [::ttk::labelframe $frame.utf -text "Use UTF-8 (Unicode)" -relief groove -borderwidth 2 -padding 5]] \
-         -side top -pady 5 -anchor nw
-  pack [::ttk::frame $sub.never] -side top -pady 2
-  pack [::ttk::radiobutton $sub.never.rb -variable ::potato::worldconfig($w,unicode) -value 0] -side left
-  pack [::ttk::label $sub.never.label -text "Never" -width 15 -justify left -anchor w] -side left
-  bind $sub.never.label <1> [list $sub.never.rb invoke]
-  pack [::ttk::frame $sub.sometimes] -side top -pady 2
-  pack [::ttk::radiobutton $sub.sometimes.rb -variable ::potato::worldconfig($w,unicode) -value "-1"] -side left
-  pack [::ttk::label $sub.sometimes.label -text "When Available" -width 15 -justify left -anchor w] -side left
-  bind $sub.sometimes.label <1> [list $sub.sometimes.rb invoke]
-  pack [::ttk::frame $sub.always] -side top -pady 2
-  pack [::ttk::radiobutton $sub.always.rb -variable ::potato::worldconfig($w,unicode) -value 1] -side left
-  pack [::ttk::label $sub.always.label -text "Always" -width 15 -justify left -anchor w] -side left
-  bind $sub.always.label <1> [list $sub.always.rb invoke]
+  pack [set sub [::ttk::frame $frame.utf]] -side top -pady 5 -anchor nw
+  pack [::ttk::label $sub.label -text "Use UTF-8 (Unicode):" -width 35 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::combobox $sub.cb -textvariable ::potato::worldconfig($w,unicode) \
+             -values [list "Never" "When Available" "Always"] -width 20 -state readonly] -side left -padx 3
+  array set unicode [list -1 "When Available" 0 "Never" 1 "Always"]
+  set worldconfig($w,unicode) $unicode($worldconfig($w,unicode))
 
   pack [set sub [::ttk::frame $frame.loginStr]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text "Login Format:" -width 35  -justify left -anchor w] -side left -padx 3
@@ -5041,17 +5035,21 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
                           -onvalue 1 -offvalue 0] -side left
        set potato::worldconfig(MISC,toggleShowMainWindow) $misc(toggleShowMainWindow)
 
+       pack [set sub [::ttk::frame $frame.externalRequest]] -side top -pady 5 -anchor nw
+       pack [::ttk::label $sub.l -text "External Requests:" -width $lW -anchor w -justify left] -side left
+       pack [::ttk::combobox $sub.cb -textvariable ::potato::worldconfig(MISC,outsideRequestMethod) \
+                        -values [list "Quick Connect" "Use World Settings" "Prompt"] -width 20 -state readonly] \
+                        -side left -padx 3
+       set potato::worldconfig(MISC,outsideRequestMethod) \
+              [lindex [list "Quick Connect" "Use World Settings" "Prompt"] $misc(outsideRequestMethod)]
 
-       pack [set sub [::ttk::labelframe $frame.outsideRequest -text "External Requests:" \
-                   -labelanchor nw -padding 3]] -side top -pady 5 -anchor nw
-       pack [::ttk::radiobutton $sub.rb0 -variable ::potato::worldconfig(MISC,outsideRequestMethod) \
-                   -value 0 -text "Quick Connect"] -side top -anchor w
-       pack [::ttk::radiobutton $sub.rb1 -variable ::potato::worldconfig(MISC,outsideRequestMethod) \
-                   -value 1 -text "Use World Settings"] -side top -anchor w
-       pack [::ttk::radiobutton $sub.rb2 -variable ::potato::worldconfig(MISC,outsideRequestMethod) \
-                   -value 2 -text "Prompt"] -side top -anchor w
-       set potato::worldconfig(MISC,outsideRequestMethod) $misc(outsideRequestMethod)
-
+       if { ![catch {::ttk::style theme names} styles] } {
+            pack [set sub [::ttk::frame $frame.tileTheme]] -side top -pady 5 -anchor nw
+            pack [::ttk::label $sub.l -text "Widget Theme:" -width $lW -anchor w -justify left] -side left
+            pack [::ttk::combobox $sub.cb -textvariable ::potato::worldconfig(MISC,tileTheme) \
+                        -values $styles -width 20 -state readonly] -side left -padx 3
+            set potato::worldconfig(MISC,tileTheme) $misc(tileTheme)
+          }
      }
 
 
@@ -5591,7 +5589,12 @@ proc ::potato::configureWorldCommit {w win} {
          lappend newTimers $timerNext
        }
      }
-            
+
+  # Set Combobox values correctly, and hope someone changes the ttk::combobox eventually so that it can
+  # use different display/value strings.
+  array set unicode [list "When Available" -1 "Never" 0 "Always" 1]
+  set worldconfig($w,unicode) $unicode($worldconfig($w,unicode))
+
   array set world [array get worldconfig $w,*]
   set world($w,notes) $notes
   array unset worldconfig $w,*
@@ -5619,6 +5622,7 @@ proc ::potato::configureWorldCommit {w win} {
         }
   }
 
+  # Configure the fonts
   foreach where [list top bottom] {
      if { ![catch {font actual $fonts($w,$where,font)} ACKFOO] } {
           set world($w,$where,font) $fonts($w,$where,font)
@@ -5659,6 +5663,8 @@ proc ::potato::configureWorldCommit {w win} {
   # For global settings, update the misc (non-world) settings
   if { $w == -1 } {
        set showSysTray $misc(showSysTray)
+       set tileTheme $misc(tileTheme)
+       set MISC(MISC,outsideRequestMethod) [lsearch -exact [list "Quick Connect" "Use World Settings" "Prompt"] $MISC(MISC,outsideRequestMethod)]
        foreach x [array names MISC] {
          set misc([string range $x 5 end]) $MISC($x)
        }
@@ -5666,6 +5672,9 @@ proc ::potato::configureWorldCommit {w win} {
             winicoUnmap
           } elseif { !$showSysTray && $misc(showSysTray) } {
             winicoMap
+          }
+       if { $tileTheme ne $misc(tileTheme) } {
+            setTheme
           }
      }
 
@@ -6066,7 +6075,7 @@ proc ::potato::setTheme {} {
 
   return;
 
-};# return;
+};# ::potato::setTheme
 
 #: proc ::potato::tooltipInit
 #: desc Initialise the vars, widgets, etc, used by tooltips
