@@ -296,6 +296,8 @@ If you have no connections open, you can stop Potato from prompting you when you
 When "Allow Partial Names" is on, Potato will accept abbreviated world names (in, for example, the /connect [/command]), and will connect to the first world which matches the name you give. When the option is off, non-unique abbreviations cannot be used.
 
 "External Requests" are requests for Potato to connect to an address from an outside source (such as on the [???-Command Line Options//command line] or via [???default-client//DDE on Windows]). If the address given matches a site in Potato's address book, there are three things it can do: treat the connection as a [Quick Connection], and use the default settings, connect to the world saved in the Address Book and use it's settings (including login details), or ask you which to do.
+
+"Widget Themes" control the appearance of certain aspects of Potato (such as scrollbars, checkboxes, buttons, etc), including size, colour and shape. On Windows and MacOS these default to native appearances, but several others are available. On Linux, where no specific native look is available, a default look is chosen, but any of the available options may be used.
 -----------------------------
 name:appconfig,misc,clock
 title:Valid Clock Formats
