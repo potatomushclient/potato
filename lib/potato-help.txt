@@ -480,6 +480,7 @@ title:Version 2.0.0b5
   * The scrollbar in the "Configure World" dialog would sometimes be the wrong size to scroll the window.
   * Timers had become completely broken, due to a stupid typo in the last version. Reported by Reaver.
   * "Configure Global Settings" in the Options menu has been renamed to "Configure Program Settings", a more accurate description of what it does.
+  * Searching the output window backwards from the Find dialog did not work correctly.
   * Potato is now built against Tcl/Tk 8.5.7.
 -----------------------------
 name:changes,2.0.0b4

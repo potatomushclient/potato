@@ -631,7 +631,7 @@ proc ::skin::potato::init {} {
   grid rowconfigure $widgets(statusbar) all -weight 1 -uniform status
   grid columnconfigure $widgets(statusbar) all -weight 1 -uniform status
 
-  inputWindows [expr {$::potato::misc(twoInputWindows) + 1}]
+  inputWindows [expr {$::potato::world(-1,twoInputWindows) + 1}]
   showStatusBar
 
   set skin(init) 1
