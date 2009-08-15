@@ -8198,8 +8198,10 @@ proc ::potato::findIn {c str dir regexp case} {
   set switches [list]
   if { $dir } {
        lappend switches -forwards
+       set start "insert+1c"
      } else {
        lappend switches -backwards
+       set start "insert-1c"
      }
   if { $regexp } {
        lappend switches -regexp
@@ -8208,7 +8210,7 @@ proc ::potato::findIn {c str dir regexp case} {
        lappend switches -nocase
      }
 
-  set index [$t search {*}$switches -count count -- $str "insert+1c"]
+  set index [$t search {*}$switches -count count -- $str $start]
   if { $index eq "" } {
        bell -displayof .
        return;
@@ -8217,9 +8219,9 @@ proc ::potato::findIn {c str dir regexp case} {
        $t tag add sel $index "$index + $count chars"
        $t see $index
        if { $dir } {
-            $t mark set insert $index
-          } else {
             $t mark set insert "$index + $count chars"
+          } else {
+            $t mark set insert $index
           }
      }
 
