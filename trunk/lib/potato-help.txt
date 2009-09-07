@@ -460,6 +460,7 @@ title:Version 2.0.0b5
 ''Released ?????? ?? 2009.''
 
   * Closing the program with no worlds saved would raise an error.
+  * Added the first part of FANSI, support for 256 colors. Currently, the additional colors cannot be altered. (This may be removed later and provided as an additional package instead.)
   * The website address, shown in the Helpfiles and used by the "Visit Website" help menu entry, hadn't been updated.
   * Potato mistakently sent a newline after some Telnet subnegotiation commands. Found after reports from Kimiko Muffin and Brazil.
   * When using Unicode/UTF-8 character encoding on MUX, Telnet commands were accidentally encoded as UTF-8, which stopped them working. Many thanks to Brazil for tracking down this issue.
