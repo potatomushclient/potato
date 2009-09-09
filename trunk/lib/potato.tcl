@@ -3682,7 +3682,8 @@ proc ::potato::manageWorldsBtn {type} {
       set ans [tk_messageBox -parent $manageWorlds(toplevel) -title "Delete Group?" \
             -icon question -type yesno -message "Do you really want to delete the group \"$sel\"?"]
       if { $ans eq "yes" } {
-           foreach x [array names world -regexp {^[0-9]+,groups}] {
+           # This must also match -1,groups, hence the "-?"
+           foreach x [array names world -regexp {^-?[0-9]+,groups}] {
               set index [lsearch -exact $world($x) $sel]
               if { $index > -1 } {
                    set world($x) [lreplace $world($x) $index $index]
