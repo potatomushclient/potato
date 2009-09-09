@@ -482,6 +482,7 @@ title:Version 2.0.0b5
   * Timers had become completely broken, due to a stupid typo in the last version. Reported by Reaver.
   * "Configure Global Settings" in the Options menu has been renamed to "Configure Program Settings", a more accurate description of what it does.
   * Searching the output window backwards from the Find dialog did not work correctly.
+  * World Groups in the Manage Worlds window were not deleted properly. Reported by Mercutio.
   * Potato is now built against Tcl/Tk 8.5.7.
 -----------------------------
 name:changes,2.0.0b4
