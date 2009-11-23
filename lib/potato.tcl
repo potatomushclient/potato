@@ -156,6 +156,7 @@ proc ::potato::setPrefs {readfile} {
   set misc(maxSpawns) 20
 
   set misc(showSysTray) 1
+  set misc(minToTray) 0
   set misc(confirmExit) 1
   set misc(clockFormat) "%d/%m/%Y  -  %T"
   set misc(browserCmd) ""
@@ -5042,6 +5043,12 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
                           -onvalue 1 -offvalue 0] -side left
        set potato::worldconfig(MISC,showSysTray) $misc(showSysTray)
 
+       pack [set sub [::ttk::frame $frame.minToTray]] -side top -pady 5 -anchor nw
+       pack [::ttk::label $sub.l -text "Minimize to SysTray?" -width $lW -anchor w -justify left] -side left
+       pack [::ttk::checkbutton $sub.c -variable ::potato::worldconfig(MISC,minToTray) \
+                          -onvalue 1 -offvalue 0] -side left
+       set potato::worldconfig(MISC,minToTray) $misc(minToTray)
+
        pack [set sub [::ttk::frame $frame.confirmExit]] -side top -pady 5 -anchor nw
        pack [::ttk::label $sub.l -text "Confirm Exit?" -width $lW -anchor w -justify left] -side left
        pack [::ttk::checkbutton $sub.c -variable ::potato::worldconfig(MISC,confirmExit) \
@@ -5701,6 +5708,9 @@ proc ::potato::configureWorldCommit {w win} {
        if { $tileTheme ne $misc(tileTheme) } {
             setTheme
           }
+       if { [wm state .] == "withdrawn" && (!$misc(minToTray) || !$misc(showSysTray)) } {
+            wm deiconify .
+          }
      }
 
   # Have the skin re-show it, if it's up atm, so the skin reconfigures properly.
@@ -6336,6 +6346,32 @@ proc ::potato::multiscroll {widgets subcmd args} {
   return;
 
 };# ::potato::multiscroll
+
+#: proc ::potato::minimizeToTray {w} {
+#: desc If $w is a toplevel, and we can minimize to tray, and it's minimized, withdraw $w
+#: return nothing
+proc ::potato::minimizeToTray {w} {
+  variable winico;
+  variable misc;
+
+  if { $w ne [winfo toplevel $w] } {
+       return;
+     }
+
+  if { !$winico(loaded) || !$misc(showSysTray) || !$misc(minToTray) } {
+       return;
+     }
+
+  if { [wm state $w] ne "iconic" } {
+       return;
+     }
+
+  # Minimize to tray
+  wm withdraw $w
+
+  return;
+
+};# ::potato::minimizeToTray
 
 #: proc ::potato::setUpWinico
 #: desc Set up the vars used by winico and, if winico is to be used, load the icons, etc. This setup needs doing even when winico isn't loaded (to set vars stating that fact).
@@ -7094,6 +7130,7 @@ proc ::potato::setUpBindings {} {
   set ::tcl_nonwordchars {[^a-zA-Z0-9']}
 
   bind . <FocusIn> [list ::potato::focusIn %W]
+  bind . <Unmap> [list ::potato::minimiseToTray %W]
 
   # bindtags:
   # PotatoOutput displays output from the MUSH, and replaces Text in the bindtags.
