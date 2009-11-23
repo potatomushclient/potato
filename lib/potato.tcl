@@ -7130,7 +7130,7 @@ proc ::potato::setUpBindings {} {
   set ::tcl_nonwordchars {[^a-zA-Z0-9']}
 
   bind . <FocusIn> [list ::potato::focusIn %W]
-  bind . <Unmap> [list ::potato::minimiseToTray %W]
+  bind . <Unmap> [list ::potato::minimizeToTray %W]
 
   # bindtags:
   # PotatoOutput displays output from the MUSH, and replaces Text in the bindtags.
