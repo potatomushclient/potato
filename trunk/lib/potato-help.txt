@@ -457,7 +457,7 @@ Please select a version:
 -----------------------------
 name:changes,2.0.0b5
 title:Version 2.0.0b5
-''Released ?????? ?? 2009.''
+''Released December 6 2009.''
 
   * Closing the program with no worlds saved would raise an error.
   * Added the first part of FANSI, support for 256 colors. Currently, the additional colors cannot be altered. (This may be removed later and provided as an additional package instead.)
