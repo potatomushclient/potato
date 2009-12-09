@@ -40,7 +40,7 @@ proc ::potato::proxy::SOCKS4::start {c hostlist} {
      }
   fconfigure $conn($c,id) -translation binary -eof {} -buffering none
 
-  puts -nonewline $conn($c,id) $base$port$ip$username$host
+  ::potato::ioWrite -nonewline $conn($c,id) $base$port$ip$username$host
   fileevent $conn($c,id) readable [list ::potato::proxy::SOCKS4::callback $c $hostlist]
 
   return;
@@ -65,7 +65,7 @@ proc ::potato::proxy::SOCKS4::callback {c hostlist} {
 
   set w $conn($c,world)
 
-  append state($c) [read $conn($c,id) 1]
+  append state($c) [::potato::ioRead $conn($c,id) 1]
   if { [string length $state($c)] != 8 } {
        return;# not all data read yet
      }

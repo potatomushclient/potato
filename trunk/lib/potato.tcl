@@ -1404,7 +1404,7 @@ proc ::potato::sendRaw {c str telnet} {
                  DEBUG_OUTPUT $c send "$str"
                }
           }
-       set cmd [list puts]
+       set cmd [list ioWrite]
        if { $telnet } {
             lappend cmd "-nonewline"
           }
@@ -1572,6 +1572,7 @@ proc ::potato::createOutputTags {t} {
   $t tag configure weblink;# this tells it it's a webpage link, for binding purposes.
   $t tag configure activeLink;# recolours the link when it's being hovered
   $t tag configure nobacklog;# don't log when doing "log previous output"
+  $t tag bind weblink <ButtonPress-1> [list break]
   $t tag bind weblink <ButtonRelease-1> [list ::potato::doWebLink %W weblink]
   $t tag configure system
   $t tag configure echo
@@ -1782,6 +1783,47 @@ proc ::potato::reconnect {{c ""}} {
 
 };# ::potato::reconnect
 
+#: proc ::potato::ioOpen
+#: arg host host to connect to
+#: arg port port to connect to
+#: desc Called to open a new connection. Wrapper for [socket], to allow later override for ipv6, ssl, etc.
+#: return Socket id for reading/writing
+proc ::potato::ioOpen {host port} {
+
+  return [socket -async $host $port];
+
+};# ::potato::ioOpen
+
+#: proc ::potato::ioClose
+#: arg socket Socket id to close
+#: desc Close a MUSH's socket connection. Wrapper for [close].
+#: return Result of [close]
+proc ::potato::ioClose {socket} {
+
+  return [close $socket];
+
+};# ::potato::ioClose
+
+#: proc ::potato::ioRead
+#: arg args Arguments to pass
+#: desc Read data from a socket connection. Wrapper for [read]
+#: return Data read
+proc ::potato::ioRead {args} {
+
+  return [read {*}$args]
+
+};# ::potato::ioRead
+
+#: proc ::potato::ioWrite
+#: arg args Arguments to pass
+#: desc Write data to a socket connection. Wrapper for [puts]
+#: return Data read
+proc ::potato::ioWrite {args} {
+
+  return [puts {*}$args]
+
+};# ::potato::ioWrite
+
 #: proc ::potato::connect
 #: arg c the connection to connect
 #: arg first is this the first time we've tried to connect here? Affects messages, etc.
@@ -1847,7 +1889,7 @@ proc ::potato::connect {c first {hostlist ""}} {
   skinStatus $c
   update idletasks
 
-  if { [catch {socket -async $host $port} fid] } {
+  if { [catch {::potato::ioOpen $host $port} fid] } {
        outputSystem $c $fid
        disconnect $c 0
        boot_reconnect $c
@@ -2220,7 +2262,7 @@ proc ::potato::disconnect {{c ""} {prompt 1}} {
   catch {fileevent $conn($c,id) writable {}}
   catch {fileevent $conn($c,id) readable {}}  
   uploadEnd $c 1;# cancel any in-progress file upload
-  catch {close $conn($c,id)}
+  catch {::potato::ioClose $conn($c,id)}
   set conn($c,id) ""
   set prevState $conn($c,connected)
   if { $conn($c,connected) == 1 } {
@@ -2273,7 +2315,7 @@ proc ::potato::get_mushage {c} {
        return;
      }
 
-  set disc [catch {read $conn($c,id) 10} text]
+  set disc [catch {::potato::ioRead $conn($c,id) 10} text]
   if { $disc } {
        disconnect $c 0
        boot_reconnect $c
@@ -2465,7 +2507,7 @@ proc ::potato::get_mushageProcess {c line} {
             $t see end
           }
      }
- 
+
   set spawns $conn($c,spawnAll)
   if { !$empty && $eventInfo(matched) && $eventInfo(spawnTo) ne "" } {
        set spawns "$spawns $eventInfo(spawnTo)"
@@ -2477,7 +2519,7 @@ proc ::potato::get_mushageProcess {c line} {
          if { [$x count -chars 1.0 3.0] != 1 } {
               $x insert end "\n" ""
             }
-         $x insert end {*}$inserts
+         $x insert end "" "" {*}$inserts
          if { [llength $urlIndices] } {
               $x tag add link {*}$urlIndices
               $x tag add weblink {*}$urlIndices
