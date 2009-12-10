@@ -1572,7 +1572,6 @@ proc ::potato::createOutputTags {t} {
   $t tag configure weblink;# this tells it it's a webpage link, for binding purposes.
   $t tag configure activeLink;# recolours the link when it's being hovered
   $t tag configure nobacklog;# don't log when doing "log previous output"
-  $t tag bind weblink <ButtonPress-1> [list break]
   $t tag bind weblink <ButtonRelease-1> [list ::potato::doWebLink %W weblink]
   $t tag configure system
   $t tag configure echo
