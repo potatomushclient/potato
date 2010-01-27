@@ -58,7 +58,7 @@ proc ::potato::proxy::SOCKS4::callback {c hostlist} {
   upvar #0 ::potato::world world;
 
   if { [eof $conn($c,id)] } {
-       ::potato::connectVerifyProxyFail $c SOCKS4 $hostlist "Connection closed by proxy server."
+       ::potato::connectVerifyProxyFail $c SOCKS4 $hostlist [::potato::T "Connection closed by proxy server."]
        unset state($c)
        return;
      }
@@ -85,7 +85,7 @@ proc ::potato::proxy::SOCKS4::callback {c hostlist} {
      } else {
        set thishost [lindex $hostlist 0]
        set thisport [expr {$thishost eq "host" ? "port" : "port2"}]
-       set msg "Proxy server rejected request for $world($w,$thishost):$world($w,$thisport)"
+       set msg [::potato::T "Proxy server rejected request for %s:%s" $world($w,$thishost) $world($w,$thisport)]
      }
   ::potato::connectVerifyProxyFail $c SOCKS4 $hostlist $msg
   unset state($c)
