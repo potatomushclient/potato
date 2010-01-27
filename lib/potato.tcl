@@ -1332,6 +1332,7 @@ proc ::potato::newConnection {w} {
   set conn($c,twoInputWindows) $world($w,twoInputWindows)
   set conn($c,widgets) [list]
   set conn($c,spawnAll) ""
+  set conn($c,limited) [list]
 
   if { $w == -1 } {
        connZero
@@ -1482,6 +1483,7 @@ proc ::potato::configureTextWidget {c t} {
         $t tag configure ANSI_${short}_${x}h -$long $world($w,ansi,${colour}h)
      }
   }
+  $t tag configure limited -elide 1
   $t tag configure ANSI_fg_bg -foreground $world($w,top,bg)
   $t tag configure system -foreground $world($w,ansi,system)
   $t tag configure echo -foreground $world($w,ansi,echo)
@@ -2408,7 +2410,22 @@ proc ::potato::get_mushageProcess {c line} {
        set eventEnd -1
        set omit 0
      }
-
+  # Check to see if the line is to be omitted due to a "/limit"
+  if { [llength $conn($c,limited)] } {
+       set limit [lindex $conn($c,limited) 3]
+       set case [lindex $conn($c,limited) 2]
+       switch -exact -- [lindex $conn($c,limited) 0] {
+         regexp {set limit [regexp {*}$case $limit $lineNoansi]}
+         literal {set limit [string equal {*}$case $limit $lineNoansi]}
+         glob {set limit [string match {*}$case $limit $lineNoansi]}
+       }
+       set limit [expr {!$limit || [lindex $conn($c,limited) 1]}]
+       if { $limit } {
+            lappend tagList "limited"
+          }
+     } else {
+       set limit 0
+     }
   # Ansi must be parsed, no matter what we're doing with the line (gagging, recolouring, etc).
   # If nothing else, any ansi tags it leaves open should still affect the next line of text to come.
 
@@ -2489,7 +2506,7 @@ proc ::potato::get_mushageProcess {c line} {
   set newActStr "--------- New Activity ---------"
   set t $conn($c,textWidget)
   set aE [atEnd $t]
-  if { !$empty && !$omit && $showNewAct } {
+  if { !$empty && !$omit && !$limit && $showNewAct } {
        if { $world($w,act,clearOldNewActNotices) && [llength [$t tag nextrange newact 1.0]] } {
             $t delete {*}[$t tag ranges newact]
           }
@@ -2497,7 +2514,7 @@ proc ::potato::get_mushageProcess {c line} {
      }
  
   if { !$empty && !$omit } {
-       $t insert end "\n" "" {*}$inserts
+       $t insert end "\n" [lindex [list "" limited] $limit] {*}$inserts
        if { [llength $urlIndices] } {
             $t tag add link {*}$urlIndices
             $t tag add weblink {*}$urlIndices
@@ -9201,6 +9218,104 @@ proc ::potato::slash_cmd_delspawn {c full str} {
   return;
 
 };# ::potato::slash_cmd_delspawn
+
+#: proc ::potato::slash_cmd_limit
+#: arg c connection id
+#: arg full was the command name typed in full?
+#: arg str the pattern to filter by, possibly with leading args
+#: desc Filter the contents of the output window for connection $c
+#: return nothing
+proc ::potato::slash_cmd_limit {c full str} {
+  variable conn;
+
+  if { ![info exists conn($c,textWidget)] || ![winfo exists $conn($c,textWidget)]} {
+       bell -displayof .
+       return;
+  }
+  set t $conn($c,textWidget)
+  $t tag remove "limited" 1.0 end
+  set conn($c,limited) [list]
+
+  set invert 0
+  set matchType "glob"
+
+  set list [split $str " "]
+
+  # Parse off args
+  set done 0
+  set case 1
+  foreach x $list {
+    if { $done || ![string match "-*" $x] } {
+         break; # not an "-option"
+       }
+    switch -nocase -exact -- $x {
+       -v {set invert 1}
+       -a {# in TF, -a means "lines that have attributes". Whatever that is. Be nice to TF users and ignore it}
+       -msimple -
+       -literal {set matchType literal}
+       -mglob -
+       -glob -
+       -wildcard {set matchType glob}
+       -mregexp -
+       -regexp {set matchType regexp}
+       -nocase {set case 0}
+       -- {set done 1}
+       default {outputSystem $c "Invalid option \"$x\" to /limit" ; return;}
+    }
+    set list [lrange $list 1 end]
+  }
+
+  set str [join $list " "]
+  if { $str eq "" } {
+       return;
+     }
+
+  set case [lindex [list -nocase] $case]
+
+  # OK, do limiting.   
+  for { set i [$t count -lines 1.0 end]} {$i > 0} {incr i -1} {
+    if { "system" in [$t tag names $i.0] } {
+         continue;
+       }
+    set line [$t get $i.0 "$i.0 lineend"]
+    switch -exact -- $matchType {
+      regexp {set caught [catch {regexp {*}$case $str $line} match]}
+      literal {set caught [catch {string equal {*}$case $str $line} match]}
+      glob {set caught [catch {string match {*}$case $str $line} match]}
+    }
+    if { $caught } {
+         outputSystem $c "Invalid $matchType pattern \"$str\": $match"
+         return;
+       }
+    if { !$match || $invert } {
+         $t tag add limited $i.0 "$i.0 lineend+1char"
+       }
+  }
+
+  set conn($c,limited) [list $matchType $invert $case $str]
+
+  return;
+
+};# ::potato::slash_cmd_limit
+
+#: proc ::potato::slash_cmd_unlimit
+#: arg c connection id
+#: arg full was the command name typed in full?
+#: arg str the name of the window to clear
+#: desc Reverse the effects of /limit
+#: return nothing
+proc ::potato::slash_cmd_unlimit {c full str} {
+  variable conn;
+
+  if { [info exists conn($c,textWidget)] && [winfo exists $conn($c,textWidget)] } {
+       $conn($c,textWidget) tag remove limited 1.0 end
+     }
+
+  set conn($c,limited) [list]
+
+  return;
+
+};# ::potato::slash_cmd_unlimit
 
 #: proc ::potato::slash_cmd_cls
 #: arg c connection id
