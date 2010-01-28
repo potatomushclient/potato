@@ -462,6 +462,7 @@ title:Version 2.0.0b6
 ''Released ?????? ?? 2010.''
   * Added /limit and /unlimit, for hiding text which doesn't match a particular pattern from the output window.
   * Began tagging messages to make it possible to translate them. Requested by Stoko.
+  * Fixed bug that caused the window to flash, even when no new text was displayed. Reported by Null.
 -----------------------------
 name:changes,2.0.0b5
 title:Version 2.0.0b5
