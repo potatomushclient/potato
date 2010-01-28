@@ -2259,7 +2259,7 @@ proc ::potato::disconnect {{c ""} {prompt 1}} {
 
   if { $prompt } {
        set ans [tk_messageBox -title $potato(name) -type yesno \
-                         -message [T "Disconnect from %d. %s?" $c $world($w,name)]
+                         -message [T "Disconnect from %d. %s?" $c $world($w,name)]]
        if { $ans ne "yes" } {
             return;
           }
@@ -2384,6 +2384,7 @@ proc ::potato::get_mushageProcess {c line} {
     }
   }
   unset -nocomplain tmp x start end len
+  set insertedAnything 0 ;# we only flash the window if we have
 
   set empty 0
   if { $lineNoansi eq "" && $world($w,ignoreEmpty) } {
@@ -2491,9 +2492,6 @@ proc ::potato::get_mushageProcess {c line} {
        handleAnsiCodes $c 0
      }
 
-  if { !$empty && [focus -displayof .] eq "" } {
-       flash $w
-     }
   set up [up]
   if { !$empty && $world($w,act,newActNotice) && ([focus -displayof .] eq "" || $up != $c) && !$conn($c,idle) } {
        set showNewAct 1
@@ -2517,10 +2515,12 @@ proc ::potato::get_mushageProcess {c line} {
             $t delete {*}[$t tag ranges newact]
           }
        $t insert end "\n$newActStr" [list system center newact]
+       set insertedAnything 1
      }
  
   if { !$empty && !$omit } {
        $t insert end "\n" [lindex [list "" limited] $limit] {*}$inserts
+       set insertedAnything 1
        if { [llength $urlIndices] } {
             $t tag add link {*}$urlIndices
             $t tag add weblink {*}$urlIndices
@@ -2536,6 +2536,7 @@ proc ::potato::get_mushageProcess {c line} {
      }
   if { [string trim $spawns] ne "" } {
        set limit [expr {$world($w,spawnLimit,on) ? $world($w,spawnLimit,to) : 0}]
+       set insertedAnything 1
        foreach x [parseSpawnList $spawns $c] {
          set aE [atEnd $x]
          if { [$x count -chars 1.0 3.0] != 1 } {
@@ -2569,6 +2570,10 @@ proc ::potato::get_mushageProcess {c line} {
             set conn($c,twoInputWindows) 1
             toggleInputWindows $c 0
           }
+     }
+
+  if { $insertedAnything && [focus -displayof .] eq "" } {
+       flash $w
      }
 
   beepNumTimes $beeps
