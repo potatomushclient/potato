@@ -2502,10 +2502,12 @@ proc ::potato::get_mushageProcess {c line} {
        deleteSystemMessage $up actIn$c
        outputSystem $up [T "----- Activity in %d. %s -----" $c $world($w,name)] [list center actIn$c]
      }
-  if { !$empty && $up != $c } {
-       idle $c
-     } elseif { $showNewAct } {
-       set conn($c,idle) 1
+  if { !$empty } {
+       if { $up != $c } {
+            idle $c
+          } elseif { $showNewAct } {
+            set conn($c,idle) 1
+          }
      }
   set newActStr [T "--------- New Activity ---------"]
   set t $conn($c,textWidget)
