@@ -2502,13 +2502,6 @@ proc ::potato::get_mushageProcess {c line} {
        deleteSystemMessage $up actIn$c
        outputSystem $up [T "----- Activity in %d. %s -----" $c $world($w,name)] [list center actIn$c]
      }
-  if { !$empty } {
-       if { $up != $c } {
-            idle $c
-          } elseif { $showNewAct } {
-            set conn($c,idle) 1
-          }
-     }
   set newActStr [T "--------- New Activity ---------"]
   set t $conn($c,textWidget)
   set aE [atEnd $t]
@@ -2574,8 +2567,15 @@ proc ::potato::get_mushageProcess {c line} {
           }
      }
 
-  if { $insertedAnything && [focus -displayof .] eq "" } {
-       flash $w
+  if { $insertedAnything } {
+       if { $up != $c } {
+            idle $c
+          } elseif { $showNewAct } {
+            set conn($c,idle) 1
+          }
+       if { [focus -displayof .] eq "" } {
+            flash $w
+          }
      }
 
   beepNumTimes $beeps
