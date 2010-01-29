@@ -165,7 +165,7 @@ proc ::potato::setPrefs {readfile} {
   set misc(toggleShowMainWindow) 0;# when moving to a conn, show it's main window, even if we last saw a spawn?
 
   # Default locale
-  set misc(locale) "en_us"
+  set misc(locale) "en_gb";# Colour, not Color :)
 
   # Default skin
   set misc(skin) "potato"
@@ -512,7 +512,7 @@ proc ::potato::mailWindow {{c ""}} {
 
   set menu [menu $win.m -tearoff 0]
   $win configure -menu $menu
-  $menu add cascade -menu [set fileMenu [menu $menu.file -tearoff 0]] {*}[menu_label "&File"]
+  $menu add cascade -menu [set fileMenu [menu $menu.file -tearoff 0]] {*}[menu_label [T "&File"]]
 
   pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both
 
@@ -561,7 +561,7 @@ proc ::potato::mailWindow {{c ""}} {
              -command [list ::potato::mailWindowSend $c $win]] -side left -padx 8
   pack [::ttk::button $btns.cancel -text [T "Cancel"] -width 8 -command [list destroy $win]] -side left -padx 8
 
-  $fileMenu add command {*}[menu_label "&Escape Special Characters"] \
+  $fileMenu add command {*}[menu_label [T "&Escape Special Characters"]] \
            -command [format {::potato::textFindAndReplace %s {"%c" %%t %c \\%c %c \\%c %c \\%c %c \\%c %c \\%c %c \\%c %c \\%c %c \\%c %c \\%c \%c \\\%c \%c \\\%c \%c \\\%c}} $textWidget 9 37 37 59 59 91 91 93 93 40 40 41 41 44 44 94 94 36 36 123 123 125 125 92 92]
 
 
@@ -3150,7 +3150,6 @@ proc ::potato::showConn {c {main 1}} {
        bell -displayof .
        return;
      }
-  unidle $c
 
   set prevUp [up]
   if { $prevUp ne "" } {
@@ -4738,9 +4737,9 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
      }
   toplevel $win
   if { $w == -1 } {
-       wm title $win "Program Configuration for $potato(name)";
+       wm title $win [T "Program Configuration for %s" $potato(name)];
      } else {
-       wm title $win "Configuration Options for '$world($w,name)'"
+       wm title $win [T "Configuration Options for '%s'" $world($w,name)]
      }
 
   pack [set inner [::ttk::frame $win.frame]] -side left -expand 1 -fill both -anchor nw
@@ -4771,17 +4770,17 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
 
   pack [::ttk::frame $inner.btm] -side top -expand 0 -fill x
   pack [::ttk::frame $inner.btm.button] -side top -pady 8 -anchor n
-  pack [::ttk::button $inner.btm.button.ok -text "OK" -width 8 -default active \
+  pack [::ttk::button $inner.btm.button.ok -text [T "OK"] -width 8 -default active \
                -command [list ::potato::configureWorldCommit $w $win]] -side left -padx 25 -anchor n
 
-  pack [::ttk::button $inner.btm.button.cancel -text "Cancel" -width 8 \
+  pack [::ttk::button $inner.btm.button.cancel -text [T "Cancel"] -width 8 \
                -command [list destroy $win]] -side left -padx 25 -anchor n
 
   array set worldconfig [array get world $w,*]
   array unset worldconfig $w,events* ;# handled by potato::eventConfig
 
   # Basics page
-  set frame [configureFrame $canvas "Basic Settings"]
+  set frame [configureFrame $canvas [T "Basic Settings"]]
   set confBasics [lindex $frame 0]
   set frame [lindex $frame 1]
   pack [set sub [::ttk::frame $frame.name]] -side top -pady 5 -anchor nw
@@ -4793,25 +4792,25 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,host) -width 50] -side left -padx 3  
 
   pack [set sub [::ttk::frame $frame.port]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text "1st Port:" -width 17 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::label $sub.label -text [T "1st Port:"] -width 17 -justify left -anchor w] -side left -padx 3
   pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,port) -width 50] -side left -padx 3
 
   pack [set sub [::ttk::frame $frame.host2]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text "2nd Address:" -width 17 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::label $sub.label -text [T "2nd Address:"] -width 17 -justify left -anchor w] -side left -padx 3
   pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,host2) -width 50] -side left -padx 3  
 
   pack [set sub [::ttk::frame $frame.port2]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text "2nd Port:" -width 17 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::label $sub.label -text [T "2nd Port:"] -width 17 -justify left -anchor w] -side left -padx 3
   pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,port2) -width 50] -side left -padx 3
 
   pack [::ttk::separator $frame.sep1 -orient horizontal] -fill x -padx 20 -pady 5
 
   pack [set sub [::ttk::frame $frame.charname]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text "Character Name:" -width 17 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::label $sub.label -text [T "Character Name:"] -width 17 -justify left -anchor w] -side left -padx 3
   pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,charName) -width 50] -side left -padx 3
 
   pack [set sub [::ttk::frame $frame.charpass]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text "Character Password:" -width 17 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::label $sub.label -text [T "Character Password:"] -width 17 -justify left -anchor w] -side left -padx 3
   pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,charPass) -width 50 ] -side left -padx 3
   #abc This if{} commented out to avoid an unknown MacOS crash bug.
   #if { [string equal [font actual [$sub.entry cget -font]] [font actual [$sub.entry cget -font] \u25cf]] } {
@@ -4821,70 +4820,70 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   #   }
   $sub.entry configure -show \u25cf
   pack [set sub [::ttk::frame $frame.desc]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text "Description:" -width 17 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::label $sub.label -text [T "Description:"] -width 17 -justify left -anchor w] -side left -padx 3
   pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,desc) -width 50] -side left -padx 3
 
   pack [::ttk::separator $frame.sep2 -orient horizontal] -fill x -padx 20 -pady 5
 
   pack [set sub [::ttk::frame $frame.proxyType]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text "Proxy Type:" -width 17 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::label $sub.label -text [T "Proxy Type:"] -width 17 -justify left -anchor w] -side left -padx 3
   pack [::ttk::combobox $sub.cb -textvariable ::potato::worldconfig($w,proxy) \
              -values [list None SOCKS4] -width 20 -state readonly] -side left -padx 3
 #             -values [list None HTTP SOCKS4 SOCKS5] -width 20 -state readonly] -side left -padx 3
 
   pack [set sub [::ttk::frame $frame.phost]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text "Proxy Host:" -width 17 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::label $sub.label -text [T "Proxy Host:"] -width 17 -justify left -anchor w] -side left -padx 3
   pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,proxy,host) -width 50] -side left -padx 3  
 
   pack [set sub [::ttk::frame $frame.pport]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text "Proxy Port:" -width 17 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::label $sub.label -text [T "Proxy Port:"] -width 17 -justify left -anchor w] -side left -padx 3
   pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,proxy,port) -width 50] -side left -padx 3
 
   pack [::ttk::separator $frame.sep3 -orient horizontal] -fill x -padx 20 -pady 5
 
   pack [set sub [::ttk::frame $frame.mushType]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text "MU* Type:" -width 17 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::label $sub.label -text [T "MU* Type:"] -width 17 -justify left -anchor w] -side left -padx 3
   pack [::ttk::combobox $sub.cb -textvariable ::potato::worldconfig($w,type) \
              -values [list MUD MUSH] -width 20 -state readonly] -side left -padx 3
 
   # Connection page
-  set frame [configureFrame $canvas "Connection Settings"]
+  set frame [configureFrame $canvas T "Connection Settings"]]
   set confConn [lindex $frame 0]
   set frame [lindex $frame 1]
   pack [set sub [::ttk::frame $frame.telnet]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text "Attempt Telnet Negotiation?" -width 35 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::label $sub.label -text [T "Attempt Telnet Negotiation?"] -width 35 -justify left -anchor w] -side left -padx 3
   pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,telnet) -onvalue 1 -offvalue 0] -side left
 
   pack [set sub [::ttk::frame $frame.autorec]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text "Auto Reconnect when booted?" -width 35 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::label $sub.label -text [T "Auto Reconnect when booted?"] -width 35 -justify left -anchor w] -side left -padx 3
   pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,autoreconnect) -onvalue 1 -offvalue 0] -side left
 
   pack [set sub [::ttk::frame $frame.autorecTime]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text "Auto Reconnect after (seconds):"\
+  pack [::ttk::label $sub.label -text [T "Auto Reconnect after (seconds):"] \
              -width 35 -justify left -anchor w] -side left -padx 3
   pack [spinbox $sub.spin -textvariable ::potato::worldconfig($w,autoreconnect,time) -from 0 -to 3600 \
              -validate all -validatecommand {string is integer %P} -width 6] -side left
 
   pack [set sub [::ttk::frame $frame.utf]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text "Use UTF-8 (Unicode):" -width 35 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::label $sub.label -text [T "Use UTF-8 (Unicode):"] -width 35 -justify left -anchor w] -side left -padx 3
   pack [::ttk::combobox $sub.cb -textvariable ::potato::worldconfig($w,unicode) \
              -values [list "Never" "When Available" "Always"] -width 20 -state readonly] -side left -padx 3
   array set unicode [list -1 "When Available" 0 "Never" 1 "Always"]
   set worldconfig($w,unicode) $unicode($worldconfig($w,unicode))
 
   pack [set sub [::ttk::frame $frame.loginStr]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text "Login Format:" -width 35  -justify left -anchor w] -side left -padx 3
+  pack [::ttk::label $sub.label -text [T "Login Format:"] -width 35  -justify left -anchor w] -side left -padx 3
   pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,loginStr) -width 20] -side left -padx 3
 
   pack [set sub [::ttk::frame $frame.loginDelay]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text "Send Login Details after (seconds):"\
+  pack [::ttk::label $sub.label -text [T "Send Login Details after (seconds):"] \
              -width 35 -justify left -anchor w] -side left -padx 3
   pack [spinbox $sub.spin -textvariable ::potato::worldconfig($w,loginDelay) -from 0 -to 60 -increment 0.5 \
              -validate all -validatecommand {string is double %P} -width 6] -side left
 
 
   # Colours/Fonts page
-  set frame [configureFrame $canvas "ANSI, Colours and Fonts"]
+  set frame [configureFrame $canvas [T "ANSI, Colours and Fonts"]]
   set confColours [lindex $frame 0]
   set frame [lindex $frame 1]
   pack [set sub [::ttk::frame $frame.txt]] -side top -pady 5 -expand 1 -fill x
@@ -4909,7 +4908,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   bind $outText <1> [list ::potato::configureText $w Click $outText top,bg]
   bind $inText <1> [list ::potato::configureText $w Click $inText bottom,bg]
 
-  foreach {x y} [list "Normal Colours" "" "Highlight Colours" "h"] {
+  foreach {x y} [list [T "Normal Colours"] "" [T "Highlight Colours"] "h"] {
      $outText insert end "\n   $x:\n      "
      foreach {letter colour} [list N fg R r G g Bl b C c M m Y y Bk x W w] {
         $outText insert end $letter [list change ansi,$colour$y] "    "
@@ -4917,136 +4916,136 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
      }
      $outText insert end "\n"
   }
-  $outText insert end "\n   System, Echo and Link Colours:\n      "
+  $outText insert end "\n   [T "System, Echo and Link Colours"]:\n      "
   foreach {x y} [list Sys ansi,system Echo ansi,echo Link ansi,link] {
      $outText insert end $x [list change $y] "   "
      $outText tag configure $y -foreground $worldconfig($w,$y)
   }
   $outText tag configure ansi,link -underline 1
 
-  $inText insert end "\n   Input Colour: "
-  $inText insert end "Text" [list change bottom,fg]
+  $inText insert end "\n   [T "Input Colour:"] "
+  $inText insert end [T "Text"] [list change bottom,fg]
   $inText tag configure bottom,fg -foreground $worldconfig($w,bottom,fg)
 
   pack [set sub [::ttk::frame $frame.fonts]] -side top -pady 5 -expand 1 -fill x
   pack [::ttk::frame $sub.output] -side left -expand 1 -fill x
-  pack [::ttk::label $sub.output.l -text "Change Output Font" -width 23 -justify left -anchor w] -side left -anchor center 
+  pack [::ttk::label $sub.output.l -text [T "Change Output Font"] -width 23 -justify left -anchor w] -side left -anchor center 
   pack [::ttk::button $sub.output.b -image ::potato::img::dotdotdot -command [list potato::configureFont $w $win $outText top]] -side left -anchor center
   pack [::ttk::frame $sub.input] -side left -expand 1 -fill x
-  pack [::ttk::label $sub.input.l -text "Change Input Font" -width 23 -justify left -anchor w] -side left -anchor center 
+  pack [::ttk::label $sub.input.l -text [T "Change Input Font"] -width 23 -justify left -anchor w] -side left -anchor center 
   pack [::ttk::button $sub.input.b -image ::potato::img::dotdotdot -command [list potato::configureFont $w $win $inText bottom]] -side left -anchor center
 
   pack [set sub [::ttk::frame $frame.boxes1]] -side top -pady 5 -expand 1 -fill x
   pack [::ttk::frame $sub.left] -side left -expand 1 -fill x
-  pack [::ttk::label $sub.left.l -text "Allow ANSI Colours?" -width 23 -anchor w -justify left] -side left -anchor w
+  pack [::ttk::label $sub.left.l -text [T "Allow ANSI Colours?"] -width 23 -anchor w -justify left] -side left -anchor w
   pack [::ttk::checkbutton $sub.left.c -variable potato::worldconfig($w,ansi,colours) -onvalue 1 -offvalue 0] -side left -anchor w
   pack [::ttk::frame $sub.right] -side left -expand 1 -fill x
-  pack [::ttk::label $sub.right.l -text "Allow ANSI Underline?" -width 23 -anchor w -justify left] -side left -anchor w
+  pack [::ttk::label $sub.right.l -text [T "Allow ANSI Underline?"[T  -width 23 -anchor w -justify left] -side left -anchor w
   pack [::ttk::checkbutton $sub.right.c -variable potato::worldconfig($w,ansi,underline) -onvalue 1 -offvalue 0] -side left -anchor w
 
   pack [set sub [::ttk::frame $frame.boxes2]] -side top -pady 5 -expand 1 -fill x
   pack [::ttk::frame $sub.left] -side left -expand 1 -fill x
-  pack [::ttk::label $sub.left.l -text "Allow ANSI Flash?" -width 23 -anchor w -justify left] -side left -anchor w
+  pack [::ttk::label $sub.left.l -text [T "Allow ANSI Flash?"] -width 23 -anchor w -justify left] -side left -anchor w
   pack [::ttk::checkbutton $sub.left.c -variable potato::worldconfig($w,ansi,flash) -onvalue 1 -offvalue 0] -side left -anchor w
   pack [::ttk::frame $sub.right] -side left -expand 1 -fill x
-  pack [::ttk::label $sub.right.l -text "Force ANSI Normal?" -width 23 -anchor w -justify left] -side left -anchor w
+  pack [::ttk::label $sub.right.l -text [T "Force ANSI Normal?"] -width 23 -anchor w -justify left] -side left -anchor w
   pack [::ttk::checkbutton $sub.right.c -variable potato::worldconfig($w,ansi,force-normal) -onvalue 1 -offvalue 0] -side left -anchor w
 
 
   # Display: Misc
-  set frame [configureFrame $canvas "Miscellaneous Display Options"]
+  set frame [configureFrame $canvas [T "Miscellaneous Display Options"]]
   set confDisplayMisc [lindex $frame 0]
   set frame [lindex $frame 1]
 
   pack [set sub [::ttk::frame $frame.wrap]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.l -text "Wrap text at:" -width 20 -anchor w -justify left] -side left
+  pack [::ttk::label $sub.l -text [T "Wrap text at:"] -width 20 -anchor w -justify left] -side left
   pack [spinbox $sub.spin -textvariable ::potato::worldconfig($w,wrap,at) -from 0 -to 200 \
              -validate all -validatecommand {string is integer %P} -width 6] -side left
 
   pack [set sub [::ttk::frame $frame.indent]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.l -text "Indent By:" -width 20 -anchor w -justify left] -side left
+  pack [::ttk::label $sub.l -text [T "Indent By:"] -width 20 -anchor w -justify left] -side left
   pack [spinbox $sub.spin -textvariable ::potato::worldconfig($w,wrap,indent) -from 0 -to 20 \
              -validate all -validatecommand {string is integer %P} -width 6] -side left
 
   pack [set sub [::ttk::frame $frame.echo]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.l -text "Echo Sent Commands?" -width 20 -anchor w -justify left] -side left
+  pack [::ttk::label $sub.l -text [T "Echo Sent Commands?"] -width 20 -anchor w -justify left] -side left
   pack [::ttk::checkbutton $sub.cb -variable potato::worldconfig($w,echo) -onvalue 1 -offvalue 0] -side left
 
   pack [set sub [::ttk::frame $frame.empty]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.l -text "Ignore Empty Lines?" -width 20 -anchor w -justify left] -side left
+  pack [::ttk::label $sub.l -text [T "Ignore Empty Lines?"] -width 20 -anchor w -justify left] -side left
   pack [::ttk::checkbutton $sub.cb -variable potato::worldconfig($w,ignoreEmpty) -onvalue 1 -offvalue 0] -side left
 
   pack [set sub [::ttk::frame $frame.spawnSys]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.l -text "Spawn Sys Messages?" -width 20 -anchor w -justify left] -side left
+  pack [::ttk::label $sub.l -text [T "Spawn Sys Messages?"] -width 20 -anchor w -justify left] -side left
   pack [::ttk::checkbutton $sub.cb -variable potato::worldconfig($w,spawnSystem) -onvalue 1 -offvalue 0] -side left
 
   pack [set sub [::ttk::frame $frame.inputWindows]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.l -text "Two Input Windows?" -width 20 -anchor w -justify left] -side left
+  pack [::ttk::label $sub.l -text [T "Two Input Windows?"] -width 20 -anchor w -justify left] -side left
   pack [::ttk::checkbutton $sub.cb -variable potato::worldconfig($w,twoInputWindows) -onvalue 1 -offvalue 0] -side left
 
   # Activity Settings
-  set frame [configureFrame $canvas "Activity Settings"]
+  set frame [configureFrame $canvas [T "Activity Settings"]]
   set confAct [lindex $frame 0]
   set frame [lindex $frame 1]
 
   pack [set sub [::ttk::frame $frame.flash]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.l -text "Flash Taskbar?" -width 30 -anchor w -justify left] -side left
+  pack [::ttk::label $sub.l -text [T "Flash Taskbar?"] -width 30 -anchor w -justify left] -side left
   pack [::ttk::checkbutton $sub.c -variable ::potato::worldconfig($w,act,flashTaskbar) -onvalue 1 -offvalue 0] -side left
 
   pack [set sub [::ttk::frame $frame.flashSystray]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.l -text "Flash SysTray Icon?" -width 30 -anchor w -justify left] -side left
+  pack [::ttk::label $sub.l -text [T "Flash SysTray Icon?"] -width 30 -anchor w -justify left] -side left
   pack [::ttk::checkbutton $sub.c -variable ::potato::worldconfig($w,act,flashSysTray) -onvalue 1 -offvalue 0] -side left
 
   pack [set sub [::ttk::frame $frame.actInWorld]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.l -text "Show 'Activity in <World>'?" -width 30 -anchor w -justify left] -side left
+  pack [::ttk::label $sub.l -text [T "Show 'Activity in <World>'?"] -width 30 -anchor w -justify left] -side left
   pack [::ttk::checkbutton $sub.c -variable ::potato::worldconfig($w,act,actInWorldNotice) -onvalue 1 -offvalue 0] -side left
 
   pack [set sub [::ttk::frame $frame.newAct]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.l -text "Show 'New Activity'?" -width 30 -anchor w -justify left] -side left
+  pack [::ttk::label $sub.l -text [T "Show 'New Activity'?"] -width 30 -anchor w -justify left] -side left
   pack [::ttk::checkbutton $sub.c -variable ::potato::worldconfig($w,act,newActNotice) -onvalue 1 -offvalue 0] -side left
 
   pack [set sub [::ttk::frame $frame.oldNewAct]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.l -text "Clear Previous 'New Activity'?" -width 30 -anchor w -justify left] -side left
+  pack [::ttk::label $sub.l -text [T "Clear Previous 'New Activity'?"] -width 30 -anchor w -justify left] -side left
   pack [::ttk::checkbutton $sub.c -variable ::potato::worldconfig($w,act,clearOldNewActNotices) -onvalue 1 -offvalue 0] -side left
 
   # Misc
-  set frame [configureFrame $canvas "Miscellaneous Options"]
+  set frame [configureFrame $canvas [T "Miscellaneous Options"]]
   set confMisc [lindex $frame 0]
   set frame [lindex $frame 1]
 
   pack [set sub [::ttk::frame $frame.output]] -side top -pady 5 -anchor nw
   pack [::ttk::frame $sub.output] -side left -anchor nw
-  pack [::ttk::label $sub.output.l -text "Limit Output Lines?" -width 20 -anchor w -justify left] -side left
+  pack [::ttk::label $sub.output.l -text [T "Limit Output Lines?"] -width 20 -anchor w -justify left] -side left
   pack [::ttk::checkbutton $sub.output.cb -variable potato::worldconfig($w,outputLimit,on) -onvalue 1 -offvalue 0] -side left
   pack [::ttk::frame $sub.output-to] -padx 5 -side left
-  pack [::ttk::label $sub.output-to.l -text "To:" -width 5] -side left
+  pack [::ttk::label $sub.output-to.l -text [T "To:"] -width 5] -side left
   pack [spinbox $sub.output-to.spin -textvariable ::potato::worldconfig($w,outputLimit,to) -from 0 -to 5000 \
              -validate all -validatecommand {string is integer %P} -width 6] -side left
 
   pack [set sub [::ttk::frame $frame.spawn]] -side top -pady 5 -anchor nw
   pack [::ttk::frame $sub.spawn] -side left -anchor nw
-  pack [::ttk::label $sub.spawn.l -text "Limit Spawn Lines?" -width 20 -anchor w -justify left] -side left
+  pack [::ttk::label $sub.spawn.l -text [T "Limit Spawn Lines?"] -width 20 -anchor w -justify left] -side left
   pack [::ttk::checkbutton $sub.spawn.cb -variable potato::worldconfig($w,spawnLimit,on) -onvalue 1 -offvalue 0] -side left
   pack [::ttk::frame $sub.spawn-to] -padx 5 -side left
-  pack [::ttk::label $sub.spawn-to.l -text "To:" -width 5] -side left
+  pack [::ttk::label $sub.spawn-to.l -text [T "To:"] -width 5] -side left
   pack [spinbox $sub.spawn-to.spin -textvariable ::potato::worldconfig($w,spawnLimit,to) -from 0 -to 5000 \
              -validate all -validatecommand {string is integer %P} -width 6] -side left
 
   pack [set sub [::ttk::frame $frame.input]] -side top -pady 5 -anchor nw
   pack [::ttk::frame $sub.input] -side left -anchor nw
-  pack [::ttk::label $sub.input.l -text "Limit Input Lines?" -width 20 -anchor w -justify left] -side left
+  pack [::ttk::label $sub.input.l -text [T "Limit Input Lines?"] -width 20 -anchor w -justify left] -side left
   pack [::ttk::checkbutton $sub.input.cb -variable potato::worldconfig($w,inputLimit,on) -onvalue 1 -offvalue 0] -side left
   pack [::ttk::frame $sub.input-to] -padx 5 -side left
-  pack [::ttk::label $sub.input-to.l -text "To:" -width 5] -side left
+  pack [::ttk::label $sub.input-to.l -text [T "To:"] -width 5] -side left
   pack [spinbox $sub.input-to.spin -textvariable ::potato::worldconfig($w,inputLimit,to) -from 0 -to 5000 \
              -validate all -validatecommand {string is integer %P} -width 6] -side left
 
   pack [set sub [::ttk::frame $frame.telnet]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text "Split Input Cmds?" -width 20 -justify left -anchor w] -side left
+  pack [::ttk::label $sub.label -text [T "Split Input Cmds?"] -width 20 -justify left -anchor w] -side left
   pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,splitInputCmds) -onvalue 1 -offvalue 0] -side left
 
   # Timers
-  set frame [configureFrame $canvas "Timers"]
+  set frame [configureFrame $canvas [T "Timers"]]
   set confTimers [lindex $frame 0]
   set frame [lindex $frame 1]
 
@@ -5070,9 +5069,9 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
 
   set worldconfig($w,timer,tree) $mc.tree
   $mc.tree heading #0 -text "E?"
-  $mc.tree heading Every -text "Every"
-  $mc.tree heading Commands -text "Commands"
-  $mc.tree heading Frequency -text "Frequency"
+  $mc.tree heading Every -text [T "Every"]
+  $mc.tree heading Commands -text [T "Commands"]
+  $mc.tree heading Frequency -text [T "Frequency"]
   $mc.tree column #0 -stretch 0 -width 30
   $mc.tree column "Every" -stretch 0 -width 65
   $mc.tree column "Commands" -stretch 1 -width 240
@@ -5094,7 +5093,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   }
 
   # Notes
-  set frame [configureFrame $canvas "Notes"]
+  set frame [configureFrame $canvas [T "Notes"]]
   set confNotes [lindex $frame 0]
   set frame [lindex $frame 1]
 
@@ -5104,7 +5103,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   $frame.txt configure -undo 1
 
   # F-commands
-  set frame [configureFrame $canvas "F-Commands"]
+  set frame [configureFrame $canvas [T "F-Commands"]]
   set confFcmds [lindex $frame 0]
   set frame [lindex $frame 1]
 
@@ -5116,7 +5115,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
 
   # Auto-Sends
   if { $w != -1 } {
-       set frame [configureFrame $canvas "Auto-Sends"]
+       set frame [configureFrame $canvas [T "Auto-Sends"]]
        set confAutoSends [lindex $frame 0]
        set frame [lindex $frame 1]
 
@@ -5145,54 +5144,54 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   if { $w == -1 } {
 
        # Misc Program Settings
-       set frame [configureFrame $canvas "Misc Settings"]
+       set frame [configureFrame $canvas [T "Misc Settings"]]
        set confProgMisc [lindex $frame 0]
        set frame [lindex $frame 1]
 
        set lW 24
 
        pack [set sub [::ttk::frame $frame.browser]] -side top -pady 5 -anchor nw
-       pack [::ttk::label $sub.l -text "Browser Command:" -width $lW -anchor w -justify left] -side left
+       pack [::ttk::label $sub.l -text [T "Browser Command:"] -width $lW -anchor w -justify left] -side left
        pack [::ttk::entry $sub.e -textvariable potato::worldconfig(MISC,browserCmd) -width 25] -side left
        set potato::worldconfig(MISC,browserCmd) $misc(browserCmd)
 
        pack [set sub [::ttk::frame $frame.clock]] -side top -pady 5 -anchor nw
-       pack [::ttk::label $sub.l -text "Clock Format:" -width $lW -anchor w -justify left] -side left
+       pack [::ttk::label $sub.l -text [T "Clock Format:"] -width $lW -anchor w -justify left] -side left
        pack [::ttk::entry $sub.e -textvariable potato::worldconfig(MISC,clockFormat) -width 25] -side left
        set potato::worldconfig(MISC,clockFormat) $misc(clockFormat)
 
        pack [set sub [::ttk::frame $frame.sysTray]] -side top -pady 5 -anchor nw
-       pack [::ttk::label $sub.l -text "Show SysTray Icon?" -width $lW -anchor w -justify left] -side left
+       pack [::ttk::label $sub.l -text [T "Show SysTray Icon?"] -width $lW -anchor w -justify left] -side left
        pack [::ttk::checkbutton $sub.c -variable ::potato::worldconfig(MISC,showSysTray) \
                           -onvalue 1 -offvalue 0] -side left
        set potato::worldconfig(MISC,showSysTray) $misc(showSysTray)
 
        pack [set sub [::ttk::frame $frame.minToTray]] -side top -pady 5 -anchor nw
-       pack [::ttk::label $sub.l -text "Minimize to SysTray?" -width $lW -anchor w -justify left] -side left
+       pack [::ttk::label $sub.l -text [T "Minimize to SysTray?"] -width $lW -anchor w -justify left] -side left
        pack [::ttk::checkbutton $sub.c -variable ::potato::worldconfig(MISC,minToTray) \
                           -onvalue 1 -offvalue 0] -side left
        set potato::worldconfig(MISC,minToTray) $misc(minToTray)
 
        pack [set sub [::ttk::frame $frame.confirmExit]] -side top -pady 5 -anchor nw
-       pack [::ttk::label $sub.l -text "Confirm Exit?" -width $lW -anchor w -justify left] -side left
+       pack [::ttk::label $sub.l -text [T "Confirm Exit?"] -width $lW -anchor w -justify left] -side left
        pack [::ttk::checkbutton $sub.c -variable ::potato::worldconfig(MISC,confirmExit) \
                           -onvalue 1 -offvalue 0] -side left
        set potato::worldconfig(MISC,confirmExit) $misc(confirmExit)
 
        pack [set sub [::ttk::frame $frame.partialName]] -side top -pady 5 -anchor nw
-       pack [::ttk::label $sub.l -text "Allow Partial Names?" -width $lW -anchor w -justify left] -side left
+       pack [::ttk::label $sub.l -text [T "Allow Partial Names?"] -width $lW -anchor w -justify left] -side left
        pack [::ttk::checkbutton $sub.c -variable ::potato::worldconfig(MISC,partialWorldMatch) \
                           -onvalue 1 -offvalue 0] -side left
        set potato::worldconfig(MISC,partialWorldMatch) $misc(partialWorldMatch)
 
        pack [set sub [::ttk::frame $frame.toggleShowMain]] -side top -pady 5 -anchor nw
-       pack [::ttk::label $sub.l -text "Toggle to Main Window?" -width $lW -anchor w -justify left] -side left
+       pack [::ttk::label $sub.l -text [T "Toggle to Main Window?"] -width $lW -anchor w -justify left] -side left
        pack [::ttk::checkbutton $sub.c -variable ::potato::worldconfig(MISC,toggleShowMainWindow) \
                           -onvalue 1 -offvalue 0] -side left
        set potato::worldconfig(MISC,toggleShowMainWindow) $misc(toggleShowMainWindow)
 
        pack [set sub [::ttk::frame $frame.externalRequest]] -side top -pady 5 -anchor nw
-       pack [::ttk::label $sub.l -text "External Requests:" -width $lW -anchor w -justify left] -side left
+       pack [::ttk::label $sub.l -text [T "External Requests:"] -width $lW -anchor w -justify left] -side left
        pack [::ttk::combobox $sub.cb -textvariable ::potato::worldconfig(MISC,outsideRequestMethod) \
                         -values [list "Quick Connect" "Use World Settings" "Prompt"] -width 20 -state readonly] \
                         -side left -padx 3
@@ -5201,7 +5200,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
 
        if { ![catch {::ttk::style theme names} styles] } {
             pack [set sub [::ttk::frame $frame.tileTheme]] -side top -pady 5 -anchor nw
-            pack [::ttk::label $sub.l -text "Widget Theme:" -width $lW -anchor w -justify left] -side left
+            pack [::ttk::label $sub.l -text [T "Widget Theme:"] -width $lW -anchor w -justify left] -side left
             pack [::ttk::combobox $sub.cb -textvariable ::potato::worldconfig(MISC,tileTheme) \
                         -values $styles -width 20 -state readonly] -side left -padx 3
             set potato::worldconfig(MISC,tileTheme) $misc(tileTheme)
@@ -5210,29 +5209,29 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
 
 
   if { $w == -1 } {
-       set root [$tree insert {} end -text "Default World Settings"]
+       set root [$tree insert {} end -text [T "Default World Settings"]]
      } else {
        set root {}
      }
 
-  set treeBasics [$tree insert $root end -text "Basics" -tags $confBasics]
-  set treeConn [$tree insert $root end -text "Connection" -tags $confConn]
-  set treeDisplay [$tree insert $root end -text "Display"]
-  set treeColours [$tree insert $treeDisplay end -text "ANSI, Colours and Fonts" -tags $confColours]
-  set treeAct [$tree insert $root end -text "Activity Settings" -tags $confAct]
-  set treeDisplayMisc [$tree insert $treeDisplay end -text "Miscellaneous" -tags $confDisplayMisc]
-  set treeMisc [$tree insert $root end -text "Miscellaneous" -tags $confMisc]
-  set treeFcmds [$tree insert $root end -text "F-Commands" -tags $confFcmds]
+  set treeBasics [$tree insert $root end -text [T "Basics"] -tags $confBasics]
+  set treeConn [$tree insert $root end -text [T "Connection"] -tags $confConn]
+  set treeDisplay [$tree insert $root end -text [T "Display"]]
+  set treeColours [$tree insert $treeDisplay end -text [T "ANSI, Colours and Fonts"] -tags $confColours]
+  set treeAct [$tree insert $root end -text [T "Activity Settings"] -tags $confAct]
+  set treeDisplayMisc [$tree insert $treeDisplay end -text [T "Miscellaneous"] -tags $confDisplayMisc]
+  set treeMisc [$tree insert $root end -text [T "Miscellaneous"] -tags $confMisc]
+  set treeFcmds [$tree insert $root end -text [T "F-Commands"] -tags $confFcmds]
 
   if { $w == -1  } {
-       set treeNotes [$tree insert $root end -text "Notes" -tags $confNotes]
-       set root [$tree insert {} end -text "Program Settings"]
-       set treeProgMisc [$tree insert $root end -text "Misc Settings" -tags $confProgMisc]
-       set treeTimers [$tree insert $root end -text "Global Timers" -tags $confTimers]
+       set treeNotes [$tree insert $root end -text [T "Notes"] -tags $confNotes]
+       set root [$tree insert {} end -text [T "Program Settings"]]
+       set treeProgMisc [$tree insert $root end -text [T "Misc Settings"] -tags $confProgMisc]
+       set treeTimers [$tree insert $root end -text [T "Global Timers"] -tags $confTimers]
      } else {
-       set treeTimers [$tree insert $root end -text "Timers" -tags $confTimers]
-       set treeAutoSends [$tree insert $root end -text "Auto-Sends" -tag $confAutoSends]
-       set treeNotes [$tree insert $root end -text "Notes" -tags $confNotes]
+       set treeTimers [$tree insert $root end -text [T "Timers"] -tags $confTimers]
+       set treeAutoSends [$tree insert $root end -text [T "Auto-Sends"] -tag $confAutoSends]
+       set treeNotes [$tree insert $root end -text [T "Notes"] -tags $confNotes]
      }
 
   set helplist [list $confBasics basics \
@@ -5341,9 +5340,9 @@ proc ::potato::configureTimerAddEdit {w add win} {
   wm withdraw $win
   if { $add } {
        if { $w == -1 } {
-            wm title $win "Add Global Timer"
+            wm title $win [T "Add Global Timer"]
           } else {
-            wm title $win "Add Timer for $world($w,name)"
+            wm title $win [T "Add Timer for %s" $world($w,name)]
           }
        set worldconfig($w,timer,ae) ""
        set worldconfig($w,timer,ae,enabled) 1
@@ -5355,9 +5354,9 @@ proc ::potato::configureTimerAddEdit {w add win} {
      } else {
        set timerId $worldconfig($w,timer,active)
        if { $w == -1 } {
-            wm title $win "Edit Global Timer"
+            wm title $win [T "Edit Global Timer"]
           } else {
-            wm title $win "Edit Timer for $world($w,name)"
+            wm title $win [T "Edit Timer for %s" $world($w,name)]
           }
        set worldconfig($w,timer,ae) $timerId
        set worldconfig($w,timer,ae,enabled) $worldconfig($w,timer,$timerId,enabled)
@@ -5373,24 +5372,24 @@ proc ::potato::configureTimerAddEdit {w add win} {
   pack [set frame [::ttk::frame $win.frame]] -side left -expand 1 -fill both -anchor nw
 
   pack [::ttk::frame $frame.delay] {*}$styles
-  pack [::ttk::label $frame.delay.l1 -text "After connecting, wait"] -side left -anchor w
+  pack [::ttk::label $frame.delay.l1 -text [T "After connecting, wait"]] -side left -anchor w
   pack [spinbox $frame.delay.sb -from 0 -to 18000 -increment 1 -width 5 -justify right -validate key -validatecommand {string is integer %P} -textvariable potato::worldconfig($w,timer,ae,delay)] -side left -anchor w -padx 5
-  pack [::ttk::label $frame.delay.l2 -text "seconds"] -side left -anchor w
+  pack [::ttk::label $frame.delay.l2 -text [T "seconds"]] -side left -anchor w
 
   pack [::ttk::frame $frame.cmds] {*}$styles -expand 1 -fill both
-  pack [::ttk::label $frame.cmds.l -text "Run the commands:"] -side top -anchor nw
+  pack [::ttk::label $frame.cmds.l -text [T "Run the commands:"]] -side top -anchor nw
   pack [set text [text $frame.cmds.t -height 5 -width 40]] -side top -anchor nw -expand 1 -fill both
   $text insert end [string map [list " \b " "\n"] $worldconfig($w,timer,ae,cmds)]
   bind $text <Tab> [bind PotatoInput <Tab>]
   bind $text <Shift-Tab> [bind PotatoInput <Shift-Tab>]
 
   pack [::ttk::frame $frame.every] {*}$styles
-  pack [::ttk::label $frame.every.l1 -text "And repeat every"] -side left -anchor w
+  pack [::ttk::label $frame.every.l1 -text [T "And repeat every"]] -side left -anchor w
   pack [spinbox $frame.every.sb -from 0 -to 18000 -increment 1 -width 5 -justify right -validate key -validatecommand {string is integer %P} -textvariable potato::worldconfig($w,timer,ae,every)] -side left -anchor w -padx 5
-  pack [::ttk::label $frame.every.l2 -text "seconds"] -side left -anchor w
+  pack [::ttk::label $frame.every.l2 -text [T "seconds"]] -side left -anchor w
 
   pack [::ttk::frame $frame.howmany] {*}$styles
-  pack [::ttk::label $frame.howmany.l -text "Run:"] -side top -anchor w
+  pack [::ttk::label $frame.howmany.l -text [T "Run:"]] -side top -anchor w
   pack [::ttk::frame $frame.howmany.continuous] -side top -anchor w
   pack [::ttk::radiobutton $frame.howmany.continuous.rb -variable ::potato::worldconfig($w,timer,ae,continuous) \
                    -value 1 -command [list $frame.howmany.count.sb configure -state disabled] \
@@ -5403,20 +5402,20 @@ proc ::potato::configureTimerAddEdit {w add win} {
                         -validate key -validatecommand {string is integer %P} \
                         -textvariable potato::worldconfig($w,timer,ae,count)] \
                         -side left -anchor w -padx 5
-  pack [::ttk::label $frame.howmany.count.l2 -text "Times"] -side left -anchor w
+  pack [::ttk::label $frame.howmany.count.l2 -text [T "Times"]] -side left -anchor w
 
   $frame.howmany.count.sb configure -state [expr {$worldconfig($w,timer,ae,continuous) ? "disabled" : "normal"}]
 
   pack [::ttk::frame $frame.enabled] -in $frame.howmany.count -side right;#{*}$styles
-  pack [::ttk::label $frame.enabled.l -text "Enable this timer?"] -side right -anchor w
+  pack [::ttk::label $frame.enabled.l -text [T "Enable this timer?"]] -side right -anchor w
   pack [::ttk::checkbutton $frame.enabled.cb -variable ::potato::worldconfig($w,timer,ae,enabled)] \
                -side right -anchor w
 
   pack [::ttk::frame $frame.buttons] {*}$styles -fill x -pady 10
   pack [::ttk::frame $frame.buttons.ok] -side left -expand 1 -fill x
-  pack [::ttk::button $frame.buttons.ok.btn -text "OK" -width 8 -default active -command [list potato::configureTimerSave $w $text]] -side right -padx 8 -anchor e
+  pack [::ttk::button $frame.buttons.ok.btn -text [T "OK"] -width 8 -default active -command [list potato::configureTimerSave $w $text]] -side right -padx 8 -anchor e
   pack [::ttk::frame $frame.buttons.cancel] -side left -expand 1 -fill x
-  pack [::ttk::button $frame.buttons.cancel.btn -text "Cancel" -width 8 -command [list destroy $win]] -side left -padx 8 -anchor w
+  pack [::ttk::button $frame.buttons.cancel.btn -text [T "Cancel"] -width 8 -command [list destroy $win]] -side left -padx 8 -anchor w
   
   bind $win <Escape> [list $frame.buttons.cancel.btn invoke]
   bind $win <Destroy> [list array unset potato::worldconfig $w,timer,ae,*]
@@ -5544,9 +5543,9 @@ proc ::potato::configureTimerShowRow {w timer} {
        $worldconfig($w,timer,parents-enabled).t$timer configure -image ""
      }
   if { $worldconfig($w,timer,$timer,continuous) } {
-       $worldconfig($w,timer,parents-freq).t$timer configure -text "Continuous"
+       $worldconfig($w,timer,parents-freq).t$timer configure -text [T "Continuous"]
      } else {
-       $worldconfig($w,timer,parents-freq).t$timer configure -text "$worldconfig($w,timer,$timer,count) Times"
+       $worldconfig($w,timer,parents-freq).t$timer configure -text [T "%d Times" $worldconfig($w,timer,$timer,count)]
      }
   $worldconfig($w,timer,parents-every).t$timer configure -text [timeFmt $worldconfig($w,timer,$timer,every) 0]
   $worldconfig($w,timer,parents-every).t$timer configure -text [timeFmt $worldconfig($w,timer,$timer,every) 0] 
@@ -5597,14 +5596,22 @@ proc ::potato::configureFont {w parent text where} {
   variable world;
 
   if { $where eq "top" } {
-       set where2 "Output"
+       set where2 [T "Output"]
      } else {
-       set where2 "Input"
+       set where2 [T "Input"]
      }
   if { $w == -1 } {
-       set title "Choose Default $where2 Font"
+       if { $where eq "top" } {
+            set title [T "Choose Default Output Font"]
+          } else {
+            set title [T "Choose Default Input Font"]
+          }
      } else {
-       set title "Choose $where2 Font for $world($w,name)"
+       if { $where eq "top" } {
+            set title [T "Choose Output Font for %s" $world($w,name)]
+          } else {
+            set title [T "Choose Input Font for %s" $world($w,name)]
+          }
      }
   set new [::font::choose $parent ${parent}_subToplevel_font-$where [$text cget -font] $title]
   if { $new eq "" } {
@@ -5661,9 +5668,9 @@ proc ::potato::configureText {w event text {colour ""}} {
                                    ansi,link "Link" \
                                ];# array set titleColours
        if { [info exists titleColours($colour)] } {
-            set title "Choose $titleColours($colour) Colour"
+            set title [T "Choose %s Colour" $titleColours($colour)]
           } else {
-            set title "Choose Colour"
+            set title [T "Choose Colour"]
           }
 
        set newcol [tk_chooseColor -title $title -parent $text -initialcolor $worldconfig($w,$colour)]
@@ -6069,8 +6076,7 @@ proc ::potato::statsFormat {secs} {
   #set m [expr {($secs % 86400) % 3600) / 60}]
   set m [expr {($secs % 3600) / 60}]
 
-  return "${h}h ${m}m";
-  #return [format "%02d:%02d" $h $m];
+  return [T "%dh %dm" $h $m];
 
 };# ::potato::statsFormat
 
@@ -6223,19 +6229,16 @@ proc ::potato::i18nPotato {} {
 
   if { [catch {package require msgcat 1.4.2} err] } {
        # We should probably log this somewhere #abc
-puts "No msgcat"
        return;
      }
 
   # Set our preferred locale
   ::msgcat::mclocale $misc(locale)
-puts "Set locale to $misc(locale)"
 
   # Load translation files. We do this in two steps:
   # 1) Load *.ptf files using [::potato::loadTranslationFile]. These are just message catalogues.
   # 2) Use ::msgcat::mcload, which loads *.msg files containing Tcl code for translations
   foreach x [glob -nocomplain -dir $path(i18n) -- *.ptf] {
-puts "Trying to load $x"
     loadTranslationFile $x
   }
   ::msgcat::mcload $path(i18n)
@@ -6263,45 +6266,36 @@ proc ::potato::loadTranslationFile {file} {
 
   if { [catch {open $file r} fid] } {
        # Should probably report this somewhere. #abc
-puts "Can't open $file: $fid"
        return;
      }
 
   if { [catch {gets $fid line} count] || $count < 0 } {
-puts "faled to read"
        return;
      }
 
   if { ![string match "LOCALE: *" $line] } {
        # Malformed translation file
-puts "no LOCALE: line - $line"
        return;
      }
 
   set locale [string trim [string range $line 8 end]]
   if { $locale eq "" } {
-puts "empty locale"
        return;
      }
-puts "Locale for this file is: $locale"
   set i 0
   set msg ""
   while { ![catch {gets $fid line} count] && $count >= 0 } {
     if { [string trim $line] eq "" || [string range $line 0 0] eq "#" } {
-puts "skipping $line"
          continue;
        }
     if { $i } {
          set i 0;
          if { $line eq "-" } {
-puts "don't translate '$msg'"
               continue; # do not translate
             } else {
-puts "translating '$msg' to '$line' in '$locale'"
               puts "MsgCat Say: [::msgcat::mcset $locale $msg $line] for '$msg'"
             }
        } else {
-puts "got msg '$line' to translate"
          set msg $line
          set i 1
        }
@@ -6526,7 +6520,7 @@ proc ::potato::showStats {} {
   destroy $win;# if it exists, destroy it; we'll remake it with up-to-date stats
 
   toplevel $win
-  wm title $win "Connection Statistics"
+  wm title $win [T "Connection Statistics"]
   wm withdraw $win
 
   set sb $win.ysb
@@ -6629,11 +6623,11 @@ proc ::potato::setUpWinico {} {
 
   set winico(menu) [menu .winico -tearoff 0]
 
-  $winico(menu) add command -label "Restore" -command ::potato::winicoRestore
+  $winico(menu) add command -label [T "Restore"] -command ::potato::winicoRestore
   $winico(menu) add separator
-  $winico(menu) add command -label "Hide Icon" -command ::potato::winicoHideIcon
+  $winico(menu) add command -label [T "Hide Icon"] -command ::potato::winicoHideIcon
   $winico(menu) add separator
-  $winico(menu) add command -label "Exit" -command ::potato::chk_exit
+  $winico(menu) add command -label [T "Exit"] -command ::potato::chk_exit
 
   set winico(pos) 0
   set winico(loaded) 1
@@ -6829,11 +6823,11 @@ proc ::potato::history {{c ""}} {
   toplevel $win
   registerWindow $c $win
   wm withdraw $win
-  wm title $win "Input History for $c. [potato::connInfo $c name]"
+  wm title $win [T "Input History for %d. %s" $c [connInfo $c name]]
 
   pack [set frame [::ttk::frame $win.frame]] -side left -expand 1 -fill both -anchor nw
 
-  set text "Select a command and press 1 to place it in the top input window, 2 to place it in the lower input window, or 3 to send it directly to the MU*. Press 4 to copy it to the clipboard. Press escape to close the window."
+  set text [T "Select a command and press 1 to place it in the top input window, 2 to place it in the lower input window, or 3 to send it directly to the MU*. Press 4 to copy it to the clipboard. Press escape to close the window."]
   ::ttk::label $frame.label -text $text -wraplength 350
   pack $frame.label -side top -pady 5 -padx 10 -fill x
 
@@ -6842,8 +6836,8 @@ proc ::potato::history {{c ""}} {
   set tree [::ttk::treeview $frame.cmds.lb -height 15 -show headings -selectmode browse \
           -yscrollcommand [list $frame.cmds.sby set] -xscrollcommand [list $frame.cmds.sbx set] \
           -columns [list ID Command]]
-  $tree heading ID -text "ID " -anchor e
-  $tree heading Command -text "Command"
+  $tree heading ID -text [T "ID "] -anchor e
+  $tree heading Command -text [T "Command"]
   $tree column ID -anchor e -stretch 0 -width 25
   $tree column Command -anchor w -stretch 1
   foreach x $conn($c,inputHistory) {
@@ -6865,13 +6859,13 @@ proc ::potato::history {{c ""}} {
   bindtags $filter [lreplace $bindtags 0 1 [lindex $bindtags 1] [lindex $bindtags 0]]
 
   pack [::ttk::frame $frame.btns1] -side top -anchor nw -expand 0 -fill x -pady 3
-  foreach {x y z} [list 1 top "Top Input" 2 btm "Bottom Input" 3 send "Send to MUSH"] {
+  foreach {x y z} [list 1 top [T "Top Input"] 2 btm [T "Bottom Input"] 3 send [T "Send to MUSH"]] {
       pack [::ttk::frame $frame.btns1.$y] -side left -expand 1 -fill x -anchor n
       pack [set btn($y) [::ttk::button $frame.btns1.$y.btn -text $z \
                 -command [list ::potato::historySub $c $win $tree $x]]] -side top -anchor center
   }
   pack [::ttk::frame $frame.btns2] -side top -anchor nw -expand 0 -fill x -pady 3
-  foreach {x y z} [list 4 copy "Copy to Clipboard" 5 close "Close"] {
+  foreach {x y z} [list 4 copy [T "Copy to Clipboard"] 5 close [T "Close"]] {
       pack [::ttk::frame $frame.btns2.$y] -side left -expand 1 -fill x -anchor n
       pack [set btn($y) [::ttk::button $frame.btns2.$y.btn -text $z \
                 -command [list ::potato::historySub $c $win $tree $x]]] -side top -anchor center
@@ -7069,9 +7063,9 @@ proc ::potato::chk_exit {{prompt 0}} {
        
   if { $ask } {
        if { $connected } {
-            set msg "Are you sure you want to quit? There are still open connections!"
+            set msg [T "Are you sure you want to quit? There are still open connections!"]
           } else {
-            set msg "Are you sure you want to quit?"
+            set msg [T "Are you sure you want to quit?"]
           }
        set ans [tk_messageBox -title $potato(name) -type yesno -message $msg]
        if { $ans ne "yes" } {
@@ -7173,7 +7167,7 @@ proc ::potato::build_menu_file {m} {
   createMenuTask $m close
   $m add separator
 
-  $m add command {*}[menu_label "&Show Connection Stats"] \
+  $m add command {*}[menu_label [T "&Show Connection Stats"]] \
               -command ::potato::showStats -state $state
   $m add separator
   createMenuTask $m exit
@@ -7272,10 +7266,10 @@ proc ::potato::build_menu_help {m} {
 
   createMenuTask $m help
   $m add separator
-  $m add command {*}[menu_label "Tcl Code &Console"] -command [list console show]
+  $m add command {*}[menu_label [T "Tcl Code &Console"]] -command [list console show]
   $m add separator
   createMenuTask $m about
-  $m add command {*}[menu_label "Visit Potato &Website"] -command [list ::potato::launchWebPage $::potato::potato(webpage)]
+  $m add command {*}[menu_label [T "Visit Potato &Website"]] -command [list ::potato::launchWebPage $::potato::potato(webpage)]
 
   return;
 
@@ -7297,17 +7291,17 @@ proc ::potato::setUpMenu {} {
   set menu(tools,path) [menu .m.tools -tearoff 0 -postcommand [list ::potato::build_menu_tools .m.tools]]
   set menu(help,path) [menu .m.help -tearoff 0 -postcommand [list ::potato::build_menu_help .m.help]]
 
-  .m add cascade -menu .m.file {*}[menu_label "&File"]
+  .m add cascade -menu .m.file {*}[menu_label [T "&File"]]
   set menu(file) [.m index end]
-  .m add cascade -menu .m.view {*}[menu_label "&View"]
+  .m add cascade -menu .m.view {*}[menu_label [T "&View"]]
   set menu(view) [.m index end]
-  .m add cascade -menu .m.log {*}[menu_label "&Logging"]
+  .m add cascade -menu .m.log {*}[menu_label [T "&Logging"]]
   set menu(logging) [.m index end]
-  .m add cascade -menu .m.options {*}[menu_label "&Options"]
+  .m add cascade -menu .m.options {*}[menu_label [T "&Options"]]
   set menu(options) [.m index end]
-  .m add cascade -menu .m.tools {*}[menu_label "&Tools"]
+  .m add cascade -menu .m.tools {*}[menu_label [T "&Tools"]]
   set menu(tools) [.m index end]
-  .m add cascade -menu .m.help {*}[menu_label "&Help"]
+  .m add cascade -menu .m.help {*}[menu_label [T "&Help"]]
   set menu(help) [.m index end]
 
   return;
@@ -7332,15 +7326,15 @@ proc ::potato::inputWindowRightClickMenu {input x y} {
      } else {
        set state disabled
      }
-  $m add command -label "Copy" -accelerator Ctrl+C -underline 0 -command [list tk_textCopy $input] -state $state
-  $m add command -label "Cut" -accelerator Ctrl+X -underline 0 -command [list tk_textCut $input] -state $state
+  $m add command -label {*}[menu_label [T "&Copy"]] -accelerator Ctrl+C -command [list tk_textCopy $input] -state $state
+  $m add command -label {*}[menu_label [T "C&ut"]] -accelerator Ctrl+X -command [list tk_textCut $input] -state $state
 
   if { ![catch {::tk::GetSelection $input CLIPBOARD} txt] && [string length $txt] } {
        set state normal
      } else {
        set state disabled
      }
-  $m add command -label "Paste" -accelerator Ctrl+V -underline 0 -command [list tk_textPaste $input] -state $state
+  $m add command -label {*}[menu_label [T "&Paste"]] -accelerator Ctrl+V -command [list tk_textPaste $input] -state $state
 
   tk_popup $m $x $y
 
@@ -7519,7 +7513,7 @@ proc ::potato::keyboardShortcutWin {} {
        return;
      }
   toplevel $win
-  wm title $win "Keyboard Shortcuts"
+  wm title $win [T "Keyboard Shortcuts"]
 
   # The "Mac" key symbol is [format %c 8984]
 
@@ -7537,7 +7531,7 @@ proc ::potato::keyboardShortcutWin {} {
   set keyShortsTmp(key,alt) 0
   set keyShortsTmp(key,command) 0;# The "Mac" key
 
-  pack [::ttk::label $win.l -text "Select a command, then click a button to edit it's binding"] \
+  pack [::ttk::label $win.l -text [T "Select a command, then click a button to edit it's binding"]] \
           -side top -padx 4 -pady 8
 
   pack [::ttk::frame $win.tree] -side top -anchor nw -fill both
@@ -7548,8 +7542,8 @@ proc ::potato::keyboardShortcutWin {} {
             -yscrollcommand [list $sbY set]]
   ::ttk::scrollbar $sbX -orient horizontal -command [list $tree xview]
   ::ttk::scrollbar $sbY -orient vertical -command [list $tree yview]
-  $tree heading 0 -text "Command"
-  $tree heading 1 -text "Keyboard Shortcut"
+  $tree heading 0 -text [T "Command"]
+  $tree heading 1 -text [T "Keyboard Shortcut"]
 
   grid $tree $sbY -sticky nsew
   grid $sbX -sticky nswe
@@ -7574,13 +7568,13 @@ proc ::potato::keyboardShortcutWin {} {
   $tree selection set [lindex $allTasks 0 1]
 
   pack [::ttk::frame $win.btns] -side top -pady 8
-  pack [::ttk::button $win.btns.clear -text "Clear" -width 8 \
+  pack [::ttk::button $win.btns.clear -text [T "Clear"] -width 8 \
              -command [list ::potato::keyboardShortcutClear $tree $bindingsWin]] -side left -padx 4
   set subWin .keyShortsInput
-  pack [::ttk::button $win.btns.change -text "Change" -width 8 \
+  pack [::ttk::button $win.btns.change -text [T "Change"] -width 8 \
             -command [list ::potato::keyboardShortcutInput $subWin $win $tree $bindingsWin]] -side left -padx 4
-  pack [::ttk::button $win.btns.save -text "Save" -width 8 -command [list ::potato::keyboardShortcutWinSave $win]] -side left -padx 4
-  pack [::ttk::button $win.btns.close -text "Cancel" -width 8 -command [list destroy $win]] -side left -padx 4
+  pack [::ttk::button $win.btns.save -text [T "Save"] -width 8 -command [list ::potato::keyboardShortcutWinSave $win]] -side left -padx 4
+  pack [::ttk::button $win.btns.close -text [T "Cancel"] -width 8 -command [list destroy $win]] -side left -padx 4
 
 
   bind $win <Destroy> "destroy $subWin"
@@ -7634,8 +7628,8 @@ proc ::potato::keyboardShortcutClear {tree bindingsWin} {
        return;
      }
 
-  set ans [tk_messageBox -parent [winfo toplevel $tree] -icon question -title "Keyboard Shortcut" \
-             -type yesno -message "Do you really want to clear the Keyboard Shortcut for \"[taskLabel $task]\"?"]
+  set ans [tk_messageBox -parent [winfo toplevel $tree] -icon question -title [T "Keyboard Shortcut"] \
+             -type yesno -message [T "Do you really want to clear the Keyboard Shortcut for \"%s\"?" [taskLabel $task]]]
   if { $ans != "yes" } {
        return;
      }
@@ -7668,7 +7662,7 @@ proc ::potato::keyboardShortcutInput {win parent tree bindingsWin} {
   wm transient $win $parent
   set task [$tree selection]
   set taskLabel [taskLabel $task]
-  wm title $win "Keyboard Shortcut for \"$taskLabel\""
+  wm title $win [T "Keyboard Shortcut for \"%s\"" $taskLabel]
 
   bind $win <KeyPress-Shift_L> [list set ::potato::keyShortsTmp(key,shift) 1]
   bind $win <KeyPress-Shift_R> [list set ::potato::keyShortsTmp(key,shift) 1]
@@ -7686,17 +7680,17 @@ proc ::potato::keyboardShortcutInput {win parent tree bindingsWin} {
   bind $win <KeyRelease-Alt_R> [list set ::potato::keyShortsTmp(key,alt) 0]
 
   #abc No bindings for the Mac "Command" key yet.
+  set text [T "Press the desired keyboard shortcut for '%s'.\nWhen the correct shortcut is displayed below, click Accept,\nor click Cancel to keep the current shortcut." $taskLabel]]
+  pack [::ttk::label $win.l -text $text -side top -padx 4 -pady 6
 
-  pack [::ttk::label $win.l -text "Press the desired keyboard shortcut for '$taskLabel'.\nWhen the correct shortcut is displayed below, click Accept,\nor click Cancel to keep the current shortcut."] -side top -padx 4 -pady 6
-
-  pack [set disp [::ttk::label $win.disp -text "<None>"]] -side top -padx 4 -pady 10
+  pack [set disp [::ttk::label $win.disp -text [T "<None>"]]] -side top -padx 4 -pady 10
 
   pack [::ttk::frame $win.btns] -side top
   set cmd {if { [::potato::keyboardShortcutSave %s %s %s %s] } {destroy %s}}
-  pack [::ttk::button $win.btns.accept -text "Accept" -width 8 \
+  pack [::ttk::button $win.btns.accept -text [T "Accept"] -width 8 \
                  -command [format $cmd $task $disp $bindingsWin $tree $win]] \
                  -side left -padx 7
-  pack [::ttk::button $win.btns.cancel -text "Cancel" -width 8 -command [list destroy $win]] -side left -padx 7
+  pack [::ttk::button $win.btns.cancel -text [T "Cancel"] -width 8 -command [list destroy $win]] -side left -padx 7
 
   bind $win <KeyPress> [list ::potato::keyboardShortcutInputProcess $win %K $disp]
 
@@ -7724,10 +7718,9 @@ proc ::potato::keyboardShortcutSave {task disp bindingsWin tree} {
   set keysym [humanToKeysym $userBind]
   set current [bind $bindingsWin "<$keysym>"]
   if { $current ne "" && $current ne $task } {
+       set message [T "The Keyboard Shortcut '%s' is already in use by the task '%s'. Do you want to override it?" $userBind [taskLabel $current]]
        set ans [tk_messageBox -parent [winfo toplevel $disp] \
-                   -title "Keyboard Shortcut" -type yesno -icon question \
-                   -message "The Keyboard Shortcut '$userBind' is already in use by the task '[taskLabel $current]'. \
-                             Do you want to override it?"]
+                   -title [T "Keyboard Shortcut"] -type yesno -icon question -message $message]
         if { $ans ne "yes" } {
              return 0;
            }
@@ -7925,7 +7918,7 @@ proc ::potato::autoConnectWindow {} {
 
   toplevel $win
   wm withdraw $win
-  wm title $win "Potato Auto-Connects"
+  wm title $win [T "Potato Auto-Connects"]
 
   pack [set frame [::ttk::frame $win.frame]] -side left -anchor nw -expand 1 -fill both
 
@@ -7950,9 +7943,9 @@ proc ::potato::autoConnectWindow {} {
          -command [list ::potato::autoConnectWindowAdd]]] -side top -anchor center -pady 4
   pack [set btnRemove [::ttk::button $mid.remove -text "<" \
          -command [list ::potato::autoConnectWindowRemove]]] -side top -anchor center -pady 4
-  pack [set btnUp [::ttk::button $mid.up -text "Up" \
+  pack [set btnUp [::ttk::button $mid.up -text [T "Up"] \
          -command [list ::potato::autoConnectWindowReorder -1]]] -side top -anchor center -pady 4
-  pack [set btnDown [::ttk::button $mid.down -text "Down" \
+  pack [set btnDown [::ttk::button $mid.down -text [T "Down"] \
          -command [list ::potato::autoConnectWindowReorder 1]]] -side top -anchor center -pady 4
 
   set yTree [::ttk::treeview $right.tree -show {} -columns Worlds]
@@ -7965,9 +7958,9 @@ proc ::potato::autoConnectWindow {} {
   grid columnconfigure $right $yTree -weight 1
   bind $yTree <<TreeviewSelect>> [list ::potato::autoConnectWindowSel yTree]
 
-  pack [::ttk::button $btm.save -command ::potato::autoConnectWindowSave -text "Save"] \
+  pack [::ttk::button $btm.save -command ::potato::autoConnectWindowSave -text [T "Save"]] \
           -side left -anchor n -padx 6
-  pack [::ttk::button $btm.cancel -command [list destroy $win] -text "Cancel"] \
+  pack [::ttk::button $btm.cancel -command [list destroy $win] -text [T "Cancel"]] \
           -side left -anchor n -padx 6
 
   set autoConnectWindow(toplevel) $win
@@ -8388,7 +8381,7 @@ proc ::potato::findDialog {{c ""}} {
   toplevel $win
   registerWindow $c $win
   wm withdraw $win
-  wm title $win "Find..."
+  wm title $win [T "Find..."]
   wm resizable $win 0 0
   wm transient $win .
 
@@ -8398,7 +8391,7 @@ proc ::potato::findDialog {{c ""}} {
   pack [::ttk::frame $frame.r] -side right -expand 0 -fill both -pady 5 -padx 3
 
   pack [::ttk::frame $frame.l.top] -side top -padx 3 -fill both
-  ::ttk::label $frame.l.top.l -text "Find:" -width 6 -anchor w -justify left
+  ::ttk::label $frame.l.top.l -text [T "Find:"] -width 6 -anchor w -justify left
   set vcmd {if { [string length %P] } {BTN configure -state normal} else {BTN configure -state disabled} ; return 1}
   set vcmd [string map [list BTN $frame.r.find] $vcmd]
   ::ttk::entry $frame.l.top.e -textvariable ::potato::conn($c,find,str) -width 30 \
@@ -8409,10 +8402,10 @@ proc ::potato::findDialog {{c ""}} {
   pack [::ttk::frame $frame.l.mid] -side top -padx 3 -fill x
   pack [::ttk::frame $frame.l.mid.left] -fill both -side left
 
-  ::ttk::labelframe $frame.l.mid.opt -labelanchor nw -text "Options"
-  ::ttk::checkbutton $frame.l.mid.opt.case -text "Case Sensitive?" \
+  ::ttk::labelframe $frame.l.mid.opt -labelanchor nw -text [T "Options"]
+  ::ttk::checkbutton $frame.l.mid.opt.case -text [T "Case Sensitive?"] \
                   -variable ::potato::conn($c,find,case)
-  ::ttk::checkbutton $frame.l.mid.opt.regexp -text "Regexp Match?" \
+  ::ttk::checkbutton $frame.l.mid.opt.regexp -text [T "Regexp Match?"] \
                   -variable ::potato::conn($c,find,regexp)
   pack $frame.l.mid.opt.case $frame.l.mid.opt.regexp \
                   -side top -anchor nw
@@ -8420,10 +8413,10 @@ proc ::potato::findDialog {{c ""}} {
   set conn($c,find,case) 0
   set conn($c,find,regexp) 0
 
-  ::ttk::labelframe $frame.l.mid.dir -labelanchor nw -text "Direction"
-  ::ttk::radiobutton $frame.l.mid.dir.for -text "Forwards" \
+  ::ttk::labelframe $frame.l.mid.dir -labelanchor nw -text [T "Direction"]
+  ::ttk::radiobutton $frame.l.mid.dir.for -text [T "Forwards"] \
                   -variable ::potato::conn($c,find,dir) -value 1
-  ::ttk::radiobutton $frame.l.mid.dir.back -text "Backwards" \
+  ::ttk::radiobutton $frame.l.mid.dir.back -text [T "Backwards"] \
                   -variable ::potato::conn($c,find,dir) -value 0
   pack $frame.l.mid.dir.for $frame.l.mid.dir.back \
                   -side top -anchor nw
@@ -8435,15 +8428,15 @@ proc ::potato::findDialog {{c ""}} {
                     \$::potato::conn($c,find,regexp) \
                     \$::potato::conn($c,find,case)"
 
-  ::ttk::button $frame.r.find -text "Find Next" -underline 0 \
+  ::ttk::button $frame.r.find -text [T "Find Next"] -underline 0 \
                    -default active -width 11 -state disabled \
                    -command $command
-  ::ttk::button $frame.r.cancel -text "Cancel" -underline 0  -width 11\
+  ::ttk::button $frame.r.cancel -text [T "Cancel"] -underline 0  -width 11\
                      -command [list destroy $win]
   pack $frame.r.find $frame.r.cancel -side top -pady 5 -padx 3
 
-  bind $win <Escape> [list destroy $win]
-  bind $win <Alt-c> [list destroy $win]
+  bind $win <Escape> [list $frame.r.cancel invoke]
+  bind $win <Alt-c> [list $frame.r.cancel invoke]
   bind $win <Alt-f> [list $frame.r.find invoke]
   bind $win <Return> [list $frame.r.find invoke]
 
@@ -8554,12 +8547,12 @@ proc ::potato::setUserVar {c global str} {
   variable conn;
 
   if { ![regexp {^ *(.+?)=(.+)$} $str -> varName value] } {
-       outputSystem $c "Invalid var string"
+       outputSystem $c [T "Invalid var string"]
        return 0;
      }
 
   if { ![regexp {^[a-zA-Z][a-zA-Z0-9_]{1,30}$} $varName] } {
-       outputSystem $c "Invalid var name"
+       outputSystem $c [T "Invalid var name"]
        return 0;
      }
 
@@ -8677,9 +8670,9 @@ proc ::potato::slashConfig {{w ""}} {
        return;
      }
   if { $w == -1 } {
-       set title "Global Custom /commands"
+       set title [T "Global Custom /commands"]
      } else {
-       set title "Custom /commands for $world($w,name)"
+       set title [T "Custom /commands for %s" $world($w,name)]
      }
   toplevel $win
   wm withdraw $win
@@ -8697,9 +8690,10 @@ proc ::potato::slashConfig {{w ""}} {
            -xscrollcommand [list $treeframe.sbX set] -selectmode browse -height 5]
   set sbX [::ttk::scrollbar $treeframe.sbX -orient horizontal -command [list $tree xview]]
   set sbY [::ttk::scrollbar $treeframe.sbY -orient vertical -command [list $tree yview]]
-  foreach x [list Name Pattern Type] {
-    $tree heading $x -text "  $x  "
-  }
+    $tree heading Name -text "  [T Name]  "
+    $tree heading Pattern -text "  [T Pattern]  "
+    $tree heading Type -text "  [T Type]  "
+
   foreach {x y} [list Name 100 Pattern 100 Type 50] {
     $tree column $x -width $y
   }
@@ -8712,17 +8706,17 @@ proc ::potato::slashConfig {{w ""}} {
   pack [::ttk::frame $btns.add] -side left -expand 1 -fill x
   pack [set add [::ttk::button $btns.add.btn -image ::potato::img::event-new \
           -command [list ::potato::slashConfigAdd $w]]] -side top -anchor center
-  tooltip $add "Add /command"
+  tooltip $add [T "Add /command"]
 
   pack [::ttk::frame $btns.edit] -side left -expand 1 -fill x
   pack [set edit [::ttk::button $btns.edit.btn -image ::potato::img::event-edit \
           -command [list ::potato::slashConfigEdit $w]]] -side top -anchor center
-  tooltip $edit "Edit /command"
+  tooltip $edit [T "Edit /command"]
 
   pack [::ttk::frame $btns.delete] -side left -expand 1 -fill x
   pack [set delete [::ttk::button $btns.delete.btn -image ::potato::img::event-delete \
           -command [list ::potato::slashConfigDelete $w]]] -side top -anchor center
-  tooltip $delete "Delete /command"
+  tooltip $delete [T "Delete /command"]
 
   foreach x [list tree sbX sbY add edit delete] {
     set slashConfig($w,win,top,$x) [set $x]
@@ -8734,34 +8728,34 @@ proc ::potato::slashConfig {{w ""}} {
   pack [set bottom [::ttk::frame $frame.bottom]] -side top -expand 1 -fill x -padx 3 -pady 7
 
   pack [set sub [::ttk::frame $bottom.name]] -side top -fill x -padx 4 -pady 3
-  pack [::ttk::label $sub.l -text "/command Name:" -width 18] -side left -padx 3
+  pack [::ttk::label $sub.l -text [T "/command Name:"] -width 18] -side left -padx 3
   pack [set name [::ttk::entry $sub.e -textvariable ::potato::slashConfig($w,name) -width 18]] \
       -side left -fill x -padx 3
   pack [set enabled [::ttk::checkbutton $sub.enabled -variable ::potato::slashConfig($w,enabled) -text "Enabled?" \
              -onvalue 1 -offvalue 0]] -side left -padx 3
 
   pack [set sub [::ttk::frame $bottom.pattern]] -side top -fill x -padx 4 -pady 3
-  pack [::ttk::label $sub.l -text "Argument Pattern:" -width 18] -side left -padx 3
+  pack [::ttk::label $sub.l -text [T "Argument Pattern:"] -width 18] -side left -padx 3
   pack [set pattern [::ttk::entry $sub.e -textvariable ::potato::slashConfig($w,pattern) -width 35]] \
      -side left -fill x -padx 3
 
   pack [set sub [::ttk::frame $bottom.misc]] -side top -fill x -padx 4 -pady 3
-  pack [::ttk::label $sub.l -text "Pattern Type:" -width 18] -side left -padx 3
+  pack [::ttk::label $sub.l -text [T "Pattern Type:"] -width 18] -side left -padx 3
   pack [set patternType [::ttk::combobox $sub.type -textvariable ::potato::slashConfig($w,patternType) \
              -values [list Wildcard Regexp] -width 15 -state readonly]] -side left -padx 3
   pack [set case [::ttk::checkbutton $sub.case -variable ::potato::slashConfig($w,case) -text "Case?" \
              -onvalue 1 -offvalue 0]] -side left -padx 3
 
   pack [set sub [::ttk::frame $bottom.send]] -side top -fill x -padx 4 -pady 3
-  pack [::ttk::label $sub.l -text "Send to MUSH:" -width 18] -side left -padx 3
+  pack [::ttk::label $sub.l -text [T "Send to MUSH:"] -width 18] -side left -padx 3
   pack [set send [::ttk::entry $sub.e -textvariable ::potato::slashConfig($w,send) -width 35]] -side left -padx 3
 
   pack [set btns [::ttk::frame $bottom.btns]] -side top -fill x -padx 4 -pady 3
   pack [set sub [::ttk::frame $btns.save]] -side left -expand 1 -fill x
-  pack [set save [::ttk::button $sub.btn -text "Save" -command [list ::potato::slashConfigSave $w]]]
+  pack [set save [::ttk::button $sub.btn -text [T "Save"] -command [list ::potato::slashConfigSave $w]]]
 
   pack [set sub [::ttk::frame $btns.discard]] -side left -expand 1 -fill x
-  pack [set discard [::ttk::button $sub.btn -text "Discard" -command [list ::potato::slashConfigDiscard $w]]]
+  pack [set discard [::ttk::button $sub.btn -text [T "Discard"] -command [list ::potato::slashConfigDiscard $w]]]
 
   foreach x [list name enabled pattern patternType case send save discard] {
     set slashConfig($w,win,bottom,$x) [set $x]
@@ -8823,20 +8817,20 @@ proc ::potato::slashConfigSave {w} {
   variable slashConfig;
 
   # Command we use for reporting errors here, to avoid repetition
-  set error [list tk_messageBox -icon error -title "Custom /command Config" \
+  set error [list tk_messageBox -icon error -title [T "Custom /command Config"] \
                    -parent $slashConfig($w,win) -type ok -message]
 
   set name $slashConfig($w,name)
 
   # Check for valid name
   if { ![regexp -nocase {^[a-z][a-z0-9]{1,50}$} $name] } {
-       {*}$error "That is not a valid name."
+       {*}$error [T "That is not a valid name."]
        return;
      }
   # And check for name already in use
   foreach x [removePrefix [arraySubelem slashConfig $w,slashcmd] $w,slashcmd] {
      if { $name eq $slashConfig($w,slashcmd,$x) && $x ne $slashConfig($w,editing,which) } {
-          {*}$error "That name is already in use."
+          {*}$error [T "That name is already in use."]
           return;
         }
   }
@@ -9137,7 +9131,7 @@ proc ::potato::process_slash_command {c str} {
   set cmd [string range $str 1 end]
   if { $cmd eq "" } {
        if { $c != 0 } {
-            outputSystem $c "Which /command?"
+            outputSystem $c [T "Which /command?"]
           }
        return;
      }
@@ -9202,17 +9196,17 @@ proc ::potato::process_slash_command {c str} {
           }
        if { [llength $partial] == 0 } {
             if { $c != 0 } {
-                 outputSystem $c "Unknown /command \"$cmd\". Use //command to send directly to MU*."
+                 outputSystem $c [T "Unknown /command \"%s\". Use //command to send directly to MU*." $cmd]
                }
             return;
           } elseif { [llength $partial] > 1 } {
-            outputSystem $c "Ambiguous /command \"$cmd\"."
+            outputSystem $c [T "Ambiguous /command \"%s\"." $cmd]
             return;
           }
        customSlashCommand $c $custom [lindex $partial 0] $cmdArgs
      } else {
        if { $c != 0 } {
-            outputSystem $c "Ambiguous /command \"$cmd\"."
+            outputSystem $c [T "Ambiguous /command \"%s\"." $cmd]
           }
        return;
      }
@@ -9270,7 +9264,7 @@ proc ::potato::slash_cmd_input {c full str} {
   # We use string comparison, not numerical, otherwise "/input 3.0 foo" will pass, but will fail
   # as we don't have conn($c,input3.0) vars.
   if { [lindex $list 0] ne 1 && [lindex $list 0] ne 2 && [lindex $list 0] ne 3 } {
-       outputSystem $c "Invalid input window \"[lindex $list 0]\": must be 1, 2 or 3"
+       outputSystem $c [T "Invalid input window \"%s\": must be 1, 2 or 3" [lindex $list 0]]
        return;
      }
   
@@ -9379,7 +9373,7 @@ proc ::potato::slash_cmd_limit {c full str} {
        -regexp {set matchType regexp}
        -nocase {set case 0}
        -- {set done 1}
-       default {outputSystem $c "Invalid option \"$x\" to /limit" ; return;}
+       default {outputSystem $c [T "Invalid option \"%s\" to /limit" $x] ; return;}
     }
     set list [lrange $list 1 end]
   }
@@ -9403,7 +9397,7 @@ proc ::potato::slash_cmd_limit {c full str} {
       glob {set caught [catch {string match {*}$case $str $line} match]}
     }
     if { $caught } {
-         outputSystem $c "Invalid $matchType pattern \"$str\": $match"
+         outputSystem $c [T "Invalid $matchType pattern \"%s\": %s" $str $match]
          return;
        }
     if { !$match || $invert } {
@@ -9474,13 +9468,13 @@ proc ::potato::slash_cmd_cls {c full str} {
   if { $window eq "_main" || $window eq "" } {
        $conn($c,textWidget) delete 1.0 end
        if { $conn($c,connected) == 1 } {
-            set status "Connected."
+            set status [T "Connected."]
           } elseif { $conn($c,connected) == -1 } {
-            set status "Reconnecting..."
+            set status [T "Reconnecting..."]
           } elseif { [connInfo $c autoreconnect] && [connInfo $c autoreconnect,time] > 0 } {
-            set status "Disconnected. Auto-reconnect in [timeFmt [connInfo $c autoreconnect,time] 0]."
+            set status [T "Disconnected. Auto-reconnect in %s." [timeFmt [connInfo $c autoreconnect,time] 0]]
           } else {
-            set status "Disconnected."
+            set status [T "Disconnected."]
           }
        outputSystem $c $status
        $conn($c,textWidget) delete 1.0 2.0;# remove leading newline 
@@ -9569,13 +9563,13 @@ proc ::potato::slash_cmd_slash {c full str} {
   foreach x [info procs ::potato::slash_cmd_*] {
      lappend list [string range $x 20 end]
   }
-  outputSystem $c "Available slash commands: [itemize [lsort -dictionary $list]]"
+  outputSystem $c [T "Available slash commands: %s" [itemize [lsort -dictionary $list]]]
   set w [connInfo $c world]
   if { $w != -1 && [llength $world($w,slashcmd)] } {
-       outputSystem $c "User-defined commands for this world: [itemize [lsort -dictionary $world($w,slashcmd)]]"
+       outputSystem $c [T "User-defined commands for this world: %s" [itemize [lsort -dictionary $world($w,slashcmd)]]]
      }
   if { [llength $world(-1,slashcmd)] } {
-       outputSystem $c "Global User-defined commands: [itemize [lsort -dictionary $world(-1,slashcmd)]]"
+       outputSystem $c [T "Global User-defined commands: %s" [itemize [lsort -dictionary $world(-1,slashcmd)]]]
      }
 
   return;
@@ -9696,9 +9690,9 @@ proc ::potato::slash_cmd_eval {c full str} {
 
   set err [catch {eval $str} msg]
   if { $err } {
-       outputSystem $c "Error ([string length $msg]): $msg"
+       outputSystem $c [T "Error (%d): %s" [string length $msg] $msg]
      } else {
-       outputSystem $c "Return ([string length $msg]): $msg"
+       outputSystem $c "Return (%d): %s" [string length $msg] $msg]
      }
 
 };# ::potato::slash_cmd_eval
@@ -9712,7 +9706,7 @@ proc ::potato::slash_cmd_eval {c full str} {
 proc ::potato::slash_cmd_speedwalk {c full str} {
 
   if { ![regexp {^ *([0-9]+ *([ns][ew]|[nsweudo]) *)+ *$} $str] } {
-       outputSystem $c "Invalid speedwalk command"
+       outputSystem $c [T "Invalid speedwalk command"]
        return;
      }
 
@@ -9780,10 +9774,10 @@ proc ::potato::slash_cmd_log {c full str} {
                   } else {
                     set match [array names options "$x*"]
                     if { [llength $match] == 0 } {
-                         set error "Unknown option \"$x\""
+                         set error [T "Unknown option \"%s\"" $x]
                          break;
                        } elseif { [llength $match] > 1 } {
-                         set error "Ambiguous option \"$x\""
+                         set error [T "Ambiguous option \"%s\"" $x]
                        }
                   }
               } else {
@@ -9792,7 +9786,7 @@ proc ::potato::slash_cmd_log {c full str} {
                      if { [string is boolean -strict $x] } {
                           set options($match) [string is true -strict $x]
                         } else {
-                          set error "Invalid setting for \"$match\""
+                          set error [T "Invalid setting for \"%s\"" $match]
                           break;
                         }
                    } elseif { $match eq "-buffer" } {
@@ -9814,7 +9808,7 @@ proc ::potato::slash_cmd_log {c full str} {
      }
 
   if { $options(-append) && $conn($c,logFileId) ne "" } {
-       outputSystem $c "/log: There is already an open log-file."
+       outputSystem $c [T "/log: There is already an open log-file."]
        return;
      }
 
@@ -9876,7 +9870,7 @@ proc ::potato::slash_cmd_connect {c full str} {
        return;
      } elseif { [llength $partial] == 0 } {
        if { $c != 0 } {
-            outputSystem $c "No such world \"$str\". Use \"/quick host port\" to connect to a world that isn't in the address book."
+            outputSystem $c [T "No such world \"%s\". Use \"/quick host port\" to connect to a world that isn't in the address book." $str]
           }
        return;
      } elseif { [llength $partial] == 1 || $misc(partialWorldMatch) } {
@@ -9884,7 +9878,7 @@ proc ::potato::slash_cmd_connect {c full str} {
        return;
      } else {
        if { $c != 0 } {
-            outputSystem $c "Ambiguous world name \"$str\"."
+            outputSystem $c [T "Ambiguous world name \"%s\"." $str]
           }
        return;
      }
@@ -9945,7 +9939,7 @@ proc ::potato::slash_cmd_reconnect {c full str} {
        taskRun reconnect
      } else {
        if { ![string is integer $str] || ![info exists conn($str,id)] || $str == "-1" } {
-            outputSystem $c "Bad connection id"
+            outputSystem $c [T "Bad connection id"]
           } else {
             taskRun reconnect $str
           }
@@ -10081,24 +10075,21 @@ proc ::potato::about {} {
   catch {destroy $win}
   toplevel $win
   wm withdraw $win
-  wm title $win "About $potato(name)"
+  wm title $win [T "About %s" $potato(name)]
 
   pack [set frame [::ttk::frame $win.frame]] -side left -expand 1 -fill both -anchor nw
 
   pack [::ttk::frame $frame.top] -side top -padx 15 -pady 15
   pack [::ttk::frame $frame.btm] -side top -padx 15 -pady 12
 
-  set str "$potato(name) Version $potato(version).\n"
-  append str "A MU* Client written in Tcl/Tk by\n"
-  append str "Mike Griffiths ($potato(contact))"
-  append str "\n\n$potato(webpage)"
+  set [T str "%s Version %s.\nA MU* Client written in Tcl/Tk by\nMike Griffiths (%s)\n\n%s" $potato(name) $potato(version) $potato(contact) $potato(webpage)]
 
   pack [::ttk::label $frame.top.img -image ::potato::img::logoSmall] -side left -padx 15
   pack [::ttk::label $frame.top.txt -text $str] -side left -padx 5
   $frame.top.txt configure -font [list {*}[font actual "TkDefaultFont"] -size 12]
   
 
-  pack [::ttk::button $frame.btm.close -text "Close" -width 8 \
+  pack [::ttk::button $frame.btm.close -text [T "Close"] -width 8 \
              -command [list destroy $win] -default active] -side top
 
   update
@@ -10138,6 +10129,7 @@ proc ::potato::parseTelnetAddress {addr} {
 };# ::potato::parseTelnetAddress
 
 #: proc ::potato::handleOutsideRequest
+#: arg src where the request came from. One of "cl" (from potato.exe <address>), "clP" (from potato.exe -arg <foo>) or "dde" (from a Windows DDE server)
 #: arg addr the address we've been asked to connect to
 #: arg isWorld if 1, $addr is the name of a world to connect to, else it's a host and port. Defaults to 0
 #: desc $addr is an address we've been asked to connect to, either via DDE on Windows or on the command line. Attempt to do so, respecting the potato::misc(outsideRequestMethod) var
@@ -10184,8 +10176,7 @@ proc ::potato::handleOutsideRequest {src addr {isWorld 0}} {
 
   if { $conn2World > -1 && $misc(outsideRequestMethod) == 2 } {
        set ans [tk_messageBox -title $potato(name) -type yesno -message \
-           "Would you like to use the settings for \[$conn2World. $world($conn2World,name)\], \
-            rather than quick-connecting?"]
+           [T "Would you like to use the settings for \[%s. %s\], rather than quick-connected?" $conn2World $world($conn2World,name)]]
        if { $ans ne "yes" } {
             set conn2World -1
           }
@@ -10280,7 +10271,7 @@ proc ::potato::textEditor {{c ""}} {
   while { [winfo exists [set win .textEditor_${c}_$i]] } {
           incr i;
           if { $i > 5 } {
-               tk_messageBox -title $potato(name) -message "You can't open any more text editor windows for that world." \
+               tk_messageBox -title $potato(name) -message [T "You can't open any more text editor windows for that world."] \
                              -icon info -type ok
                return;
              }
@@ -10314,31 +10305,32 @@ proc ::potato::textEditor {{c ""}} {
   # set menuColour [menu $menu.colour -tearoff 0]
   # set menuColourBG [menu $menu.colourBG -tearoff 1]
   # set menuColourFG [menu $menu.colourFG -tearoff 1]
-  $menu add cascade -label "Action" -menu $menuAction -underline 0
+  $menu add cascade -label {*}[menu_label [T "&Action"]] -menu $menuAction
 
   set allTxt [format {[%s get 1.0 end-1char]} $text]
-  $menuAction add command {*}[menu_label "Send to &World"] \
+  $menuAction add command {*}[menu_label [T "Send to &World"]] \
           -command [format {::potato::send_to %s %s \n 1} $c $allTxt]
-  $menuAction add command {*}[menu_label "Place in &Top Input Window"] \
+  $menuAction add command {*}[menu_label [T "Place in &Top Input Window"]] \
           -command [format {::potato::showInput %s 1 %s 1} $c $allTxt]
-  $menuAction add command {*}[menu_label "Place in &Bottom Input Window"] \
+  $menuAction add command {*}[menu_label [T "Place in &Bottom Input Window"]] \
           -command [format {::potato::showInput %s 2 %s 1} $c $allTxt]
   $menuAction add separator
-  $menuAction add cascade {*}[menu_label "&Convert..."] -menu $menuConvert
-  # $menuAction add cascade {*}[menu_label "&ANSI Colour..." -menu $menuColour]
+  $menuAction add cascade {*}[menu_label [T "&Convert..."]] -menu $menuConvert
+  # $menuAction add cascade {*}[menu_label [T "&ANSI Colour..."] -menu $menuColour]
   $menuAction add separator
-  $menuAction add command {*}[menu_label "&Open..."] -command [list ::potato::textEditorOpen $text]
-  $menuAction add command {*}[menu_label "&Save As..."] -command [list ::potato::textEditorSave $text]
+  $menuAction add command {*}[menu_label [T "&Open..."]] -command [list ::potato::textEditorOpen $text]
+  $menuAction add command {*}[menu_label [T "&Save As..."]] -command [list ::potato::textEditorSave $text]
 
-  $menuConvert add command {*}[menu_label "&Returns to %r"] \
+  $menuConvert add command {*}[menu_label [T "&Returns to %r"]] \
            -command [list ::potato::textFindAndReplace $text [list \n %r]]
-  $menuConvert add command {*}[menu_label "&Spaces to %b"] \
+  $menuConvert add command {*}[menu_label [T "&Spaces to %b"]] \
            -command [list ::potato::textFindAndReplace $text [list " " %b]]
-  $menuConvert add command {*}[menu_label "&Escape Special Characters"] \
+  $menuConvert add command {*}[menu_label [T "&Escape Special Characters"]] \
            -command [format {::potato::textFindAndReplace %s {"%c" %%t %c \\%c %c \\%c %c \\%c %c \\%c %c \\%c %c \\%c %c \\%c %c \\%c %c \\%c \%c \\\%c \%c \\\%c \%c \\\%c}} $text 9 37 37 59 59 91 91 93 93 40 40 41 41 44 44 94 94 36 36 123 123 125 125 92 92]
-  # $menuConvert add comand {*}[menu_label "&ANSI Colours to Tags"] -command [list ::potato::textEditorConvertANSI $text]
+  # $menuConvert add comand {*}[menu_label [T "&ANSI Colours to Tags"]] -command [list ::potato::textEditorConvertANSI $text]
   
-  # Allow for saving to a file, including hard-wrapping and auto-indenting!
+  # Allow for saving to a file, including hard-wrapping and auto-indenting! #abc
+  # Do ANSI Colour conversion stuff! #abc
 
 
   update idletasks
@@ -10362,7 +10354,7 @@ proc ::potato::textEditorOpen {text} {
        return;
      }
   if { [catch {open $file r} fid] } {
-       tk_messageBox -icon error -title "Open File" -type ok -parent $text -message "Unable to open \"$file\": $fid"
+       tk_messageBox -icon error -title [T "Open File"] -type ok -parent $text -message [T "Unable to open \"%s\": %s" $file $fid]
        return;
      }
   $text replace 1.0 end [read $fid]
@@ -10388,7 +10380,7 @@ proc ::potato::textEditorSave {text} {
        return;
      }
   if { [catch {open $file w} fid] } {
-       tk_messageBox -icon error -title "Save File" -type ok -parent $text -message "Unable to save to \"$file\": $fid"
+       tk_messageBox -icon error -title [T "Save File"] -type ok -parent $text -message [T "Unable to save to \"%s\": %s" $file $fid]
        return;
      }
   puts -nonewline $fid [$text get 1.0 end-1char]
@@ -10496,8 +10488,7 @@ proc ::potato::rebuildConnectMenu {m} {
        $m add separator
      }
 
-  #$m add command -label "Add World" -command [list ::potato::newWorld 0]
-  $m add command -label "Quick Connect" -command [list ::potato::newWorld 1]
+  $m add command -label [T "Quick Connect"] -command [list ::potato::newWorld 1]
 
   return;
 
@@ -10537,96 +10528,96 @@ proc ::potato::fcmd {num {c ""}} {
 proc ::potato::tasksInit {} {
   variable tasks;
 
-  # Set map of 
+  # Set map of task names and commands
   array set tasks [list \
-       inputHistory,name   "Show Input &History Window" \
+       inputHistory,name   [T "Show Input &History Window"] \
        inputHistory,cmd    "::potato::history" \
-       goNorth,name        "Go &North" \
+       goNorth,name        [T "Go &North"] \
        goNorth,cmd         [list ::potato::send_to {} north {} 1] \
-       goSouth,name        "Go &South" \
+       goSouth,name        [T "Go &South"] \
        goSouth,cmd         [list ::potato::send_to {} south {} 1] \
-       goEast,name         "Go &East" \
+       goEast,name         [T "Go &East"] \
        goEast,cmd          [list ::potato::send_to {} east {} 1] \
-       goWest,name         "Go &West" \
+       goWest,name         [T "Go &West"] \
        goWest,cmd          [list ::potato::send_to {} west {} 1] \
-       find,name           "&Find" \
+       find,name           [T "&Find"] \
        find,cmd            "::potato::findDialog" \
-       disconnect,name     "&Disconnect" \
+       disconnect,name     [T "&Disconnect"] \
        disconnect,cmd      "::potato::disconnect" \
-       reconnect,name      "&Reconnect" \
+       reconnect,name      [T "&Reconnect"] \
        reconnect,cmd       "::potato::reconnect" \
-       close,name          "&Close Connection" \
+       close,name          [T "&Close Connection"] \
        close,cmd           "::potato::closeConn" \
-       nextConn,name       "&Next Connection" \
+       nextConn,name       [T "&Next Connection"] \
        nextConn,cmd        [list ::potato::toggleConn 1] \
-       prevConn,name       "&Previous Connection" \
+       prevConn,name       [T "&Previous Connection"] \
        prevConn,cmd        [list ::potato::toggleConn -1] \
-       config,name         "Configure &World" \
+       config,name         [T "Configure &World"] \
        config,cmd          "::potato::configureWorld" \
-       programConfig,name  "Configure Program &Settings" \
+       programConfig,name  [T "Configure Program &Settings"] \
        programConfig,cmd   [list ::potato::configureWorld -1] \
-       events,name         "Configure &Events" \
+       events,name         [T "Configure &Events"] \
        events,cmd          "::potato::eventConfig" \
-       globalEvents,name   "&Global Events" \
+       globalEvents,name   [T "&Global Events"] \
        globalEvents,cmd    [list ::potato::eventConfig -1] \
-       slashCmds,name      "Customise &Slash Commands" \
+       slashCmds,name      [T "Customise &Slash Commands"] \
        slashCmds,cmd       "::potato::slashConfig" \
-       globalSlashCmds,name "Global S&lash Commands" \
+       globalSlashCmds,name [T "Global S&lash Commands"] \
        globalSlashCmds,cmd [list ::potato::slashConfig -1] \
-       log,name            "Show &Log Window" \
+       log,name            [T "Show &Log Window"] \
        log,cmd             "::potato::logWindow" \
-       logStop,name        "S&top Logging" \
+       logStop,name        [T "S&top Logging"] \
        logStop,cmd         "::potato::stopLog" \
-       upload,name         "&Upload File" \
+       upload,name         [T "&Upload File"] \
        upload,cmd          "::potato::uploadWindow" \
-       help,name           "Show &Helpfiles" \
+       help,name           [T "Show &Helpfiles"] \
        help,cmd            "::help::help" \
-       about,name          "&About Potato" \
+       about,name          [T "&About Potato"] \
        about,cmd           "::potato::about" \
-       exit,name           "E&xit" \
+       exit,name           [T "E&xit"] \
        exit,cmd            "::potato::chk_exit" \
-       textEd,name         "&Text Editor" \
+       textEd,name         [T "&Text Editor"] \
        textEd,cmd          "::potato::textEditor" \
-       twoInputWins,name   "Show Two Input Windows?" \
+       twoInputWins,name   [T "Show Two Input Windows?"] \
        twoInputWins,cmd    "::potato::toggleInputWindows" \
-       connectMenu,name    "&Connect To..." \
+       connectMenu,name    [T "&Connect To..."] \
        connectMenu,cmd     "::potato::connectMenuPost" \
-       customKeyboard,name "Customize Keyboard Shortcuts" \
+       customKeyboard,name [T "Customize Keyboard Shortcuts"] \
        customKeyboard,cmd  "::potato::keyboardShortcutWin" \
-       mailWindow,name     "Open &Mail Window" \
+       mailWindow,name     [T "Open &Mail Window"] \
        mailWindow,cmd      "::potato::mailWindow" \
-       prevHistCmd,name    "Previous History Command" \
+       prevHistCmd,name    [T "Previous History Command"] \
        prevHistCmd,cmd     "::potato::inputHistoryScroll -1" \
-       nextHistCmd,name    "Next History Command" \
+       nextHistCmd,name    [T "Next History Command"] \
        nextHistCmd,cmd     "::potato::inputHistoryScroll 1" \
-       escHistCmd,name     "Clear History Command" \
+       escHistCmd,name     [T "Clear History Command"] \
        escHistCmd,cmd      "::potato::inputHistoryReset" \
-       manageWorlds,name   "Manage &Worlds" \
+       manageWorlds,name   [T "Manage &Worlds"] \
        manageWorlds,cmd    "::potato::manageWorlds" \
-       autoConnects,name   "Manage &Auto-Connects" \
+       autoConnects,name   [T "Manage &Auto-Connects"] \
        autoConnects,cmd    "::potato::autoConnectWindow" \
        fcmd2,cmd           "::potato::fcmd 2" \
-       fcmd2,name          "Run F2 Command" \
+       fcmd2,name          [T "Run F2 Command"] \
        fcmd3,cmd           "::potato::fcmd 3" \
-       fcmd3,name          "Run F3 Command" \
+       fcmd3,name          [T "Run F3 Command"] \
        fcmd4,cmd           "::potato::fcmd 4" \
-       fcmd4,name          "Run F4 Command" \
+       fcmd4,name          [T "Run F4 Command"] \
        fcmd5,cmd           "::potato::fcmd 5" \
-       fcmd5,name          "Run F5 Command" \
+       fcmd5,name          [T "Run F5 Command"] \
        fcmd6,cmd           "::potato::fcmd 6" \
-       fcmd6,name          "Run F6 Command" \
+       fcmd6,name          [T "Run F6 Command"] \
        fcmd7,cmd           "::potato::fcmd 7" \
-       fcmd7,name          "Run F7 Command" \
+       fcmd7,name          [T "Run F7 Command"] \
        fcmd8,cmd           "::potato::fcmd 8" \
-       fcmd8,name          "Run F8 Command" \
+       fcmd8,name          [T "Run F8 Command"] \
        fcmd9,cmd           "::potato::fcmd 9" \
-       fcmd9,name          "Run F9 Command" \
-       fcmd10,cmd           "::potato::fcmd 10" \
-       fcmd10,name          "Run F10 Command" \
-       fcmd11,cmd           "::potato::fcmd 11" \
-       fcmd11,name          "Run F11 Command" \
-       fcmd12,cmd           "::potato::fcmd 12" \
-       fcmd12,name          "Run F12 Command" \
+       fcmd9,name          [T "Run F9 Command"] \
+       fcmd10,cmd          "::potato::fcmd 10" \
+       fcmd10,name         [T "Run F10 Command"] \
+       fcmd11,cmd          "::potato::fcmd 11" \
+       fcmd11,name         [T "Run F11 Command"] \
+       fcmd12,cmd          "::potato::fcmd 12" \
+       fcmd12,name         [T "Run F12 Command"] \
   ]
 
   # Set initial task states
