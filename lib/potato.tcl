@@ -7326,15 +7326,15 @@ proc ::potato::inputWindowRightClickMenu {input x y} {
      } else {
        set state disabled
      }
-  $m add command -label {*}[menu_label [T "&Copy"]] -accelerator Ctrl+C -command [list tk_textCopy $input] -state $state
-  $m add command -label {*}[menu_label [T "C&ut"]] -accelerator Ctrl+X -command [list tk_textCut $input] -state $state
+  $m add command {*}[menu_label [T "&Copy"]] -accelerator Ctrl+C -command [list tk_textCopy $input] -state $state
+  $m add command {*}[menu_label [T "C&ut"]] -accelerator Ctrl+X -command [list tk_textCut $input] -state $state
 
   if { ![catch {::tk::GetSelection $input CLIPBOARD} txt] && [string length $txt] } {
        set state normal
      } else {
        set state disabled
      }
-  $m add command -label {*}[menu_label [T "&Paste"]] -accelerator Ctrl+V -command [list tk_textPaste $input] -state $state
+  $m add command {*}[menu_label [T "&Paste"]] -accelerator Ctrl+V -command [list tk_textPaste $input] -state $state
 
   tk_popup $m $x $y
 
