@@ -4847,7 +4847,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
              -values [list MUD MUSH] -width 20 -state readonly] -side left -padx 3
 
   # Connection page
-  set frame [configureFrame $canvas T "Connection Settings"]]
+  set frame [configureFrame $canvas [T "Connection Settings"]]
   set confConn [lindex $frame 0]
   set frame [lindex $frame 1]
   pack [set sub [::ttk::frame $frame.telnet]] -side top -pady 5 -anchor nw
@@ -4940,7 +4940,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [::ttk::label $sub.left.l -text [T "Allow ANSI Colours?"] -width 23 -anchor w -justify left] -side left -anchor w
   pack [::ttk::checkbutton $sub.left.c -variable potato::worldconfig($w,ansi,colours) -onvalue 1 -offvalue 0] -side left -anchor w
   pack [::ttk::frame $sub.right] -side left -expand 1 -fill x
-  pack [::ttk::label $sub.right.l -text [T "Allow ANSI Underline?"[T  -width 23 -anchor w -justify left] -side left -anchor w
+  pack [::ttk::label $sub.right.l -text [T "Allow ANSI Underline?"]  -width 23 -anchor w -justify left] -side left -anchor w
   pack [::ttk::checkbutton $sub.right.c -variable potato::worldconfig($w,ansi,underline) -onvalue 1 -offvalue 0] -side left -anchor w
 
   pack [set sub [::ttk::frame $frame.boxes2]] -side top -pady 5 -expand 1 -fill x
@@ -9692,7 +9692,7 @@ proc ::potato::slash_cmd_eval {c full str} {
   if { $err } {
        outputSystem $c [T "Error (%d): %s" [string length $msg] $msg]
      } else {
-       outputSystem $c "Return (%d): %s" [string length $msg] $msg]
+       outputSystem $c [T "Return (%d): %s" [string length $msg] $msg]
      }
 
 };# ::potato::slash_cmd_eval
