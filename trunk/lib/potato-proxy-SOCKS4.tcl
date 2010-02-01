@@ -81,7 +81,7 @@ proc ::potato::proxy::SOCKS4::callback {c hostlist} {
      }
   # Failed. Try and give a specific reason why...
   if { $status eq "\x5c" || $status eq "\x5d" } {
-       set msg "identd not running/user ID could not be verified"
+       set msg [::potato::T "identd not running/user ID could not be verified"]
      } else {
        set thishost [lindex $hostlist 0]
        set thisport [expr {$thishost eq "host" ? "port" : "port2"}]

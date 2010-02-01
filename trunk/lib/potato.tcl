@@ -1486,7 +1486,11 @@ proc ::potato::configureTextWidget {c t} {
              set colour fg
            }
         $t tag configure ANSI_${short}_$x -$long $world($w,ansi,$colour)
-        $t tag configure ANSI_${short}_${x}h -$long $world($w,ansi,${colour}h)
+        if { $short eq "bg" } {
+             $t tag configure ANSI_${short}_${x}h -$long $world($w,ansi,${colour})
+           } else {
+             $t tag configure ANSI_${short}_${x}h -$long $world($w,ansi,${colour}h)
+           }
      }
   }
   $t tag configure limited -elide 1
@@ -6255,11 +6259,16 @@ proc ::potato::loadTranslationFile {file} {
 
   # The format for these files is:
   # LOCALE: <locale>
+  # ENCODING: <encoding>  (optional)
   # <originalMsg>
   # <translatedMsg>
   # <originalMsg>
   # <translatedMsg>
-  # etc. Any empty lines, lines containing only white space, and lines starting with '#' will
+  # etc. 
+  # The ENCODING: line is optional. Where present, Potato attempts to change file encoding to <encoding> when 
+  # reading the file in.
+  #
+  # Any empty lines, lines containing only white space, and lines starting with '#' will
   # be ignored as comments/whitespace to make the .ptf file clearer. A <translatedMsg> containing
   # the single character "-" will cause that original message to be skipped, so I can build a template
   # of translatable messages which will "work" but do nothing.
@@ -6282,22 +6291,36 @@ proc ::potato::loadTranslationFile {file} {
   if { $locale eq "" } {
        return;
      }
+
+  if { [catch {gets $fid line} count] || $count < 0 } {
+       return;
+     }
+  if { [string match "ENCODING: *" $line] } {
+       # Process for encoding
+       catch {fconfigure $fid -encoding [string range $line 10 end]}
+       if { [catch {gets $fid line} count] || $count < 0 } {
+            return;
+          }
+    }
+
   set i 0
   set msg ""
-  while { ![catch {gets $fid line} count] && $count >= 0 } {
-    if { [string trim $line] eq "" || [string range $line 0 0] eq "#" } {
-         continue;
-       }
-    if { $i } {
-         set i 0;
-         if { $line eq "-" } {
-              continue; # do not translate
+  while { 1 } {
+    if { [string trim $line] ne "" && [string range $line 0 0] ne "#" } {
+         if { $i } {
+              set i 0;
+              if { $line eq "-" } {
+                   continue; # do not translate
+                 } else {
+                   puts "MsgCat Say: [::msgcat::mcset $locale $msg $line] for '$msg'"
+                 }
             } else {
-              puts "MsgCat Say: [::msgcat::mcset $locale $msg $line] for '$msg'"
+              set msg $line
+              set i 1
             }
-       } else {
-         set msg $line
-         set i 1
+       }
+    if { [catch {gets $fid line} count] || $count < 0 } {
+         break;
        }
   }
   close $fid;
@@ -9397,7 +9420,7 @@ proc ::potato::slash_cmd_limit {c full str} {
       glob {set caught [catch {string match {*}$case $str $line} match]}
     }
     if { $caught } {
-         outputSystem $c [T "Invalid $matchType pattern \"%s\": %s" $str $match]
+         outputSystem $c [T "Invalid %s pattern \"%s\": %s" $matchType $str $match]
          return;
        }
     if { !$match || $invert } {
