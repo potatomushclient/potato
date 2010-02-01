@@ -543,43 +543,43 @@ proc ::skin::potato::init {} {
   $widgets(toolbar,connect) configure -command [list ::skin::potato::connectMenu]
   set widgets(toolbar,reconnect) [toolbarButton 1 reconnect "" reconnect]
   set widgets(toolbar,disconnect) [toolbarButton 1 disconnect "" disconnect]
-  set widgets(toolbar,close) [toolbarButton 1 close "Close" close]
+  set widgets(toolbar,close) [toolbarButton 1 close [::potato::T "Close"] close]
   foreach x [list connect reconnect disconnect close] {
      pack $widgets(toolbar,$x) -in $widgets(toolbar) -side left -padx 0 -pady 4 -anchor w
   }
 
   pack [::ttk::separator $widgets(toolbar).spacer_1 -orient vertical] -side left -padx 7 -pady 5 -fill y
-  set widgets(toolbar,prev) [toolbarButton 1 prevConn "Prev" left]
-  set widgets(toolbar,toggle) [toolbarButton 0 [list "Go to Connection" ::skin::potato::toggleMenu] "Go To" down]
-  set widgets(toolbar,next) [toolbarButton 1 nextConn "Next" right]
+  set widgets(toolbar,prev) [toolbarButton 1 prevConn [::potato::T "Prev"] left]
+  set widgets(toolbar,toggle) [toolbarButton 0 [list [::potato::T "Go to Connection"] ::skin::potato::toggleMenu] [::potato::T "Go To"] down]
+  set widgets(toolbar,next) [toolbarButton 1 nextConn [::potato::T "Next"] right]
   foreach x [list prev toggle next] {
      pack $widgets(toolbar,$x) -in $widgets(toolbar) -side left -padx 0 -pady 4 -anchor w
   }
 
   pack [::ttk::separator $widgets(toolbar).spacer_2 -orient vertical] -side left -padx 7 -pady 5 -fill y
-  set widgets(toolbar,config) [toolbarButton 1 config "Conf" globe]
-  set widgets(toolbar,events) [toolbarButton 1 events "Events" events]
+  set widgets(toolbar,config) [toolbarButton 1 config [::potato::T "Conf"] globe]
+  set widgets(toolbar,events) [toolbarButton 1 events [::potato::T "Events"] events]
   foreach x [list config events] {
      pack $widgets(toolbar,$x) -in $widgets(toolbar) -side left -padx 0 -pady 4 -anchor w
   }
 
   pack [::ttk::separator $widgets(toolbar).spacer_3 -orient vertical] -side left -padx 7 -pady 5 -fill y
-  set widgets(toolbar,log) [toolbarButton 1 log "Log" log]
-  set widgets(toolbar,upload) [toolbarButton 1 upload "Upload" upload]
-  set widgets(toolbar,textEditor) [toolbarButton 1 textEd "Editor" pad]
-  set widgets(toolbar,mailWindow) [toolbarButton 1 mailWindow "Mail Window" mail]
+  set widgets(toolbar,log) [toolbarButton 1 log [::potato::T "Log"] log]
+  set widgets(toolbar,upload) [toolbarButton 1 upload [::potato::T "Upload"] upload]
+  set widgets(toolbar,textEditor) [toolbarButton 1 textEd [::potato::T "Editor"] pad]
+  set widgets(toolbar,mailWindow) [toolbarButton 1 mailWindow [::potato::T "Mail Window"] mail]
   foreach x [list log upload textEditor mailWindow] {
      pack $widgets(toolbar,$x) -in $widgets(toolbar) -side left -padx 0 -pady 4 -anchor w
   }
 
   pack [::ttk::separator $widgets(toolbar).spacer_4 -orient vertical] -side left -padx 7 -pady 5 -fill y
-  set widgets(toolbar,find) [toolbarButton 1 find "Find" find]
+  set widgets(toolbar,find) [toolbarButton 1 find [::potato::T "Find"] find]
   foreach x [list find] {
      pack $widgets(toolbar,$x) -in $widgets(toolbar) -side left -padx 0 -pady 4 -anchor w
   }
 
   pack [::ttk::separator $widgets(toolbar).spacer_5 -orient vertical] -side left -padx 7 -pady 5 -fill y
-  set widgets(toolbar,help) [toolbarButton 1 help "Help" help]
+  set widgets(toolbar,help) [toolbarButton 1 help [::potato::T "Help"] help]
   foreach x [list help] {
      pack $widgets(toolbar,$x) -in $widgets(toolbar) -side left -padx 0 -pady 4 -anchor w
   }
@@ -827,11 +827,11 @@ proc ::skin::potato::viewMenuPost {menu} {
   variable widgets;
 
   $menu add separator
-  $menu add checkbutton -label "Show World Toolbar?" -variable ::skin::potato::opts(worldbar) \
+  $menu add checkbutton -label [::potato::T "Show World Toolbar?"] -variable ::skin::potato::opts(worldbar) \
             -command ::skin::potato::worldBar
-  $menu add checkbutton -label "Show Spawn Toolbar?" -variable ::skin::potato::opts(spawnbar) \
+  $menu add checkbutton -label [::potato::T "Show Spawn Toolbar?"] -variable ::skin::potato::opts(spawnbar) \
             -command ::skin::potato::spawnBar
-  $menu add checkbutton -label "Show Status Bar?" -variable ::skin::potato::opts(statusbar) \
+  $menu add checkbutton -label [::potato::T "Show Status Bar?"] -variable ::skin::potato::opts(statusbar) \
             -command ::skin::potato::showStatusBar
   set c [::potato::up]
   if { $c == 0 || [llength [::potato::connInfo $c spawns]] == 0 } {
@@ -842,8 +842,8 @@ proc ::skin::potato::viewMenuPost {menu} {
   if { ![info exists widgets(viewmenuSpawns)] || ![winfo exists $widgets(viewmenuSpawns)] } {
        set widgets(viewmenuSpawns) [menu $menu.spawns -tearoff 0 -postcommand [list ::skin::potato::spawnMenuPost]]
      }
-  $menu add cascade -label "Spawns" -underline 0 -menu $widgets(viewmenuSpawns) -state $state
-  $menu add checkbutton -label "Show Toolbar Labels?" -variable ::skin::potato::opts(toolbarLabels) \
+  $menu add cascade -label [::potato::T "Spawns"] -underline 0 -menu $widgets(viewmenuSpawns) -state $state
+  $menu add checkbutton -label [::potato::T "Show Toolbar Labels?"] -variable ::skin::potato::opts(toolbarLabels) \
             -command ::skin::potato::toolbarLabels -underline 13
 
   return;
@@ -863,7 +863,7 @@ proc ::skin::potato::spawnMenuPost {} {
 
   set disp(spawnMenu) $disp([::potato::up])
 
-  $menu add checkbutton -label "Main Window" -command [list ::skin::potato::showSpawn $c ""] -variable ::skin::potato::disp(spawnMenu) -onvalue ""
+  $menu add checkbutton -label [::potato::T "Main Window"] -command [list ::skin::potato::showSpawn $c ""] -variable ::skin::potato::disp(spawnMenu) -onvalue ""
 
   $menu add separator
 
@@ -911,20 +911,20 @@ proc ::skin::potato::status {c} {
             $widgets(toolbar,close) configure -state normal
             set recontime [potato::connInfo $c autoreconnect,time]
             if { $recontime == 0 || ![potato::connInfo $c autoreconnect] } {
-                 $widgets(statusbar,connstatus,sub,msg) configure -text "Not Connected"
+                 $widgets(statusbar,connstatus,sub,msg) configure -text [::potato::T "Not Connected"]
                } else {
-                 $widgets(statusbar,connstatus,sub,msg) configure -text "Not Connected - Reconnect Every [potato::timeFmt $recontime 0]"
+                 $widgets(statusbar,connstatus,sub,msg) configure -text [::potato::T "Not Connected - Reconnect Every %s" [potato::timeFmt $recontime 0]]
                }
           } elseif { $cstatus == "connecting" } {
             $widgets(toolbar,disconnect) configure -state normal;# cancel reconnect
             $widgets(toolbar,reconnect) configure -state disabled
             $widgets(toolbar,close) configure -state normal
-            $widgets(statusbar,connstatus,sub,msg) configure -text "Connecting..."
+            $widgets(statusbar,connstatus,sub,msg) configure -text [::potato::T "Connecting..."]
           } else {
             $widgets(toolbar,disconnect) configure -state normal
             $widgets(toolbar,reconnect) configure -state disabled
             $widgets(toolbar,close) configure -state normal
-            $widgets(statusbar,connstatus,sub,msg) configure -text "Connected For:"
+            $widgets(statusbar,connstatus,sub,msg) configure -text [::potato::T "Connected For:"]
           }
      } else {
        if { $status == "closed" } {
@@ -1100,8 +1100,8 @@ proc ::skin::potato::show {c} {
 
   if { $c == 0 } {
        $widgets(statusbar,worldname,label) configure -text $::potato::potato(name)
-       $widgets(statusbar,hostinfo,label) configure -text "Not Connected"
-       $widgets(statusbar,connstatus,sub,msg) configure -text "Not Connected"
+       $widgets(statusbar,hostinfo,label) configure -text [::potato::T "Not Connected"]
+       $widgets(statusbar,connstatus,sub,msg) configure -text [::potato::T "Not Connected"]
     } else {
        $widgets(statusbar,worldname,label) configure -text "$c. [potato::connInfo $c name]"
        $widgets(statusbar,hostinfo,label) configure -text "[potato::connInfo $c host]:[potato::connInfo $c port]"
@@ -1206,10 +1206,10 @@ proc ::skin::potato::rightclickOutput {c t evx evy evX evY} {
 
   set menu $widgets(rightclickOutputMenu)
   $menu delete 0 end
-  $menu add command -label "Toggle World" -command [list ::potato::toggleConn 1]
-  $menu add command -label "Copy Selected Text"
-  $menu add command -label "Copy Hyperlink"
-  $menu add command -label "Edit Settings"
+  $menu add command -label [::potato::T "Toggle World"] -command [list ::potato::toggleConn 1]
+  $menu add command -label [::potato::T "Copy Selected Text"]
+  $menu add command -label [::potato::T "Copy Hyperlink"]
+  $menu add command -label [::potato::T "Edit Settings"]
   if { $t eq "" } {
        set t [activeTextWidget $c]
      }
@@ -1230,7 +1230,7 @@ proc ::skin::potato::rightclickOutput {c t evx evy evX evY} {
        $menu entryconfigure 2 -state disabled
      }
   if { $c == 0 } {
-       $menu entryconfigure 3 -label "Edit Global Settings" -command [list ::potato::configureWorld -1]
+       $menu entryconfigure 3 -label [::potato::T "Edit Global Settings"] -command [list ::potato::configureWorld -1]
      } else {
        $menu entryconfigure 3 -command [list ::potato::configureWorld [::potato::connInfo $c world]]
      }

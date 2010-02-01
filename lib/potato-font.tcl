@@ -24,12 +24,15 @@ namespace eval ::font {
 #: arg title Title for the dialog; defaults to "Font"
 #: desc Show a font dialog $win, using the initial font $defaultFont.
 #: return The chosen font (note: does not return immediately)
-proc ::font::choose {parent win {defaultFont "TkFixedFont"} {title "Font"}} {
+proc ::font::choose {parent win {defaultFont "TkFixedFont"} {title ""}} {
   variable S
 
   if { [winfo exists $win] } {
        potato::reshowWindow $win
        return;
+     }
+  if { $title eq "" } {
+       set title [::potato::T "Font"]
      }
   toplevel $win -padx 5 -pady 5
   wm withdraw $win
@@ -40,9 +43,9 @@ proc ::font::choose {parent win {defaultFont "TkFixedFont"} {title "Font"}} {
   set S($win,under) 0
   set S($win,first) 1
 
-  ::ttk::label $frame.font -text "Font:"
-  ::ttk::label $frame.style -text "Font style:"
-  ::ttk::label $frame.size -text "Size:"
+  ::ttk::label $frame.font -text [::potato::T "Font:"]
+  ::ttk::label $frame.style -text [::potato::T "Font style:"]
+  ::ttk::label $frame.size -text [::potato::T "Size:"]
   ::ttk::entry $frame.efont -textvariable ::font::S($win,font) ;# -state disabled
   ::ttk::entry $frame.estyle -textvariable ::font::S($win,style) ;# -state disabled
   ::ttk::entry $frame.esize -textvariable ::font::S($win,size) -width 0 \
@@ -62,15 +65,15 @@ proc ::font::choose {parent win {defaultFont "TkFixedFont"} {title "Font"}} {
   bind $frame.lsizes <<ListboxSelect>> [list ::font::click $win size]
 
   set WE $frame.effects
-  ::ttk::labelframe $WE -text "Effects"
+  ::ttk::labelframe $WE -text [::potato::T "Effects"]
   ::ttk::checkbutton $WE.strike -variable ::font::S($win,strike) \
       -text Strikeout -command [list ::font::click $win strike]
   ::ttk::checkbutton $WE.under -variable ::font::S($win,under) \
       -text Underline -command [list ::font::click $win under]
 
-  ::ttk::button $frame.ok -text OK -width 8 -default active -command [list ::font::done $win 1]
+  ::ttk::button $frame.ok -text [::potato::T "OK"] -width 8 -default active -command [list ::font::done $win 1]
   bind $win <Return> [list $frame.ok invoke]
-  ::ttk::button $frame.cancel -text Cancel -width 8 -command [list ::font::done $win 0]
+  ::ttk::button $frame.cancel -text [::potato::T "Cancel"] -width 8 -command [list ::font::done $win 0]
   wm protocol $win WM_DELETE_WINDOW [list ::font::done $win 0]
 
   grid $frame.font - x $frame.style - x $frame.size - x -sticky w
@@ -89,9 +92,9 @@ proc ::font::choose {parent win {defaultFont "TkFixedFont"} {title "Font"}} {
   grid $WE - x -sticky news -row 100 -column 0
 
   set WS $frame.sample
-  ::ttk::labelframe $WS -text "Sample"
+  ::ttk::labelframe $WS -text [::potato::T "Sample"]
   label $WS.fsample -bd 2 -relief sunken
-  label $WS.fsample.sample -text "AaBbYyZz"
+  label $WS.fsample.sample -text [::potato::T "AaBbYyZz"]
   set S($win,sample) $WS.fsample.sample
   pack $WS.fsample -fill both -expand 1 -padx 10 -pady 10 -ipady 15
   pack $WS.fsample.sample -fill both -expand 1
