@@ -6304,15 +6304,12 @@ proc ::potato::loadTranslationFile {file} {
     }
 
   set i 0
-  set msg ""
+
   while { 1 } {
     if { [string trim $line] ne "" && [string range $line 0 0] ne "#" } {
          if { $i } {
               set i 0;
-              if { $line eq "-" } {
-                   continue; # do not translate
-                 } else {
-                   puts "MsgCat Say: [::msgcat::mcset $locale $msg $line] for '$msg'"
+              if { $line ne "-" } {
                  }
             } else {
               set msg $line
@@ -6859,7 +6856,7 @@ proc ::potato::history {{c ""}} {
   set tree [::ttk::treeview $frame.cmds.lb -height 15 -show headings -selectmode browse \
           -yscrollcommand [list $frame.cmds.sby set] -xscrollcommand [list $frame.cmds.sbx set] \
           -columns [list ID Command]]
-  $tree heading ID -text [T "ID "] -anchor e
+  $tree heading ID -text "[T "ID"] " -anchor e
   $tree heading Command -text [T "Command"]
   $tree column ID -anchor e -stretch 0 -width 25
   $tree column Command -anchor w -stretch 1
