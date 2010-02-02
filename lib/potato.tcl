@@ -6305,16 +6305,16 @@ proc ::potato::loadTranslationFile {file} {
     }
 
   set i 0
-
+  set multi ""
   while { 1 } {
     if { [string trim $line] ne "" && [string range $line 0 0] ne "#" } {
-         if { $i } {
+            if { $i } {
               set i 0;
               if { $line ne "-" } {
-                   ::msgcat::mcset $locale $msg $line
+                   ::msgcat::mcset $locale $msg [string map [list "\\n" "\n"] $line]
                  }
             } else {
-              set msg $line
+              set msg [string map [list "\\n" "\n"] $line]
               set i 1
             }
        }
@@ -10551,94 +10551,94 @@ proc ::potato::tasksInit {} {
 
   # Set map of task names and commands
   array set tasks [list \
-       inputHistory,name   "Show Input &History Window" \
+       inputHistory,name   [T "Show Input &History Window"] \
        inputHistory,cmd    "::potato::history" \
-       goNorth,name        "Go &North" \
+       goNorth,name        [T "Go &North"] \
        goNorth,cmd         [list ::potato::send_to {} north {} 1] \
-       goSouth,name        "Go &South" \
+       goSouth,name        [T "Go &South"] \
        goSouth,cmd         [list ::potato::send_to {} south {} 1] \
-       goEast,name         "Go &East" \
+       goEast,name         [T "Go &East"] \
        goEast,cmd          [list ::potato::send_to {} east {} 1] \
-       goWest,name         "Go &West" \
+       goWest,name         [T "Go &West"] \
        goWest,cmd          [list ::potato::send_to {} west {} 1] \
-       find,name           "&Find" \
+       find,name           [T "&Find"] \
        find,cmd            "::potato::findDialog" \
-       disconnect,name     "&Disconnect" \
+       disconnect,name     [T "&Disconnect"] \
        disconnect,cmd      "::potato::disconnect" \
-       reconnect,name      "&Reconnect" \
+       reconnect,name      [T "&Reconnect"] \
        reconnect,cmd       "::potato::reconnect" \
-       close,name          "&Close Connection" \
+       close,name          [T "&Close Connection"] \
        close,cmd           "::potato::closeConn" \
-       nextConn,name       "&Next Connection" \
+       nextConn,name       [T "&Next Connection"] \
        nextConn,cmd        [list ::potato::toggleConn 1] \
-       prevConn,name       "&Previous Connection" \
+       prevConn,name       [T "&Previous Connection"] \
        prevConn,cmd        [list ::potato::toggleConn -1] \
-       config,name         "Configure &World" \
+       config,name         [T "Configure &World"] \
        config,cmd          "::potato::configureWorld" \
-       programConfig,name  "Configure Program &Settings" \
+       programConfig,name  [T "Configure Program &Settings"] \
        programConfig,cmd   [list ::potato::configureWorld -1] \
-       events,name         "Configure &Events" \
+       events,name         [T "Configure &Events"] \
        events,cmd          "::potato::eventConfig" \
-       globalEvents,name   "&Global Events" \
+       globalEvents,name   [T "&Global Events"] \
        globalEvents,cmd    [list ::potato::eventConfig -1] \
-       slashCmds,name      "Customise &Slash Commands" \
+       slashCmds,name      [T "Customise &Slash Commands"] \
        slashCmds,cmd       "::potato::slashConfig" \
-       globalSlashCmds,name "Global S&lash Commands" \
+       globalSlashCmds,name [T "Global S&lash Commands"] \
        globalSlashCmds,cmd [list ::potato::slashConfig -1] \
-       log,name            "Show &Log Window" \
+       log,name            [T "Show &Log Window"] \
        log,cmd             "::potato::logWindow" \
-       logStop,name        "S&top Logging" \
+       logStop,name        [T "S&top Logging"] \
        logStop,cmd         "::potato::stopLog" \
-       upload,name         "&Upload File" \
+       upload,name         [T "&Upload File"] \
        upload,cmd          "::potato::uploadWindow" \
-       help,name           "Show &Helpfiles" \
+       help,name           [T "Show &Helpfiles"] \
        help,cmd            "::help::help" \
-       about,name          "&About Potato" \
+       about,name          [T "&About Potato"] \
        about,cmd           "::potato::about" \
-       exit,name           "E&xit" \
+       exit,name           [T "E&xit"] \
        exit,cmd            "::potato::chk_exit" \
-       textEd,name         "&Text Editor" \
+       textEd,name         [T "&Text Editor"] \
        textEd,cmd          "::potato::textEditor" \
-       twoInputWins,name   "Show Two Input Windows?" \
+       twoInputWins,name   [T "Show Two Input Windows?"] \
        twoInputWins,cmd    "::potato::toggleInputWindows" \
-       connectMenu,name    "&Connect To..." \
+       connectMenu,name    [T "&Connect To..."] \
        connectMenu,cmd     "::potato::connectMenuPost" \
-       customKeyboard,name "Customize Keyboard Shortcuts" \
+       customKeyboard,name [T "Customize Keyboard Shortcuts"] \
        customKeyboard,cmd  "::potato::keyboardShortcutWin" \
-       mailWindow,name     "Open &Mail Window" \
+       mailWindow,name     [T "Open &Mail Window"] \
        mailWindow,cmd      "::potato::mailWindow" \
-       prevHistCmd,name    "Previous History Command" \
+       prevHistCmd,name    [T "Previous History Command"] \
        prevHistCmd,cmd     "::potato::inputHistoryScroll -1" \
-       nextHistCmd,name    "Next History Command" \
+       nextHistCmd,name    [T "Next History Command"] \
        nextHistCmd,cmd     "::potato::inputHistoryScroll 1" \
-       escHistCmd,name     "Clear History Command" \
+       escHistCmd,name     [T "Clear History Command"] \
        escHistCmd,cmd      "::potato::inputHistoryReset" \
-       manageWorlds,name   "Manage &Worlds" \
+       manageWorlds,name   [T "Manage &Worlds"] \
        manageWorlds,cmd    "::potato::manageWorlds" \
-       autoConnects,name   "Manage &Auto-Connects" \
+       autoConnects,name   [T "Manage &Auto-Connects"] \
        autoConnects,cmd    "::potato::autoConnectWindow" \
        fcmd2,cmd           "::potato::fcmd 2" \
-       fcmd2,name          "Run F2 Command" \
+       fcmd2,name          [T "Run F2 Command"] \
        fcmd3,cmd           "::potato::fcmd 3" \
-       fcmd3,name          "Run F3 Command" \
+       fcmd3,name          [T "Run F3 Command"] \
        fcmd4,cmd           "::potato::fcmd 4" \
-       fcmd4,name          "Run F4 Command" \
+       fcmd4,name          [T "Run F4 Command"] \
        fcmd5,cmd           "::potato::fcmd 5" \
-       fcmd5,name          "Run F5 Command" \
+       fcmd5,name          [T "Run F5 Command"] \
        fcmd6,cmd           "::potato::fcmd 6" \
-       fcmd6,name          "Run F6 Command" \
+       fcmd6,name          [T "Run F6 Command"] \
        fcmd7,cmd           "::potato::fcmd 7" \
-       fcmd7,name          "Run F7 Command" \
+       fcmd7,name          [T "Run F7 Command"] \
        fcmd8,cmd           "::potato::fcmd 8" \
-       fcmd8,name          "Run F8 Command" \
+       fcmd8,name          [T "Run F8 Command"] \
        fcmd9,cmd           "::potato::fcmd 9" \
-       fcmd9,name          "Run F9 Command" \
+       fcmd9,name          [T "Run F9 Command"] \
        fcmd10,cmd          "::potato::fcmd 10" \
-       fcmd10,name         "Run F10 Command" \
+       fcmd10,name         [T "Run F10 Command"] \
        fcmd11,cmd          "::potato::fcmd 11" \
-       fcmd11,name         "Run F11 Command" \
+       fcmd11,name         [T "Run F11 Command"] \
        fcmd12,cmd          "::potato::fcmd 12" \
-       fcmd12,name         "Run F12 Command" \
+       fcmd12,name         [T "Run F12 Command"] \
   ]
 
   # Set initial task states
@@ -10740,11 +10740,10 @@ proc ::potato::taskLabel {task {menu 0}} {
        return;
      }
 
-  set label [T $tasks($task,name)]
   if { $menu } {
-       return $label;
+       return $tasks($task,name);
      } else {
-       return [string map [list & ""] $label];
+       return [string map [list & ""] $tasks($task,name)];
      }
 
 };# ::potato::taskLabel
