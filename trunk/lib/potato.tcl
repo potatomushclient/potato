@@ -554,7 +554,7 @@ proc ::potato::mailWindow {{c ""}} {
   pack [set convert [::ttk::frame $frame.convert]] -side top -anchor n -padx 5 -pady 8
   pack [::ttk::label $convert.l -text [T "Convert returns?"]] -side left -anchor nw -padx 3
   pack [::ttk::checkbutton $convert.cb -variable ::potato::world($w,mailConvertReturns)] -side left -anchor nw -padx 3
-  pack [::ttk::label $convert.l2 -text [T "To:"]] -side left -anchor nw -padx 3
+  pack [::ttk::label $convert.l2 -text [T "Convert To:"]] -side left -anchor nw -padx 3
   pack [::ttk::entry $convert.e -width 5 -textvariable ::potato::world($w,mailConvertReturns,to)] -side left -anchor nw -padx 3
   pack [set btns [::ttk::frame $frame.btns]] -side top -anchor n -padx 5 -pady 8
   pack [::ttk::button $btns.ok -text [T "Send"] -width 8 -default active \
@@ -6240,6 +6240,12 @@ proc ::potato::i18nPotato {} {
   # Set our preferred locale
   ::msgcat::mclocale $misc(locale)
 
+  # Some English "translations".
+  # This is where we've used more verbose messages in some places to make phrases which are repeated in English, but with
+  # different context, translatable as different strings in other languages. In English we convert the verbose form back to
+  # the shorter version. NOTE: Must be done before we load translations, otherwise we may clobber the user's preferred translation.
+  namespace eval :: {::msgcat::mcset en "Convert To:" "To:"}
+
   # Load translation files. We do this in two steps:
   # 1) Load *.ptf files using [::potato::loadTranslationFile]. These are just message catalogues.
   # 2) Use ::msgcat::mcload, which loads *.msg files containing Tcl code for translations
@@ -6316,7 +6322,7 @@ proc ::potato::loadTranslationFile {file} {
             if { $i } {
               set i 0;
               if { $line ne "-" } {
-                   ::msgcat::mcset $locale $msg [string map [list "\\n" "\n"] $line]
+                   namespace eval :: [list ::msgcat::mcset $locale $msg [string map [list "\\n" "\n"] $line]]
                  }
             } else {
               set msg [string map [list "\\n" "\n"] $line]
@@ -10331,7 +10337,7 @@ proc ::potato::textEditor {{c ""}} {
   # set menuColour [menu $menu.colour -tearoff 0]
   # set menuColourBG [menu $menu.colourBG -tearoff 1]
   # set menuColourFG [menu $menu.colourFG -tearoff 1]
-  $menu add cascade -label {*}[menu_label [T "&Action"]] -menu $menuAction
+  $menu add cascade {*}[menu_label [T "&Action"]] -menu $menuAction
 
   set allTxt [format {[%s get 1.0 end-1char]} $text]
   $menuAction add command {*}[menu_label [T "Send to &World"]] \
