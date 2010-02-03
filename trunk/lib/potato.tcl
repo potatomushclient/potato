@@ -7299,6 +7299,9 @@ proc ::potato::build_menu_help {m} {
   createMenuTask $m help
   $m add separator
   $m add command {*}[menu_label [T "Tcl Code &Console"]] -command [list console show]
+  if { [catch {console title "$::potato::potato(name) - Tcl Code Console"}] } {
+       $m entryconfigure end -state disabled
+     }
   $m add separator
   createMenuTask $m about
   $m add command {*}[menu_label [T "Visit Potato &Website"]] -command [list ::potato::launchWebPage $::potato::potato(webpage)]
@@ -10114,7 +10117,7 @@ proc ::potato::about {} {
   pack [::ttk::frame $frame.top] -side top -padx 15 -pady 15
   pack [::ttk::frame $frame.btm] -side top -padx 15 -pady 12
 
-  set [T str "%s Version %s.\nA MU* Client written in Tcl/Tk by\nMike Griffiths (%s)\n\n%s" $potato(name) $potato(version) $potato(contact) $potato(webpage)]
+  set str [T "%s Version %s.\nA MU* Client written in Tcl/Tk by\nMike Griffiths (%s)\n\n%s" $potato(name) $potato(version) $potato(contact) $potato(webpage)]
 
   pack [::ttk::label $frame.top.img -image ::potato::img::logoSmall] -side left -padx 15
   pack [::ttk::label $frame.top.txt -text $str] -side left -padx 5
