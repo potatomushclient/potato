@@ -1301,6 +1301,7 @@ proc ::potato::newConnection {w} {
   set inputSwap($conn($c,input2),conn) $c
 
   set conn($c,world) $w
+  set conn($c,id) "" ;# we hope this doesn't break anything.
   set conn($c,protocols) [list]
   set conn($c,logFileName) ""
   set conn($c,logFileId) ""
@@ -6244,11 +6245,15 @@ proc ::potato::i18nPotato {} {
   # 2) Use ::msgcat::mcload, which loads *.msg files containing Tcl code for translations
   foreach x [glob -nocomplain -dir $path(i18n) -- *.ptf] {
     loadTranslationFile $x
-puts "Loading $x"
   }
   ::msgcat::mcload $path(i18n)
 
   return;
+
+  # These lines are for the benefit of the script which builds the translation template.
+  # They are not necessarily used by Potato directly, but shown in Tcl/Tk by widgets (message dialogs, etc)
+  # so we include the strings to ensure they get offered for translation
+  # [T "Yes"] [T "No"] [T "Cancel"] from tk_messageBox
 
 };# ::potato::i18nPotato
 

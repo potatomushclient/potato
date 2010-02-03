@@ -806,15 +806,16 @@ proc ::skin::potato::worldBarButtonMenu {btn c x y} {
   $m delete 0 end
 
   set status [::potato::connStatus $c]
-  $m add command -label [::potato::taskLabel reconnect] -command [list ::potato::taskRun reconnect $c]
+
+  ::potato::createMenuTask $m reconnect $c
   if { $status ne "disconnected" } {
        $m entryconfigure end -state disabled
      }
-  $m add command -label [::potato::taskLabel disconnect] -command [list ::potato::taskRun disconnect $c]
+  ::potato::createMenuTask $m disconnect $c
   if { $status eq "disconnected" && ![::potato::connInfo $c autoreconnect] } {
        $m entryconfigure end -state disabled
      }
-  $m add command -label [::potato::taskLabel close] -command [list ::potato::taskRun close $c]
+  ::potato::createMenuTask $m close $c
   tk_popup $m $x $y
 
 };# ::skin::potato::worldBarButtonMenu
@@ -827,11 +828,11 @@ proc ::skin::potato::viewMenuPost {menu} {
   variable widgets;
 
   $menu add separator
-  $menu add checkbutton -label [::potato::T "Show World Toolbar?"] -variable ::skin::potato::opts(worldbar) \
+  $menu add checkbutton {*}[::potato::menu_label [::potato::T "Show World Toolbar?"]] -variable ::skin::potato::opts(worldbar) \
             -command ::skin::potato::worldBar
-  $menu add checkbutton -label [::potato::T "Show Spawn Toolbar?"] -variable ::skin::potato::opts(spawnbar) \
+  $menu add checkbutton  {*}[::potato::menu_label [::potato::T "Show Spawn Toolbar?"]] -variable ::skin::potato::opts(spawnbar) \
             -command ::skin::potato::spawnBar
-  $menu add checkbutton -label [::potato::T "Show Status Bar?"] -variable ::skin::potato::opts(statusbar) \
+  $menu add checkbutton  {*}[::potato::menu_label [::potato::T "Show Status Bar?"]] -variable ::skin::potato::opts(statusbar) \
             -command ::skin::potato::showStatusBar
   set c [::potato::up]
   if { $c == 0 || [llength [::potato::connInfo $c spawns]] == 0 } {
@@ -842,9 +843,9 @@ proc ::skin::potato::viewMenuPost {menu} {
   if { ![info exists widgets(viewmenuSpawns)] || ![winfo exists $widgets(viewmenuSpawns)] } {
        set widgets(viewmenuSpawns) [menu $menu.spawns -tearoff 0 -postcommand [list ::skin::potato::spawnMenuPost]]
      }
-  $menu add cascade -label [::potato::T "Spawns"] -underline 0 -menu $widgets(viewmenuSpawns) -state $state
-  $menu add checkbutton -label [::potato::T "Show Toolbar Labels?"] -variable ::skin::potato::opts(toolbarLabels) \
-            -command ::skin::potato::toolbarLabels -underline 13
+  $menu add cascade  {*}[::potato::menu_label [::potato::T "&Spawns"]] -menu $widgets(viewmenuSpawns) -state $state
+  $menu add checkbutton  {*}[::potato::menu_label [::potato::T "Show Toolbar &Labels?"]] -variable ::skin::potato::opts(toolbarLabels) \
+            -command ::skin::potato::toolbarLabels
 
   return;
 
@@ -863,7 +864,7 @@ proc ::skin::potato::spawnMenuPost {} {
 
   set disp(spawnMenu) $disp([::potato::up])
 
-  $menu add checkbutton -label [::potato::T "Main Window"] -command [list ::skin::potato::showSpawn $c ""] -variable ::skin::potato::disp(spawnMenu) -onvalue ""
+  $menu add checkbutton  {*}[::potato::menu_label [::potato::T "Main Window"]] -command [list ::skin::potato::showSpawn $c ""] -variable ::skin::potato::disp(spawnMenu) -onvalue ""
 
   $menu add separator
 
@@ -1206,10 +1207,14 @@ proc ::skin::potato::rightclickOutput {c t evx evy evX evY} {
 
   set menu $widgets(rightclickOutputMenu)
   $menu delete 0 end
-  $menu add command -label [::potato::T "Toggle World"] -command [list ::potato::toggleConn 1]
-  $menu add command -label [::potato::T "Copy Selected Text"]
-  $menu add command -label [::potato::T "Copy Hyperlink"]
-  $menu add command -label [::potato::T "Edit Settings"]
+  ::potato::createMenuTask $menu nextConn
+  $menu add command {*}[::potato::menu_label [::potato::T "&Copy Selected Text"]]
+  $menu add command {*}[::potato::menu_label [::potato::T "Copy &Hyperlink"]]
+  if { $c == 0 } {
+       ::potato::createMenuTask $menu programConfig
+     } else {
+       ::potato::createMenuTask $menu config
+     }
   if { $t eq "" } {
        set t [activeTextWidget $c]
      }
@@ -1228,11 +1233,6 @@ proc ::skin::potato::rightclickOutput {c t evx evy evX evY} {
        $menu entryconfigure 2 -state normal -command [list ::skin::potato::linkCopy $t [$t index @$evx,$evy]]
      } else {
        $menu entryconfigure 2 -state disabled
-     }
-  if { $c == 0 } {
-       $menu entryconfigure 3 -label [::potato::T "Edit Global Settings"] -command [list ::potato::configureWorld -1]
-     } else {
-       $menu entryconfigure 3 -command [list ::potato::configureWorld [::potato::connInfo $c world]]
      }
   if { $c != 0 } {
        $menu add separator
