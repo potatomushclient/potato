@@ -517,7 +517,7 @@ proc ::potato::mailWindow {{c ""}} {
   pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both
 
   pack [set to [::ttk::frame $frame.to]] -side top -anchor nw -expand 0 -fill x -padx 5 -pady 3
-  pack [::ttk::label $to.l -text [T "To:"] -width 10] -side left -anchor nw
+  pack [::ttk::label $to.l -text [T "Recipient:"] -width 10] -side left -anchor nw
   pack [::ttk::entry $to.e -textvariable ::potato::conn($c,mailWindow,to) -width 40] -side left -anchor nw -fill x
   set ::potato::conn($c,mailWindow,to) ""
 
@@ -6244,7 +6244,7 @@ proc ::potato::i18nPotato {} {
   # This is where we've used more verbose messages in some places to make phrases which are repeated in English, but with
   # different context, translatable as different strings in other languages. In English we convert the verbose form back to
   # the shorter version. NOTE: Must be done before we load translations, otherwise we may clobber the user's preferred translation.
-  namespace eval :: {::msgcat::mcset en "Convert To:" "To:"}
+  namespace eval :: {::msgcat::mcmset en [list "Convert To:" "To:" "Recipient:" "To:"]}
 
   # Load translation files. We do this in two steps:
   # 1) Load *.ptf files using [::potato::loadTranslationFile]. These are just message catalogues.
