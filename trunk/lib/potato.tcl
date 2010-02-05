@@ -6259,7 +6259,9 @@ proc ::potato::i18nPotato {} {
   # These lines are for the benefit of the script which builds the translation template.
   # They are not necessarily used by Potato directly, but shown in Tcl/Tk by widgets (message dialogs, etc)
   # so we include the strings to ensure they get offered for translation
-  # [T "Yes"] [T "No"] [T "Cancel"] from tk_messageBox
+  # [T "Yes"]
+  # [T "No"]
+  # [T "Cancel"] from tk_messageBox
 
 };# ::potato::i18nPotato
 
