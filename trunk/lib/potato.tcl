@@ -4964,7 +4964,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
 
   pack [set sub [::ttk::frame $frame.wrap]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.l -text [T "Wrap text at:"] -width 20 -anchor w -justify left] -side left
-  pack [spinbox $sub.spin -textvariable ::potato::worldconfig($w,wrap,at) -from 0 -to 200 \
+  pack [spinbox $sub.spin -textvariable ::potato::worldconfig($w,wrap,at) -from 0 -to 1000 \
              -validate all -validatecommand {string is integer %P} -width 6] -side left
 
   pack [set sub [::ttk::frame $frame.indent]] -side top -pady 5 -anchor nw
@@ -5779,7 +5779,7 @@ proc ::potato::configureWorldCommit {w win} {
 
   # Validate the spinbox values. Note: these maxes are hard-coded into spinbox widgets above,
   # so if they're changed here, they should be changed there, too.
-  foreach {varname type max} [list autoreconnect,time integer 3600 wrap,at integer 200 \
+  foreach {varname type max} [list autoreconnect,time integer 3600 wrap,at integer 1000 \
              wrap,indent integer 20 loginDelay double 60] {
      if { ![string is $type -strict $world($w,$varname)] } {
           set world($w,$varname) 0
