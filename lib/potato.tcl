@@ -17,24 +17,24 @@ proc ::potato::setPrefs {readfile} {
 
   # START DEFAULT WORLD SETTINGS
   # default ansi colors
-  set world(-1,ansi,fgh) #ffff88
-  set world(-1,ansi,fg)  #ffffff
+  set world(-1,ansi,fgh) #dfdfdf
+  set world(-1,ansi,fg)  #aeaeae
   set world(-1,ansi,rh)  #ff0000
-  set world(-1,ansi,r)   #880000
+  set world(-1,ansi,r)   #800000
   set world(-1,ansi,gh)  #00ff00
-  set world(-1,ansi,g)   #008800
+  set world(-1,ansi,g)   #008000
   set world(-1,ansi,bh)  #0000ff
-  set world(-1,ansi,b)   #000088
+  set world(-1,ansi,b)   #000080
   set world(-1,ansi,yh)  #ffff00
-  set world(-1,ansi,y)   #888800
+  set world(-1,ansi,y)   #808000
   set world(-1,ansi,mh)  #ff00ff
-  set world(-1,ansi,m)   #880088
+  set world(-1,ansi,m)   #800080
   set world(-1,ansi,ch)  #00ffff
-  set world(-1,ansi,c)   #008888
+  set world(-1,ansi,c)   #008080
   set world(-1,ansi,wh)  #ffffff
-  set world(-1,ansi,w)   #888888
-  set world(-1,ansi,xh)  #666666
-  set world(-1,ansi,x)   #333333
+  set world(-1,ansi,w)   #c0c0c0
+  set world(-1,ansi,xh)  #808080
+  set world(-1,ansi,x)   #222222
   set world(-1,ansi,system) #ffff00
   set world(-1,ansi,echo) #0000ffff8800
   set world(-1,ansi,link) #4848ff
