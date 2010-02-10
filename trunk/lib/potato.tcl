@@ -6262,9 +6262,13 @@ proc ::potato::i18nPotato {} {
   # These lines are for the benefit of the script which builds the translation template.
   # They are not necessarily used by Potato directly, but shown in Tcl/Tk by widgets (message dialogs, etc)
   # so we include the strings to ensure they get offered for translation
-  # [T "Yes"]
-  # [T "No"]
-  # [T "Cancel"] from tk_messageBox
+  # [T "&Yes"]
+  # [T "&No"]
+  # [T "&OK"]
+  # [T "&Retry"]
+  # [T "&Abort"]
+  # [T "&Ignore"]
+  # [T "&Cancel"] from tk_messageBox
 
 };# ::potato::i18nPotato
 
@@ -6296,26 +6300,31 @@ proc ::potato::loadTranslationFile {file} {
      }
 
   if { [catch {gets $fid line} count] || $count < 0 } {
+       catch {close $fid}
        return;
      }
 
   if { ![string match "LOCALE: *" $line] } {
        # Malformed translation file
+       catch {close $fid}
        return;
      }
 
   set locale [string trim [string range $line 8 end]]
   if { $locale eq "" } {
+       catch {close $fid}
        return;
      }
 
   if { [catch {gets $fid line} count] || $count < 0 } {
+       catch {close $fid}
        return;
      }
   if { [string match "ENCODING: *" $line] } {
        # Process for encoding
        catch {fconfigure $fid -encoding [string range $line 10 end]}
        if { [catch {gets $fid line} count] || $count < 0 } {
+            catch {close $fid}
             return;
           }
     }
