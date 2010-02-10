@@ -550,7 +550,8 @@ proc ::skin::potato::init {} {
 
   pack [::ttk::separator $widgets(toolbar).spacer_1 -orient vertical] -side left -padx 7 -pady 5 -fill y
   set widgets(toolbar,prev) [toolbarButton 1 prevConn [::potato::T "Prev"] left]
-  set widgets(toolbar,toggle) [toolbarButton 0 [list [::potato::T "Go to Connection"] ::skin::potato::toggleMenu] [::potato::T "Go To"] down]
+  set widgets(toolbar,toggle) [toolbarButton 0 [list [::potato::T "Go to Connection"] ::skin::potato::toggleMenu] \
+                              [::potato::T "Go To"] down] ;# must be on a newline for translation-tagging script to detect second [T ...]
   set widgets(toolbar,next) [toolbarButton 1 nextConn [::potato::T "Next"] right]
   foreach x [list prev toggle next] {
      pack $widgets(toolbar,$x) -in $widgets(toolbar) -side left -padx 0 -pady 4 -anchor w
