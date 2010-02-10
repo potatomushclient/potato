@@ -694,7 +694,7 @@ proc ::potato::uploadWindowStart {c} {
   pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both -side left -anchor nw
   pack [::ttk::labelframe $frame.options -text [T "Options"]] -side top -anchor center -padx 6 -pady 7
   pack [::ttk::frame $frame.options.empty] -side top -pady 3 -anchor nw
-  pack [::ttk::label $frame.options.empty.l -text "Ignore empty lines?" -width 20 \
+  pack [::ttk::label $frame.options.empty.l -text [T "Ignore empty lines?"] -width 20 \
                   -underline 0 -anchor w -justify left] -side left -anchor nw -padx 3
   pack [::ttk::checkbutton $frame.options.empty.cb -variable potato::conn($c,upload,ignoreEmpty) \
                    -onvalue 1 -offvalue 0] -side left -padx 3
@@ -2028,7 +2028,7 @@ proc ::potato::connectVerifyComplete {c} {
      } else {
        set str "[lindex $peer 0] ([lindex $peer 1])"
      }
-  outputSystem $c "Connected - $str"
+  outputSystem $c [T "Connected - %s" $str]
 
   #abc handle stats for tracking time connected to world
   fileevent $id readable [list ::potato::get_mushage $c]
@@ -2346,7 +2346,6 @@ proc ::potato::get_mushage {c} {
           set conn($c,outputBuffer) [string range $conn($c,outputBuffer) [expr {$nextNewline+1}] end]
                get_mushageProcess $c $toProcess
         }
-
   return;
 
 };# ::potato::get_mushage
@@ -3554,9 +3553,9 @@ proc ::potato::manageWorlds {} {
   set manageWorlds(delBtn) $del
 
   pack [set btnFrame2 [::ttk::frame $btm.btns2]] -side top -anchor n -expand 0 -fill none -pady 10 -padx 10
-  pack [set newGroup [::ttk::button $btnFrame2.new -text "New Group" \
+  pack [set newGroup [::ttk::button $btnFrame2.new -text [T "New Group"] \
            -command [list ::potato::manageWorldsNewGroup]]] -side left -padx 5
-  pack [set delGroup [::ttk::button $btnFrame2.del -text "Delete Group" \
+  pack [set delGroup [::ttk::button $btnFrame2.del -text [T "Delete Group"] \
            -command [list ::potato::manageWorldsBtn "delgroup"]]] -side left -padx 5
   set manageWorlds(delGroupBtn) $delGroup
   pack [set close [::ttk::button $btnFrame2.close -text [T "Close"] -width 8 \
@@ -3660,7 +3659,7 @@ proc ::potato::manageWorldsNewGroup {} {
   
   pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both
   pack [::ttk::label $frame.l -text [T "Enter the name for the new Group, and click Add."]] -side top -padx 3 -pady 5
-  set name "New Group"
+  set name [T "New Group"]
   if { $name in $world(-1,groups) } {
        set num 1
        while { "$name ($num)" in $world(-1,groups) && $num < 1000 } {
@@ -4284,7 +4283,7 @@ proc ::potato::eventConfig {{w ""}} {
   pack [::ttk::label $frame.right.row08.l -text [T "Spawn?"] -width 10 -justify left -anchor w] -side left -anchor nw -padx 2
   pack [::ttk::checkbutton $frame.right.row08.cb -variable potato::eventConfig($w,spawn) \
                 -onvalue 1 -offvalue 0] -side left -anchor nw
-  pack [::ttk::label $frame.right.row08.l2 -text [T "To:"] -justify left -anchor w] -side left -anchor nw -padx 2
+  pack [::ttk::label $frame.right.row08.l2 -text [T "Spawn To:"] -justify left -anchor w] -side left -anchor nw -padx 2
   pack [::ttk::entry $frame.right.row08.e -textvariable potato::eventConfig($w,spawnTo)] -side left -anchor nw \
                      -padx 2 -expand 1 -fill x
   lappend rightList $frame.right.row08.cb $frame.right.row08.e
@@ -4789,11 +4788,11 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   set confBasics [lindex $frame 0]
   set frame [lindex $frame 1]
   pack [set sub [::ttk::frame $frame.name]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text "World Name:" -width 17 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::label $sub.label -text [T "World Name:"] -width 17 -justify left -anchor w] -side left -padx 3
   pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,name) -width 50] -side left -padx 3
 
   pack [set sub [::ttk::frame $frame.host]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text "1st Address:" -width 17 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::label $sub.label -text [T "1st Address:"] -width 17 -justify left -anchor w] -side left -padx 3
   pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,host) -width 50] -side left -padx 3  
 
   pack [set sub [::ttk::frame $frame.port]] -side top -pady 5 -anchor nw
@@ -4913,7 +4912,8 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   bind $outText <1> [list ::potato::configureText $w Click $outText top,bg]
   bind $inText <1> [list ::potato::configureText $w Click $inText bottom,bg]
 
-  foreach {x y} [list [T "Normal Colours"] "" [T "Highlight Colours"] "h"] {
+  foreach {x y} [list [T "Normal Colours"] "" \
+                      [T "Highlight Colours"] "h"] {
      $outText insert end "\n   $x:\n      "
      foreach {letter colour} [list N fg R r G g Bl b C c M m Y y Bk x W w] {
         $outText insert end $letter [list change ansi,$colour$y] "    "
@@ -4922,7 +4922,9 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
      $outText insert end "\n"
   }
   $outText insert end "\n   [T "System, Echo and Link Colours"]:\n      "
-  foreach {x y} [list Sys ansi,system Echo ansi,echo Link ansi,link] {
+  foreach {x y} [list [T "Sys"] ansi,system \
+                      [T "Echo"] ansi,echo \
+                      [T "Link"] ansi,link] {
      $outText insert end $x [list change $y] "   "
      $outText tag configure $y -foreground $worldconfig($w,$y)
   }
@@ -5023,7 +5025,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [::ttk::label $sub.output.l -text [T "Limit Output Lines?"] -width 20 -anchor w -justify left] -side left
   pack [::ttk::checkbutton $sub.output.cb -variable potato::worldconfig($w,outputLimit,on) -onvalue 1 -offvalue 0] -side left
   pack [::ttk::frame $sub.output-to] -padx 5 -side left
-  pack [::ttk::label $sub.output-to.l -text [T "To:"] -width 5] -side left
+  pack [::ttk::label $sub.output-to.l -text [T "Limit To:"] -width 5] -side left
   pack [spinbox $sub.output-to.spin -textvariable ::potato::worldconfig($w,outputLimit,to) -from 0 -to 5000 \
              -validate all -validatecommand {string is integer %P} -width 6] -side left
 
@@ -5032,7 +5034,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [::ttk::label $sub.spawn.l -text [T "Limit Spawn Lines?"] -width 20 -anchor w -justify left] -side left
   pack [::ttk::checkbutton $sub.spawn.cb -variable potato::worldconfig($w,spawnLimit,on) -onvalue 1 -offvalue 0] -side left
   pack [::ttk::frame $sub.spawn-to] -padx 5 -side left
-  pack [::ttk::label $sub.spawn-to.l -text [T "To:"] -width 5] -side left
+  pack [::ttk::label $sub.spawn-to.l -text [T "Limit To:"] -width 5] -side left
   pack [spinbox $sub.spawn-to.spin -textvariable ::potato::worldconfig($w,spawnLimit,to) -from 0 -to 5000 \
              -validate all -validatecommand {string is integer %P} -width 6] -side left
 
@@ -5041,7 +5043,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [::ttk::label $sub.input.l -text [T "Limit Input Lines?"] -width 20 -anchor w -justify left] -side left
   pack [::ttk::checkbutton $sub.input.cb -variable potato::worldconfig($w,inputLimit,on) -onvalue 1 -offvalue 0] -side left
   pack [::ttk::frame $sub.input-to] -padx 5 -side left
-  pack [::ttk::label $sub.input-to.l -text [T "To:"] -width 5] -side left
+  pack [::ttk::label $sub.input-to.l -text [T "Limit To:"] -width 5] -side left
   pack [spinbox $sub.input-to.spin -textvariable ::potato::worldconfig($w,inputLimit,to) -from 0 -to 5000 \
              -validate all -validatecommand {string is integer %P} -width 6] -side left
 
@@ -5057,9 +5059,10 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [set mc [::ttk::frame $frame.mc]] -side top -anchor nw
 
   pack [set sub [::ttk::frame $frame.btns]] -side top -anchor s -pady 35 -padx 25
-  pack [::ttk::button $sub.add -command [list ::potato::configureTimerAddEdit $w 1 ${win}_subToplevel_timerAE] -text "Add Timer"] -padx 5 -side left
-  pack [set tEdit [::ttk::button $sub.edit -command [list ::potato::configureTimerAddEdit $w 0 ${win}_subToplevel_timerAE] -text "Edit Timer" -state disabled]] -padx 5 -side left
-  pack [set tDel [::ttk::button $sub.del -command [list ::potato::configureTimerDelete $w] -text "Delete Timer" -state disabled]] -padx 5 -side left
+  pack [::ttk::button $sub.add -command [list ::potato::configureTimerAddEdit $w 1 ${win}_subToplevel_timerAE] -text [T "Add Timer"]] -padx 5 -side left
+  pack [set tEdit [::ttk::button $sub.edit -command [list ::potato::configureTimerAddEdit $w 0 ${win}_subToplevel_timerAE] \
+                                           -text [T "Edit Timer"] -state disabled]] -padx 5 -side left
+  pack [set tDel [::ttk::button $sub.del -command [list ::potato::configureTimerDelete $w] -text [T "Delete Timer"] -state disabled]] -padx 5 -side left
   set worldconfig($w,timer,edit) $tEdit
   set worldconfig($w,timer,delete) $tDel
 
@@ -5125,7 +5128,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
        set frame [lindex $frame 1]
 
        pack [set sub [::ttk::frame $frame.connect]] -side top -pady 5 -anchor nw
-       pack [::ttk::label $sub.l -text "Send before Login info:"] -side top
+       pack [::ttk::label $sub.l -text [T "Send before Login info:"]] -side top
        pack [set sub [::ttk::frame $sub.tframe]] -side top -pady 3 -anchor nw
        pack [text $sub.txt -height 10 -width 78 -undo 0 -wrap word -font TkFixedFont \
                     -yscrollcommand [list $sub.sb set]] -side left -anchor nw -fill both
@@ -5135,7 +5138,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
        set worldconfig($w,CONFIG,autosend,connect) $sub.txt
 
        pack [set sub [::ttk::frame $frame.login]] -side top -pady 5 -anchor nw
-       pack [::ttk::label $sub.l -text "Send after Login info:"] -side top
+       pack [::ttk::label $sub.l -text [T "Send after Login info:"]] -side top
        pack [set sub [::ttk::frame $sub.tframe]] -side top -pady 3 -anchor nw
        pack [text $sub.txt -height 10 -width 78 -undo 0 -wrap word -font TkFixedFont \
                     -yscrollcommand [list $sub.sb set]] -side left -anchor nw -fill both
@@ -6244,7 +6247,7 @@ proc ::potato::i18nPotato {} {
   # This is where we've used more verbose messages in some places to make phrases which are repeated in English, but with
   # different context, translatable as different strings in other languages. In English we convert the verbose form back to
   # the shorter version. NOTE: Must be done before we load translations, otherwise we may clobber the user's preferred translation.
-  namespace eval :: {::msgcat::mcmset en [list "Convert To:" "To:" "Recipient:" "To:"]}
+  namespace eval :: {::msgcat::mcmset en [list "Convert To:" "To:" "Recipient:" "To:" "Limit To:" "To:" "Spawn To:" "To:"]}
 
   # Load translation files. We do this in two steps:
   # 1) Load *.ptf files using [::potato::loadTranslationFile]. These are just message catalogues.
@@ -6558,7 +6561,9 @@ proc ::potato::showStats {} {
   wm withdraw $win
 
   set sb $win.ysb
-  foreach x [list name conns time] y [list "MU* Name" "No of Connections" "Total Connection Time"] {
+  foreach x [list name conns time] y [list [T "MU* Name"] \
+                                           [T "No of Connections"] \
+                                           [T "Total Connection Time"]] {
      set lb [listbox $win.lb_$x -yscrollcommand [list $sb set] -activestyle none]
      lappend listboxes $lb
      $lb insert end $y
@@ -6893,7 +6898,9 @@ proc ::potato::history {{c ""}} {
   bindtags $filter [lreplace $bindtags 0 1 [lindex $bindtags 1] [lindex $bindtags 0]]
 
   pack [::ttk::frame $frame.btns1] -side top -anchor nw -expand 0 -fill x -pady 3
-  foreach {x y z} [list 1 top [T "Top Input"] 2 btm [T "Bottom Input"] 3 send [T "Send to MUSH"]] {
+  foreach {x y z} [list 1 top [T "Top Input"] \
+                        2 btm [T "Bottom Input"] \
+                        3 send [T "Send to MUSH"]] {
       pack [::ttk::frame $frame.btns1.$y] -side left -expand 1 -fill x -anchor n
       pack [set btn($y) [::ttk::button $frame.btns1.$y.btn -text $z \
                 -command [list ::potato::historySub $c $win $tree $x]]] -side top -anchor center
@@ -8727,9 +8734,9 @@ proc ::potato::slashConfig {{w ""}} {
            -xscrollcommand [list $treeframe.sbX set] -selectmode browse -height 5]
   set sbX [::ttk::scrollbar $treeframe.sbX -orient horizontal -command [list $tree xview]]
   set sbY [::ttk::scrollbar $treeframe.sbY -orient vertical -command [list $tree yview]]
-    $tree heading Name -text "  [T Name]  "
-    $tree heading Pattern -text "  [T Pattern]  "
-    $tree heading Type -text "  [T Type]  "
+    $tree heading Name -text "  [T "Name"]  "
+    $tree heading Pattern -text "  [T "Pattern"]  "
+    $tree heading Type -text "  [T "Type"]  "
 
   foreach {x y} [list Name 100 Pattern 100 Type 50] {
     $tree column $x -width $y
@@ -8768,7 +8775,7 @@ proc ::potato::slashConfig {{w ""}} {
   pack [::ttk::label $sub.l -text [T "/command Name:"] -width 18] -side left -padx 3
   pack [set name [::ttk::entry $sub.e -textvariable ::potato::slashConfig($w,name) -width 18]] \
       -side left -fill x -padx 3
-  pack [set enabled [::ttk::checkbutton $sub.enabled -variable ::potato::slashConfig($w,enabled) -text "Enabled?" \
+  pack [set enabled [::ttk::checkbutton $sub.enabled -variable ::potato::slashConfig($w,enabled) -text [T "Enabled?"] \
              -onvalue 1 -offvalue 0]] -side left -padx 3
 
   pack [set sub [::ttk::frame $bottom.pattern]] -side top -fill x -padx 4 -pady 3
@@ -8780,7 +8787,7 @@ proc ::potato::slashConfig {{w ""}} {
   pack [::ttk::label $sub.l -text [T "Pattern Type:"] -width 18] -side left -padx 3
   pack [set patternType [::ttk::combobox $sub.type -textvariable ::potato::slashConfig($w,patternType) \
              -values [list Wildcard Regexp] -width 15 -state readonly]] -side left -padx 3
-  pack [set case [::ttk::checkbutton $sub.case -variable ::potato::slashConfig($w,case) -text "Case?" \
+  pack [set case [::ttk::checkbutton $sub.case -variable ::potato::slashConfig($w,case) -text [T "Case?"] \
              -onvalue 1 -offvalue 0]] -side left -padx 3
 
   pack [set sub [::ttk::frame $bottom.send]] -side top -fill x -padx 4 -pady 3
