@@ -465,6 +465,8 @@ title:Version 2.0.0b6
   * Fixed bug that caused the window to flash, even when no new text was displayed. Reported by Null.
   * Background colors are no longer shown highlighted, in line with the ANSI spec. Requested by Trinsec and Brazil.
   * Small changes to default colors. Suggested by Trinsec.
+  * Bug in /grab fixed by Stoko.
+  * Fix bug in Custom /command window. Reported by Stoko.
 -----------------------------
 name:changes,2.0.0b5
 title:Version 2.0.0b5

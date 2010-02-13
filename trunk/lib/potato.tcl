@@ -109,7 +109,7 @@ proc ::potato::setPrefs {readfile} {
   set world(-1,slashcmd) [list grab]
   set world(-1,slashcmd,grab) "^(.+)$"
   set world(-1,slashcmd,grab,type) "regexp"
-  set world(-1,slashcmd,grab,send) "@decompile/tf %1"
+  set world(-1,slashcmd,grab,send) "@decompile/tf %0"
   set world(-1,slashcmd,grab,case) 1
 
   set world(-1,fcmd,2) ""
@@ -8731,7 +8731,6 @@ proc ::potato::slashConfig {{w ""}} {
   wm withdraw $win
   wm title $win $title
 
-  bind $win <Destroy> [list array unset ::potato::slashConfig $w,*]
   set slashConfig($w,win) $win
 
   pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both
@@ -8840,7 +8839,7 @@ proc ::potato::slashConfig {{w ""}} {
 
   bind $win <Escape> [list destroy $win];#abc edit this to "discard" if currently editing, and "destroy" if not
   # Bind this to the tree, not the toplevel, or we get a fire for every child widget too. Feh.
-  bind $slashConfig($w,win,top,tree) <Destroy> [list ::potato::slashConfigClose $w]
+  bind $slashConfig($w,win,top,tree) <Destroy> "[list ::potato::slashConfigClose $w] ; [list array unset ::potato::slashConfig $w,*]"
 
   # Propagate the list. We use the array elements, to include disabled slash commands
   set count 0
