@@ -4624,7 +4624,7 @@ proc ::potato::eventConfigSelect {w states} {
 
   unset colours
 
-  set eventConfig($w,input,window) [lindex [list None One Two] $world($w,events,$this,input,window)]
+  set eventConfig($w,input,window) [lindex [list None One Two Focus] $world($w,events,$this,input,window)]
 
   $eventConfig($w,conf,input) delete 1.0 end
   $eventConfig($w,conf,input) insert end $world($w,events,$this,input,string)
