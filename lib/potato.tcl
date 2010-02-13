@@ -2623,21 +2623,20 @@ proc ::potato::parseSpawnList {spawns c} {
      }
 
   set returnList [list]
-  set spawnCreateErrors [list [T "Invalid Spawn Name"] \
-                              [T "Too many spawns"]]
+
   # OK, first, let's go through and get a list of valid names
   foreach x [split [string trim $spawns] " "] {
     if { $x eq "" } {
          # Ignore empty ones silently
          continue;
-       } elseif { ([info exists conn($c,spawns,$x)] || [set create [createSpawnWindow $c $x]] == -1) } {
+       } elseif { ([info exists conn($c,spawns,$x)] || [set create [createSpawnWindow $c $x]] eq "") } {
          # It's good!
          if { $conn($c,spawns,$x) ni $returnList } {
               lappend returnList $conn($c,spawns,$x)
             }
        } else {
          # Uh-oh
-         outputSystem $c [T "Unable to create new spawn window \"%s\": %s" $x [lindex $spawnCreateErrors $create]]
+         outputSystem $c [T "Unable to create new spawn window \"%s\": %s" $x $create]
        }
   }
   # Return the list of successful ones
@@ -2649,16 +2648,16 @@ proc ::potato::parseSpawnList {spawns c} {
 #: arg c connection id
 #: arg name Spawn window name
 #: desc Attempt to create a spawn window $name using settings from connection $c
-#: return -1 on success, 0 or greater on failure
+#: return empty string on success, error message on failure
 proc ::potato::createSpawnWindow {c name} {
   variable misc;
   variable conn;
   variable potato;
 
   if { ![regexp {^[A-Za-z][A-Za-z0-9_-]{0,49}$} $name] } {
-       return 0;# bad name
+       return [T "Invalid Spawn Name"];# bad name
      } elseif { $misc(maxSpawns) > 0 && [llength [arraySubelem conn $c,spawns]] >= $misc(maxSpawns) } {
-       return 1;# too many spawns already
+       return [T "Too many spawns"];# too many spawns already
      } else {
        # set it up. NOTE: Using a ::ttk::frame makes it go haywire when using [wm manage]!
        set t [text .spawn_${c}_$name]
@@ -2670,7 +2669,7 @@ proc ::potato::createSpawnWindow {c name} {
        bindtags $t [lreplace [bindtags $t] $pos $pos]
 
        ::skin::$potato(skin)::addSpawn $c $name
-       return -1;
+       return "";
      }
 
 };# ::potato::createSpawnWindow

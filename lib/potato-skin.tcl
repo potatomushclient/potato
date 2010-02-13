@@ -1125,6 +1125,9 @@ proc ::skin::potato::fixWindowOrder {c} {
 
   raise $widgets(toolbar)
   raise $widgets(worldbar)
+  if { [winfo exists $widgets(spawnbar)] && [winfo manager $widgets(spawnbar)] ne "" } {
+       raise $widgets(spawnbar)
+     }
   raise $widgets(conn,$c,txtframe)
 
   raise [::potato::connInfo $c input1]
@@ -1415,14 +1418,15 @@ proc ::skin::potato::spawnBar {{c ""}} {
   variable opts;
   variable disp;
 
-  catch {destroy {*}[winfo children $widgets(spawnbar)]}
-  if { !$opts(spawnbar) } {
-       pack forget $widgets(spawnbar)
-       return;
-     }
-
   if { $c eq "" } {
        set c [::potato::up]
+     }
+
+  catch {destroy {*}[winfo children $widgets(spawnbar)]}
+  if { !$opts(spawnbar) } {
+       catch {pack forget $widgets(spawnbar)}
+       fixWindowOrder $c
+       return;
      }
 
   foreach name [lsort -dictionary [::potato::connInfo $c spawns]] {
@@ -1437,10 +1441,12 @@ proc ::skin::potato::spawnBar {{c ""}} {
   }
 
   if { ![llength [winfo children $widgets(spawnbar)]] } {
-       pack forget $widgets(spawnbar)
+       catch {pack forget $widgets(spawnbar)}
      } else {
-       pack $widgets(spawnbar) -in $widgets(main) -side top -expand 0 -fill x -anchor nw -after $widgets(worldbar)
+       catch {pack $widgets(spawnbar) -in $widgets(main) -side top -expand 0 -fill x -anchor nw -after $widgets(worldbar)}
      }
+
+  fixWindowOrder $c
 
   return;
 
