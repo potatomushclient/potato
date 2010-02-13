@@ -467,6 +467,7 @@ title:Version 2.0.0b6
   * Small changes to default colors. Suggested by Trinsec.
   * Bug in /grab fixed by Stoko.
   * Fix bug in Custom /command window. Reported by Stoko.
+  * The "Input" option for Events was not saved correctly when set to "Focus".
 -----------------------------
 name:changes,2.0.0b5
 title:Version 2.0.0b5
