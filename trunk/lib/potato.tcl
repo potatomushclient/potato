@@ -508,7 +508,7 @@ proc ::potato::mailWindow {{c ""}} {
 
   set w $conn($c,world)
 
-  wm title $win "Send Mail - \[$c. $world($w,name)]"
+  wm title $win [T "Send Mail - \[%d. %s\]" $c $world($w,name)]
 
   set menu [menu $win.m -tearoff 0]
   $win configure -menu $menu
@@ -5401,11 +5401,11 @@ proc ::potato::configureTimerAddEdit {w add win} {
   pack [::ttk::frame $frame.howmany.continuous] -side top -anchor w
   pack [::ttk::radiobutton $frame.howmany.continuous.rb -variable ::potato::worldconfig($w,timer,ae,continuous) \
                    -value 1 -command [list $frame.howmany.count.sb configure -state disabled] \
-                   -text "Continuously"] -side left -anchor w
+                   -text [T "Continuously"]] -side left -anchor w
   pack [::ttk::frame $frame.howmany.count] -side top -anchor w -fill x;
   pack [::ttk::radiobutton $frame.howmany.count.rb -variable ::potato::worldconfig($w,timer,ae,continuous) \
                    -value 0 -command [list $frame.howmany.count.sb configure -state normal] \
-                   -text "Exactly"] -side left -anchor w
+                   -text [T "Exactly"]] -side left -anchor w
   pack [spinbox $frame.howmany.count.sb -from 0 -to 10000 -increment 1 -width 5 -justify right \
                         -validate key -validatecommand {string is integer %P} \
                         -textvariable potato::worldconfig($w,timer,ae,count)] \
