@@ -1,0 +1,19 @@
+#summary Download links for Potato
+
+= Introduction =
+
+You can currently download binaries of *Potato* for Windows and Linux.
+
+The code is also available to download as a Starkit, and as a zip archive of Tcl source code files. You can also [RunFromSource#SVN checkout the latest copy from SVN]. These methods all require a copy of the [GettingTcl Tcl Intepreter].
+
+==Windows==
+
+You can download the [http://code.google.com/p/potatomushclient/downloads/list?can=2&q=OpSys%3AWindows+Type%3AExecutable+Featured latest Windows binary here]. [http://code.google.com/p/potatomushclient/downloads/list?can=1&q=OpSys%3AWindows+Type%3AExecutable&colspec=Filename+Summary+Uploaded+Size+DownloadCount+Opsys+Type Older versions] are also available.
+
+==Linux==
+
+The latest Linux binaries are [http://code.google.com/p/potatomushclient/downloads/list?can=3&q=OpSys%3ALinux+Type%3AExecutable&colspec=Filename+Summary+Uploaded+Size+DownloadCount+Opsys+Type available here]. You can also download [http://code.google.com/p/potatomushclient/downloads/list?can=1&q=OpSys%3ALinux+Type%3AExecutable&colspec=Filename+Summary+Uploaded+Size+DownloadCount+Opsys+Type older versions].
+
+==MacOS X==
+
+There are not currently any MacOS X binaries available. While *Potato* should run on MacOS without any problems, some people have reported issues (normally related to the program being slow), so binaries are not currently being built. If you'd like to try running Potato on MacOS X, however, you can [RunFromSource try running it from SVN, a Starkit or the source].
