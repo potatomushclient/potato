@@ -1,0 +1,47 @@
+= Running Potato from Source =
+
+The simplest way to run _Potato_ is using a [Downloads binary], which contains the _Potato_ source and a Tcl interpreter in a single file. However, if you don't wish to do this (either because a binay is not available for your platform, because you already have Tcl installed on your system, or because you wish to make changes to the source), you can run Potato from source. There are three ways to do this:
+
+* Download a [Downloads#Source Starkit]
+* Download the [Downloads#Source source code]
+* Checkout from SVN
+
+A Starkit is a single-file archive of Tcl source code. (All of these methods require that you have [GetTcl Tcl installed].)
+
+----
+
+=Instructions=
+
+To run from source, you should first create a directory for Potato (for example, *C:\Potato*). Place the [GetTcl TclKit] for your platform in this directory.
+
+==Starkit==
+If you're using a Starkit, the [Downloads#Source _Potato_ Starkit] in *C:\Potato*. To run Potato, run
+
+{{{
+C:\Potato\tclkit potato.kit
+}}}
+
+(using the correct filenames for your versions of Tcl and _Potato_). On Windows, you can drag-and-drop the Potato.kit onto the Tclkit.exe to run it.
+
+----
+
+==From Source==
+If you're [Downloads#Source downloading the source], extract the *potato.vfs* folder from the archive into *C:\Potato*
+
+==SVN==
+From *C:\Potato*, checkout a copy of Potato, with the command
+
+{{{
+svn checkout http://potatomushclient.googlecode.com/svn/trunk/ potato.vfs
+}}}
+
+This creates the directory *C:\Potato\potato.vfs*, with the source code inside.
+
+===Running Potato===
+When you have the source in place, download the [http://potatomushclient.com/scripts/potato-launch-from-vfs.tcl potato-launch-from-vfs.tcl] script, and place it in *C:\Potato*. Then, to run _Potato_, do
+
+{{{
+C:\Potato\tclkit potato-launch-from-vfs.tcl
+}}}
+
+or, on Windows, drag-and-drop the .tcl file onto the Tclkit.exe. This should run _Potato_ from the source code.
