@@ -12,7 +12,7 @@ A Starkit is a single-file archive of Tcl source code. (All of these methods req
 
 =Instructions=
 
-To run from source, you should first create a directory for Potato (for example, *C:\Potato*). Place the [GetTcl TclKit] for your platform in this directory.
+To run from source, you should first create a directory for Potato (for example, *C:\Potato*). Place the [GettingTcl TclKit] for your platform in this directory.
 
 ==Starkit==
 If you're using a Starkit, the [Downloads#Source Potato Starkit] in *C:\Potato*. To run Potato, run
