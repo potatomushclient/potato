@@ -2,9 +2,9 @@
 
 The simplest way to run _Potato_ is using a [Downloads binary], which contains the _Potato_ source and a Tcl interpreter in a single file. However, if you don't wish to do this (either because a binay is not available for your platform, because you already have Tcl installed on your system, or because you wish to make changes to the source), you can run Potato from source. There are three ways to do this:
 
-* Download a [Downloads#Source Starkit]
-* Download the [Downloads#Source source code]
-* Checkout from SVN
+  * Download a [Downloads#Source Starkit]
+  * Download the [Downloads#Source source code]
+  * Checkout from SVN
 
 A Starkit is a single-file archive of Tcl source code. (All of these methods require that you have [GetTcl Tcl installed].)
 
