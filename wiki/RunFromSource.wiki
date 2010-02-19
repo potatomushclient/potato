@@ -6,7 +6,7 @@ The simplest way to run _Potato_ is using a [Downloads binary], which contains t
   * Download the [Downloads#Source source code]
   * Checkout from SVN
 
-A Starkit is a single-file archive of Tcl source code. (All of these methods require that you have [GetTcl Tcl installed].)
+A Starkit is a single-file archive of Tcl source code. (All of these methods require that you have [GettingTcl Tcl installed].)
 
 ----
 
@@ -15,7 +15,7 @@ A Starkit is a single-file archive of Tcl source code. (All of these methods req
 To run from source, you should first create a directory for Potato (for example, *C:\Potato*). Place the [GetTcl TclKit] for your platform in this directory.
 
 ==Starkit==
-If you're using a Starkit, the [Downloads#Source _Potato_ Starkit] in *C:\Potato*. To run Potato, run
+If you're using a Starkit, the [Downloads#Source Potato Starkit] in *C:\Potato*. To run Potato, run
 
 {{{
 C:\Potato\tclkit potato.kit
