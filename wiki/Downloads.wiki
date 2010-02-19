@@ -4,7 +4,7 @@
 
 You can currently download binaries of _Potato_ for Windows and Linux.
 
-The code is also available to download as a Starkit, and as a zip archive of Tcl source code files. You can also [RunFromSource#SVN checkout the latest copy from SVN]. These methods all require a copy of the [GettingTcl Tcl Intepreter].
+The code is also available to download as a Starkit, and as a zip archive of Tcl source code files. You can also [RunFromSource checkout the latest copy from SVN]. These methods all require a copy of the [GettingTcl Tcl Intepreter].
 
 ==Windows==
 
