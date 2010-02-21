@@ -3,7 +3,7 @@
     * License
     * Contact Me
     * What is a MUSH/MUD/MU`*`?
-    * Potato's Features
+    * [Features Potato's Features]
     * Credits and Contributions
   * Adding and Configuring Worlds
     * Basic Settings
