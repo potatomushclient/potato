@@ -52,4 +52,6 @@ More stuff to add:
   * Logging
   * Uploading Files
   * Making Potato the default Telnet Client
+
+[http://code.google.com/p/potatomushclient/w/list All Wiki Pages]
   
