@@ -1,0 +1,33 @@
+#summary List of Potato's features
+
+=Potato's Features=
+
+Below is a list of the main features supported by Potato.
+
+  * Full Unicode support
+  * Runs on Windows and Linux
+  * Unlimited number of worlds, each fully customizable
+  * Unlimited number of connections to worlds
+  * ANSI Colour support, customizable per-world:
+    * 16 colours (8 normal, plus 8 highlight)
+    * Underline and Flash
+    * 256 XTerm Colours
+  * Logging support
+  * Upload files directly to the game. Useful for code
+  * Customizable Events, triggered when output matches a specified pattern:
+    * Regexp, glob (wildcard) or exact-string matching
+    * Recolour string (foreground or background) in output window
+    * Omit line from the display
+    * Omit line from log files
+    * Spawn to an additional output window. Useful for separating channel chat and pages from RP.
+    * Send a response back to the MUSH
+    * Place a string into the input window
+  * Timers, to send commands repeatedly at regular intervals
+  * Automatic recobnect when booted, or when a connection fails
+  * Unlimited, searchable output buffer
+  * Unlimited, searchable command input history
+  * Easy to install and uninstall (download to install, delete to uninstall)
+  * Customizable keyboard bindings
+  * Graphical Mail window for sending in-game mail, which works with most common @mail/+mail formats
+
+There are many more features than those listed above, with more planned and added all the time.
