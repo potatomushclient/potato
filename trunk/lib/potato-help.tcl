@@ -229,6 +229,7 @@ proc ::help::makeWindow {} {
   pack [::ttk::button $frame.bottom.close -text "Close" -width 8 \
                    -command [list destroy $win] -default active] -side top -anchor center
   if { ![catch {wm attributes $win -topmost 0}] } {
+       set ::help::aot 0
        place [::ttk::checkbutton $frame.bottom.aot -text "Always on Top?" -variable ::help::aot -command "wm attributes $win -topmost \$::help::aot"] -relx 1 -rely .5 -anchor e
      }
   
