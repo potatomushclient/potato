@@ -1,0 +1,55 @@
+#summary Wiki Contents Page
+  * [WelcomeToPotato Welcome to Potato]
+    * License
+    * Contact Me
+    * What is a MUSH/MUD/MU`*`?
+    * Potato's Features
+    * Credits and Contributions
+  * Adding and Configuring Worlds
+    * Basic Settings
+    * Connection Settings
+      * Telnet Protocols
+    * Display Settings
+      * ANSI, Colours and Fonts
+      * Misc Display Options
+    * Misc Options
+    * Notes
+    * Timers
+    * F-Commands
+  * Configuring Potato
+    * Activity Settings
+    * Misc Settings
+      * Valid Clock Formats
+  * Events
+    * Event Patterns
+    * Processing Order
+    * When to run Events
+    * Recolouring Matched Text
+    * Omitting from Display/Logs
+    * Spawning
+    * Sending a Command
+    * Placing text in an Input Window
+    * Examples
+  * Technology Behind Potato
+    * Tcl/Tk
+    * Winico and Winflash
+  * Version Change History
+    * Version 2.0.0b6
+    * Version 2.0.0b5
+    * Version 2.0.0b4
+    * Version 2.0.0b3
+    * Version 2.0.0b2
+    * Version 2.0.0b1
+    * Version 2.0.0a15
+    * Version 2.0.0a14
+    * Version 2.0.0a13
+    * Version 2.0.0a12
+    * Version 2.0.0a11
+
+More stuff to add:
+  * /commands
+  * Keyboard Shortcuts
+  * Logging
+  * Uploading Files
+  * Making Potato the default Telnet Client
+  
