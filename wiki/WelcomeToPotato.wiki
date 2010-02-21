@@ -1,0 +1,8 @@
+#summary Wiki Introduction Page
+=Welcome to Potato!=
+
+_Potato_ is a MU`*` client written in Tcl/Tk 8.5. The latest version of _Potato_ is 2.0.0b5.
+
+The help-files are still being written and revised, so there's quite a bit missing. If you need help with anything, feel free to contact me. Bug reports, fixes, suggestions, etc, are also welcome, either by email or, preferably, via a [http://code.google.com/p/potatomushclient/issues/list ticket on the website].
+
+-- Mike
