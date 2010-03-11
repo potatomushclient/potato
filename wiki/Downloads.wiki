@@ -14,6 +14,8 @@ You can download the *[http://code.google.com/p/potatomushclient/downloads/list?
 
 The latest Linux binaries are *[http://code.google.com/p/potatomushclient/downloads/list?can=3&q=OpSys%3ALinux+Type%3AExecutable&colspec=Filename+Summary+Uploaded+Size+DownloadCount+Opsys+Type available here]*. You can also download [http://code.google.com/p/potatomushclient/downloads/list?can=1&q=OpSys%3ALinux+Type%3AExecutable&colspec=Filename+Summary+Uploaded+Size+DownloadCount+Opsys+Type older versions].
 
+_Note: Currently (as of 2.0.0b5), you must have libstdc++5 installed to run _Potato_ on Linux, though this should change soon. On Fedora this is provided by the 'compat-libstdc++' package._
+
 ==MacOS X==
 
 There are not currently any MacOS X binaries available. While _Potato_ should run on MacOS without any problems, some people have reported issues (normally related to the program being slow), so binaries are not currently being built. If you'd like to try running _Potato_ on MacOS X, however, you can [RunFromSource try running it from SVN, a Starkit or the source].
