@@ -760,7 +760,7 @@ proc ::skin::potato::toolbarLabels {} {
 proc ::skin::potato::doWorldBarButton {c} {
   variable widgets;
 
-  set widgets(worldbar,$c) [ttk::button $widgets(worldbar).button-$c -text "$c. [::potato::connInfo $c name]" -style Toolbutton -command [list ::skin::potato::worldBarButtonClick $c] -compound left]
+  set widgets(worldbar,$c) [ttk::button $widgets(worldbar).button-$c -style Toolbutton -command [list ::skin::potato::worldBarButtonClick $c] -compound left]
   bind $widgets(worldbar,$c) <Button-3> [list ::skin::potato::worldBarButtonMenu %W $c %X %Y]
   set after [list]
   foreach x [lsort -dictionary [array names widgets worldbar,*]] {
@@ -772,10 +772,40 @@ proc ::skin::potato::doWorldBarButton {c} {
   # up #77eecceeee44 newact #ffffbbe77ve7 disconnected #ffff99999999 \
   # normal [ttk::style lookup TFrame -background [$widgets(worldbar) state]]
 
+  worldBarButtonNames
+
   return;
 
 };# ::skin::potato::doWorldBarButton
 
+proc ::skin::potato::worldBarButtonNames {} {
+  variable widgets;
+
+  set len [llength [array names widgets worldbar,*]]
+  if { $len >= 20 } {
+       set clip 6
+     } elseif { $len >= 15 } {
+       set clip 9
+     } elseif { $len >= 8 } {
+       set clip 18
+     } else {
+       set clip 30
+     }
+  foreach x [array names widgets worldbar,*] {
+     foreach {tmp c} [split $x ,] {break}
+     set name "$c. [::potato::connInfo $c name]"
+     ::potato::tooltip $widgets($x) $name
+     if { [expr {[string length $name] + 3}] > $clip } {
+          $widgets($x) configure -text "[string range $name 0 $clip]..."
+        } else {
+          $widgets($x) configure -text $name
+        }
+  }
+
+  return;
+
+};# ::skin::potato::worldBarButtonNames
+  
 #: proc ::skin::potato::worldBarButtonClick
 #: arg c connection id
 #: desc Handle a click on the worldbar button for connection $c. If the connection is not up, show it. If it is up, but we're showing one of it's spawns instead, reshow the main window
@@ -968,7 +998,7 @@ proc ::skin::potato::status {c} {
        $widgets(toolbar,next) configure -state normal
     }
 
-  catch {$widgets(worldbar,$c) configure -text "$c. [::potato::connInfo $c name]"}
+  worldBarButtonNames
   if { [set pos [lsearch $idle(ids) $c]] != -1 } {
        set idle(list) [lreplace $idle(list) $pos $pos "$c. [::potato::connInfo $c name]"]
      }
@@ -1155,6 +1185,8 @@ proc ::skin::potato::unshow {c} {
   pack forget $widgets(conn,$c,txtframe) $input1 $input2
   catch {wm withdraw $widgets(conn,$c,find)}
   catch {destroy {*}[winfo children $widgets(spawnbar)]}
+
+  worldBarButtonNames
 
   return;
 
@@ -1351,6 +1383,7 @@ proc ::skin::potato::export {c} {
 
   catch {array unset widgets conn,$c,*}
   unset -nocomplain disp($c)
+  worldBarButtonNames
   return;  
 
 };# ::skin::potato::export
