@@ -2701,9 +2701,10 @@ proc ::potato::destroySpawnWindow {c name} {
        return; # no such spawn
      }
 
-  ::skin::$potato(skin)::delSpawn $c $name
-  destroy $conn($c,spawns,$name)
+  set togo $conn($c,spawns,$name)
   unset conn($c,spawns,$name)
+  ::skin::$potato(skin)::delSpawn $c $name
+  destroy $togo
 
   return;
 
