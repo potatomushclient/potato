@@ -59,7 +59,8 @@ proc ::potato::setPrefs {readfile} {
   set world(-1,loginDelay) 1.5
   set world(-1,type) "MUSH"
   set world(-1,telnet) 1
-  set world(-1,unicode) -1
+  set world(-1,encoding,start) iso8859-1
+  set world(-1,encoding,negotiate) 1
   set world(-1,groups) [list]
 
   set world(-1,proxy) "None"
@@ -105,6 +106,8 @@ proc ::potato::setPrefs {readfile} {
   set world(-1,mailConvertReturns,to) "%r"
 
   set world(-1,events) [list]
+
+  set world(-1,verbose) 0;# show extra system messages when things happen?
 
   set world(-1,slashcmd) [list grab]
   set world(-1,slashcmd,grab) "^(.+)$"
@@ -331,6 +334,15 @@ proc ::potato::manageWorldVersion {w version} {
        set world($w,type) [lindex [list MUD MUSH] $world($w,type)]
      }
 
+  if { ! ($version & $wf(new_encoding)) } {
+       if { [info exists world($w,unicode)] } {
+            if { $world($w,unicode) == 1 } {
+                 set world($w,encoding,negotiate) 0
+               }
+            unset -nocomplain $world($w,unicode)
+          }
+     }
+
   # Example:
   # if { ! ($version & $wf(some_new_feature)) } {
   #      set world($w,new_features_var) foobar
@@ -450,6 +462,7 @@ proc ::potato::worldFlags {{total 0}} {
 
   set f(has_world_flags) 1    ;# world file uses flags
   set f(verbose_mu_type) 2    ;# Uses "MUD" and "MUSH" (not 0 and 1) for world($w,type)
+  set f(new_encoding)    4    ;# Has the new $w,encoding,* options in place of $w,unicode
 
   if { !$total } {
        return [array get f];
@@ -1424,8 +1437,6 @@ proc ::potato::sendRaw {c str telnet} {
        catch {{*}$cmd}
        if { $telnet } {
             catch {flush $conn($c,id)}
-          }
-       if { $telnet } {
             fconfigure $conn($c,id) -encoding $encoding
           }
      }
@@ -2018,9 +2029,12 @@ proc ::potato::connectVerifyComplete {c} {
   incr world($w,stats,conns)
 
   fileevent $id writable {}
-  fconfigure $id -translation auto -encoding binary -eof {} -blocking 0 -buffering none
-  if { $world($conn($c,world),unicode) == 1 } {
-       catch {fconfigure $id -encoding utf-8}
+  fconfigure $id -translation auto -encoding iso8859-1 -eof {} -blocking 0 -buffering none
+  set encErr [catch {fconfigure $id -encoding $world($w,encoding,start)} encErrTxt];# change to preferred encoding if possible
+  if { $encErr } {
+       verbose $c [T "Unable to set encoding to %s: %s", $world($w,encoding,start) $encErrTxt]
+     } elseif { $world($w,encoding,start) ne "iso8859-1" } {
+       verbose $c [T "Encoding changed to %s." $world($w,encoding,start)]
      }
   set peer [fconfigure $id -peername]
   if { [lindex $peer 0] == [lindex $peer 1] } {
@@ -3079,6 +3093,24 @@ proc ::potato::outputSystem {c msg {tags ""}} {
   return;
 
 };# ::potato::outputSystem
+
+#: proc ::potato::verbose
+#: arg c connection id
+#: arg msg Message to display
+#: desc If conn $c is set to display verbose messages, output $msg as a system message
+#: return 1 if message was displayed, 0 if not
+proc ::potato::verbose {c msg} {
+  variable world;
+  variable conn;
+
+  if { $c == -1 || !$world($conn($c,world),verbose) } {
+       return 0;
+     }
+
+  ::potato::outputSystem $c $msg
+  return 1;
+
+};# ::potato::verbose
 
 #: proc ::potato::deleteSystemMessage
 #: arg c connection id
@@ -4868,12 +4900,18 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [spinbox $sub.spin -textvariable ::potato::worldconfig($w,autoreconnect,time) -from 0 -to 3600 \
              -validate all -validatecommand {string is integer %P} -width 6] -side left
 
-  pack [set sub [::ttk::frame $frame.utf]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text [T "Use UTF-8 (Unicode):"] -width 35 -justify left -anchor w] -side left -padx 3
-  pack [::ttk::combobox $sub.cb -textvariable ::potato::worldconfig($w,unicode) \
-             -values [list "Never" "When Available" "Always"] -width 20 -state readonly] -side left -padx 3
-  array set unicode [list -1 "When Available" 0 "Never" 1 "Always"]
-  set worldconfig($w,unicode) $unicode($worldconfig($w,unicode))
+  pack [set sub [::ttk::frame $frame.encStart]] -side top -pady 5 -anchor nw
+  pack [::ttk::label $sub.label -text [T "Starting Encoding:"] -width 35 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::combobox $sub.cb -textvariable ::potato::worldconfig($w,encoding,start) -width 20 -state readonly] -side left -padx 3
+  if { $potato::worldconfig($w,encoding,start) ni [encoding names] } {
+       $sub.cb config -values [lsort -dictionary [concat [encoding names] $potato::worldconfig($w,encoding,start)]]
+     } else {
+       $sub.cb config -values [lsort -dictionary [encoding names]]
+     }
+
+  pack [set sub [::ttk::frame $frame.encNegotiate]] -side top -pady 5 -anchor nw
+  pack [::ttk::label $sub.label -text [T "Negotiate Encoding?"] -width 35 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,encoding,negotiate) -onvalue 1 -offvalue 0] -side left
 
   pack [set sub [::ttk::frame $frame.loginStr]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "Login Format:"] -width 35  -justify left -anchor w] -side left -padx 3
@@ -5050,6 +5088,10 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [set sub [::ttk::frame $frame.telnet]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "Split Input Cmds?"] -width 20 -justify left -anchor w] -side left
   pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,splitInputCmds) -onvalue 1 -offvalue 0] -side left
+
+  pack [set sub [::ttk::frame $frame.verbose]] -side top -pady 5 -anchor nw
+  pack [::ttk::label $sub.label -text [T "Show Verbose Messages?"] -width 20 -justify left -anchor w] -side left
+  pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,verbose) -onvalue 1 -offvalue 0] -side left
 
   # Timers
   set frame [configureFrame $canvas [T "Timers"]]
@@ -5762,9 +5804,6 @@ proc ::potato::configureWorldCommit {w win} {
      }
 
   # Set Combobox values correctly, and hope someone changes the ttk::combobox eventually so that it can
-  # use different display/value strings.
-  array set unicode [list "When Available" -1 "Never" 0 "Always" 1]
-  set worldconfig($w,unicode) $unicode($worldconfig($w,unicode))
 
   array set world [array get worldconfig $w,*]
   set world($w,notes) $notes
