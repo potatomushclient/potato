@@ -1252,6 +1252,30 @@ proc ::skin::potato::rightclickOutput {c t evx evy evX evY} {
 
 };# ::skin::potato::rightclickOutput
 
+#: proc ::skin::potato::rightclickSpawnBar
+#: arg c connection id
+#: arg name spawn name
+#: arg evx %x event substitution
+#: arg evy %y event substitution
+#: arg evX %X event substitution
+#: arg evY %Y event substitution
+#: desc Handle a right-click on the button for conn $c's spawn $name on the spawn toolbar
+#: return nothing
+proc ::skin::potato::rightclickSpawnBar {c name evx evy evX evY} {
+  variable widgets;
+
+  # We reuse this, since it's only ever displayed in one place at a time, and all entries are deleted prior to display
+  set menu $widgets(rightclickOutputMenu)
+  $menu delete 0 end
+  $menu add command {*}[::potato::menu_label [::potato::T "&Close Spawn"]] -command [list ::potato::destroySpawnWindow $c $name]
+
+  tk_popup $menu $evX $evY
+
+  return;
+
+};# ::skin::potato::rightClickSpawnBar
+
+
 #: proc ::skin::potato::import
 #: arg c connection id
 #: desc REQUIRED by the skin protocol. Start managing connection $c in this skin; create any widgets needed, set vars, etc. The connection's text widgets can be packed into appropriate frames, etc, but should not be displayed on screen.
@@ -1417,11 +1441,10 @@ proc ::skin::potato::spawnBar {{c ""}} {
   variable widgets;
   variable opts;
   variable disp;
-
+puts "Running spawnBar"
   if { $c eq "" } {
        set c [::potato::up]
      }
-
   catch {destroy {*}[winfo children $widgets(spawnbar)]}
   if { !$opts(spawnbar) } {
        catch {pack forget $widgets(spawnbar)}
@@ -1438,6 +1461,7 @@ proc ::skin::potato::spawnBar {{c ""}} {
           $btn configure -image ::skin::potato::img::spawnbarNormal
         }
      pack $btn -side left -padx 8 -pady 5
+     bind $btn <Button-3> [list ::skin::potato::rightclickSpawnBar $c $name %x %y %X %Y]
   }
 
   if { ![llength [winfo children $widgets(spawnbar)]] } {
@@ -1464,10 +1488,12 @@ proc ::skin::potato::delSpawn {c name} {
   if { $disp($c) eq $name } {
        showSpawn $c ""
      }
-  set t $::potato::conn($c,spawns,$name)
-  bind $t <Button-3> {}
+  if { [info exists ::potato::conn($c,spawns,$name)] } {
+       bind $::potato::conn($c,spawns,$name) <Button-3> {}
+     }
+  catch {destroy $widgets(spawnbar).spawn_$name}
   if { [::potato::up] == $c } {
-       catch {destroy $widgets(spawnbar).spawn_$name}
+       spawnBar $c
      }
   return;
 
