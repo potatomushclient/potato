@@ -8327,6 +8327,11 @@ proc ::potato::mouseWheel {widget delta} {
 proc ::potato::send_mushage {window {clear 1}} {
   variable inputSwap;
 
+  if { [$window count -chars 1.0 end-1c] == 0 && $conn([up],connected) == 0 } {
+       reconnect [up]
+       return;
+     }
+
   set txt [$window get 1.0 end-1char]
   $window edit separator
   $window replace 1.0 end ""
