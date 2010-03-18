@@ -8326,6 +8326,7 @@ proc ::potato::mouseWheel {widget delta} {
 #: return nothing
 proc ::potato::send_mushage {window {clear 1}} {
   variable inputSwap;
+  variable conn;
 
   if { [$window count -chars 1.0 end-1c] == 0 && $conn([up],connected) == 0 } {
        reconnect [up]
