@@ -1353,6 +1353,7 @@ proc ::potato::newConnection {w} {
   set conn($c,widgets) [list]
   set conn($c,spawnAll) ""
   set conn($c,limited) [list]
+  set conn($c,debugPackets) 0
 
   if { $w == -1 } {
        connZero
@@ -1418,11 +1419,11 @@ proc ::potato::sendRaw {c str telnet} {
 
   # Make sure we have an id to send to, and that we're not still trying to connect
   if { $conn($c,id) ne "" && $conn($c,connected) == 1 } {
-       if { $::DEBUGPOTATO } {
-            if { !$telnet } {
-                 DEBUG_OUTPUT $c send "$str\n"
+       if { $conn($c,debugPackets) } {
+            if { $telnet } {
+                 debug_packet $c 0 $str
                } else {
-                 DEBUG_OUTPUT $c send "$str"
+                 debug_packet $c 0 "$str\n"
                }
           }
        set cmd [list ioWrite]
@@ -2324,6 +2325,39 @@ proc ::potato::disconnect {{c ""} {prompt 1}} {
 
 };# ::potato::disconnect
 
+#: proc ::potato::debug_packet
+#: arg c connection id
+#: arg dir 1 if text was received, 0 if sent
+#: arg text the text to print
+#: return nothing
+proc ::potato::debug_packet {c dir text} {
+
+  set win(toplevel) .debug_packet_$c
+  set win(txt,frame) $win(toplevel).txt
+  set win(txt,txt) $win(txt,frame).t
+  set win(txt,sb) $win(txt,frame).sb
+  if { ![winfo exists $win(toplevel)] } {
+       toplevel $win(toplevel)
+       wm title $win(toplevel) [T "Packet Debugger for \[%d. %s\]" $c [connInfo $c name]]
+       pack [::ttk::frame $win(txt,frame)] -side top -expand 1 -fill both
+       pack [text $win(txt,txt) -background black -foreground white -font TkFixedFont -width 78 -wrap word -yscrollcommand [list $win(txt,sb) set]] -side left -expand 1 -fill both
+       pack [scrollbar $win(txt,sb) -orient vertical -command [list $win(txt,txt) yview]] -side left -fill y
+       bind $win(toplevel) <Destroy> [list set ::potato::conn($c,debugPackets) 0]
+       $win(txt,txt) tag configure sent -foreground yellow
+     }
+  set aE [atEnd $win(txt,txt)]
+  if { $dir } {
+       $win(txt,txt) insert end $text
+     } else {
+       $win(txt,txt) insert end $text sent
+     }
+  if { $aE } {
+       $win(txt,txt) see end
+     }
+  return;
+
+};# ::potato::debug_packet
+
 #: proc ::potato::get_mushage
 #: arg c connection id
 #: desc Get pending output for connection $c, parse through any necessary protocols and, if a complete line is present, display it. Must also watch for the connection being closed and act accordingly.
@@ -2348,8 +2382,8 @@ proc ::potato::get_mushage {c} {
        skinStatus $c
        return;
      }
-  if { $::DEBUGPOTATO } {
-       DEBUG_OUTPUT $c receive $text
+  if { $conn($c,debugPackets) } {
+       debug_packet $c 1 $text
      }
   if { $world($conn($c,world),telnet) || [hasProtocol $c telnet] } {
        set text [::potato::telnet::process $c $text]
@@ -6196,10 +6230,6 @@ proc ::potato::main {} {
   }
   lappend ::auto_path $path(lib)
 
-  # Packet debugging.
-  set ::DEBUGPOTATO 0
-  catch {package require potato-debug}
-
   # We need to set the prefs before we load anything...
   setPrefs 1
 
@@ -7278,6 +7308,8 @@ proc ::potato::build_menu_view {m} {
   createMenuTask $m twoInputWins
 
   ::skin::$potato(skin)::viewMenuPost $m
+  $m insert end checkbutton {*}[menu_label [T "&Debug Packets?"]] -variable ::potato::conn([up],debugPackets) \
+                     -onvalue 1 -offvalue 0 -state [lindex [list normal disabled] [expr {[up] == 0}]]
 
   return;
 

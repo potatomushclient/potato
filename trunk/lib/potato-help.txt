@@ -476,6 +476,7 @@ title:Version 2.0.0b6
   * Spawn windows can now be closed, by right-clicking their button on the Spawn toolbar. Reported by Nathan Corbier.
   * The World toolbar now condenses the world name slightly for large numbers of connections. Based on suggestions from Bane, Mercutio and Kimiko Muffin.
   * Pressing Return in an empty input window of a disconnected world now causes a reconnect. Suggested by Reaver.
+  * Added "Debug Packets" to the View menu, which shows output exactly as it's sent/received in a separate window. Needs expanding to use normal MUSH colors/fonts. Suggested by Paige.
 -----------------------------
 name:changes,2.0.0b5
 title:Version 2.0.0b5
