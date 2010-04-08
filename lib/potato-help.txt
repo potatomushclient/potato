@@ -477,6 +477,7 @@ title:Version 2.0.0b6
   * The World toolbar now condenses the world name slightly for large numbers of connections. Based on suggestions from Bane, Mercutio and Kimiko Muffin.
   * Pressing Return in an empty input window of a disconnected world now causes a reconnect. Suggested by Reaver.
   * Added "Debug Packets" to the View menu, which shows output exactly as it's sent/received in a separate window. Needs expanding to use normal MUSH colors/fonts. Suggested by Paige.
+  * When you hover over a line of outputted text for a couple of seconds, a tooltip will pop up telling you when the message was received. Suggested by Nathan Corbier.
 -----------------------------
 name:changes,2.0.0b5
 title:Version 2.0.0b5
