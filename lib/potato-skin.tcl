@@ -836,17 +836,9 @@ proc ::skin::potato::worldBarButtonMenu {btn c x y} {
   set m $widgets(worldbarRightclickMenu)
   $m delete 0 end
 
-  set status [::potato::connStatus $c]
-
-  ::potato::createMenuTask $m reconnect $c
-  if { $status ne "disconnected" } {
-       $m entryconfigure end -state disabled
-     }
-  ::potato::createMenuTask $m disconnect $c
-  if { $status eq "disconnected" && ![::potato::connInfo $c autoreconnect] } {
-       $m entryconfigure end -state disabled
-     }
-  ::potato::createMenuTask $m close $c
+  ::potato::createMenuTask $m reconnect $c $c
+  ::potato::createMenuTask $m disconnect $c $c
+  ::potato::createMenuTask $m close $c $c
   tk_popup $m $x $y
 
 };# ::skin::potato::worldBarButtonMenu
@@ -1442,7 +1434,7 @@ proc ::skin::potato::connectMenu {} {
   set atX [winfo rootx $widgets(toolbar,connect)]
   set atY [expr [winfo rooty $widgets(toolbar,connect)]+[winfo height $widgets(toolbar,connect)]]
 
-  ::potato::taskRun connectMenu $atX $atY
+  ::potato::taskRun connectMenu "" $atX $atY
 
   return;
   

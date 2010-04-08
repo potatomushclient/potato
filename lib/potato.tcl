@@ -1179,9 +1179,6 @@ proc ::potato::doLog {c file append buffer leave} {
        outputSystem $c [T "Now logging to \"%s\"." $file]
        set conn($c,logFileName) $file
        set conn($c,logFileId) $fid
-       if { $c == [up] } {
-            taskState logStop 1
-          }
      } else {
        outputSystem $c [T "Logged to \"%s\"." $file]
        close $fid
@@ -1208,10 +1205,6 @@ proc ::potato::stopLog {{c ""}} {
   close $conn($c,logFileId)
   set conn($c,logFileId) ""
   set conn($c,logFileName) ""
-
-  if { $c == [up] } {
-       taskState logStop 0
-     }
 
   return;
 
@@ -1361,14 +1354,6 @@ proc ::potato::newConnection {w} {
 
   configureTextWidget $c $conn($c,textWidget)
   ::skin::$potato(skin)::import $c
-  # Check > 1 because connIDs doesn't include "connection 0"
-  if { [llength [connIDs]] > 1 } {
-       taskState nextConn 1
-       taskState prevConn 1
-     } else {
-       taskState nextConn 0
-       taskState prevConn 0
-     }
 
   showConn $c
 
@@ -1871,12 +1856,6 @@ proc ::potato::connect {c first {hostlist ""}} {
   set conn($c,connected) -1 ;# trying to connect
 
   set up [up]
-  if { $c == $up } {
-       foreach x [list goEast goNorth goSouth goWest reconnect upload] {
-         taskState $x 0
-       }
-       taskState disconnect 1
-     }
 
   if { ![llength $hostlist] } {
        lappend hostlist host
@@ -2049,12 +2028,6 @@ proc ::potato::connectVerifyComplete {c} {
   #abc handle stats for tracking time connected to world
   fileevent $id readable [list ::potato::get_mushage $c]
   timersStart $c
-  if { $c == [up] } {
-       foreach x [list disconnect goEast goNorth goSouth goWest upload] {
-         taskState $x 1
-       }
-       taskState reconnect 0
-     }
   skinStatus $c
   sendLoginInfo $c
 
@@ -2268,12 +2241,6 @@ proc ::potato::disconnect {{c ""} {prompt 1}} {
   if { $conn($c,connected) == 0 } {
        # Make sure we don't auto-reconnect
        cancel_reconnect $c
-       if { $c == $up } {
-            taskState reconnect 1
-            foreach x [list disconnect goEast goNorth goSouth goWest upload] {
-              taskState $x 0
-            }
-          }
        skinStatus $c
        return;
      }
@@ -2312,12 +2279,6 @@ proc ::potato::disconnect {{c ""} {prompt 1}} {
   set conn($c,stats,formatted) ""
   if { [focus -displayof .] eq "" && $prevState == 1 } {
        flash $w
-     }
-  if { $c == $up } {
-       taskState reconnect 1
-       foreach x [list disconnect goEast goNorth goSouth goWest upload] {
-         taskState $x 0
-       }
      }
 
   skinStatus $c
@@ -3057,10 +3018,8 @@ proc ::potato::boot_reconnect {c} {
   if { $world($w,autoreconnect) && $world($w,autoreconnect,time) > 0 } {
        set conn($c,reconnectId) [after [expr { $world($w,autoreconnect,time) * 1000}] [list ::potato::reconnect $c]]
        outputSystem $c [T "Auto-reconnect in %s..." [timeFmt $world($w,autoreconnect,time) 1]]
-       taskState disconnect 1
      } else {
        set conn($c,reconnectId) ""
-       taskState disconnect 0
      }
 
   skinStatus $c
@@ -3079,10 +3038,6 @@ proc ::potato::cancel_reconnect {c} {
        after cancel $conn($c,reconnectId)
        set conn($c,reconnectId) ""
        outputSystem $c [T "Auto-reconnect cancelled."]
-       if { $c == [up] } {
-            taskState reconnect 1
-            taskState disconnect 0
-          }
      }
 
   return;
@@ -3232,33 +3187,7 @@ proc ::potato::showConn {c {main 1}} {
   # We used to do this, but it led to problems during debugging if an error occurred during this proc, so now we don't
   #set potato(up) ""
 
-  if { $c == 0 } {
-       taskState config 0
-       taskState events 0
-       taskState slashCmds 0
-       taskState log 0
-       taskState logStop 0
-       taskState find 0
-       taskState close 0
-       taskState inputHistory 0
-       taskState mailWindow 0
-     } else {
-       taskState config 1
-       taskState events 1
-       taskState slashCmds 1
-       taskState log 1
-       taskState logStop [expr {$conn($c,logFileId) ne ""}]
-       taskState find 1
-       taskState close 1
-       taskState inputHistory 1
-       taskState mailWindow 1
-     }
   set state [expr {$c != 0 && $conn($c,connected) == 1}]
-  foreach x [list upload goNorth goSouth goEast goWest] {
-     taskState $x $state
-  }
-  taskState disconnect [expr {$c != 0 && $conn($c,connected) != 0}]
-  taskState reconnect [expr {$c != 0 && $conn($c,connected) == 0}]
 
   ::skin::$potato(skin)::show $c
   set potato(up) $c
@@ -3446,12 +3375,6 @@ proc ::potato::closeConn {{c ""} {autoDisconnect 0} {prompt 1}} {
        disconnect $c 0
      } else {
        cancel_reconnect $c
-     }
-  if { [llength [connIDs]] < 3 } {
-       # < 3: in order to be able to toggle, we must the closing conn (1), and 2 remaining
-       # connections to toggle between (3). "Conn 0" is not included in the list.
-       taskState prevConn 0
-       taskState nextConn 0
      }
   if { $c == [up] } {
        set allconns [lsort -integer -index 0 [connList]]
@@ -7300,14 +7223,15 @@ proc ::potato::menu_label {str} {
 #: proc ::potato::createMenuTask
 #: arg m The menu to add to
 #: arg task The task to add
+#: arg c connection id to operate task on, or "" for current
 #: arg args Further arguments to pass to the task when it's run
 #: desc Add a menu entry for the task $task to menu $m, using the tasks's label, cmd, etc.
 #: return nothing
-proc ::potato::createMenuTask {m task args} {
+proc ::potato::createMenuTask {m task {c ""} args} {
   variable menu;
 
   set vars [taskVars $task]
-  set command [list -command [concat [list ::potato::taskRun $task] $args]]
+  set command [list -command [concat [list ::potato::taskRun $task $c] $args]]
   if { [llength $vars] != 0 } {
        set type "checkbutton"
        foreach {a b c} $vars {break;}
@@ -7324,7 +7248,7 @@ proc ::potato::createMenuTask {m task args} {
      }
 
   $m add $type {*}[menu_label [taskLabel $task 1]] {*}$command {*}$extras \
-         -state [lindex [list disabled normal] [taskState $task]] -accelerator [taskAccelerator $task]
+         -state [lindex [list disabled normal] [taskState $task $c]] -accelerator [taskAccelerator $task]
 
   return;
 
@@ -9858,7 +9782,7 @@ proc ::potato::slash_cmd_edit {c full str} {
   if { $c == 0 } {
        taskRun programConfig
      } else {
-       taskRun config $c
+       taskRun config $c $c
      }
   return;
 
@@ -9942,14 +9866,14 @@ proc ::potato::slash_cmd_log {c full str} {
 
   # Check for no options given
   if { [string trim $str] eq "" } {
-       taskRun log $c
+       taskRun log $c $c
        return;
      }
 
   # Check for "/log -close"
   if { [lsearch -exact -nocase [list -close -stop -off] [string trim $str]] != -1 } {
        # Close the currently opened log file
-       taskRun logStop $c
+       taskRun logStop $c $c
        return;
      }
 
@@ -10014,7 +9938,7 @@ proc ::potato::slash_cmd_log {c full str} {
   set file [join $file " "]
   if { $file eq "" } {
        # Gahhhh. Why did I write all that parsing code if you DIDN'T GIVE A FILE?!
-       taskRun log $c
+       taskRun log $c $c
        return;
      }
 
@@ -10031,7 +9955,7 @@ proc ::potato::slash_cmd_log {c full str} {
 #: return nothing
 proc ::potato::slash_cmd_close {c full str} {
 
-  taskRun close $c
+  taskRun close $c $c
 
   return;
 
@@ -10120,7 +10044,7 @@ proc ::potato::slash_cmd_exit {c full str} {
      } else {
        set prompt -1
      }
-  taskRun exit $prompt
+  taskRun exit $c $prompt
   return;
 
 };# ::potato::slash_cmd_exit
@@ -10140,7 +10064,7 @@ proc ::potato::slash_cmd_reconnect {c full str} {
        if { ![string is integer $str] || ![info exists conn($str,id)] || $str == "-1" } {
             outputSystem $c [T "Bad connection id"]
           } else {
-            taskRun reconnect $str
+            taskRun reconnect $c $str
           }
      }
   return;
@@ -10200,7 +10124,7 @@ proc ::potato::slash_cmd_history {c full str} {
   variable conn;
 
   if { [string trim $str] eq "" } {
-       after idle [list ::potato::taskRun inputHistory $c]
+       after idle [list ::potato::taskRun inputHistory $c $c]
      } elseif { [string is integer -strict [set num [string trim $str]]] } {
        if { $num < 1 } {
             if { [llength $conn($c,inputHistory)] > [expr {abs($num)}] } {
@@ -10731,105 +10655,136 @@ proc ::potato::tasksInit {} {
   array set tasks [list \
        inputHistory,name   [T "Show Input &History Window"] \
        inputHistory,cmd    "::potato::history" \
+       inputHistory,state  notZero \
        goNorth,name        [T "Go &North"] \
        goNorth,cmd         [list ::potato::send_to {} north {} 1] \
+       goNorth,state       connected \
        goSouth,name        [T "Go &South"] \
        goSouth,cmd         [list ::potato::send_to {} south {} 1] \
+       goSouth,state       connected \
        goEast,name         [T "Go &East"] \
        goEast,cmd          [list ::potato::send_to {} east {} 1] \
+       goEast,state        connected \
        goWest,name         [T "Go &West"] \
        goWest,cmd          [list ::potato::send_to {} west {} 1] \
+       goWest,state        connected \
        find,name           [T "&Find"] \
        find,cmd            "::potato::findDialog" \
+       find,state          notZero \
        disconnect,name     [T "&Disconnect"] \
        disconnect,cmd      "::potato::disconnect" \
+       disconnect,state    {$c != 0 && $conn($c,connected) != 0} \
        reconnect,name      [T "&Reconnect"] \
        reconnect,cmd       "::potato::reconnect" \
+       reconnect,state     {$c != 0 && $conn($c,connected) == 0} \
        close,name          [T "&Close Connection"] \
        close,cmd           "::potato::closeConn" \
+       close,state         notZero \
        nextConn,name       [T "&Next Connection"] \
        nextConn,cmd        [list ::potato::toggleConn 1] \
+       nextConn,state      {[llength [connIDs]] > 1} \
        prevConn,name       [T "&Previous Connection"] \
        prevConn,cmd        [list ::potato::toggleConn -1] \
+       prevConn,state      {[llength [connIDs]] > 1} \
        config,name         [T "Configure &World"] \
        config,cmd          "::potato::configureWorld" \
+       config,state        notZero \
        programConfig,name  [T "Configure Program &Settings"] \
        programConfig,cmd   [list ::potato::configureWorld -1] \
+       programConfig,state always \
        events,name         [T "Configure &Events"] \
        events,cmd          "::potato::eventConfig" \
+       events,state        notZero \
        globalEvents,name   [T "&Global Events"] \
        globalEvents,cmd    [list ::potato::eventConfig -1] \
+       globalEvents,state  always \
        slashCmds,name      [T "Customise &Slash Commands"] \
        slashCmds,cmd       "::potato::slashConfig" \
+       slashCmds,state     notZero \
        globalSlashCmds,name [T "Global S&lash Commands"] \
        globalSlashCmds,cmd [list ::potato::slashConfig -1] \
+       globalSlashCmds,state always \
        log,name            [T "Show &Log Window"] \
        log,cmd             "::potato::logWindow" \
+       log,state           notZero \
        logStop,name        [T "S&top Logging"] \
        logStop,cmd         "::potato::stopLog" \
+       logStop,state       {[info exists $conn($c,logFileId)] && $conn($c,logFileId) ne ""} \
        upload,name         [T "&Upload File"] \
        upload,cmd          "::potato::uploadWindow" \
+       upload,state        always \
        help,name           [T "Show &Helpfiles"] \
        help,cmd            "::help::help" \
+       help,state          always \
        about,name          [T "&About Potato"] \
        about,cmd           "::potato::about" \
+       about,state         always \
        exit,name           [T "E&xit"] \
        exit,cmd            "::potato::chk_exit" \
+       exit,state          always \
        textEd,name         [T "&Text Editor"] \
        textEd,cmd          "::potato::textEditor" \
+       textEd,state        always \
        twoInputWins,name   [T "Show Two Input Windows?"] \
        twoInputWins,cmd    "::potato::toggleInputWindows" \
+       twoInputWins,state  always \
        connectMenu,name    [T "&Connect To..."] \
        connectMenu,cmd     "::potato::connectMenuPost" \
+       connectMenu,state   always \
        customKeyboard,name [T "Customize Keyboard Shortcuts"] \
        customKeyboard,cmd  "::potato::keyboardShortcutWin" \
+       customKeyboard,state always \
        mailWindow,name     [T "Open &Mail Window"] \
        mailWindow,cmd      "::potato::mailWindow" \
+       mailWindow,state    notZero \
        prevHistCmd,name    [T "Previous History Command"] \
        prevHistCmd,cmd     "::potato::inputHistoryScroll -1" \
+       prevHistCmd,state   always \
        nextHistCmd,name    [T "Next History Command"] \
        nextHistCmd,cmd     "::potato::inputHistoryScroll 1" \
+       nextHistCmd,state   always \
        escHistCmd,name     [T "Clear History Command"] \
        escHistCmd,cmd      "::potato::inputHistoryReset" \
+       escHistCmd,state    always \
        manageWorlds,name   [T "Manage &Worlds"] \
        manageWorlds,cmd    "::potato::manageWorlds" \
+       manageWorlds,state  always \
        autoConnects,name   [T "Manage &Auto-Connects"] \
        autoConnects,cmd    "::potato::autoConnectWindow" \
+       autoConnects,state  always \
        fcmd2,cmd           "::potato::fcmd 2" \
        fcmd2,name          [T "Run F2 Command"] \
+       fcmd3,state         always \
        fcmd3,cmd           "::potato::fcmd 3" \
        fcmd3,name          [T "Run F3 Command"] \
+       fcmd4,state         always \
        fcmd4,cmd           "::potato::fcmd 4" \
        fcmd4,name          [T "Run F4 Command"] \
+       fcmd5,state         always \
        fcmd5,cmd           "::potato::fcmd 5" \
        fcmd5,name          [T "Run F5 Command"] \
+       fcmd6,state         always \
        fcmd6,cmd           "::potato::fcmd 6" \
        fcmd6,name          [T "Run F6 Command"] \
+       fcmd7,state         always \
        fcmd7,cmd           "::potato::fcmd 7" \
        fcmd7,name          [T "Run F7 Command"] \
+       fcmd8,state         always \
        fcmd8,cmd           "::potato::fcmd 8" \
        fcmd8,name          [T "Run F8 Command"] \
+       fcmd9,state         always \
        fcmd9,cmd           "::potato::fcmd 9" \
        fcmd9,name          [T "Run F9 Command"] \
+       fcmd10,state        always \
        fcmd10,cmd          "::potato::fcmd 10" \
        fcmd10,name         [T "Run F10 Command"] \
+       fcmd11,state        always \
        fcmd11,cmd          "::potato::fcmd 11" \
        fcmd11,name         [T "Run F11 Command"] \
+       fcmd12,state        always \
        fcmd12,cmd          "::potato::fcmd 12" \
        fcmd12,name         [T "Run F12 Command"] \
   ]
-
-  # Set initial task states
-  foreach x [list exit about help globalEvents programConfig globalSlashCmds \
-             textEd twoInputWins customKeyboard connectMenu \
-             prevHistCmd nextHistCmd escHistCmd manageWorlds autoConnects \
-             fcmd2 fcmd3 fcmd4 fcmd5 fcmd6 fcmd7 fcmd8 fcmd9 fcmd10 fcmd11 fcmd12] {
-     set tasks($x,state) 1
-  }
-  foreach x [list upload logStop log events config slashCmds prevConn nextConn close inputHistory \
-             reconnect disconnect goWest goEast goSouth goNorth find mailWindow] {
-     set tasks($x,state) 0
-  }
 
   return;
 
@@ -10870,34 +10825,41 @@ proc ::potato::taskVars {task} {
 #: arg newstate Optional new state (1 or 0) for task. Defaults to ""
 #: desc Return the current state (if $newstate is "") of, or set the state of, $task to $newstate.
 #: return The state of $task, after any changes have taken place.
-proc ::potato::taskState {task {newstate ""}} {
+proc ::potato::taskState {task {c ""}} {
   variable tasks;
+  variable conn;
+
+  if { $c eq "" } {
+       set c [up]
+     }
 
   if { ![info exists tasks($task,state)] } {
        return 0; # unknown task
      }
 
-  if { $newstate != "" } {
-       set tasks($task,state) [string is true $newstate]
-     }
-
-  return $tasks($task,state);
+  switch $tasks($task,state) {
+     always    {return 1;}
+     notZero   {return [expr {$c != 0}];}
+     connected {return [expr {$c != 0 && $conn($c,connected) == 1}];}
+     default   {return [expr $tasks($task,state)];}
+  }
 
 };# ::potato::taskState
 
 #: proc ::potato::taskRun
 #: arg task Task name to run
+#: arg c connection to run task for, or "" for current, for state-checking
 #: arg args Additional args to pass the task
 #: desc Run the command associated with the task $task for connection $c, or the currently viewed connection if $c is ""
 #: return The return value of running the command.
-proc ::potato::taskRun {task args} {
+proc ::potato::taskRun {task {c ""} args} {
   variable tasks;
 
   if { ![info exists tasks($task,cmd)] } {
        return;# invalid task
      }
 
-  if { !$tasks($task,state) } {
+  if { [taskState $task $c] } {
        bell;
        return;
      }
