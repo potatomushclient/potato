@@ -10859,7 +10859,7 @@ proc ::potato::taskRun {task {c ""} args} {
        return;# invalid task
      }
 
-  if { [taskState $task $c] } {
+  if { ![taskState $task $c] } {
        bell;
        return;
      }
