@@ -1466,7 +1466,7 @@ proc ::skin::potato::spawnBar {{c ""}} {
   variable widgets;
   variable opts;
   variable disp;
-puts "Running spawnBar"
+
   if { $c eq "" } {
        set c [::potato::up]
      }
