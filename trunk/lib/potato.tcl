@@ -1543,6 +1543,7 @@ proc ::potato::configureTextWidget {c t} {
        $t tag configure margins -lmargin2 $lm2
      }
 
+  $t tag configure timestamp -elide 1
 
   set FANSI [list #000000 #00005F #000087 #0000AF #0000D7 #0000FF #005F00 #005F5F \
                   #005F87 #005FAF #005FD7 #005FFF #008700 #00875F #008787 #0087AF \
@@ -2561,12 +2562,12 @@ proc ::potato::get_mushageProcess {c line} {
        if { $world($w,act,clearOldNewActNotices) && [llength [$t tag nextrange newact 1.0]] } {
             $t delete {*}[$t tag ranges newact]
           }
-       $t insert end "\n$newActStr" [list system center newact]
+       $t insert end "\n" [list system center newact] [clock seconds] [list system center newact timestamp] $newActStr [list system center newact] 
        set insertedAnything 1
      }
  
   if { !$empty && !$omit } {
-       $t insert end "\n" [lindex [list "" limited] $limit] {*}$inserts
+       $t insert end "\n" [lindex [list "" limited] $limit]  [clock seconds] [list timestamp] {*}$inserts
        set insertedAnything 1
        if { [llength $urlIndices] } {
             $t tag add link {*}$urlIndices
@@ -3103,7 +3104,7 @@ proc ::potato::outputSystem {c msg {tags ""}} {
        return;
      }
   set aE [atEnd $conn($c,textWidget)]
-  $conn($c,textWidget) insert end "\n$msg" $tags
+  $conn($c,textWidget) insert end "\n" $tags [clock seconds] [concat $tags timestamp] $msg $tags
   if { $aE } {
        $conn($c,textWidget) see end
      }
@@ -3116,7 +3117,7 @@ proc ::potato::outputSystem {c msg {tags ""}} {
              } else {
                set newline ""
              }
-          $conn($x) insert end "$newline$msg" $tags
+          $conn($x) insert end $newline $tags [clock seconds] [concat $tags timestamp] $msg $tags
           if { $aE } {
                $conn($x) see end
              }
@@ -3201,6 +3202,7 @@ proc ::potato::toggleConn {dir} {
        showConn [lindex $list $pos]
      }
 
+  tooltipLeave .;
   return;
 
 };# ::potato::toggleConn
@@ -6502,17 +6504,61 @@ proc ::potato::tooltip {widget txt} {
 
 };# ::potato::tooltip
 
+#: proc ::potato::showMessageTimestamp
+#: arg widget text widget path
+#: arg x x-coord in widget
+#: arg y y-coord in widget
+#: desc Wrapper to show a tooltip with the timestamp of the message being hovered in text widget $widget, when the mouse moves in widger $t
+#: return nothing
+proc ::potato::showMessageTimestamp {widget x y} {
+  variable tooltip;
+  variable misc;
+
+  if { ![info exists tooltip($widget)] } {
+       set tooltip($widget) 0
+     }
+
+  set index [$widget index @$x,$y]
+  if { $index eq [$widget index end-1char] } {
+       # Not over a line
+       tooltipLeave $widget
+       return;
+     }
+  scan $index %d.%*d line
+  if { $line == $tooltip($widget) } {
+       # Do nothing, we're already showing the right timestamp
+       return;
+     }
+
+  set stamp [$widget tag prevrange timestamp $index]
+  if { $stamp eq "" } {
+       # No timestamp for line
+       tooltipLeave $widget
+       return;
+     }
+  set timestamp [$widget get {*}$stamp]
+  # Find coords to show it
+  set coords [$widget bbox $index]
+  set x [expr {[lindex $coords 0] + [winfo rootx $widget]}]
+  set y [expr {[lindex $coords 1] + [winfo rooty $widget]}]
+  tooltipEnter $widget [clock format $timestamp -format $misc(clockFormat)] $x $y
+
+  return;
+
+};# ::potato::showMessageTimestamp
+
 #: proc ::potato::tooltipEnter
 #: arg widget Widget path
+#: arg text Text to show, or empty to use preset text for widget. Defaults to empty string.
 #: desc Called when a widget with a tooltip has an <Enter> event. Set up an [after] to display the tooltip
 #: return nothing
-proc ::potato::tooltipEnter {widget} {
+proc ::potato::tooltipEnter {widget {text ""} {x ""} {y ""}} {
   variable tooltip;
 
   after cancel $tooltip(after)
   catch {destroy $tooltip(widget)}
   set tooltip(up) $widget
-  set tooltip(after) [after 450 [list ::potato::tooltipShow $widget]]
+  set tooltip(after) [after 450 [list ::potato::tooltipShow $widget $text $x $y]]
 
   return;
 
@@ -6536,28 +6582,49 @@ proc ::potato::tooltipLeave {widget} {
 
 #: proc ::potato::tooltipShow
 #: arg widget Widget path
-#: desc Actually show the tooltip for $widget, if we're still in it
+#: arg text Text to show, or empty to use preset text for widget. Defaults to empty string.
+#: arg x x-coord, or "" to use the cursor position. Defaults to ""
+#: arg y y-coord, or "" to use either a position near the cursor (if $text is non-empty), or the bottom of the widget. Defaults to ""
+#: desc Actually show the tooltip for $widget, if we're still in it.
 #: return nothing
-proc ::potato::tooltipShow {widget} {
+proc ::potato::tooltipShow {widget {text ""} {x ""} {y ""}} {
   variable tooltip;
 
   if { [winfo containing {*}[winfo pointerxy $widget]] != $widget } {
        return;
      }
-  if { ![info exists tooltip(for,$widget)] } {
-       return;
+  if { $text eq "" } {
+       if { ![info exists tooltip(for,$widget)] } {
+            return;
+          }
+       set text $tooltip(for,$widget);
+       set pos 1
+     } else {
+       set pos 0
      }
   set top $tooltip(widget)
   catch {destroy $top}
   toplevel $top
-  wm title $top $tooltip(for,$widget)
+  wm title $top $text
   $top configure -borderwidth 1 -background black
   wm overrideredirect $top 1
   pack [message $top.txt -aspect 10000 -background lightyellow \
-        -font {"" 8} -text $tooltip(for,$widget) -padx 1 -pady 0]
+        -font {"" 8} -text $text -padx 1 -pady 0]
   bind $top <ButtonPress-1> [list catch [list destroy $tooltip(widget)]]
-  set wmx [winfo pointerx $widget]
-  set wmy [expr [winfo rooty $widget]+[winfo height $widget]]
+  if { $x eq "" } {
+       set wmx [winfo pointerx $widget]
+     } else {
+       set wmx $x
+     }
+  if { $y eq "" } {
+       if { $pos } {
+            set wmy [expr [winfo rooty $widget]+[winfo height $widget]]
+          } else {
+            set wmy [expr {[winfo pointery $widget] - 25}]
+          }
+     } else {
+       set wmy [expr {$y - [winfo reqheight $top.txt] - 5}]
+     }
   if {[expr $wmy+([winfo reqheight $top.txt]*2)]>[winfo screenheight $top]} {
       incr wmy -[expr [winfo reqheight $top.txt]*2]
      }
@@ -7594,6 +7661,8 @@ proc ::potato::setUpBindings {} {
      bind PotatoOutput <$x> [bind Text <$x>]
   }
   bind PotatoOutput <<Cut>> [bind Text <<Copy>>]
+
+  bind PotatoOutput <Motion> [list ::potato::showMessageTimestamp %W %x %y]
 
   # Use Control-Return for a newline, and Return to send text
   bind PotatoInput <Control-Return> "[bind Text <Return>] ; break"
