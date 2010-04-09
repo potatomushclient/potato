@@ -479,6 +479,7 @@ title:Version 2.0.0b6
   * Added "Debug Packets" to the View menu, which shows output exactly as it's sent/received in a separate window. Needs expanding to use normal MUSH colors/fonts. Suggested by Paige.
   * When you hover over a line of outputted text for a couple of seconds, a tooltip will pop up telling you when the message was received. Suggested by Nathan Corbier.
   * Some stuff (like right-clicking a button on the World Toolbar and selecting Reconnect) didn't always work right, because it was checking the wrong world when seeing if a reconnect was allowed. Reported by Nathan Corbier.
+  * ANSI-inverse is now handled better, and in a way similar to other MUSH clients. Reported by Nammyung.
 -----------------------------
 name:changes,2.0.0b5
 title:Version 2.0.0b5
