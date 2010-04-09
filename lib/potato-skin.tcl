@@ -755,18 +755,13 @@ proc ::skin::potato::toolbarLabels {} {
 
 #: proc ::skin::potato::doWorldBarButton
 #: arg c connection id
-#: desc Create a button for the "World Bar", which has a list of buttons for each connection. Store the widget path in $widgets(woldbar,$c), and then pack the button in the appropriate place.
+#: desc Create a button for the "World Bar", which has a list of buttons for each connection. Store the widget path in $widgets(woldbar,$c)
 #: return nothing
 proc ::skin::potato::doWorldBarButton {c} {
   variable widgets;
 
   set widgets(worldbar,$c) [ttk::button $widgets(worldbar).button-$c -style Toolbutton -command [list ::skin::potato::worldBarButtonClick $c] -compound left]
   bind $widgets(worldbar,$c) <Button-3> [list ::skin::potato::worldBarButtonMenu %W $c %X %Y]
-  set after [list]
-  foreach x [lsort -dictionary [array names widgets worldbar,*]] {
-     pack $widgets($x) -in $widgets(worldbar) -side left -anchor nw -padx 6 -pady 6 {*}$after
-     set after [list -after $widgets($x)]
-  }
 
   # BG Colours previously used by the Worldbar buttons to show status, for reference.
   # up #77eecceeee44 newact #ffffbbe77ve7 disconnected #ffff99999999 \
@@ -778,6 +773,9 @@ proc ::skin::potato::doWorldBarButton {c} {
 
 };# ::skin::potato::doWorldBarButton
 
+#: proc ::skin::potato::worldBarButtonNames
+#: desc Trim the names of the worldbar buttons as needed, and repack them all in the correct order
+#: return nothing
 proc ::skin::potato::worldBarButtonNames {} {
   variable widgets;
 
@@ -791,8 +789,9 @@ proc ::skin::potato::worldBarButtonNames {} {
      } else {
        set clip 30
      }
-  foreach x [array names widgets worldbar,*] {
-     foreach {tmp c} [split $x ,] {break}
+  set after [list]
+  foreach x [lsort -dictionary [array names widgets worldbar,*]] {
+     foreach {tmp c} [split $x ,] {break;}
      set name "$c. [::potato::connInfo $c name]"
      ::potato::tooltip $widgets($x) $name
      if { [expr {[string length $name] + 3}] > $clip } {
@@ -800,6 +799,8 @@ proc ::skin::potato::worldBarButtonNames {} {
         } else {
           $widgets($x) configure -text $name
         }
+     pack $widgets($x) -in $widgets(worldbar) -side left -anchor nw -padx 6 -pady 6 {*}$after
+     set after [list -after $widgets($x)]
   }
 
   return;
@@ -1583,10 +1584,9 @@ proc ::skin::potato::savePrefs {} {
   set opts(input1height) [winfo height $widgets(pane,btm,pane,top)]
   set opts(input2height) [winfo height $widgets(pane,btm,pane,btm)]
   set opts(inputheights) [winfo height $widgets(pane,btm,pane)]
-parray opts
   puts $fid [list array set ::skin::potato::opts [array get opts]]
   close $fid
-#tk_messageBox -message ping!!!
+
   return;
 
 };# ::skin::potato::savePrefs
