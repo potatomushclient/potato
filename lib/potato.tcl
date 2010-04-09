@@ -1336,6 +1336,7 @@ proc ::potato::newConnection {w} {
   set conn($c,ansi,flash) 0
   set conn($c,ansi,underline) 0
   set conn($c,ansi,highlight) 0
+  set conn($c,ansi,inverse) 0
   set conn($c,reconnectId) ""
   set conn($c,inputHistory) [list]
   set conn($c,inputHistory,count) 0
@@ -2756,6 +2757,7 @@ proc ::potato::handleAnsiCodes {c codes} {
              set conn($c,ansi,flash) 0
              set conn($c,ansi,highlight) 0
              set conn($c,ansi,underline) 0
+             set conn($c,ansi,inverse) 0
            }
        ^1$ {
              if { !$conn($c,ansi,highlight) } {
@@ -2771,9 +2773,7 @@ proc ::potato::handleAnsiCodes {c codes} {
              set conn($c,ansi,flash) 1
            }
        ^7$ { 
-             set temp $conn($c,ansi,fg)
-             set conn($c,ansi,fg) $conn($c,ansi,bg)
-             set conn($c,ansi,bg) $temp
+             set conn($c,ansi,inverse) 1
            }
        {^3[0-7]$} {
              set conn($c,ansi,fg) [lindex $colours [string range $x end end]]
@@ -2794,10 +2794,6 @@ proc ::potato::handleAnsiCodes {c codes} {
 
 };# ::potato::handleAnsiCodes
 
-#abc redo this so an extra highlight tag is applied instead to recolour, instead of just applying
-# the "wrong" fg/bg tags? No, because that would mean more tags defined and applied, which would
-# increase memory use and slow things down for basically no gain.
-
 #: proc ::potato::get_mushageColours
 #: arg c connection id
 #: arg eventfg the event fg colour, or empty string if none
@@ -2808,17 +2804,19 @@ proc ::potato::handleAnsiCodes {c codes} {
 proc ::potato::get_mushageColours {c eventfg eventbg extraTags} {
   variable conn;
 
-  if { $eventfg eq "" } {
-       set fg $conn($c,ansi,fg)
-     } else {
-       set fg $eventfg 
+  set fg $conn($c,ansi,fg)
+  set bg $conn($c,ansi,bg)
+  if { $conn($c,ansi,inverse) } {
+       # Invert colors
+       foreach [list fg bg] [list $bg $fg] {break;}
      }
-  if { $eventbg eq "" } {
-       set bg $conn($c,ansi,bg)
-     } else {
+  if { $eventfg ne "" } {
+       set fg $eventfg
+     }
+  if { $eventbg ne "" } {
        set bg $eventbg
      }
-#xxx
+
   if { $fg eq "bg" || $fg eq "bgh" } {
        lappend extraTags ANSI_fg_bg
      } elseif { $fg eq "fg" } {
