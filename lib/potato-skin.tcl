@@ -11,7 +11,7 @@ if { ![namespace exists ::skin] || [namespace exists ::skin::potato] } {
    }
 
 # Check to make sure the version of Potato running supports the same skin spec we do
-if { ![package vsatisfies "1.2" "$::potato::potato(skinMinVersion)-"] } {
+if { ![package vsatisfies "1.3" "$::potato::potato(skinMinVersion)-"] } {
      return "";
    }
 # Basic init of the skin
@@ -1165,6 +1165,7 @@ proc ::skin::potato::fixWindowOrder {c} {
 #: return nothing
 proc ::skin::potato::unshow {c} {
   variable widgets;
+  variable spawns;
 
   set input1 [::potato::connInfo $c input1]
   set input2 [::potato::connInfo $c input2]
@@ -1180,6 +1181,8 @@ proc ::skin::potato::unshow {c} {
   catch {destroy {*}[winfo children $widgets(spawnbar)]}
 
   worldBarButtonNames
+
+  array unset spawns $c,*
 
   return;
 
@@ -1467,6 +1470,7 @@ proc ::skin::potato::spawnBar {{c ""}} {
   variable widgets;
   variable opts;
   variable disp;
+  variable spawns;
 
   if { $c eq "" } {
        set c [::potato::up]
@@ -1483,6 +1487,8 @@ proc ::skin::potato::spawnBar {{c ""}} {
      ttk::button $btn -text $name -command [list ::skin::potato::showSpawn $c $name] -style Toolbutton -compound left
      if { [info exists disp($c)] && $disp($c) eq $name } {
           $btn configure -image ::skin::potato::img::spawnbarUp
+        } elseif { [info exists spawns($c,$name)] } {
+          $btn configure -image ::skin::potato::img::worldbarNewact
         } else {
           $btn configure -image ::skin::potato::img::spawnbarNormal
         }
@@ -1502,6 +1508,32 @@ proc ::skin::potato::spawnBar {{c ""}} {
 
 };# ::skin::potato::spawnBar
 
+#: proc ::skin::potato::spawnUpdate
+#: arg c connection id
+#: arg spawn name of spawn updated
+#: desc REQUIRED by the skin protocol. Mark new activity for conn $c's spawn $spawn
+proc ::skin::potato::spawnUpdate {c spawn} {
+  variable widgets;
+  variable opts;
+  variable disp;
+  variable spawns;
+
+  if { $c ne [::potato::up] || !$opts(spawnbar)} {
+       # We don't care right now
+       return;
+     }
+
+  if { [info exists disp($c)] && $disp($c) eq $spawn } {
+       return;
+     }
+
+  $widgets(spawnbar).spawn_$name configure -image ::skin::potato::img::worldbarNewact
+  set spawns($c,$spawn) 1
+
+  return;
+
+};# ::skin::potato::spawnUpdate
+
 #: proc ::skin::potato::delSpawn
 #: arg c connection id
 #: arg name Spawn name
@@ -1510,6 +1542,7 @@ proc ::skin::potato::spawnBar {{c ""}} {
 proc ::skin::potato::delSpawn {c name} {
   variable widgets;
   variable disp;
+  variable spawns;
 
   if { $disp($c) eq $name } {
        showSpawn $c ""
@@ -1521,6 +1554,7 @@ proc ::skin::potato::delSpawn {c name} {
   if { [::potato::up] == $c } {
        spawnBar $c
      }
+  unset -nocomplain spawns($c,$name)
   return;
 
 };# ::skin::potato::delSpawn
@@ -1533,6 +1567,7 @@ proc ::skin::potato::delSpawn {c name} {
 proc ::skin::potato::showSpawn {c spawn} {
   variable disp;
   variable widgets;
+  variable spawns;
 
   if { [lsearch -nocase -exact [list "" "_main" "Main Window"] $spawn] > -1 } {
        set spawn ""
@@ -1554,6 +1589,7 @@ proc ::skin::potato::showSpawn {c spawn} {
      }
 
   set disp($c) $spawn
+  unset -nocomplain spawns($c,$spawn)
   set t [activeTextWidget $c]
   pack $t -in $widgets(conn,$c,txtframe) -expand 0 -fill y -side left -anchor nw -padx 3 -pady 6
   raise $t

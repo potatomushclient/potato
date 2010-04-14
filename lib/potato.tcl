@@ -2547,7 +2547,7 @@ proc ::potato::get_mushageProcess {c line} {
   if { [string trim $spawns] ne "" } {
        set limit [expr {$world($w,spawnLimit,on) ? $world($w,spawnLimit,to) : 0}]
        set insertedAnything 1
-       foreach x [parseSpawnList $spawns $c] {
+       foreach {x y} [parseSpawnList $spawns $c] {
          set aE [atEnd $x]
          if { [$x count -chars 1.0 3.0] != 1 } {
               $x insert end "\n" ""
@@ -2563,6 +2563,7 @@ proc ::potato::get_mushageProcess {c line} {
          if { $limit } {
               $x delete 1.0 end-${limit}lines
             }
+         ::skin::$potato(skin)::spawnUpdate $c $y
        }
      }
 
@@ -2625,7 +2626,7 @@ proc ::potato::beepNumTimes {num} {
 #: arg spawns A list of spawn window names, supplied by the user
 #: arg c Connection id to create new spawns from
 #: desc For each spawn window name given in $spawns, create a spawn window (if it doesn't exist and we have space), using the info from the connection $c
-#: return the list of text-widget paths for all the spawn windows successfully created/existing
+#: return the list of text-widget and spawn names paths for all the spawn windows successfully created/existing
 proc ::potato::parseSpawnList {spawns c} {
   variable conn;
 
@@ -2643,7 +2644,7 @@ proc ::potato::parseSpawnList {spawns c} {
        } elseif { ([info exists conn($c,spawns,$x)] || [set create [createSpawnWindow $c $x]] eq "") } {
          # It's good!
          if { $conn($c,spawns,$x) ni $returnList } {
-              lappend returnList $conn($c,spawns,$x)
+              lappend returnList $conn($c,spawns,$x) $x
             }
        } else {
          # Uh-oh
@@ -6119,7 +6120,7 @@ proc ::potato::main {} {
   # The current connection on display
   set potato(up) ""
 
-  set potato(skinMinVersion) "1.2" ;# The minimum version of the skin spec this Potato supports.
+  set potato(skinMinVersion) "1.3" ;# The minimum version of the skin spec this Potato supports.
                                    ;# All skins must be at least this to be usable.
 
   set potato(skinCurrVersion) "1.2" ;# The current version of the skin spec. If changes made aren't
