@@ -1527,7 +1527,7 @@ proc ::skin::potato::spawnUpdate {c spawn} {
        return;
      }
 
-  $widgets(spawnbar).spawn_$name configure -image ::skin::potato::img::worldbarNewact
+  $widgets(spawnbar).spawn_$spawn configure -image ::skin::potato::img::worldbarNewact
   set spawns($c,$spawn) 1
 
   return;
