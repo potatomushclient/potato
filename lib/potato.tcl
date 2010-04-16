@@ -1169,7 +1169,7 @@ proc ::potato::doLog {c file append buffer leave} {
          if { "nobacklog" in [$t tag names $i.0] } {
               continue;
             }
-         puts $fid [$t get "$i.0" "$i.0 lineend"]
+         puts $fid [$t get -displaychars -- "$i.0" "$i.0 lineend"]
        }
        flush $fid
      }
