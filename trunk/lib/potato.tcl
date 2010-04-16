@@ -91,6 +91,8 @@ proc ::potato::setPrefs {readfile} {
   set world(-1,wrap,at) 78
   set world(-1,wrap,indent) 2
 
+  set world(-1,convertNonBreakingSpaces) 1
+
   set world(-1,spawnSystem) 1
 
   set world(-1,autoreconnect) 1
@@ -2373,6 +2375,11 @@ proc ::potato::get_mushageProcess {c line} {
   variable potato;
 
   set w $conn($c,world)
+
+  if { $world($w,convertNonBreakingSpaces) } {
+       set line [string map [list [format %c 160] " "] $line]
+     }
+
   # ANSI escape char is \x1B, char code 27
   regsub -all {\x1B.*?m} $line "" lineNoansi
 
@@ -4986,6 +4993,10 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [set sub [::ttk::frame $frame.inputWindows]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.l -text [T "Two Input Windows?"] -width 20 -anchor w -justify left] -side left
   pack [::ttk::checkbutton $sub.cb -variable potato::worldconfig($w,twoInputWindows) -onvalue 1 -offvalue 0] -side left
+
+  pack [set sub [::ttk::frame $frame.nbsp]] -side top -pady 5 -anchor nw
+  pack [::ttk::label $sub.l -text [T "Convert NBSPs?"] -width 20 -anchor w -justify left] -side left
+  pack [::ttk::checkbutton $sub.cb -variable potato::worldconfig($w,convertNonBreakingSpaces) -onvalue 1 -offvalue 0] -side left
 
   # Activity Settings
   set frame [configureFrame $canvas [T "Activity Settings"]]
