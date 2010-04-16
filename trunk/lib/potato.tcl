@@ -7583,7 +7583,8 @@ proc ::potato::setUpBindings {} {
   foreach x [list B2-Motion Button-2 Meta-Key-greater Meta-Key-less Meta-f Meta-b Control-t Control-p Control-n Control-f Control-e Control-b Control-a Escape Control-Key Alt-Key <Copy> Control-backslash Control-slash Shift-Select Control-Shift-End Control-End Control-Shift-Home Control-Home Shift-End Shift-Home Home End Next Prior Shift-Next Shift-Prior Control-Shift-Up Control-Shift-Left Control-Shift-Right Control-Down Control-Up Control-Right Control-Left Up Down Left Right Shift-Up Shift-Down Shift-Left Shift-Right Control-Button-1 ButtonRelease-1 B1-Enter B1-Leave Triple-Shift-Button-1 Double-Shift-Button-1 Shift-Button-1 Triple-Button-1 Double-Button-1 B1-Motion Button-1 <Selection>] {
      bind PotatoOutput <$x> [bind Text <$x>]
   }
-  bind PotatoOutput <<Cut>> [bind Text <<Copy>>]
+  bind PotatoOutput <<Copy>> [list ::potato::textCopy %W]
+  bind PotatoOutput <<Cut>> [list ::potato::textCopy %W]
 
   bind PotatoOutput <Motion> [list ::potato::showMessageTimestamp %W %x %y]
 
@@ -7605,6 +7606,21 @@ proc ::potato::setUpBindings {} {
   return;
 
 };# ::potato::setUpBindings
+
+#: proc ::potato::textCopy
+#: arg w widget path
+#: desc Perform a 'Copy' on the text widget $w, skipping elided characters. Based on Tk's built-in tk_textCopy
+#: return nothing
+proc ::potato::textCopy {w} {
+
+  if { ![catch {$w get -displaychars -- sel.first sel.last} data]} {
+       clipboard clear -displayof $w
+       clipboard append -displayof $w $data
+     }
+
+  return;
+
+};# ::potato::textCopy  
 
 #: proc ::potato::activeTextWidget
 #: desc Return the text widget currently displayed in the main window. We need to ask the skin, as they may be displaying a spawn window instead.
