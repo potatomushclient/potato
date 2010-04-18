@@ -794,7 +794,7 @@ proc ::skin::potato::worldBarButtonNames {} {
      foreach {tmp c} [split $x ,] {break;}
      set name "$c. [::potato::connInfo $c name]"
      ::potato::tooltip $widgets($x) $name
-     if { [expr {[string length $name] + 3}] > $clip } {
+     if { [string length $name] > [expr {$clip + 3}] } {
           $widgets($x) configure -text "[string range $name 0 $clip]..."
         } else {
           $widgets($x) configure -text $name
