@@ -1,1 +1,1 @@
-return "2.0.0b5"
+return "2.0.0b6"

@@ -459,7 +459,7 @@ Please select a version:
 -----------------------------
 name:changes,2.0.0b6
 title:Version 2.0.0b6
-''Released ?????? ?? 2010.''
+''Released June 20 2010.''
   * Added /limit and /unlimit, for hiding text which doesn't match a particular pattern from the output window.
   * Nearly all messages produced by Potato can now be translated. Requested by Stoko. 
   * Changed the default encoding for connections from ascii to iso8859-1.
