@@ -4972,6 +4972,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [::ttk::label $sub.l -text [T "Wrap text at:"] -width 20 -anchor w -justify left] -side left
   pack [spinbox $sub.spin -textvariable ::potato::worldconfig($w,wrap,at) -from 0 -to 1000 \
              -validate all -validatecommand {string is integer %P} -width 6] -side left
+  pack [::ttk::button $sub.b -text " [T "Current Window Size"] " -command [list ::potato::currentWindowSize ::potato::worldconfig($w,wrap,at) $w 1000]] -side left -padx 8
 
   pack [set sub [::ttk::frame $frame.indent]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.l -text [T "Indent By:"] -width 20 -anchor w -justify left] -side left
@@ -5313,6 +5314,29 @@ proc ::potato::configureWorldCancel {w win} {
   return;
 
 };# ::potato::configureWorldCancel
+
+#: proc ::potato::currentWindowSize
+#: arg _var Variable to store result in
+#: arg w World whose font we should use for measurement
+#: arg max Maximum number of chars
+#: desc Measure how many chars, for world $w, it would take to fill the main window at current size (capping at $max). Set result in $var. NOTE: This is really quite skin dependant, and needs recoding better to interface with the skin, instead of cheating and assuming the default skin. Not that I'm ever likely to get around to writing another one. #abc
+#: return nothing
+proc ::potato::currentWindowSize {_var w max} {
+  variable world;
+
+  upvar #0 $_var var
+  set t [::potato::activeTextWidget]
+  pack $t -expand 1 -fill both
+  update
+  set window_width [winfo width $t];# hack alert #abc
+  pack $t -expand 0 -fill y
+  set font_width [font measure $world($w,top,font) "0"]
+  set total [expr {min($max,($window_width / $font_width))}]
+  set var $total
+
+  return;
+
+};# ::potato::currentWindowSize
 
 #: proc ::potato::configureTimerSelect
 #: arg tree Treeview widget
