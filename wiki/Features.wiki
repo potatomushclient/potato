@@ -23,7 +23,7 @@ Below is a list of the main features supported by Potato.
     * Send a response back to the MUSH
     * Place a string into the input window
   * Timers, to send commands repeatedly at regular intervals
-  * Automatic recobnect when booted, or when a connection fails
+  * Automatic reconnect when booted, or when a connection fails
   * Unlimited, searchable output buffer
   * Unlimited, searchable command input history
   * Easy to install and uninstall (download to install, delete to uninstall)
