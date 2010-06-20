@@ -5101,8 +5101,10 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   # Now we need to populate the list.
   set worldconfig($w,timer) -1
   set worldconfig($w,timer,active) {}
-  foreach x [array names world -regexp "$w,timer,\[0-9\]+\,cmds$"] {
-    scan $x $w,timer,%d,cmds timerId
+  foreach x [array names world -regexp "$w,timer,\[0-9\]+,cmds\$"] {
+    if { ![scan $x $w,timer,%d,cmds timerId] } {
+         continue;
+       } 
     set worldconfig($w,timer,$timerId,delay) $world($w,timer,$timerId,delay)
     set worldconfig($w,timer,$timerId,every) $world($w,timer,$timerId,every)
     set worldconfig($w,timer,$timerId,cmds) [string map [list "\n" " \b "] $world($w,timer,$timerId,cmds)]
@@ -6474,7 +6476,7 @@ proc ::potato::showMessageTimestamp {widget x y} {
   set coords [$widget bbox $index]
   set x [expr {[lindex $coords 0] + [winfo rootx $widget]}]
   set y [expr {[lindex $coords 1] + [winfo rooty $widget]}]
-  tooltipEnter $widget [clock format $timestamp -format $misc(clockFormat)] $x $y
+  tooltipEnter $widget 900 [clock format $timestamp -format $misc(clockFormat)] $x $y
 
   return;
 
@@ -6482,16 +6484,19 @@ proc ::potato::showMessageTimestamp {widget x y} {
 
 #: proc ::potato::tooltipEnter
 #: arg widget Widget path
+#: arg time Time delay before showing. Defaults to 450
 #: arg text Text to show, or empty to use preset text for widget. Defaults to empty string.
+#: arg x X-coord to show at, defaults to empty string to show near widget
+#: arg y Y-coord to show at, defaults to empty string to show near widget
 #: desc Called when a widget with a tooltip has an <Enter> event. Set up an [after] to display the tooltip
 #: return nothing
-proc ::potato::tooltipEnter {widget {text ""} {x ""} {y ""}} {
+proc ::potato::tooltipEnter {widget {time 450} {text ""} {x ""} {y ""}} {
   variable tooltip;
 
   after cancel $tooltip(after)
   catch {destroy $tooltip(widget)}
   set tooltip(up) $widget
-  set tooltip(after) [after 450 [list ::potato::tooltipShow $widget $text $x $y]]
+  set tooltip(after) [after $time [list ::potato::tooltipShow $widget $text $x $y]]
 
   return;
 
