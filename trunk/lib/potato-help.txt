@@ -47,6 +47,7 @@ title:Table of Contents
    ** [???//Command-Line Options]
    ** [Making Potato the default Telnet Client on Windows] (write me)
    * [changes//]
+   ** [changes,2.0.0b7//]
    ** [changes,2.0.0b6//]
    ** [changes,2.0.0b5//]
    ** [changes,2.0.0b4//]
@@ -445,6 +446,7 @@ The Winflash extension is also used, for flashing windows on the taskbar to show
 name:changes
 title:Changes
 Please select a version:
+   * [changes,2.0.0b7//]
    * [changes,2.0.0b6//]
    * [changes,2.0.0b5//]
    * [changes,2.0.0b4//]
@@ -456,6 +458,11 @@ Please select a version:
    * [changes,2.0.0a13//]
    * [changes,2.0.0a12//]
    * [changes,2.0.0a11//]
+-----------------------------
+name:changes,2.0.0b7
+title:Version 2.0.0b7
+''Released ???? ?? 2010.''
+  * When configuring window wrap size, there's now a 'Current Window Size' button that sets the size to the maximum width currently possible. Suggested by Trinsec.
 -----------------------------
 name:changes,2.0.0b6
 title:Version 2.0.0b6
