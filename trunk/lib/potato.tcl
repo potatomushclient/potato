@@ -57,7 +57,7 @@ proc ::potato::setPrefs {readfile} {
   set world(-1,description) ""
   set world(-1,loginStr) {connect %s %s}
   set world(-1,loginDelay) 1.5
-  set world(-1,type) "MUSH"
+  set world(-1,type) "Auto"
   set world(-1,telnet) 1
   set world(-1,encoding,start) iso8859-1
   set world(-1,encoding,negotiate) 1
@@ -2013,7 +2013,15 @@ proc ::potato::connectVerifyComplete {c} {
   incr world($w,stats,conns)
 
   fileevent $id writable {}
-  fconfigure $id -translation auto -encoding iso8859-1 -eof {} -blocking 0 -buffering none
+
+  switch $world($w,type) {
+     "MUSH" {set translation crlf}
+     "MUD"  {set translation cr}
+     "Auto" {set translation auto}
+     default {set translation auto}
+  }
+  fconfigure $id -translation $translation -encoding iso8859-1 -eof {} -blocking 0 -buffering none
+
   set encErr [catch {fconfigure $id -encoding $world($w,encoding,start)} encErrTxt];# change to preferred encoding if possible
   if { $encErr } {
        verbose $c [T "Unable to set encoding to %s: %s", $world($w,encoding,start) $encErrTxt]
@@ -4846,7 +4854,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [set sub [::ttk::frame $frame.mushType]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "MU* Type:"] -width 17 -justify left -anchor w] -side left -padx 3
   pack [::ttk::combobox $sub.cb -textvariable ::potato::worldconfig($w,type) \
-             -values [list MUD MUSH] -width 20 -state readonly] -side left -padx 3
+             -values [list Auto MUD MUSH] -width 20 -state readonly] -side left -padx 3
 
   # Connection page
   set frame [configureFrame $canvas [T "Connection Settings"]]
