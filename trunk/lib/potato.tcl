@@ -341,7 +341,7 @@ proc ::potato::manageWorldVersion {w version} {
             if { $world($w,unicode) == 1 } {
                  set world($w,encoding,negotiate) 0
                }
-            unset -nocomplain $world($w,unicode)
+            unset -nocomplain world($w,unicode)
           }
      }
 
