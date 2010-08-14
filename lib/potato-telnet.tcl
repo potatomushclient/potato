@@ -35,6 +35,7 @@ proc ::potato::telnet::init {} {
                  [list NEWENV 39 0] \
                  [list CHARSET 42 1] \
                  [list STARTTLS 46 0] \
+                 [list MSSP 70 0] \
                  [list MCP 86 0] \
                  [list MSP 90 0] \
                  [list MXP 91 0] \
@@ -56,6 +57,10 @@ proc ::potato::telnet::init {} {
      set subCmd(CHARSET,$name) [binary format c $int]
   }
 
+  # Subnegotiation commands used by MSSP
+  foreach {name int} [list MSSP_VAR 1 MSSP_VAL 2] {
+     set subCmd(MSSP,$name) [binary format c $int]
+  }
   return;
 
 };# ::potato::telnet::init
