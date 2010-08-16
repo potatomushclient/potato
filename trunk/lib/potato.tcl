@@ -9807,6 +9807,30 @@ proc ::potato::slash_cmd_unset {c full str} {
 
 };# ::potato::slash_cmd_unset
 
+#: proc ::potato::slash_cmd_vars
+#: arg c connection id
+#: arg full was the command name typed in full?
+#: arg str Arg given. Not used.
+#: desc Show a list of all vars set for the current world, and globally
+#: return nothing
+proc ::potato::slash_cmd_vars {c full str} {
+  variable conn;
+
+  if { $c != 0 } {
+       outputSystem $c "World vars:"
+       foreach x [lsort -dictionary [removePrefix [array names conn $c,uservar,*] $c,uservar]] {
+         outputSystem $c "\t$x\t$conn($c,uservar,$x)"
+       }
+       outputSystem $c ""
+     }
+
+  outputSystem $c "Global vars:"
+  foreach x [lsort -dictionary [removePrefix [array names conn 0,uservar,*] 0,uservar]] {
+    outputSystem $c "\t$x\t$conn(0,uservar,$x)"
+  }
+
+};# ::potato::slash_cmd_vars
+
 #: proc ::potato::slash_cmd_setglobal
 #: arg c connection id
 #: arg full was the command name typed in full?
