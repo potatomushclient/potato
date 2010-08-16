@@ -10755,10 +10755,18 @@ proc ::potato::rebuildConnectMenu {m} {
 
   foreach w [worldIDs] {
      if { [llength $world($w,groups)] == 0 } {
-          lappend noGroups [list $w $world($w,name)]
+          if  { [string length [string trim $world($w,charName)]] } {
+                lappend noGroups [list $w "$world($w,name) ($world($w,charName))"]
+              } else {
+                lappend noGroups [list $w $world($w,name)]
+              }
         } else {
           foreach y $world($w,groups) {
-             lappend group($y) [list $w $world($w,name)]
+          if  { [string length [string trim $world($w,charName)]] } {
+                lappend group($y) [list $w "$world($w,name) ($world($w,charName))"]
+              } else {
+                lappend group($y) [list $w $world($w,name)]
+              }
           }
         }
   }
