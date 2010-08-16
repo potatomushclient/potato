@@ -466,6 +466,7 @@ title:Version 2.0.0b7
   * The 'MU* Type' option for worlds didn't actually do anything. Now, setting it to MUD forces cr lineendings, MUSH uses crlf, and Auto attempts to figure it out automatically (the previous behaviour). Reported by Chaz@M*U*S*H.
   * A bug in the new Encoding Negotiation code meant it didn't work correctly for people upgrading, and caused an error for people installing a new copy, when connecting to a world that did charset negotiation (ie, a MUX). Reported by Nathan Corbier.
   * /log had several bugs. Reported by Merin.
+  * Auto-Sends now parse /commands. Requested by Merin.
 -----------------------------
 name:changes,2.0.0b6
 title:Version 2.0.0b6

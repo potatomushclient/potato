@@ -2071,7 +2071,7 @@ proc ::potato::sendLoginInfoSub {c} {
 
   set w $conn($c,world)
   if { [string length $world($w,autosend,connect)] } {
-       send_to_real $c $world($w,autosend,connect)
+       send_to $c $world($w,autosend,connect) "\n" 0
      }
   # Don't check for pw being blank, as some games allow empty passwords
   if { [string length $world($w,charName)] && \
@@ -2081,7 +2081,7 @@ proc ::potato::sendLoginInfoSub {c} {
        send_to_real $c $str
      }
   if { [string length $world($w,autosend,login)] } {
-       send_to_real $c $world($w,autosend,login)
+       send_to $c $world($w,autosend,login) "\n" 0
      }
 
   return;
