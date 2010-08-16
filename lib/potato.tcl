@@ -104,6 +104,7 @@ proc ::potato::setPrefs {readfile} {
 
   set world(-1,notes) ""
   set world(-1,mailFormat) "MUSH @mail"
+  set world(-1,mailFormat,custom) "writeto %to% %cc% %bcc% about %subject% ;; write %body% ;; send"
   set world(-1,mailConvertReturns) 1
   set world(-1,mailConvertReturns,to) "%r"
 
@@ -556,9 +557,20 @@ proc ::potato::mailWindow {{c ""}} {
   pack [::ttk::label $format.l -text [T "Format:"] -width 10] -side left -anchor nw
   pack [::ttk::combobox $format.cb -justify left -state normal -width 40 \
                -textvariable ::potato::conn($c,mailWindow,format) \
-               -values [list "MUSH @mail" "MUX @mail" "Multi-Command +mail" "MUSE +mail"]] -side left -anchor nw -fill x
+               -values [list "MUSH @mail" "MUX @mail" "Multi-Command +mail" "MUSE +mail" "Custom"]] -side left -anchor nw -fill x
   set ::potato::conn($c,mailWindow,format) $world($w,mailFormat)
   set ::potato::conn($c,mailWindow,formatWidget) $format.cb
+
+  pack [set custom [::ttk::frame $frame.custom]] -side top -anchor nw -expand 0 -fill x -padx 5 -pady 3
+  pack [::ttk::label $custom.l -text [T "Custom:"] -width 10] -side left -anchor nw
+  pack [::ttk::entry $custom.e -textvariable ::potato::conn($c,mailWindow,custom) -width 40] \
+     -side left -anchor nw -fill x
+  set ::potato::conn($c,mailWindow,custom) $world($w,mailFormat,custom)
+  if { $conn($c,mailWindow,format) ne "Custom" } {
+       $custom.e state disabled
+     }
+
+  bind $format.cb <<ComboboxSelected>> [list ::potato::mailWindowFormatChange %W $custom.e]
 
   pack [set txt [::ttk::frame $frame.txt]] -side top -anchor nw -expand 1 -fill both -padx 5 -pady 3
   pack [set textWidget [text $txt.t -height 12 -width 40 -wrap word -background white -foreground black \
@@ -589,6 +601,23 @@ proc ::potato::mailWindow {{c ""}} {
 
 };# ::potato::mailWindow
 
+#: proc ::potato::mailWindowFormatChange
+#: arg cb combobox widget path
+#: arg e entry widget path
+#: desc Change the state of the entry widget based on the combo's value
+#: return nothing
+proc ::potato::mailWindowFormatChange {cb e} {
+
+  if { [$cb get] eq "Custom" } {
+       $e state !disabled
+     } else {
+       $e state disabled
+     }
+
+  return;
+
+};# ::potato::mailWindowFormatChange
+
 #: proc ::potato::mailWindowSend
 #: arg c connection id
 #: arg win the mail window toplevel
@@ -601,25 +630,25 @@ proc ::potato::mailWindowSend {c win} {
   set w $conn($c,world)
 
   # Figure out the mail format
-  set formatNum [$conn($c,mailWindow,formatWidget) current]
-  set formats [list "@mail %0=%3/%4" "@mail %0=%3 \b -%4 \b --" "+mail %0=%3 \b -%4 \b --" "+mail %0=%4"]
-  set names [list "MUSH @mail" "MUX @mail" "Multi-Command +mail" "MUSE +mail"]
-  if { $formatNum > -1 && $formatNum < [llength $formats] } {
-       set format [lindex $formats $formatNum]
-       set world($conn($c,world),mailFormat) $conn($c,mailWindow,format)
+  set format $conn($c,mailWindow,format)
+  if { $format eq "Custom" } {
+       set world($w,mailFormat) Custom
+       set world($w,mailFormat,custom) $conn($c,mailWindow,custom)
+       set cmd [string map [list ";;" \b] $world($w,mailFormat,custom)]
      } else {
-       set format [string map [list ";;" "\b"] $conn($c,mailWindow,format)]
        set world($w,mailFormat) $format
+       set cmds [list "@mail %to%=%subject%/%body%" "@mail %to%=%subject% \b -%body% \b --" "+mail %to%=%subject% \b -%body^ \b --" "+mail %to%=%body%"]
+       set names [list "MUSH @mail" "MUX @mail" "Multi-Command +mail" "MUSE +mail"]
+       set cmd [lindex $cmds [lsearch $names $format]]
      }
 
-  # %0 = to, %1 = cc, %2 = bcc, %3 = subject, %4 = body
   set msg [$conn($c,mailWindow,bodyWidget) get 1.0 end-1char]
   if { $world($w,mailConvertReturns) } {
        set msg [string map [list "\n" $world($w,mailConvertReturns,to)] $msg]
      }
-  set mailcmd [string map [list %0 $conn($c,mailWindow,to) %1 $conn($c,mailWindow,cc) \
-              %2 $conn($c,mailWindow,bcc) %3 $conn($c,mailWindow,subject) \
-              %4 $msg] $format]
+  set mailcmd [string map [list %to% $conn($c,mailWindow,to) %cc% $conn($c,mailWindow,cc) \
+              %bcc% $conn($c,mailWindow,bcc) %subject% $conn($c,mailWindow,subject) \
+              %body% $msg] $cmd]
 
   send_to $c $mailcmd \b 1
 
@@ -9810,24 +9839,47 @@ proc ::potato::slash_cmd_unset {c full str} {
 #: proc ::potato::slash_cmd_vars
 #: arg c connection id
 #: arg full was the command name typed in full?
-#: arg str Arg given. Not used.
+#: arg str Possible args -all, -global or -local to control which to show
 #: desc Show a list of all vars set for the current world, and globally
 #: return nothing
 proc ::potato::slash_cmd_vars {c full str} {
   variable conn;
 
-  if { $c != 0 } {
+  set local 1
+  set global 1
+
+  foreach x [split $str " "] {
+    if { $x eq "-all" } {
+         set local 1
+         set global 1
+       } elseif { $x eq "-local" } {
+         set local 1
+         set global 0
+       } elseif { $x eq "-global" } {
+         set local 0
+         set global 1
+       } else {
+         outputSystem $c "/vars: Invalid arg \"$x\": Must be one of -all, -global or -local"
+         return;
+       }
+  }   
+
+  if { $local && $c != 0 } {
        outputSystem $c "World vars:"
        foreach x [lsort -dictionary [removePrefix [array names conn $c,uservar,*] $c,uservar]] {
          outputSystem $c "\t$x\t$conn($c,uservar,$x)"
        }
-       outputSystem $c ""
+       if { $global } {
+            outputSystem $c ""
+          }
      }
 
-  outputSystem $c "Global vars:"
-  foreach x [lsort -dictionary [removePrefix [array names conn 0,uservar,*] 0,uservar]] {
-    outputSystem $c "\t$x\t$conn(0,uservar,$x)"
-  }
+  if { $global || ($local && $c == 0) } {
+       outputSystem $c "Global vars:"
+       foreach x [lsort -dictionary [removePrefix [array names conn 0,uservar,*] 0,uservar]] {
+         outputSystem $c "\t$x\t$conn(0,uservar,$x)"
+       }
+     }
 
 };# ::potato::slash_cmd_vars
 
