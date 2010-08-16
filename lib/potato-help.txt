@@ -467,6 +467,7 @@ title:Version 2.0.0b7
   * A bug in the new Encoding Negotiation code meant it didn't work correctly for people upgrading, and caused an error for people installing a new copy, when connecting to a world that did charset negotiation (ie, a MUX). Reported by Nathan Corbier.
   * /log had several bugs. Reported by Merin.
   * Auto-Sends now parse /commands. Requested by Merin.
+  * New /vars command, which lists vars set with /set and /setglobal. Requested by Paige.
 -----------------------------
 name:changes,2.0.0b6
 title:Version 2.0.0b6
@@ -719,6 +720,7 @@ A "/command" is a special command you can type into the input box (or anywhere e
    * '''/toggle ''[[<direction>]''''' - Toggle to a different open connection. If ''<direction>'' is "down" or "-1" it will toggle backwards to the previous connection, otherwise it will go forwards to the next.
    * '''/unset ''<varName>''''' - Unset the variable ''<varName>'' for this connection.
    * '''/unsetglobal ''<varName>''''' - Unset the global variable ''<varName>''.
+   * '''/vars ''[[-all|-global|-local]]''''' - Lists vars set via /set and /setglobal. Use -local for local (/set) vars, -global for global (/setglobal) vars, or -all (the default) for both.
    * '''/web ''<address>''''' - Launch the web page <address>
 -----------------------------
 name:/commandVars
