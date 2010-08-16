@@ -9946,7 +9946,11 @@ proc ::potato::slash_cmd_log {c full str} {
   set finished 0
   set file [list]
   set needOpt 1
-  foreach x [split $str " "] {
+  set argv [split $str " "]
+  set argc [llength $argv]
+  set i 0
+  foreach x $argv {
+     incr i
      if { $finished } {
           lappend file $x
         } else {
@@ -9960,10 +9964,17 @@ proc ::potato::slash_cmd_log {c full str} {
                   } else {
                     set match [array names options "$x*"]
                     if { [llength $match] == 0 } {
-                         set error [T "Unknown option \"%s\"" $x]
-                         break;
+                         if { $i == $argc || ![string match "-*" $x] } {
+                              set finished 1
+                              lappend file $x
+                            } else {
+                              set error [T "Unknown option \"%s\"" $x]
+                              break;
+                            }
                        } elseif { [llength $match] > 1 } {
                          set error [T "Ambiguous option \"%s\"" $x]
+                       } else {
+                         set needOpt 0
                        }
                   }
               } else {
@@ -9972,7 +9983,7 @@ proc ::potato::slash_cmd_log {c full str} {
                      if { [string is boolean -strict $x] } {
                           set options($match) [string is true -strict $x]
                         } else {
-                          set error [T "Invalid setting for \"%s\"" $match]
+                          set error [T "Invalid setting \"%s\" for \"%s\"" $x $match]
                           break;
                         }
                    } elseif { $match eq "-buffer" } {
@@ -9984,6 +9995,7 @@ proc ::potato::slash_cmd_log {c full str} {
                           set options(-buffer) $x;# name of a spawn window
                         }
                    }
+                set needOpt 1
               }
         }
      }
@@ -9993,7 +10005,7 @@ proc ::potato::slash_cmd_log {c full str} {
        return;
      }
 
-  if { $options(-append) && $conn($c,logFileId) ne "" } {
+  if { $options(-leave) && $conn($c,logFileId) ne "" } {
        outputSystem $c [T "/log: There is already an open log-file."]
        return;
      }
@@ -10772,7 +10784,7 @@ proc ::potato::tasksInit {} {
        log,state           notZero \
        logStop,name        [T "S&top Logging"] \
        logStop,cmd         "::potato::stopLog" \
-       logStop,state       {[info exists $conn($c,logFileId)] && $conn($c,logFileId) ne ""} \
+       logStop,state       {[info exists ::potato::conn($c,logFileId)] && $::potato::conn($c,logFileId) ne ""} \
        upload,name         [T "&Upload File"] \
        upload,cmd          "::potato::uploadWindow" \
        upload,state        always \
@@ -10885,9 +10897,9 @@ proc ::potato::taskVars {task} {
 
 #: proc ::potato::taskState
 #: arg task Task name to query/change state of
-#: arg newstate Optional new state (1 or 0) for task. Defaults to ""
-#: desc Return the current state (if $newstate is "") of, or set the state of, $task to $newstate.
-#: return The state of $task, after any changes have taken place.
+#: arg c Connection id, or "" for current connection
+#: desc Return the current state of $task for connection $c.
+#: return The state of $task
 proc ::potato::taskState {task {c ""}} {
   variable tasks;
   variable conn;

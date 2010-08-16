@@ -35,7 +35,7 @@ proc ::potato::telnet::init {} {
                  [list NEWENV 39 0] \
                  [list CHARSET 42 1] \
                  [list STARTTLS 46 0] \
-                 [list MSSP 70 0] \
+                 [list MSSP 70 1] \
                  [list MCP 86 0] \
                  [list MSP 90 0] \
                  [list MXP 91 0] \
