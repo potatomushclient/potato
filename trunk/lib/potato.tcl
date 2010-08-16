@@ -8841,12 +8841,14 @@ proc ::potato::parseUserVars {c str} {
   set inVar 0
   set varMarkerChar {$}
   set w $conn($c,world)
+  # $_chr$ was a typo, but is left as an alias for $_char$ for backwards compatability
   array set masterVars [list _u [up] \
                              _c $c \
                              _w $w \
                              _name $world($w,name) \
                              _host $world($w,host) \
                              _port $world($w,port) \
+                             _char $world($w,charName) \
                              _chr $world($w,charName) \
                        ] ;# array set masterVars
 
