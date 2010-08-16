@@ -78,6 +78,9 @@ proc ::potato::setPrefs {readfile} {
   set world(-1,inputLimit,to) 250
   set world(-1,splitInputCmds) 0
 
+  set world(-1,beep,show) 1
+  set world(-1,beep,sound) "All" ;# All, Once or None
+
   set world(-1,temp) 0
   set world(-1,autoconnect) -1
 
@@ -2425,7 +2428,20 @@ proc ::potato::get_mushageProcess {c line} {
   set tmp [regexp -all -inline -indices -- $matchLinks $lineNoansi]
   # '\a' is the beep char defined in PennMUSH in ansi.h. If a game has changed this, or another codebase uses something
   # else, you can change it by.. hrm, nope, you're just screwed.
-  set beeps [regsub -all -- \a $line {} line]
+
+  # First, we need to count the beeps
+  set beepCount [llength [lsearch -all [split $line ""] \a]]
+  if { $beepCount } {
+       # We have beeps. Figure out how many times to beep, and whether to display beeps.
+       if { !$world($w,beep,show) } {
+            regsub -all -- \a $line {} line;# remove beep chars from output
+          }
+        switch -exact $world($w,beep,sound) {
+          None {set beepCount 0}
+          Once {set beepCount 1}
+        }
+     }
+
   set len [string length $lineNoansi]
   set urlIndices [list]
   foreach x $tmp {
@@ -2638,7 +2654,7 @@ proc ::potato::get_mushageProcess {c line} {
           }
      }
 
-  beepNumTimes $beeps
+  beepNumTimes $beepCount
 
   skinStatus $c
 
@@ -5100,6 +5116,15 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [set sub [::ttk::frame $frame.verbose]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "Show Verbose Messages?"] -width 20 -justify left -anchor w] -side left
   pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,verbose) -onvalue 1 -offvalue 0] -side left
+
+  pack [set sub [::ttk::frame $frame.beepShow]] -side top -pady 5 -anchor nw
+  pack [::ttk::label $sub.label -text [T "Show Beeps?"] -width 20 -justify left -anchor w] -side left
+  pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,beep,show) -onvalue 1 -offvalue 0] -side left
+
+  pack [set sub [::ttk::frame $frame.beepSound]] -side top -pady 5 -anchor nw
+  pack [::ttk::label $sub.label -text [T "Play Beeps?"] -width 20 -justify left -anchor w] -side left
+  pack [::ttk::combobox $sub.cb -textvariable ::potato::worldconfig($w,beep,sound) \
+             -values [list All Once None] -width 20 -state readonly] -side left -padx 3
 
   # Timers
   set frame [configureFrame $canvas [T "Timers"]]
