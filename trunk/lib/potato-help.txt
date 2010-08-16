@@ -468,6 +468,7 @@ title:Version 2.0.0b7
   * /log had several bugs. Reported by Merin.
   * Auto-Sends now parse /commands. Requested by Merin.
   * New /vars command, which lists vars set with /set and /setglobal. Requested by Paige.
+  * Added a new Custom Mail Format option to the Mail Window. Suggested by Blank Forrest.
 -----------------------------
 name:changes,2.0.0b6
 title:Version 2.0.0b6
