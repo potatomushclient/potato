@@ -30,16 +30,16 @@ C:\Potato\tclkit potato.kit
 If you're [Downloads#Source downloading the source], extract the *potato.vfs* folder from the archive into *C:\Potato*
 
 ==SVN==
-From *C:\Potato*, checkout a copy of Potato, with the command
+From *C:\*, checkout a copy of Potato, with the command
 
 {{{
-svn checkout http://potatomushclient.googlecode.com/svn/trunk/ potato.vfs
+svn checkout http://potatomushclient.googlecode.com/svn/trunk/ potato
 }}}
 
-This creates the directory *C:\Potato\potato.vfs*, with the source code inside.
+This creates the directory *C:\potato\*, which contains the *potato.vfs* directory with the source code.
 
 ===Running Potato===
-When you have the source in place, download the [http://potatomushclient.com/scripts/potato-launch-from-vfs.tcl potato-launch-from-vfs.tcl] script, and place it in *C:\Potato*. Then, to run _Potato_, do
+When you have the source in place, download the [http://potatomushclient.com/scripts/potato-launch-from-vfs.tcl potato-launch-from-vfs.tcl] script, and place it in *C:\potato*. Then, to run _Potato_, do
 
 {{{
 C:\Potato\tclkit potato-launch-from-vfs.tcl
