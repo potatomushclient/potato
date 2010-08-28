@@ -50,8 +50,10 @@ proc ::potato::setPrefs {readfile} {
   set world(-1,id) -1
   set world(-1,host) ""
   set world(-1,port) "4201"
+  set world(-1,ssl) 0
   set world(-1,host2) ""
   set world(-1,port2) "4201"
+  set world(-1,ssl2) 0
   set world(-1,charName) ""
   set world(-1,charPass) ""
   set world(-1,description) ""
@@ -1878,6 +1880,7 @@ proc ::potato::ioWrite {args} {
 proc ::potato::connect {c first {hostlist ""}} {
   variable conn;
   variable world;
+  variable potato;
 
   if { $conn($c,connected) != 0 || $c == 0 } {
        return;# already connected or trying to connect
@@ -1893,15 +1896,35 @@ proc ::potato::connect {c first {hostlist ""}} {
   set up [up]
 
   if { ![llength $hostlist] } {
-       lappend hostlist host
-       if { [string length $world($w,host2)] && [string length $world($w,port2)] } {
-            lappend hostlist host2
+       if { !$world($w,ssl) || $potato(hasTLS) } {
+            lappend hostlist host
+          } else {
+            outputSystem $c [T "Unable to connect to primary host - SSL not available"]
           }
-       set thishost host
+       if { [string length $world($w,host2)] && [string length $world($w,port2)] } {
+            if { !$world($w,ssl2) || $potato(hasTLS) } {
+                 lappend hostlist host2
+               } else {
+                 outputSystem $c [T "Unable to connect to secondary host - SSL not available"]
+               }
+          }
+     }
+
+  if { ![llength $hostlist] } {
+       # All connections require SSL, and we don't have TLS
+       disconnect $c 0
+       skinStatus $c
+       return;
+     }
+
+  set thishost [lindex $hostlist 0]
+  if { $thishost eq "host" } {
        set thisport port
+       set thisssl ssl
+       set message [T "Connecting to host %s:%s..." $world($w,$thishost) $world($w,$thisport)]
      } else {
-       set thishost [lindex $hostlist 0]
-       set thisport [expr {$thishost eq "host" ? "port" : "port2"}]
+       set thisport port2
+       set thisssl ssl2
        set message [T "Connecting to secondary host %s:%s..." $world($w,$thishost) $world($w,$thisport)]
      }
 
@@ -1937,6 +1960,9 @@ proc ::potato::connect {c first {hostlist ""}} {
      }
 
   set conn($c,id) $fid
+  if { $world($w,$thisssl) } {
+       addProtocol $c ssl
+     }
   fileevent $fid writable [list ::potato::connectVerify $c $hostlist]
 
   return;
@@ -2052,6 +2078,10 @@ proc ::potato::connectVerifyComplete {c} {
      "Auto" {set translation auto}
      default {set translation auto}
   }
+  if { [hasProtocol $c ssl] } {
+       tls::import $id
+     }
+
   fconfigure $id -translation $translation -encoding iso8859-1 -eof {} -blocking 0 -buffering none
 
   set encErr [catch {fconfigure $id -encoding $world($w,encoding,start)} encErrTxt];# change to preferred encoding if possible
@@ -4850,6 +4880,10 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [::ttk::label $sub.label -text [T "1st Port:"] -width 17 -justify left -anchor w] -side left -padx 3
   pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,port) -width 50] -side left -padx 3
 
+  pack [set sub [::ttk::frame $frame.ssl]] -side top -pady 5 -anchor nw
+  pack [::ttk::label $sub.label -text [T "Use SSL?:"] -width 17 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,ssl) -onvalue 1 -offvalue 0] -side left -padx 3
+
   pack [set sub [::ttk::frame $frame.host2]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "2nd Address:"] -width 17 -justify left -anchor w] -side left -padx 3
   pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,host2) -width 50] -side left -padx 3  
@@ -4857,6 +4891,10 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [set sub [::ttk::frame $frame.port2]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "2nd Port:"] -width 17 -justify left -anchor w] -side left -padx 3
   pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,port2) -width 50] -side left -padx 3
+
+  pack [set sub [::ttk::frame $frame.ssl2]] -side top -pady 5 -anchor nw
+  pack [::ttk::label $sub.label -text [T "Use SSL?:"] -width 17 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,ssl2) -onvalue 1 -offvalue 0] -side left -padx 3
 
   pack [::ttk::separator $frame.sep1 -orient horizontal] -fill x -padx 20 -pady 5
 
@@ -6260,6 +6298,9 @@ proc ::potato::main {} {
   i18nPotato
 
   tasksInit
+
+  # Load TLS if available, for SSL connections
+  set potato(hasTLS) [expr {![catch {package require tls}]}]
 
   # Set the ttk theme to use
   setTheme
@@ -11205,7 +11246,6 @@ package require potato-telnet 1.1
 package require potato-proxy
 package require potato-help
 package require potato-font
-
 
 ::potato::main
 

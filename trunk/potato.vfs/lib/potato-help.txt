@@ -472,6 +472,7 @@ title:Version 2.0.0b7
   * New Beep options allow you to configure whether beep characters (a la beep() in PennMUSH) are shown on screen, and also whether Potato should beep once for each beep char (All), once for each line containing a beep char (Once), or not beep at all (None).
   * The ${DOLLAR}_char${DOLLAR} variable in /commands didn't work. Reported by Merin.
   * The "Connect To..." menu now shows the character name, if given, in brackets after the world name. Suggested by Merin.
+  * Added basic SSL support. Requires TLS from http://sourceforge.net/projects/tls/
 -----------------------------
 name:changes,2.0.0b6
 title:Version 2.0.0b6
