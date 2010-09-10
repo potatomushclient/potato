@@ -38,6 +38,7 @@ title:Table of Contents
    * [tech//]
    ** [tech,tcl//]
    ** [tech,win//]
+   ** [tech,tls//]
    * Other stuff to add:
    ** [/commands//]
    ** [Keyboard Shortcuts] (write me)
@@ -430,6 +431,7 @@ name:tech
 title:Technology Behind Potato
    * [tech,tcl//]
    * [tech,win//]
+   * [tech,tsl//]
 -----------------------------
 name:tech,tcl
 title:Tcl/Tk
@@ -442,6 +444,14 @@ title:Winico & Winflash
 On MS Windows, Potato includes the Winico extension for Tk, which is available from SourceForge ([w:http://tktable.sourceforge.net/]). Winico is used to place an icon in the system tray, and is Copyright © 1997-1998, Brueckner&Jarosch.
 
 The Winflash extension is also used, for flashing windows on the taskbar to show activity. Winflash was written by Youness El Alaoui (KaKaRoTo - kakaroto@users.sourceforge.net), and the version used in Potato was compiled by Evelyn K. Vides.
+-----------------------------
+name:tech,tls
+title:SSL support with TLS
+Potato has some limited support for SSL connections (it can connect to games using SSL, but cannot present a certificate, or verify certificates from the server - most MUSHes don't require either, though). The SSL support is provided via the TLS package, which can be downloaded from http://sourceforge.net/projects/tls/ . Precompiled binaries are available for Windows; Linux users will need to compile themselves from the source code. 
+
+On Windows, unzip the tls.zip file and place the folder it contains in C:\Potato\lib (assuming you installed Potato in C:\Potato).
+
+On Linux, compile, and place the resulting files into /potato/lib/tls/ (assuming you installed Potato in /potato/).
 -----------------------------
 name:changes
 title:Changes
@@ -472,7 +482,7 @@ title:Version 2.0.0b7
   * New Beep options allow you to configure whether beep characters (a la beep() in PennMUSH) are shown on screen, and also whether Potato should beep once for each beep char (All), once for each line containing a beep char (Once), or not beep at all (None).
   * The ${DOLLAR}_char${DOLLAR} variable in /commands didn't work. Reported by Merin.
   * The "Connect To..." menu now shows the character name, if given, in brackets after the world name. Suggested by Merin.
-  * Added basic SSL support. Requires TLS from http://sourceforge.net/projects/tls/
+  * Added basic SSL support. Requires TLS from http://sourceforge.net/projects/tls/ . See [tech,tls//] for details.
 -----------------------------
 name:changes,2.0.0b6
 title:Version 2.0.0b6
