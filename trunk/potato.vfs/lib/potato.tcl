@@ -11041,7 +11041,7 @@ proc ::potato::tasksInit {} {
        fcmd12,state        always \
        fcmd12,cmd          "::potato::fcmd 12" \
        fcmd12,name         [T "Run F12 Command"] \
-       spellcheck,name     [T "Check Spelling"] \
+       spellcheck,name     [T "Check &Spelling"] \
        spellcheck,cmd      "::potato::spellcheck" \
        spellcheck,state    {[file exists $::potato::misc(aspell)]} \
   ]

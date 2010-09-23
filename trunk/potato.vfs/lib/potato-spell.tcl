@@ -68,7 +68,7 @@ proc ::potato::spellcheck::spellcheck {string} {
   $right.frameCancel.sub.b configure -command [list ::potato::spellcheck::finish 0]
   $right.frameReplace.sub.b configure -command [list ::potato::spellcheck::replaceWord 1]
   $right.frameIgnore.sub.b configure -command [list ::potato::spellcheck::replaceWord 0]
-  bind $replacement [list $right.frameDone.sub.b invoke]
+  bind $replacement <Return> [list $right.frameReplace.sub.b invoke]
 
   $right.frameReplace.sub.b state disabled
   $right.frameIgnore.sub.b state disabled
@@ -311,6 +311,7 @@ proc ::potato::spellcheck::checkSpelling {string} {
 proc ::potato::spellcheck::checkSpellingSub {pipe} {
 
   set i 0
+  set return [list]
   while { [set count [gets $pipe line]] >= 0 } {
     incr i
     if { $count == 0 || $line eq "*" } {
@@ -324,6 +325,7 @@ proc ::potato::spellcheck::checkSpellingSub {pipe} {
          lappend return [list [string range [lindex $list 3] 0 end-1] [lindex $list 1] [split [string map [list "," ""] [join [lrange $list 4 end] " "]] " "]]
        }
   }
+
   close $pipe
 
   set ::potato::spellcheck::spellcheck(result) [list $i $return];
