@@ -433,7 +433,7 @@ name:tech
 title:Technology Behind Potato
    * [tech,tcl//]
    * [tech,win//]
-   * [tech,tsl//]
+   * [tech,tls//]
 -----------------------------
 name:tech,tcl
 title:Tcl/Tk
