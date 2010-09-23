@@ -143,7 +143,7 @@ proc ::potato::spellcheck::spellcheck {string} {
 
   vwait ::potato::spellcheck::spellcheck(string)
 
-  bind $win <Destroy> ""
+  catch {bind $win <Destroy> ""}
 
   destroy $win;
 
