@@ -181,6 +181,8 @@ proc ::potato::setPrefs {readfile} {
   # Default skin
   set misc(skin) "potato"
 
+  set misc(aspell) "";# path to aspell executable. None by default.
+
   if { $potato(windowingsystem) eq "aqua" } {
        set misc(tileTheme) aqua
      } elseif { $potato(windowingsystem) eq "win32" } {
@@ -5278,6 +5280,11 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
        pack [::ttk::entry $sub.e -textvariable potato::worldconfig(MISC,browserCmd) -width 25] -side left
        set potato::worldconfig(MISC,browserCmd) $misc(browserCmd)
 
+       pack [set sub [::ttk::frame $frame.aspell]] -side top -pady 5 -anchor nw
+       pack [::ttk::label $sub.l -text [T "ASpell executable:"] -width $lW -anchor w -justify left] -side left
+       pack [::ttk::entry $sub.e -textvariable potato::worldconfig(MISC,aspell) -width 25] -side left
+       set potato::worldconfig(MISC,aspell) $misc(aspell)
+
        pack [set sub [::ttk::frame $frame.clock]] -side top -pady 5 -anchor nw
        pack [::ttk::label $sub.l -text [T "Clock Format:"] -width $lW -anchor w -justify left] -side left
        pack [::ttk::entry $sub.e -textvariable potato::worldconfig(MISC,clockFormat) -width 25] -side left
@@ -6102,6 +6109,10 @@ proc ::potato::connStatus {c} {
 proc ::potato::connInfo {c type} {
   variable conn;
   variable world;
+
+  if { $c eq "" } {
+       set c [up]
+     }
 
   switch -glob -- $type {
     name -
@@ -7429,6 +7440,22 @@ proc ::potato::build_menu_file {m} {
 
 };# ::potato::build_menu_file
 
+#: proc ::potato::build_menu_edit
+#: arg m Edit menu widget
+#: desc The Edit menu is about to be posted. Create its entries appropriately.
+#: return nothing
+proc ::potato::build_menu_edit {m} {
+  variable potato;
+  variable menu;
+
+  $m delete 0 end
+
+  createMenuTask $m spellcheck
+
+  return;
+
+};# ::potato::build_menu_edit
+
 #: proc ::potato::build_menu_view
 #: arg m Widget path to the View menu
 #: desc The "View" menu ($m) is about to be posted. Configure it's entries appropriately. Unlike other menus, this one also has entries appended by the skin.
@@ -7542,6 +7569,7 @@ proc ::potato::setUpMenu {} {
   menu .m -tearoff 0
   . configure -menu .m
   set menu(file,path) [menu .m.file -tearoff 0 -postcommand [list ::potato::build_menu_file .m.file]]
+  set menu(edit,path) [menu .m.edit -tearoff 0 -postcommand [list ::potato::build_menu_edit .m.edit]]
   set menu(connect,path) [menu .m.file.connect -tearoff 0 -postcommand [list ::potato::rebuildConnectMenu .m.file.connect]]
   set menu(view,path) [menu .m.view -tearoff 0 -postcommand [list ::potato::build_menu_view .m.view]]
   set menu(log,path) [menu .m.log -tearoff 0 -postcommand [list ::potato::build_menu_log .m.log]]
@@ -7551,6 +7579,8 @@ proc ::potato::setUpMenu {} {
 
   .m add cascade -menu .m.file {*}[menu_label [T "&File"]]
   set menu(file) [.m index end]
+  .m add cascade -menu .m.edit {*}[menu_label [T "&Edit"]]
+  set menu(edit) [.m index end]
   .m add cascade -menu .m.view {*}[menu_label [T "&View"]]
   set menu(view) [.m index end]
   .m add cascade -menu .m.log {*}[menu_label [T "&Logging"]]
@@ -11011,6 +11041,9 @@ proc ::potato::tasksInit {} {
        fcmd12,state        always \
        fcmd12,cmd          "::potato::fcmd 12" \
        fcmd12,name         [T "Run F12 Command"] \
+       spellcheck,name     [T "Check Spelling"] \
+       spellcheck,cmd      "::potato::spellcheck" \
+       spellcheck,state    {[file exists $::potato::misc(aspell)]} \
   ]
 
   return;
@@ -11114,6 +11147,24 @@ proc ::potato::taskLabel {task {menu 0}} {
      }
 
 };# ::potato::taskLabel
+
+#: proc ::potato::spellcheck
+#: desc Launch the spellchecker for the current input window. Note: the actual spellchecking code is in potato-spell.tcl, this simply launches it with the correct text and processes the result.
+#: return nothing
+proc ::potato::spellcheck {} {
+
+  set widget [connInfo [up] input3]
+  set text [$widget get 1.0 end-1c]
+  if { [string trim $text] eq "" } {
+       bell -displayof .
+       return;
+     }
+  set result [::potato::spellcheck::spellcheck $text]
+  if { [lindex $result 0] } {
+       $widget replace 1.0 end-1c [lindex $result 1]
+     }
+
+};# ::potato::spellcheck
 
 #: proc ::potato::glob2Regexp
 #: arg pattern A glob pattern
@@ -11236,6 +11287,10 @@ proc ::potato::T {msgformat args} {
 
 };# ::potato::T
 
+namespace eval ::potato {
+  namespace export T
+}
+
 ##################################
 # Everything below this should be somewhere more sensible, please. Thank you. #abc
 package require Tcl 8.5 ; package require Tk 8.5; # this should be redone more elegantly #abc
@@ -11246,6 +11301,7 @@ package require potato-telnet 1.1
 package require potato-proxy
 package require potato-help
 package require potato-font
+package require potato-spell
 
 ::potato::main
 

@@ -290,6 +290,8 @@ Potato turns any links it recognises in text received from a game into hyperlink
 
 (If Potato can't find the default browser on your computer, please [intro,contact//let me know].
 
+If you have ASpell installed, you can use it to perform spellchecking in the input windows. You must specify the path; unlike the Browser Command option, the path should NOT be enclosed in quotes, even if it contains spaces.
+
 You can also change the format that the date and time are displayed in with the "Clock Format" box. The valid formats are explained [appconfig,misc,clock//here].
 
 Potato can display an icon in the System Tray (this is only available on MS Windows at present). You can also [appconfig,act//animate the icon] when there's new activity.
@@ -472,6 +474,7 @@ Please select a version:
 name:changes,2.0.0b7
 title:Version 2.0.0b7
 ''Released ???? ?? 2010.''
+  * Spellchecking has finally been added, using ASpell (which you must install, see http://www.aspell.net). Requested by many people, including Paige and John_Fox.
   * When configuring window wrap size, there's now a 'Current Window Size' button that sets the size to the maximum width currently possible. Suggested by Trinsec.
   * The 'MU* Type' option for worlds didn't actually do anything. Now, setting it to MUD forces cr lineendings, MUSH uses crlf, and Auto attempts to figure it out automatically (the previous behaviour). Reported by Chaz@M*U*S*H.
   * A bug in the new Encoding Negotiation code meant it didn't work correctly for people upgrading, and caused an error for people installing a new copy, when connecting to a world that did charset negotiation (ie, a MUX). Reported by Nathan Corbier.

@@ -9,6 +9,7 @@ potato-skin.tcl            GUI-related code
 potato-telnet.tcl          Telnet parsing code
 potato-proxy.tcl           Base Proxy support code
 potato-proxy-SOCKS4.tcl    SOCKS4-specific Proxy code
+potato-spell.tcl           Spell-checking code
 MANIFEST                   This file
 
 images/                    A numer of image files used by Potato
