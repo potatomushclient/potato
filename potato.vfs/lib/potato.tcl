@@ -353,6 +353,11 @@ proc ::potato::manageWorldVersion {w version} {
           }
      }
 
+  if { ($version & $wf(obfusticated_pw)) && [info exists world($w,charPass)] } {
+       # Un-obfusticate the password, for actual use. It will be re-obfusticated on save.
+       set world($w,charPass) [obfusticate $world($w,charPass) 0]
+     }
+
   # Example:
   # if { ! ($version & $wf(some_new_feature)) } {
   #      set world($w,new_features_var) foobar
@@ -452,7 +457,12 @@ proc ::potato::saveWorlds {} {
              $opt eq "id" || [string match nosave,* $opt] } {
              continue;
            }
-        puts $fid [list set newWorld($opt) $world($w,$opt)]
+        set value $world($w,$opt)
+        if { $opt eq "charPass" } {
+             # Obfusticate!
+             set value [obfusticate $value 1]
+           }             
+        puts $fid [list set newWorld($opt) $value]
      }
      # This should NOT be translated
      puts $fid [list return "World Loaded Successfully [worldFlags 1]"]
@@ -464,15 +474,32 @@ proc ::potato::saveWorlds {} {
 
 };# ::potato::saveWorlds
 
+#: proc ::potato::obfusticate
+#: arg str string to [de]obfusticate
+#: arg dir if 1, obfusticate a string. If 0, reverse obfustication.
+#: desc Obfusticate a string (or remove obfustication). Used for saving/reading passwords. This is only obfustication, not encryption, but that's about all you can do in an open-source project.
+#: return modified $str
+proc ::potato::obfusticate {str dir} {
+
+  # I hope your password is largely letters, numbers, or the symbols I happened to pick.
+  set map1 {B 5 7 f S w I L 6 i D 2 p + V X Y Q u t N / ! e v x P b F k { } c d 1 Z z W - , 9 q g T s l y . H A m 4 $ K r 8 ? C R * E M o = 3 0 G J O h j n a U G ? # z 4 j I a V 1 n o q e Z w d H h O = b U i F k . s ! R S Q D c 6 / l $ C f B L T + W t P m , y N 2 v - 8 9 J r p x A E * X 0 5 K 3 u g Y M 7}
+
+  set map0 {5 B f 7 w S L I i 6 2 D + p X V Q Y t u / N e ! x v b P k F c { } 1 d z Z - W 9 , g q s T y l H . m A $ 4 r K ? 8 R C E * o M 3 = G 0 O J j h a n G U # ? 4 z I j V a n 1 q o Z e d w h H = O U b F i . k ! s S R D Q 6 c l / C $ B f T L W + P t , m N y v 2 8 - J 9 p r A x * E 0 X K 5 u 3 Y g 7 M}
+
+  return [string map [set map$dir] $str];
+
+};# ::potato::obfusticate
+
 #: proc ::potato::worldFlags
 #: arg total Return a total of the flags, instead of a list of name/value pairs? Defaults to 0
 #: desc Return a list (suitable for [array set]) of name/value pairs of world flags, used in the world config file. If $total is true, return the total of all flags instead.
 #: return list of name/value pairs, or total of all flags
 proc ::potato::worldFlags {{total 0}} {
 
-  set f(has_world_flags) 1    ;# world file uses flags
-  set f(verbose_mu_type) 2    ;# Uses "MUD" and "MUSH" (not 0 and 1) for world($w,type)
-  set f(new_encoding)    4    ;# Has the new $w,encoding,* options in place of $w,unicode
+  set f(has_world_flags)     1    ;# world file uses flags
+  set f(verbose_mu_type)     2    ;# Uses "MUD" and "MUSH" (not 0 and 1) for world($w,type)
+  set f(new_encoding)        4    ;# Has the new $w,encoding,* options in place of $w,unicode
+  set f(obfusticated_pw)     8    ;# Passwords are obfusticated
 
   if { !$total } {
        return [array get f];
