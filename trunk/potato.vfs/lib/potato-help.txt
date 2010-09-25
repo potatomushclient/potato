@@ -48,6 +48,7 @@ title:Table of Contents
    ** [???//Command-Line Options]
    ** [Making Potato the default Telnet Client on Windows] (write me)
    * [changes//]
+   ** [changes,2.0.0b8//]
    ** [changes,2.0.0b7//]
    ** [changes,2.0.0b6//]
    ** [changes,2.0.0b5//]
@@ -458,6 +459,7 @@ On Linux, compile, and place the resulting files into /potato/lib/tls/ (assuming
 name:changes
 title:Changes
 Please select a version:
+   * [changes,2.0.0b8//]
    * [changes,2.0.0b7//]
    * [changes,2.0.0b6//]
    * [changes,2.0.0b5//]
@@ -470,6 +472,12 @@ Please select a version:
    * [changes,2.0.0a13//]
    * [changes,2.0.0a12//]
    * [changes,2.0.0a11//]
+-----------------------------
+name:changes,2.0.0b8
+title:Version 2.0.0b8
+''Released ?????? ?? 2010.''
+  * Help fixes.
+  * MUSH passwords are now obfusticated on save.
 -----------------------------
 name:changes,2.0.0b7
 title:Version 2.0.0b7
