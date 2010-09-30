@@ -2739,16 +2739,16 @@ proc ::potato::debug_packet {c dir text} {
        toplevel $win(toplevel)
        wm title $win(toplevel) [T "Packet Debugger for \[%d. %s\]" $c [connInfo $c name]]
        pack [::ttk::frame $win(txt,frame)] -side top -expand 1 -fill both
-       pack [text $win(txt,txt) -background black -foreground white -font TkFixedFont -width 78 -wrap word -yscrollcommand [list $win(txt,sb) set]] -side left -expand 1 -fill both
+       pack [text $win(txt,txt) -wrap word -yscrollcommand [list $win(txt,sb) set]] -side left -expand 1 -fill both
+       configureTextWidget $c $win(txt,txt)
        pack [scrollbar $win(txt,sb) -orient vertical -command [list $win(txt,txt) yview]] -side left -fill y
        bind $win(toplevel) <Destroy> [list set ::potato::conn($c,debugPackets) 0]
-       $win(txt,txt) tag configure sent -foreground yellow
      }
   set aE [atEnd $win(txt,txt)]
   if { $dir } {
        $win(txt,txt) insert end $text
      } else {
-       $win(txt,txt) insert end $text sent
+       $win(txt,txt) insert end $text echo
      }
   if { $aE } {
        $win(txt,txt) see end
@@ -6324,7 +6324,9 @@ proc ::potato::configureWorldCommit {w win} {
           foreach s [arraySubelem conn $c,spawns] {
              configureTextWidget $c $conn($s)
           }
-
+          if { [winfo exists .debug_packet_$c.txt.t] } {
+               configureTextWidget $c .debug_packet_$c.txt.t
+             }
           ::skin::$potato(skin)::status $c
         }
      if { $conn($c,world) == $w || $w == -1 } {
