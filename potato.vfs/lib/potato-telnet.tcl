@@ -346,6 +346,9 @@ proc ::potato::telnet::process_sub_3_1 {c str} {
                } else {
                  # Nothing. We don't support any CHARSET options but REQUEST. We probably should. #abc
                }
+          } elseif { $optChar eq $tOpt(MSSP) } {
+            # Store MSSP info
+            do_MSSP $c $subStr
           } else {
             # We don't support subnegotiation for any other commands, so do nothing.
           }
@@ -359,6 +362,20 @@ proc ::potato::telnet::process_sub_3_1 {c str} {
   return [process $c $remainder];  
 
 };# ::potato::telnet::process_sub_3_1
+
+proc ::potato::telnet::do_MSSP {c data} {
+  upvar ::potato::conn conn;
+  variable subCmd;
+
+  foreach x [split $data $subCmd(MSSP,MSSP_VAR)] { 
+    if { $x eq "" } {
+         continue;
+       }
+    foreach {var val} [split $x $subCmd(MSSP,MSSP_VAL)] {break}
+    lappend conn($c,telnet,mssp) [list $var $val]
+  }
+
+};# ::potato::telnet::do_MSSP
 
 proc ::potato::telnet::do_NAWS {c} {
   upvar ::potato::conn conn;
