@@ -7148,8 +7148,10 @@ proc ::potato::showMSSP {} {
   grid columnconfigure $win $tree -weight 1
 
 
-  $tree heading Variable -text Variable
-  $tree heading Value -text Value
+  $tree heading Variable -text Variable -anchor w
+  $tree heading Value -text Value -anchor w
+  $tree column Variable -width 100
+  $tree column Value -width 250
 
   # Build list
   foreach x [lsort -dictionary -index 0 $conn($c,telnet,mssp)] {
