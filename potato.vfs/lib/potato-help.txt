@@ -488,6 +488,8 @@ title:Version 2.0.0b8
   * MUSH passwords are now obfusticated on save.
   * Added Prefixes/Auto-Says, which can be accessed via the Edit menu, or the /setprefix command. Use /send <text> to send text without the prefix. Requested by Nathan Corbier.
   * Added a window (accessed via the File menu) for viewing MSSP info from the MUSH.
+  * The Debug Packets window now uses the normal world colours.
+  * You can now use 'Disconnect' to cancel auto-reconnect again.
 -----------------------------
 name:changes,2.0.0b7
 title:Version 2.0.0b7
