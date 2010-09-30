@@ -533,6 +533,332 @@ proc ::potato::prefFlags {{total 0}} {
 
 };# ::potato::prefFlags
 
+#: proc ::potato::prefixWindow
+#: arg w world id. Defaults to "".
+#: desc Show the window for configuring Prefixes (Auto-Says) for world $w, or the world of the currently displayed connection's world if $c is "".
+#: return nothing
+proc ::potato::prefixWindow {{w ""}} {
+  variable conn;
+  variable world;
+  variable prefixWindow
+
+  if { $w eq "" } {
+       set w $conn([up],world)
+     }
+
+  set win .prefixWin$w
+  if { [winfo exists $win] } {
+       reshowWindow $win
+       return;
+     }
+
+  if { $w == -1 } {
+       set title [T "Global Prefixes"]
+       set message [T "Set auto-prefixes to apply for all worlds below."]
+     } else {
+       set title [T "Prefixes for %s" $world($w,name)]
+       set message [T "Set auto-prefixes to apply for %s below." $world($w,name)]
+     }
+
+  toplevel $win
+  wm title $win $title
+
+  pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both
+  pack [label $frame.l -text $message] -side top -anchor n -pady 8
+
+  pack [set sub [::ttk::frame $frame.treeframe]] -expand 1 -fill both -padx 10 -pady 8
+  set tree [::ttk::treeview $sub.tree -columns [list Window Prefix] -show [list tree headings] -selectmode browse]
+  set sbX [::ttk::scrollbar $sub.sbX -orient horizontal -command [list $tree xview]]
+  set sbY [::ttk::scrollbar $sub.sbY -orient vertical -command [list $tree yview]]
+  grid $tree $sbY -sticky nsew
+  grid $sbX -sticky nswe
+  grid rowconfigure $sub $tree -weight 1
+  grid columnconfigure $sub $tree -weight 1
+  $tree configure -xscrollcommand [list $sbX set]
+  $tree configure -yscrollcommand [list $sbY set]
+
+  set prefixWindow($w,path,tree) $tree
+
+  $tree column #0  -width 70 -stretch 0 -anchor center
+  $tree column Window -width 90 -stretch 1 -anchor e
+  $tree column Prefix -width 250 -stretch 1 -anchor w
+  $tree heading #0 -text "Enabled?"
+  $tree heading Window -text "   [T "Window"]   "
+  $tree heading Prefix -text "   [T "Prefix"]   " -anchor w
+
+  $tree tag bind on <Button-1> [list ::potato::prefixWindowToggle $w 1 %x %y]
+  $tree tag bind off <Button-1> [list ::potato::prefixWindowToggle $w 0 %x %y]
+
+  # Display prefixes
+  prefixWindowUpdate $w
+
+  if { [llength [$tree children {}]] } {
+       set first [lindex [$tree children {}] 0]
+       $tree selection set $first
+       $tree focus $first
+       set state "!disabled"
+     } else {
+       set state "disabled"
+     }
+
+  pack [set sub [::ttk::frame $frame.addedit]] -expand 1 -fill y -side top -anchor nw -padx 20 -pady 8
+  pack [set prefixWindow($w,path,aewindow) [::ttk::entry $sub.window -textvariable ::potato::prefixWindow($w,ae,window)]] -side left -padx 5
+  pack [set prefixWindow($w,path,aeprefix) [::ttk::entry $sub.prefix -textvariable ::potato::prefixWindow($w,ae,prefix)]] -side left -padx 5
+  pack [set prefixWindow($w,path,aeadd)    [::ttk::button $sub.add -text [T "Save"] -command [list ::potato::prefixWindowSave $w]]] -side left -padx 5
+  pack [set prefixWindow($w,path,aecancel) [::ttk::button $sub.cancel -text [T "Cancel"] -command [list ::potato::prefixWindowCancel $w]]] -side left -padx 5
+
+  foreach x [array names prefixWindow $w,path,ae*] {
+    $prefixWindow($x) state disabled
+  }
+
+  menu $win.m -tearoff 0
+  $win configure -menu $win.m
+  menu $win.m.prefix -tearoff 0 -postcommand [list ::potato::prefixWindowPostMenu $w]
+  set prefixWindow($w,path,menu) $win.m.prefix
+  $win.m add cascade {*}[menu_label [T "&Prefix..."]] -menu $win.m.prefix
+  $win.m.prefix add command {*}[menu_label "&Add New Prefix"] -command [list ::potato::prefixWindowAdd $w]
+  $win.m.prefix add command {*}[menu_label "&Edit Prefix"] -command [list ::potato::prefixWindowEdit $w]
+  $win.m.prefix add command {*}[menu_label "&Delete Prefix"] -command [list ::potato::prefixWindowDelete $w]
+  $win.m.prefix add command {*}[menu_label "&Cancel Add/Edit"] -command [list ::potato::prefixWindowCancel $w]
+  $win.m.prefix add separator
+  $win.m.prefix add command {*}[menu_label "C&lose Window"] -command [list destroy $win]
+
+  bind $win <Destroy> [list array unset ::potato::prefixWindow $w,*]
+
+  return;
+
+};# ::potato::prefixWindow
+
+#: proc ::potato::prefixWindowCancel
+#: arg w world id
+#: desc Cancel add/editing a prefix in $w's prefix window.
+#: return nothing
+proc ::potato::prefixWindowCancel {w} {
+  variable prefixWindow;
+
+  $prefixWindow($w,path,aewindow) delete 0 end
+  $prefixWindow($w,path,aeprefix) delete 0 end
+  $prefixWindow($w,path,tree) state !disabled
+  foreach x [list window prefix add cancel] {
+    $prefixWindow($w,path,ae$x) state disabled
+  }
+
+  return;
+
+};# ::potato::prefixWindowCancel
+
+#: proc ::potato::prefixWindowUpdate
+#: arg w world id
+#: arg sel the tag to select. Defaults to "" for none.
+#: desc Update the tree of prefixes in world $w's Prefix Window from the vars. Set selection to $sel
+#: return nothing
+proc ::potato::prefixWindowUpdate {w {sel ""}} {
+  variable world;
+  variable prefixWindow;
+
+  set tree $prefixWindow($w,path,tree)
+  $tree state !disabled
+
+  $tree delete [$tree children {}]
+
+  set list [lsort -dictionary [removePrefix [arraySubelem world $w,prefixes] $w,prefixes]]
+  set states [list off on]
+  set images [list ::potato::img::cb-unticked ::potato::img::cb-ticked]
+  foreach x $list {
+    $tree insert {} end -id $x -values [list $x [string map [list " " [format %c 183]] [lindex $world($w,prefixes,$x) 0]]] \
+                        -tags [list [lindex $states [lindex $world($w,prefixes,$x) 1]]] \
+                        -image [list [lindex $images [lindex $world($w,prefixes,$x) 1]]]
+  }
+  if { $sel ne "" } {
+       $tree selection set $sel
+       $tree focus $sel
+     }
+
+  return;
+
+};# ::potato::prefixWindowUpdate
+
+#: proc ::potato::prefixWindowToggle
+#: arg w world id
+#: arg state Current state; enabled (1) or disabled (0)
+#: arg x x-coord
+#: arg y y-coord
+#: desc Toggle the state of the currently selected item if we're clicking on the Enabled (tree) column
+#: return nothing
+proc ::potato::prefixWindowToggle {w state x y} {
+  variable prefixWindow;
+  variable world;
+
+  set tree $prefixWindow($w,path,tree)
+  if { [$tree instate disabled] } {
+       return;# Very, very annoying. Bah at whoever didn't make disabled Treeviews work right.
+     }
+  set sel [lindex [$tree selection] 0]
+  if { $sel eq "" } {
+       return;
+     }
+  if { [lindex [$tree identify $x $y] 0] eq "item" } {
+       # Close enough!
+       set tags [list on off]
+       set images [list ::potato::img::cb-ticked ::potato::img::cb-unticked]
+       set newstate [list 1 0]
+       $tree item $sel -tags [list [lindex $tags $state]] -image [lindex $images $state]
+       set world($w,prefixes,$sel) [lreplace $world($w,prefixes,$sel) end end [lindex $newstate $state]]
+     }
+
+  return;
+
+};# ::potato::prefixWindowToggle
+
+#: proc ::potato::prefixWindowSave
+#: arg w world id
+#: desc Save the new (or edited) prefix in world $w's prefix window
+#: return nothing
+proc ::potato::prefixWindowSave {w} {
+  variable prefixWindow;
+  variable world;
+  variable potato;
+
+  set toplevel [winfo toplevel $prefixWindow($w,path,aewindow)]
+
+  set window [$prefixWindow($w,path,aewindow) get]
+  set prefix [$prefixWindow($w,path,aeprefix) get]
+  # Validate window name
+  if { ![regexp $potato(spawnRegexp) $window] && $window ne "_main" && $window ne "_all" } {
+        tk_messageBox -icon error -parent $toplevel -title [T "Prefixes"] \
+                      -message [T "Invalid window name."] 
+        return;
+     }
+
+  if { [info exists world($w,prefixes,$window)] && $window ne $prefixWindow($w,editing) } {
+       set ans [tk_messageBox -icon error -parent $toplevel -title [T "Prefixes"] -type yesno \
+                     -message [T "There is already a prefix for \"%s\". Override?" $window]]
+       if { $ans ne "yes" } {
+            return;
+          }
+     }
+
+  if { [info exists world($w,prefixes,$prefixWindow($w,editing))] } {
+       set state [lindex $world($w,prefixes,$prefixWindow($w,editing)) 1]
+       unset world($w,prefixes,$prefixWindow($w,editing))
+     } else {
+       set state 1
+     }
+  if { $prefix eq "" } {
+       # Empty prefix - just delete it
+       unset -nocomplain world($w,prefixes,$window)
+       set window ""
+     } else {
+       set world($w,prefixes,$window) [list $prefix $state]
+     }
+
+  $prefixWindow($w,path,aewindow) delete 0 end
+  $prefixWindow($w,path,aeprefix) delete 0 end
+
+  foreach x [list window prefix add cancel] {
+    $prefixWindow($w,path,ae$x) state disabled
+  }
+
+  prefixWindowUpdate $w $window
+
+  return;
+
+};# ::potato::prefixWindowSave
+
+#: proc ::potato::prefixWindowDelete
+#: arg w world id
+#: desc Delete the currently selected prefix in world $w's prefix window
+#: return nothing
+proc ::potato::prefixWindowDelete {w} {
+  variable prefixWindow;
+  variable world;
+
+  set sel [lindex [$prefixWindow($w,path,tree) sel] 0]
+  if { $sel eq "" } {
+       return;
+     }
+
+  unset world($w,prefixes,$sel)
+
+  prefixWindowUpdate $w
+
+  return;
+
+};# ::potato::prefixWindowDelete
+
+#: proc ::potato::prefixWindowAdd
+#: arg w world id
+#: desc Add a new prefix in world $w's prefix window
+#: return nothing
+proc ::potato::prefixWindowAdd {w} {
+  variable prefixWindow;
+
+  $prefixWindow($w,path,tree) state disabled
+  foreach x [list window prefix add cancel] {
+    $prefixWindow($w,path,ae$x) state !disabled
+  }
+  set prefixWindow($w,editing) ""
+  focus $prefixWindow($w,path,aewindow)
+
+  return;
+
+};# ::potato::prefixWindowAdd
+
+#: proc ::potato::prefixWindowEdit
+#: arg w world id
+#: desc Edit the currently selected prefix for world $w's prefix window
+#: return nothing
+proc ::potato::prefixWindowEdit {w} {
+  variable prefixWindow;
+  variable world;
+
+  set tree $prefixWindow($w,path,tree)
+  set sel [lindex [$tree selection] 0]
+  if { $sel eq "" } {
+       return;
+     }
+  $tree state disabled
+  foreach x [list window prefix add cancel] {
+    $prefixWindow($w,path,ae$x) state !disabled
+  }
+  $prefixWindow($w,path,aewindow) insert end $sel
+  $prefixWindow($w,path,aeprefix) insert end [lindex $world($w,prefixes,$sel) 0]
+  set prefixWindow($w,editing) $sel
+  focus $prefixWindow($w,path,aewindow)
+
+  return;
+
+};# ::potato::prefixWindowEdit
+
+#: proc ::potato::prefixWindowPostMenu
+#: arg w world id
+#: desc Configure menu item states when menu is posted
+#: return nothing
+proc ::potato::prefixWindowPostMenu {w} {
+  variable prefixWindow;
+
+  set m $prefixWindow($w,path,menu)
+  if { [$prefixWindow($w,path,aecancel) instate !disabled] } {
+       $m entryconfigure 0 -state disabled
+       $m entryconfigure 1 -state disabled
+       $m entryconfigure 2 -state disabled
+       $m entryconfigure 3 -state normal
+     } elseif { [llength [$prefixWindow($w,path,tree) children {}]] } {
+       $m entryconfigure 0 -state normal
+       $m entryconfigure 1 -state normal
+       $m entryconfigure 2 -state normal
+       $m entryconfigure 3 -state disabled
+     } else {
+       $m entryconfigure 0 -state normal
+       $m entryconfigure 1 -state disabled
+       $m entryconfigure 2 -state disabled
+       $m entryconfigure 3 -state disabled
+     }
+
+  return;
+
+};# ::potato::prefixWindowPostMenu
+
 #: proc ::potato::mailWindow
 #: arg c connection id. Defaults to "".
 #: desc Show a "send mail" window for connection $c, or the currently displayed connection if $c is ""
@@ -709,16 +1035,19 @@ proc ::potato::mailWindowCleanup {c} {
 #: arg win the window to re-show
 #: arg bell Ring the [bell]? Defaults to 1
 #: desc Raise/reshow window $win to draw a user's attention to it, and possibly [bell]
-#: return nothing
+#: return 1 if window existed (and has been reshown), 0 otherwise
 proc ::potato::reshowWindow {win {bell 1}} {
 
+  if { ![winfo exists $win] } {
+       return 0;
+     }
   wm deiconify $win
   raise $win
   focus -force $win
   if { $bell } {
        bell -displayof $win
      }
-  return;
+  return 1;
 
 };# ::potato::reshowWindow
 
@@ -1115,7 +1444,7 @@ proc ::potato::logWindow {{c ""}} {
 
   pack [::ttk::frame $frame.top] -side top -padx 5 -pady 10
   pack [::ttk::labelframe $frame.top.buffer -text [T "Include Buffer From: "] -padding 2] -side left -anchor nw -padx 6
-  set spawns [removePrefix [arraySubelem conn $c,spawns] $c,spawns,]
+  set spawns [removePrefix [arraySubelem conn $c,spawns] $c,spawns]
   pack [::ttk::combobox $frame.top.buffer.cb -values [linsert $spawns 0 {No Buffer} {Main Window}] \
              -textvariable potato::conn($c,logDialog,buffer) -state readonly] -side top -anchor nw
 
@@ -2785,7 +3114,7 @@ proc ::potato::createSpawnWindow {c name} {
   variable conn;
   variable potato;
 
-  if { ![regexp {^[A-Za-z][A-Za-z0-9_-]{0,49}$} $name] } {
+  if { ![regexp $potato(spawnRegexp) $name] } {
        return [T "Invalid Spawn Name"];# bad name
      } elseif { $misc(maxSpawns) > 0 && [llength [arraySubelem conn $c,spawns]] >= $misc(maxSpawns) } {
        return [T "Too many spawns"];# too many spawns already
@@ -6295,6 +6624,9 @@ proc ::potato::main {} {
   # The current connection on display
   set potato(up) ""
 
+  # Regexp which spawn names must match
+  set potato(spawnRegexp) {^[A-Za-z][A-Za-z0-9_-]{0,49}$}
+
   set potato(skinMinVersion) "1.3" ;# The minimum version of the skin spec this Potato supports.
                                    ;# All skins must be at least this to be usable.
 
@@ -7277,6 +7609,8 @@ proc ::potato::createImages {} {
   image create photo ::potato::img::globe -file [file join $imgPath globe.gif]
   image create photo ::potato::img::folder -file [file join $imgPath folder.gif]
 
+  image create photo ::potato::img::cb-ticked -file [file join $imgPath cb-ticked.gif]
+  image create photo ::potato::img::cb-unticked -file [file join $imgPath cb-unticked.gif]
 
   return;
 
@@ -7478,6 +7812,9 @@ proc ::potato::build_menu_edit {m} {
   $m delete 0 end
 
   createMenuTask $m spellcheck
+  $m add command {*}[menu_label [T "Configure &Prefixes/Auto-Say"]] \
+              -command ::potato::prefixWindow
+
 
   return;
 
@@ -7831,6 +8168,34 @@ proc ::potato::activeTextWidget {} {
   return [::skin::$potato(skin)::activeTextWidget];
 
 };# potato::activeTextWidget
+
+#: proc ::potato::textWidgetName
+#: arg text text widget path
+#: arg c connection id. Defaults to "".
+#: desc Given a text widget path (.foo.text) and a connection id, find the "name" of the text widget (_main or a spawn name).
+#: return Text widget name, or "" if it can't be found
+proc ::potato::textWidgetName {text {c ""}} {
+  variable conn;
+
+  if { $c eq "" } {
+       set c [up]
+     }
+
+  if { $conn($c,textWidget) eq $text } {
+       return "_main";
+     }
+
+  # Check spawn widgets
+  foreach x [arraySubelem conn $c,spawns] {
+    if { $conn($x) eq $text } {
+         return [removePrefix $x $c,spawns];
+       }
+  }
+
+  # Can't find it - return empty string as error
+  return "";
+
+};# ::potato::textWidgetName
 
 #: proc ::potato::keyboardShortcutWin
 #: desc Show the window for customizing Keyboard Shortcuts
@@ -8219,6 +8584,7 @@ proc ::potato::loadDefaultUserBindings {} {
   set keyShorts(mailWindow) "Control-KeyPress-M"
   set keyShorts(prevHistCmd) "Control-KeyPress-Up"
   set keyShorts(nextHistCmd) "Control-KeyPress-Down"
+  set keyShorts(spellcheck) "Control-KeyPress-S"
   set keyShorts(help) "F1"
   set keyShorts(fcmd2) "F2"
   set keyShorts(fcmd3) "F3"
@@ -8567,16 +8933,44 @@ proc ::potato::mouseWheel {widget delta} {
 proc ::potato::send_mushage {window {clear 1}} {
   variable inputSwap;
   variable conn;
+  variable world;
 
-  if { [$window count -chars 1.0 end-1c] == 0 && $conn([up],connected) == 0 } {
+  set c [up]
+
+  if { [$window count -chars 1.0 end-1c] == 0 && $conn($c,connected) == 0 } {
        reconnect [up]
        return;
      }
 
+  set w $conn($c,world)
+
+  # Figure out the auto-prefix, if any
+  set windowName [textWidgetName [activeTextWidget] $c]
+  if { $windowName eq "" } {
+       set windows [list _all]
+     } else {
+       set windows [list $windowName _all]
+     }
+  if { $w == -1 } {
+       set worlds [list -1]
+     } else {
+       set worlds [list $w -1]
+     }
+  foreach w $worlds {
+    foreach x $windows {
+      if { ![info exists world($w,prefixes,$x)] || ![lindex $world($w,prefixes,$x) 1] } {
+           continue;
+         }
+      !set prefix [lindex $world($w,prefixes,$x) 0]
+      break;
+    }
+  }
+  !set prefix ""
+
   set txt [$window get 1.0 end-1char]
   $window edit separator
   $window replace 1.0 end ""
-  send_to "" $txt \n 1
+  send_to "" $txt \n 1 $prefix
   set inputSwap($window,count) -1
   set inputSwap($window,backup) ""
 
@@ -8589,9 +8983,10 @@ proc ::potato::send_mushage {window {clear 1}} {
 #: arg string string to process
 #: arg sep separator character
 #: arg history add commands to history?
-#: desc for every line in $string (lines are delimited by $sep), parse (it may be a /command) and send to connection $c (or current connection, if $c is ""). If $sep is "" (empty string), treat as one line.
+#: arg prefix Prefix (auto-say) to add, if text isn't a /command. Defaults to nothing.
+#: desc for every line in $string (lines are delimited by $sep), parse (it may be a /command) and send to connection $c (or current connection, if $c is "") with prefix. If $sep is "" (empty string), treat as one line.
 #: return nothing
-proc ::potato::send_to {c string sep history} {
+proc ::potato::send_to {c string sep history {prefix ""}} {
   variable conn;
   variable world;
 
@@ -8600,10 +8995,10 @@ proc ::potato::send_to {c string sep history} {
      }
 
   if { $sep eq "" } {
-       send_to_sub $c $string
+       send_to_sub $c $string $prefix
      } else {
        foreach x [split $string $sep] {
-          send_to_sub $c $x
+          send_to_sub $c $x $prefix
        }
      }
 
@@ -8623,14 +9018,15 @@ proc ::potato::send_to {c string sep history} {
 #: proc ::potato::send_to_sub
 #: arg c connection id
 #: arg string string to process
+#: arg prefix Prefix to add to non-/command lines. Defaults to "".
 #: desc parse $string to see if it's a /command, and send to connection $c
 #: return nothing
-proc ::potato::send_to_sub {c string} {
+proc ::potato::send_to_sub {c string {prefix ""}} {
 
   if { [string index $string 0] ne "/" } {
-       send_to_real $c $string
+       send_to_real $c "$prefix$string"
      } elseif { [string index $string 1] eq "/" } {
-       send_to_real $c [string range $string 1 end]
+       send_to_real $c "$prefix[string range $string 1 end]"
      } else {
        process_slash_command $c $string
      }
@@ -9613,6 +10009,54 @@ proc ::potato::slash_cmd_input {c full str} {
   return;
 
 };# ::potato::slash_cmd_input
+
+#: proc ::potato::slash_cmd_setprefix
+#: arg c connection id
+#: arg full was the command name typed in full?
+#: arg str [[<window>]=]<prefix>
+#: desc Set the prefix for <window>, or the current output window, to <prefix>.
+#: return nothing
+proc ::potato::slash_cmd_setprefix {c full str} {
+  variable potato;
+  variable conn;
+  variable world;
+
+  set w $conn($c,world)
+
+  # Just check the Prefix Window isn't open. For simplicity, disallow
+  # setting prefixes when it is.
+  if { [winfo exists .prefixWin$w] } {
+       bell -displayof .
+       return;
+     }
+
+  # Parse str
+  set window ""
+  if { [string match "*=*" $str] } {
+       set equals [string first "=" $str]
+       set window [string range $str 0 $equals-1]
+       set str [string range $str $equals+1 end]
+     }
+  # Validate window name
+  if { $window eq "" } {
+       set window [textWidgetName [activeTextWidget] $c]
+     } elseif { ![regexp $potato(spawnRegexp) $window] } {
+       beep -displayof .
+       return;
+     }
+
+  if { $str eq "" } {
+       # Clear prefix
+       unset -nocomplain world($w,prefixes,$window)
+     } else {
+       # Update prefix. We enable the new prefix, even if there
+       # was an existing, disabled one.
+       set world($w,prefixes,$window) [list $str 1]
+     }
+
+  return;
+
+};# ::potato::slash_cmd_setprefix
 
 #: proc ::potato::slash_cmd_print
 #: arg c connection id

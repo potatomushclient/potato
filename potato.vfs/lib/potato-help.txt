@@ -33,6 +33,7 @@ title:Table of Contents
    ** [events,send//]
    ** [events,input//]
    ** Examples
+   * [prefixes//]
    *** A WHO window capture (/cls who ; "/addspawn who" in an event at when first line is received, "/delspawn who" in event when the last line is received)
    *** More?
    * [tech//]
@@ -429,6 +430,13 @@ title:Placing text in an Input Window
 Potato can automatically place a string into the input window when an Event is matched. Using the pull-down menu, you can select whether it should go into the top input window, the bottom one, or the window which currently has the focus. As with [events,send], you can use the %0 through %9 to get the first ten matched subpatterns, or the first ten matched wildcards, for regular expression and wildcard matches, respectively. Use %% for a literal percent-sign.
 
 This is commonly used with something like the @decompile/tf MUSH command, to inline editing of attributes. It's used in the /grab slash-command.
+
+-----------------------------
+name:prefixes
+title:Prefixes/Auto-Says
+Potato supports Prefixes (also known as Auto-Says), where a string is automatically pre-pended to all lines of input. They are configured via the Prefix Window, which can be accessed from the Edit menu.
+
+In the Prefix Window, select Add New Prefix from the menu, then enter the window name and prefix in the text boxes and click Save. Window Name should be one of "_main" for the main world window, the name of a spawn window, or "_all" for the main window and all spawn windows. For example, setting the window to "public" and the prefix to "+pub " will automatically prepend the string "+pub " to all input in the "public" spawn window, for speaking on the <Public> channel.
 -----------------------------
 name:tech
 title:Technology Behind Potato
@@ -478,6 +486,7 @@ title:Version 2.0.0b8
 ''Released ?????? ?? 2010.''
   * Help fixes.
   * MUSH passwords are now obfusticated on save.
+  * Added Prefixes/Auto-Says, which can be accessed via the Edit menu, or the /setprefix command. Use /send <text> to send text without the prefix.
 -----------------------------
 name:changes,2.0.0b7
 title:Version 2.0.0b7
@@ -736,6 +745,7 @@ A "/command" is a special command you can type into the input box (or anywhere e
    * '''/reconnect''' - Reconnect the current connection
    * '''/set ''<varName>''=''<value>''''' - Set the variable ''<varName>'' for the current connection to ''<value>''.
    * '''/setglobal ''<varName>''=''<value>''''' - Set the global variable ''<varName>'' to ''<value>''.
+   * '''/setprefix [[''<window>''=]]''<prefix>''''' - Sets the prefix for <window> to <prefix>. Use an empty <prefix> to clear. <window> should be "_main" for the default window, "_all" for all windows, or a spawn name.
    * '''/show ''<connectionID>''''' - Show connection ''<connectionID>''
    * '''/show [[''<connectionID>''.]]''<spawn>''''' - Show the spawn ''<spawn>'' in the current connection, or in ''<connectionID>'' if given. If ''<spawn>'' is empty or "_main" it shows the main window.
    * '''/slash''' - List available /commands
