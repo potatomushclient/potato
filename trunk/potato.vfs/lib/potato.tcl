@@ -11457,7 +11457,7 @@ proc ::potato::tasksInit {} {
        find,state          notZero \
        disconnect,name     [T "&Disconnect"] \
        disconnect,cmd      "::potato::disconnect" \
-       disconnect,state    {$c != 0 && $conn($c,connected) != 0} \
+       disconnect,state    {$c != 0 && ($conn($c,connected) != 0 || ($conn($c,connected) == 0 && $conn($c,reconnectId) ne ""))} \
        reconnect,name      [T "&Reconnect"] \
        reconnect,cmd       "::potato::reconnect" \
        reconnect,state     {$c != 0 && $conn($c,connected) == 0} \
