@@ -1724,6 +1724,7 @@ proc ::potato::newConnection {w} {
   set conn($c,telnet,state) 0
   set conn($c,telnet,subState) 0
   set conn($c,telnet,buffer) ""
+  set conn($c,telnet,mssp) [list]
   set conn($c,outputBuffer) ""
   set conn($c,ansi,fg) fg
   set conn($c,ansi,bg) bg
@@ -2455,6 +2456,11 @@ proc ::potato::connectVerifyComplete {c} {
        set str "[lindex $peer 0] ([lindex $peer 1])"
      }
   outputSystem $c [T "Connected - %s" $str]
+
+  set conn($c,telnet,state) 0
+  set conn($c,telnet,subState) 0
+  set conn($c,telnet,buffer) ""
+  set conn($c,telnet,mssp) [list]
 
   #abc handle stats for tracking time connected to world
   fileevent $id readable [list ::potato::get_mushage $c]
@@ -7111,6 +7117,49 @@ proc ::potato::connIDs {{includeDefault 0}} {
 
 };# ::potato::connIDs
 
+#: proc ::potato::showMSSP
+#: desc Show MSSP info for the current connection.
+#: return nothing
+proc ::potato::showMSSP {} {
+  variable conn;
+  variable world;
+
+  set c [up]
+  if { ![info exists conn($c,telnet,mssp)] || ![llength $conn($c,telnet,mssp)] } {
+       bell -displayof .
+       return;
+     }
+
+  set win .mssp$c
+  if { [reshowWindow $win] } {
+       return;
+     }
+  toplevel $win
+  registerWindow $c $win
+  wm title $win [T "MSSP Info for \[%d. %s\]" $c $world($conn($c,world),name)]
+
+  set tree [::ttk::treeview $win.tree -columns [list Variable Value] -show [list headings] \
+                  -xscrollcommand [list $win.x set] -yscrollcommand [list $win.y set]]
+  set y [::ttk::scrollbar $win.y -orient vertical -command [list $tree yview]]
+  set x [::ttk::scrollbar $win.x -orient horizontal -command [list $tree xview]]
+  grid $tree $y -sticky nsew
+  grid $x -sticky nswe
+  grid rowconfigure $win $tree -weight 1
+  grid columnconfigure $win $tree -weight 1
+
+
+  $tree heading Variable -text Variable
+  $tree heading Value -text Value
+
+  # Build list
+  foreach x [lsort -dictionary -index 0 $conn($c,telnet,mssp)] {
+     $tree insert {} end -values $x
+  }
+
+  return;
+
+};# ::potato::showMSSP 
+
 #: proc ::potato::showStats
 #: desc Show a window of connection stats for each world.
 #: return nothing
@@ -7775,6 +7824,7 @@ proc ::potato::createMenuTask {m task {c ""} args} {
 proc ::potato::build_menu_file {m} {
   variable potato;
   variable menu;
+  variable conn;
 
   $m delete 0 end
 
@@ -7786,14 +7836,18 @@ proc ::potato::build_menu_file {m} {
   createMenuTask $m manageWorlds
   createMenuTask $m connectMenu
   createMenuTask $m autoConnects
+
   $m add separator
   createMenuTask $m reconnect
   createMenuTask $m disconnect
   createMenuTask $m close
-  $m add separator
 
+  $m add separator
   $m add command {*}[menu_label [T "&Show Connection Stats"]] \
               -command ::potato::showStats -state $state
+  $m add command {*}[menu_label [T "Show &MSSP Info"]] \
+              -command ::potato::showMSSP -state [expr {[llength $conn([up],telnet,mssp)] ? "normal" : "disabled"}]
+
   $m add separator
   createMenuTask $m exit
 
