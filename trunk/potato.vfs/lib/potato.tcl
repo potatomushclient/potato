@@ -4781,7 +4781,7 @@ proc ::potato::eventConfig {{w ""}} {
   bind $win <Destroy> [list array unset potato::eventConfig $w,*]
   bind $win <Escape> [list destroy $win]
 
-  bind $win <F1> [list ::help::help gth]
+  bind $win <F1> [list ::wikihelp::help]
 
   update idletasks
   center $win
@@ -6081,14 +6081,14 @@ proc ::potato::configureHelp {canvas helplist helplist2} {
   set current [$canvas itemcget 1 -window]
   foreach {frame help} $helplist {
      if { $frame eq $current } {
-          ::help::help worldconfig,$help
+          ::wikihelp::help worldconfig,$help
           return;
         }
   }
 
   foreach {frame help} $helplist2 {
      if { $frame eq $current } {
-          ::help::help appconfig,$help
+          ::wikihelp::help appconfig,$help
           return;
         }
   }
@@ -6663,6 +6663,7 @@ proc ::potato::main {} {
        set path(startupCmds) [file join ~ .potato potato.startup]
        set path(i18n) [file join ~ .potato i18n]
      }
+  set path(help) [file join $potato(vfsdir) lib help]
   catch {source [file join $potato(homedir) potato.dev]}
   foreach x [list world skins lib] {
      catch {file mkdir $path($x)}
@@ -6701,7 +6702,7 @@ proc ::potato::main {} {
 
   setClock
 
-  ::help::readFile [file join $::potato::potato(vfsdir) lib potato-help.txt]
+  #::help::readFile [file join $::potato::potato(vfsdir) lib potato-help.txt]
 
   newConnection -1
   # We do this after newConnection, or the <FocusIn> binding comes up wrong
@@ -11500,7 +11501,7 @@ proc ::potato::tasksInit {} {
        upload,cmd          "::potato::uploadWindow" \
        upload,state        always \
        help,name           [T "Show &Helpfiles"] \
-       help,cmd            "::help::help" \
+       help,cmd            "::wikihelp::help" \
        help,state          always \
        about,name          [T "&About Potato"] \
        about,cmd           "::potato::about" \
@@ -11828,7 +11829,7 @@ option add *TEntry.Cursor xterm
 
 package require potato-telnet 1.1
 package require potato-proxy
-package require potato-help
+package require potato-wikihelp
 package require potato-font
 package require potato-spell
 
