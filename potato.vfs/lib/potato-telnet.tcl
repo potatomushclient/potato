@@ -191,19 +191,25 @@ proc ::potato::telnet::process_sub_2 {c str} {
        return; # nothing to process yet
      }
 
+  set w $conn($c,world)
+
   set cmdChar $conn($c,telnet,buffer)
   set optChar [string index $str 0]
   set optCharCode [scan $optChar %c]
   set remainder [string range $str 1 end]
 
-  # See if it's a known option, and if we'll do it
-  if { $optChar eq $tOpt(CHARSET) } {
-       set will $world($conn($c,world),encoding,negotiate)
-     } elseif { ![info exists tOpt($optCharCode)] } {
-       set will 0
+  if { $optChar == $tOpt(CHARSET) } {
+       set will $world($w,encoding,negotiate)
+     } elseif { $optChar == $tOpt(NAWS) } {
+       set will $world($w,telnet,naws)
+     } elseif { $optChar == $tOpt(TERM) } {
+       set will $world($w,telnet,term)
+     } elseif { $optChar == $tOpt(STARTTLS) } {
+       set will [expr {0 && !0 && $world($w,telnet,ssl) && $::potato::potato(hasTLS)}]
      } else {
-       set will $tOpt($optCharCode,will)
+       set will [expr { [info exists tOpt($optCharCode)] && $tOpt($optCharCode,will) }] 
      }
+
   if { $cmdChar == $tCmd(DO) } {
         set response [expr {$will ? $tCmd(WILL) : $tCmd(WONT)}]
      } elseif { $cmdChar == $tCmd(DONT) } {
@@ -275,6 +281,7 @@ proc ::potato::telnet::process_sub_3_0 {c str} {
 #: return Any literal text from $str after telnet processing
 proc ::potato::telnet::process_sub_3_1 {c str} {
   upvar ::potato::conn conn;
+  upvar ::potato::world world;
   variable tCmd;
   variable tOpt;
   variable subCmd;
@@ -282,6 +289,8 @@ proc ::potato::telnet::process_sub_3_1 {c str} {
   if { [string length $str] == 0 } {
        return; # wait for more input
      }
+
+  set w $conn($c,world)
 
   set firstChar [string index $str 0]
   set remainder [string range $str 1 end]
@@ -316,7 +325,11 @@ proc ::potato::telnet::process_sub_3_1 {c str} {
        if { $optChar eq $tOpt(TERM) } {
             if { [string index $subStr 0] eq $subCmd(,SEND) } {
                  # Identify the client, by sending IAC-SB-TERM-IS-<name>-IAC-SE
-                 set clientName [escape "Potato"]
+                 if { [info exists world($w,telnet,term,as)] && [string trim $world($w,telnet,term,as)] ne "" } {
+                      set clientName [escape [string map [list " " "_"] $world($w,telnet,term,as)]]
+                    } else {
+                      set clientName [escape "Potato"]
+                    }
                  ::potato::sendRaw $c "$tCmd(IAC)$tCmd(SB)$tOpt(TERM)$subCmd(,IS)$clientName$tCmd(IAC)$tCmd(SE)" 1
                }
           } elseif { $optChar eq $tOpt(CHARSET) } {

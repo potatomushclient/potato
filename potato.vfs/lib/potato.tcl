@@ -61,6 +61,10 @@ proc ::potato::setPrefs {readfile} {
   set world(-1,loginDelay) 1.5
   set world(-1,type) "Auto"
   set world(-1,telnet) 1
+  set world(-1,telnet,ssl) 0
+  set world(-1,telnet,naws) 1
+  set world(-1,telnet,term) 1
+  set world(-1,telnet,term,as) ""
   set world(-1,encoding,start) iso8859-1
   set world(-1,encoding,negotiate) 1
   set world(-1,groups) [list]
@@ -5307,9 +5311,6 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   set frame [configureFrame $canvas [T "Connection Settings"]]
   set confConn [lindex $frame 0]
   set frame [lindex $frame 1]
-  pack [set sub [::ttk::frame $frame.telnet]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text [T "Attempt Telnet Negotiation?"] -width 35 -justify left -anchor w] -side left -padx 3
-  pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,telnet) -onvalue 1 -offvalue 0] -side left
 
   pack [set sub [::ttk::frame $frame.autorec]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "Auto Reconnect when booted?"] -width 35 -justify left -anchor w] -side left -padx 3
@@ -5343,6 +5344,45 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
              -width 35 -justify left -anchor w] -side left -padx 3
   pack [spinbox $sub.spin -textvariable ::potato::worldconfig($w,loginDelay) -from 0 -to 60 -increment 0.5 \
              -validate all -validatecommand {string is double %P} -width 6] -side left
+
+
+  # Connection -> Telnet
+  set frame [configureFrame $canvas [T "Telnet Options"]]
+  set confConnTelnet [lindex $frame 0]
+  set frame [lindex $frame 1]
+
+  pack [set sub [::ttk::frame $frame.telnet]] -side top -pady 5 -anchor nw
+  pack [::ttk::label $sub.label -text [T "Attempt Telnet Negotiation?"] -width 35 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,telnet) -onvalue 1 -offvalue 0] -side left
+
+  pack [set sub [::ttk::frame $frame.encStart]] -side top -pady 5 -anchor nw
+  pack [::ttk::label $sub.label -text [T "Starting Encoding:"] -width 35 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::combobox $sub.cb -textvariable ::potato::worldconfig($w,encoding,start) -width 20 -state readonly] -side left -padx 3
+  if { $potato::worldconfig($w,encoding,start) ni [encoding names] } {
+       $sub.cb config -values [lsort -dictionary [concat [encoding names] $potato::worldconfig($w,encoding,start)]]
+     } else {
+       $sub.cb config -values [lsort -dictionary [encoding names]]
+     }
+
+  pack [set sub [::ttk::frame $frame.encNegotiate]] -side top -pady 5 -anchor nw
+  pack [::ttk::label $sub.label -text [T "Negotiate Encoding?"] -width 35 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,encoding,negotiate) -onvalue 1 -offvalue 0] -side left
+
+  pack [set sub [::ttk::frame $frame.ssl]] -side top -pady 5 -anchor nw
+  pack [::ttk::label $sub.label -text [T "Negotiate SSL?"] -width 35 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,telnet,ssl) -onvalue 1 -offvalue 0] -side left
+$sub.cb state disabled
+  pack [set sub [::ttk::frame $frame.naws]] -side top -pady 5 -anchor nw
+  pack [::ttk::label $sub.label -text [T "Negotiate NAWS?"] -width 35 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,telnet,naws) -onvalue 1 -offvalue 0] -side left
+
+  pack [set sub [::ttk::frame $frame.doTerm]] -side top -pady 5 -anchor nw
+  pack [::ttk::label $sub.label -text [T "Send Client Info?"] -width 35 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,telnet,term) -onvalue 1 -offvalue 0] -side left
+
+  pack [set sub [::ttk::frame $frame.termStr]] -side top -pady 5 -anchor nw
+  pack [::ttk::label $sub.label -text [T "Send Client Name As:"] -width 35  -justify left -anchor w] -side left -padx 3
+  pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,telnet,term,as) -width 20] -side left -padx 3
 
 
   # Colours/Fonts page
@@ -5708,6 +5748,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
 
   set treeBasics [$tree insert $root end -text [T "Basics"] -tags $confBasics]
   set treeConn [$tree insert $root end -text [T "Connection"] -tags $confConn]
+  set treeConnTelnet [$tree insert $treeConn end -text [T "Telnet Options"] -tags $confConnTelnet]
   set treeDisplay [$tree insert $root end -text [T "Display"]]
   set treeColours [$tree insert $treeDisplay end -text [T "ANSI, Colours and Fonts"] -tags $confColours]
   set treeAct [$tree insert $root end -text [T "Activity Settings"] -tags $confAct]
