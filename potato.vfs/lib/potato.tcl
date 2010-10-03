@@ -1788,6 +1788,8 @@ proc ::potato::newConnection {w} {
   set conn($c,spawnAll) ""
   set conn($c,limited) [list]
   set conn($c,debugPackets) 0
+  set conn($c,input1,mode) "multi"
+  set conn($c,input2,mode) "multi"
 
   if { $w == -1 } {
        connZero
@@ -7954,11 +7956,15 @@ proc ::potato::build_menu_edit {m} {
   variable menu;
 
   $m delete 0 end
+  set c [up]
 
   createMenuTask $m spellcheck
   $m add command {*}[menu_label [T "Configure &Prefixes/Auto-Say"]] \
               -command ::potato::prefixWindow
-
+  $m add checkbutton {*}[menu_label [T "Input1 Multi-Line Mode?"]] \
+              -variable ::potato::conn($c,input1,mode) -onvalue "multi" -offvalue "single"
+  $m add checkbutton {*}[menu_label [T "Input2 Multi-Line Mode?"]] \
+              -variable ::potato::conn($c,input2,mode) -onvalue "multi" -offvalue "single"
 
   return;
 
@@ -9106,7 +9112,7 @@ proc ::potato::mouseWheel {widget delta} {
 #: arg window the text widget to send from
 #: desc send the text currently in $window to the connection currently up, parsing for /commands
 #: return nothing
-proc ::potato::send_mushage {window {clear 1}} {
+proc ::potato::send_mushage {window} {
   variable inputSwap;
   variable conn;
   variable world;
@@ -9119,6 +9125,14 @@ proc ::potato::send_mushage {window {clear 1}} {
      }
 
   set w $conn($c,world)
+
+  if { $window eq $conn($c,input1)} {
+       set mode $conn($c,input1,mode)
+     } elseif { $window eq $conn($c,input2) } {
+       set mode $conn($c,input2,mode)
+     } else {
+       set mode "multi" ;# shouldn't happen
+     }
 
   # Figure out the auto-prefix, if any
   set windowName [textWidgetName [activeTextWidget] $c]
@@ -9146,7 +9160,11 @@ proc ::potato::send_mushage {window {clear 1}} {
   set txt [$window get 1.0 end-1char]
   $window edit separator
   $window replace 1.0 end ""
-  send_to "" $txt \n 1 $prefix
+  if { $mode eq "multi" } {
+       send_to "" $txt \n 1 $prefix
+     } else {
+       send_to "" $txt "" 1 $prefix
+     }
   set inputSwap($window,count) -1
   set inputSwap($window,backup) ""
 

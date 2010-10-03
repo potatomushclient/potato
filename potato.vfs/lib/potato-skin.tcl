@@ -613,7 +613,7 @@ proc ::skin::potato::init {} {
   toolbarLabels
 
   # Set up the status bar #abc
-  foreach x [list worldname hostinfo connstatus clock] {
+  foreach x [list worldname hostinfo connstatus clock modes] {
      set widgets(statusbar,$x) [::ttk::frame $widgets(statusbar).$x -relief sunken -borderwidth 2]
   }
   foreach x [list worldname hostinfo clock] {
@@ -626,11 +626,18 @@ proc ::skin::potato::init {} {
   set widgets(statusbar,connstatus,sub,time) [::ttk::label $widgets(statusbar,connstatus,sub).time]
   pack $widgets(statusbar,connstatus,sub,msg) -side left -anchor e
   pack $widgets(statusbar,connstatus,sub,time) -side left -anchor w
+  set widgets(statusbar,modes,sub) [::ttk::frame $widgets(statusbar,modes).sub]
+  pack $widgets(statusbar,modes,sub) -padx 4
+  set widgets(statusbar,modes,sub,label) [::ttk::label $widgets(statusbar,modes,sub).label -text "Mode: "]
+  set widgets(statusbar,modes,sub,multi) [::ttk::label $widgets(statusbar,modes,sub).multi -text "unknown"]
+  pack $widgets(statusbar,modes,sub,label) $widgets(statusbar,modes,sub,multi) -side left -anchor w
   $widgets(statusbar,clock,label) configure -textvariable ::potato::potato(clock)
 
-  grid $widgets(statusbar,worldname) $widgets(statusbar,hostinfo) $widgets(statusbar,connstatus) $widgets(statusbar,clock)  -in $widgets(statusbar) -padx 1 -pady 1 -ipady 1 -sticky nswe
+  grid $widgets(statusbar,worldname) $widgets(statusbar,hostinfo) $widgets(statusbar,connstatus) $widgets(statusbar,clock) $widgets(statusbar,modes) -in $widgets(statusbar) -padx 1 -pady 1 -ipady 1 -sticky nswe
   grid rowconfigure $widgets(statusbar) all -weight 1 -uniform status
+  grid rowconfigure $widgets(statusbar) $widgets(statusbar,modes) -weight 0 -uniform {}
   grid columnconfigure $widgets(statusbar) all -weight 1 -uniform status
+  grid columnconfigure $widgets(statusbar) $widgets(statusbar,modes) -weight 0 -uniform {}
 
   inputWindows [expr {$::potato::world(-1,twoInputWindows) + 1}]
   showStatusBar
@@ -1118,6 +1125,7 @@ proc ::skin::potato::show {c} {
      } else {
        focus [set input[::potato::connInfo $c inputFocus]]
      }
+  $widgets(statusbar,modes,sub,multi) configure -textvariable ::potato::conn($c,input[::potato::connInfo $c inputFocus],mode)
 
   update idletasks
   pack $widgets(conn,$c,txtframe) -in $widgets(pane,top) -side left -expand 1 -fill both -anchor nw -pady 0
@@ -1171,6 +1179,7 @@ proc ::skin::potato::unshow {c} {
   set input2 [::potato::connInfo $c input2]
 
   set widgets(conn,$c,withInput) [set input[::potato::connInfo $c inputFocus]]
+  $widgets(statusbar,modes,sub,multi) configure -textvariable "" -text "unknown"
 
   $input1 configure -yscrollcommand ""
   $widgets(pane,btm,pane,top,sb) configure -command ""
@@ -1328,10 +1337,13 @@ proc ::skin::potato::import {c} {
 
   pack $widgets(conn,$c,txtframe,sb) -side right -fill y -anchor ne
 
-  bind $widgets(conn,$c,txtframe) <MouseWheel> [list ::skin:: potato::scrollActiveTextWidget $c %D]
+  bind $widgets(conn,$c,txtframe) <MouseWheel> [list ::skin::potato::scrollActiveTextWidget $c %D]
   bind $widgets(conn,$c,txtframe) <Button-3> [list ::skin::potato::rightclickOutput $c "" %x %y %X %Y]
 
   bind $t <Button-3> [list ::skin::potato::rightclickOutput $c $t %x %y %X %Y]
+
+  bind [::potato::connInfo $c input1] <FocusIn> [list ::skin::potato::statusBarMode $c input1]
+  bind [::potato::connInfo $c input2] <FocusIn> [list ::skin::potato::statusBarMode $c input2]
 
   foreach x [::potato::connInfo $c spawns] {
     addSpawn $c $x
@@ -1342,6 +1354,20 @@ proc ::skin::potato::import {c} {
   return;
 
 };# ::skin::potato::import
+
+#: proc ::skin::potato::statusBarMode
+#: arg c connection id
+#: arg which "input1" or "input2"
+#: desc Change the mode for the status bar to show the mode for conn $c's $which input window
+#: return nothing
+proc ::skin::potato::statusBarMode {c which} {
+  variable widgets;
+
+  $widgets(statusbar,modes,sub,multi) configure -textvariable ::potato::conn($c,$which,mode)
+
+  return;
+
+};# ::skin::potato::statusBarMode
 
 #: proc ::skin::potato::scrollActiveTextWidget
 #: arg c connection id
