@@ -1642,7 +1642,7 @@ proc ::potato::log {c str} {
      }
 
   set logs [array names conn $c,log,*]
-  if { [llength $logs] } 
+  if { [llength $logs] } {
        foreach x [removePrefix $logs $c,log] {
          puts $x $str
          flush $x
