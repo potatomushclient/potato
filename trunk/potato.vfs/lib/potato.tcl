@@ -1790,6 +1790,7 @@ proc ::potato::newConnection {w} {
   set conn($c,debugPackets) 0
   set conn($c,input1,mode) "multi"
   set conn($c,input2,mode) "multi"
+  set conn($c,userAfterIDs) [list]
 
   if { $w == -1 } {
        connZero
@@ -9126,7 +9127,7 @@ proc ::potato::send_mushage {window} {
 
   set w $conn($c,world)
 
-  if { $window eq $conn($c,input1)} {
+  if { $window eq $conn($c,input1) } {
        set mode $conn($c,input1,mode)
      } elseif { $window eq $conn($c,input2) } {
        set mode $conn($c,input2,mode)
@@ -10264,6 +10265,81 @@ proc ::potato::slash_cmd_print {c full str} {
   return;
 
 };# ::potato::slash_cmd_print
+
+#: proc ::potato::slash_cmd_at
+#: arg c connection id
+#: arg full was the command name typed in full?
+#: arg str A string in the format <time>=<action>
+#: desc At <time> (a [clock scan] time) send <action> to the MUSH
+#: return nothing
+proc ::potato::slash_cmd_at {c full str} {
+  variable conn;
+
+  set equals [string first "=" $str]
+  if { $equals == -1 } {
+       outputSystem $c [T "Format: /at <time>=<string>"]
+       return;
+     }
+  set time [string range $str 0 $equals-1]
+  set action [string range $str $equals+1 end]
+  if { [catch {clock scan $time} inttime] } {
+       outputSystem $c "/at: $inttime"
+       return;
+     }
+
+  set now [clock scan "now"]
+  if { $now >= $inttime } {
+       outputSystem $c [T "/at: Time must be in the future."]
+       return;
+     }
+  set when [expr {($inttime - [clock scan "now"]) * 1000}]
+  lappend conn($c,userAfterIDs) [set afterid [after $when [list ::potato::send_to $c $action "\n" 0 ""]]]
+  outputSystem $c [T "Command will run at %s, id %s" [clock format $inttime -format "%D %T"] $afterid]
+  after [expr {$when + 1200}] [list ::potato::cleanup_afters $c]
+
+  return;
+};# ::potato::slash_cmd_at
+
+#: proc ::potato::slash_cmd_cancelat
+#: arg c connection id
+#: arg full was the command name typed in full?
+#: arg str A string in the format <time>=<action>
+#: desc At <time> (a [clock scan] time) send <action> to the MUSH
+#: return nothing
+proc ::potato::slash_cmd_cancelat {c full str} {
+  variable conn;
+
+  if { $str ni $conn($c,userAfterIDs) } {
+       outputSystem $c [T "Invalid /at ID."]
+       return;
+     }
+
+  after cancel $str
+  outputSystem $c [T "/at cancelled."]
+  cleanup_afters $c
+
+  return;
+};# ::potato::slash_cmd_at
+
+#: proc ::potato::cleanup_afters
+#: arg c connection id
+#: desc Cleanup the after IDs for conn $c's userAfterIDs var
+#: return nothing
+proc ::potato::cleanup_afters {c} {
+  variable conn;
+
+  set new [list]
+  set all [after info]
+  foreach x $conn($c,userAfterIDs) {
+    if { $x in $all } {
+         lappend new $x
+       }
+  }
+  set conn($c,userAfterIDs) $new
+
+  return;
+
+};# ::potato::cleanup_afters
 
 #: proc ::potato::slash_cmd_addspawn
 #: arg c connection id
