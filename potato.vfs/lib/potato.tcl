@@ -7039,7 +7039,7 @@ proc ::potato::main {} {
 
   setClock
 
-  #::help::readFile [file join $::potato::potato(vfsdir) lib potato-help.txt]
+  ::help::readFile [file join $::potato::potato(vfsdir) lib potato-help.txt]
 
   newConnection -1
   # We do this after newConnection, or the <FocusIn> binding comes up wrong
@@ -12305,6 +12305,7 @@ option add *TEntry.Cursor xterm
 package require potato-telnet 1.1
 package require potato-proxy
 package require potato-wikihelp
+package require potato-help
 package require potato-font
 package require potato-spell
 
