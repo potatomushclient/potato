@@ -1535,6 +1535,10 @@ proc ::potato::doLog {c file append buffer leave} {
 
   set mode [lindex [list w a] $append]
 
+  if { ![catch {clock format [clock seconds] -format $file} newfile] } {
+       set file $newfile
+     }
+
   set err [catch {open $file $mode} fid]
   if { $err } {
        outputSystem $c "Unable to log to \"$file\": $fid"
@@ -10287,7 +10291,7 @@ proc ::potato::slash_cmd_at {c full str} {
        return;
      }
 
-  set now [clock scan "now"]
+  set now [clock seconds]
   if { $now >= $inttime } {
        outputSystem $c [T "/at: Time must be in the future."]
        return;
