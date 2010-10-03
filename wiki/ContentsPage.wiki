@@ -1,10 +1,10 @@
-#summary Wiki Contents Page
+#summary Contents Page
   * [WelcomeToPotato Welcome to Potato]
-    * License
-    * Contact Me
+    * [License]
+    * [ContactMe Contact Me]
     * What is a MUSH/MUD/MU`*`?
     * [Features Potato's Features]
-    * Credits and Contributions
+    * [Credits Credits and Contributions]
   * Adding and Configuring Worlds
     * Basic Settings
     * Connection Settings
@@ -33,7 +33,7 @@
   * Technology Behind Potato
     * Tcl/Tk
     * Winico and Winflash
-  * Version Change History
+  * [PastVersions Version Change History]
     * Version 2.0.0b6
     * Version 2.0.0b5
     * Version 2.0.0b4
@@ -45,6 +45,8 @@
     * Version 2.0.0a13
     * Version 2.0.0a12
     * Version 2.0.0a11
+  * Downloads
+    * Features
 
 More stuff to add:
   * /commands
