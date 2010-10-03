@@ -492,6 +492,9 @@ title:Version 2.0.0b8
   * You can now use 'Disconnect' to cancel auto-reconnect again.
   * You can now configure which Telnet options are negotiated. (Note that these options only take after the next reconnect.)
   * It's now possible to have multiple logfiles open per-connection at the same time.
+  * Added the /at command, to send input at some point in the future. Syntax: /at <time>=<input>. <input> can be a /command.
+  * Added /cancelat to cancel a previously entered /at.
+  * Added support for Macros. Define macros via the Options menu, and run with "/run <macro>".
 -----------------------------
 name:changes,2.0.0b7
 title:Version 2.0.0b7

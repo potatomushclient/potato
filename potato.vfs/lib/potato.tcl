@@ -380,7 +380,7 @@ proc ::potato::loadWorldDefaults {w override} {
   variable world;
 
   # Options we don't copy. This is a list of option names.
-  set nocopyPatterns [list *,font,created id *,fcmd,* events events,* timer timer,* groups slashcmd slashcmd,*]
+  set nocopyPatterns [list *,font,created id *,fcmd,* events events,* timer timer,* groups slashcmd slashcmd,* macro,*]
 
   # Load preset defaults for these, don't copy from world -1. This is a list of optionName optionDefault pairs.
   set standardDefaults [list fcmd,2 {} fcmd,3 {} fcmd,4 {} fcmd,5 {} fcmd,6 {} fcmd,7 {} fcmd,8 {} \
@@ -574,10 +574,7 @@ proc ::potato::prefixWindow {{w ""}} {
   set tree [::ttk::treeview $sub.tree -columns [list Window Prefix] -show [list tree headings] -selectmode browse]
   set sbX [::ttk::scrollbar $sub.sbX -orient horizontal -command [list $tree xview]]
   set sbY [::ttk::scrollbar $sub.sbY -orient vertical -command [list $tree yview]]
-  grid $tree $sbY -sticky nsew
-  grid $sbX -sticky nswe
-  grid rowconfigure $sub $tree -weight 1
-  grid columnconfigure $sub $tree -weight 1
+  grid_with_scrollbars $tree $sbX $sbY
   $tree configure -xscrollcommand [list $sbX set]
   $tree configure -yscrollcommand [list $sbY set]
 
@@ -4010,10 +4007,7 @@ proc ::potato::manageWorlds {} {
   set manageWorlds(gTree) $gTree
   set sbX [::ttk::scrollbar $left.sbX -orient horizontal -command [list $gTree xview]]
   set sbY [::ttk::scrollbar $left.sbY -orient vertical -command [list $gTree yview]]
-  grid $gTree $sbY -sticky nsew
-  grid $sbX -sticky nswe
-  grid rowconfigure $left $gTree -weight 1
-  grid columnconfigure $left $gTree -weight 1
+  grid_with_scrollbars $gTree $sbX $sbY
   $gTree configure -xscrollcommand [list $sbX set]
   $gTree configure -yscrollcommand [list $sbY set]
 
@@ -4032,10 +4026,7 @@ proc ::potato::manageWorlds {} {
   $wTree column "World Name" -stretch 1 -width 170
   $wTree column "Address" -stretch 1 -width 160
   $wTree column "Char" -stretch 0 -width 75
-  grid $wTree $sbY -sticky nsew
-  grid $sbX -sticky nswe
-  grid rowconfigure $right $wTree -weight 1
-  grid columnconfigure $right $wTree -weight 1
+  grid_with_scrollbars $wTree $sbX $sbY
   $wTree configure -xscrollcommand [list $sbX set]
   $wTree configure -yscrollcommand [list $sbY set]
 
@@ -4615,6 +4606,272 @@ proc ::potato::copyWorld {w} {
 
 };# ::potato::copyWorld
 
+#: proc ::potato::macroWindow
+#: arg w world id
+#: desc Show the window for configuring Macros for world $w.
+#: return nothing
+proc ::potato::macroWindow {{w ""}} {
+  variable conn;
+  variable world;
+  variable macroWindow
+
+  if { $w eq "" } {
+       set w $conn([up],world)
+     }
+
+  set win .macroWindow$w
+  if { [winfo exists $win] } {
+       reshowWindow $win
+       return;
+     }
+
+  if { $w == -1 } {
+       set title [T "Global Macros"]
+     } else {
+       set title [T "Macros for %s" $world($w,name)]
+     }
+
+  toplevel $win
+  wm title $win $title
+
+  pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both
+
+  pack [set top [::ttk::frame $frame.top]] -side left -expand 1 -fill both
+
+  pack [set left [::ttk::frame $top.left]] -side left -expand 1 -fill both
+  pack [set right [::ttk::frame $top.right]] -side left -expand 1 -fill both
+
+  set tframe [::ttk::frame $left.tframe]
+  set tree [::ttk::treeview $tframe.tree -show [list headings] -columns [list Name Commands] \
+               -yscrollcommand [list $tframe.y set] \
+               -xscrollcommand [list $tframe.x set]]
+  set x [::ttk::scrollbar $tframe.x -orient horizontal -command [list $tree xview]]
+  set y [::ttk::scrollbar $tframe.y -orient vertical -command [list $tree xview]]
+  grid_with_scrollbars $tree $x $y
+
+  $tree heading Name -text Name
+  $tree heading Commands -text Commands
+  $tree column Name -width 80 -stretch 0
+  $tree column Commands -width 150 -stretch 1
+  bind $tree <<TreeviewSelect>> [list ::potato::macroWindowState $w]
+
+  pack $tframe -side top -padx 10 -pady 10 -expand 1 -fill both
+
+  pack [set bframe [::ttk::frame $left.bframe]] -side top -anchor n -pady 13
+
+  pack [set add [::ttk::button $bframe.add -image ::potato::img::event-new \
+            -command [list potato::macroWindowAdd $w]]] -side left -padx 8
+  tooltip $add [T "Add Macro"]
+  pack [set edit [::ttk::button $bframe.edit -image ::potato::img::event-edit \
+            -command [list potato::macroWindowEdit $w]]] -side left -padx 8
+  tooltip $edit [T "Edit Macro"]
+  pack [set delete [::ttk::button $bframe.delete -image ::potato::img::event-delete \
+            -command [list potato::macroWindowDelete $w]]] -side top -padx 8
+  tooltip $delete [T "Delete Macro"]
+
+  pack [set nframe [::ttk::frame $right.name]] -side top -anchor w -padx 10 -pady 10 -expand 1 -fill x
+  pack [::ttk::label $nframe.l -text [T "Name:"]] -side left -anchor w
+  pack [set name [::ttk::entry $nframe.e]] -side left -anchor w -expand 1 -fill x
+  pack [set tframe [::ttk::frame $right.text]] -side top -anchor w -padx 10 -pady 10
+  pack [::ttk::label $tframe.l -text [T "Commands:"]] -anchor w
+  pack [set commands [text $tframe.txt -height 10 -width 40 -wrap word -font TkFixedFont]] -anchor w
+  pack [set bframe [::ttk::frame $right.btns]] -side top -anchor e -padx 10 -pady 10
+  pack [set save [::ttk::button $bframe.save -text [T "Save"] -command [list ::potato::macroWindowFinish $w 1]]] -side left -padx 8
+  pack [set cancel [::ttk::button $bframe.cancel -text [T "Cancel"] -command [list ::potato::macroWindowFinish $w 0]]] -side left -padx 8
+
+  foreach x [list tree add edit delete name commands save cancel] {
+    set macroWindow($w,path,$x) [set $x]
+  }
+
+  macroWindowPopulate $w
+
+  bind $win <Destroy> [list array unset macroWindow $w,*]
+
+  return;
+
+};# ::potato::macroWindow
+
+#: proc ::potato::macroWindowDelete
+#: arg w world id
+#: desc Delete the currently selected macro
+#: return nothing
+proc ::potato::macroWindowDelete {w} {
+  variable macroWindow;
+  variable world;
+
+  set sel [lindex [$macroWindow($w,path,tree) selection] 0]
+  if { $sel eq "" } {
+       return;
+     }
+  unset world($w,macro,$sel)
+  macroWindowPopulate $w
+
+  return;
+
+};# ::potato::macroWindowDelete
+
+#: proc ::potato::macroWindowFinish
+#: arg w world id
+#: arg save Save (1) or cancel (0)
+#: desc Possibly save the currently edited macro, then clear the window
+#: return nothing
+proc ::potato::macroWindowFinish {w save} {
+  variable macroWindow;
+  variable world;
+
+  if { $save } {
+       set name [$macroWindow($w,path,name) get]
+       set commands [$macroWindow($w,path,commands) get 1.0 end-1c]
+       if { ![regexp {^[a-zA-Z0-9!._-]{1,49}$} $name] } {
+            tk_messageBox -message [T "Invalid name."] -icon error -title [T "Macros"] \
+                          -type ok -parent $macroWindow($w,path,commands)
+            return;
+          }
+       if { $name ne $macroWindow($w,editing) } {
+            # Using a different name.
+            if { [info exists world($w,macro,$name)] } {
+                 set ans [tk_messageBox -icon warning -title [T "Macros"] -type yesno \
+                            -parent $macroWindow($w,path,commands) \
+                            -message [T "A Macro with that name already exists. Override?"]]
+                 if { $ans ne "yes" } {
+                      return;
+                    }
+                 unset world($w,macro,$macroWindow($w,editing))
+               }
+          }
+       set world($w,macro,$name) $commands
+     }
+  $macroWindow($w,path,name) delete 0 end
+  $macroWindow($w,path,commands) delete 1.0 end
+  macroWindowState $w
+  if { $save } {
+       macroWindowPopulate $w $name
+     }
+
+  return;
+
+};# ::potato::macroWindowFinish
+
+#: proc ::potato::macroWindowAdd
+#: arg w world id
+#: desc Set up Macro Window for world $w for adding a new macro
+#: return nothing
+proc ::potato::macroWindowAdd {w} {
+  variable macroWindow;
+
+  set macroWindow($w,editing) ""
+  macroWindowState $w 2
+
+  return;
+
+};# ::potato::macroWindowAdd
+
+#: proc ::potato::macroWindowEdit
+#: arg w world id
+#: desc Set up Macro Window for world $w for editing the currently selected macro
+#: return nothing
+proc ::potato::macroWindowEdit {w} {
+  variable macroWindow;
+  variable world;
+
+  set which [lindex [$macroWindow($w,path,tree) selection] 0]
+
+  set macroWindow($w,editing) $which
+  macroWindowState $w 2
+  $macroWindow($w,path,name) insert end $which
+  $macroWindow($w,path,commands) insert end $world($w,macro,$which)
+
+  return;
+
+};# ::potato::macroWindowEdit
+
+#: proc ::potato::macroWindowPopulate
+#: arg w world id
+#: arg sel Item ID to select, defaults to "" for first item
+#: desc Populate the Macro Window list for world $w and select the specified item
+#: return nothing
+proc ::potato::macroWindowPopulate {w {sel ""}} {
+  variable macroWindow;
+  variable world;
+
+  set tree $macroWindow($w,path,tree)
+  $tree delete [$tree children {}]
+  foreach x [lsort -dictionary [removePrefix [arraySubelem world $w,macro] $w,macro]] {
+    $tree insert {} end -id $x -values [list $x [string map [list \n " \b "] $world($w,macro,$x)]]
+  }
+  if { $sel eq "" || ![$tree exists $sel] } {
+       set sel [lindex [$tree children {}] 0]
+     }
+  if { $sel eq "" } {
+       macroWindowState $w 0
+puts "Setting state to 0, sel is $sel for [$tree children {}]"
+     } else {
+       $tree selection set $sel
+       $tree focus $sel
+       macroWindowState $w 1
+     }
+  
+  return;
+
+};# ::potato::macroWindowPopulate
+
+#: proc ::potato::macroWindowState
+#: arg w world id
+#: arg state Window state (0 = empty tree, 1 = selected tree entry, 2 = adding/editing an entry, -1 = check tree selection for 0/1)
+#: desc Set widget states in the Macro Window for world $w.
+#: return nothing
+proc ::potato::macroWindowState {w {state -1}} {
+  variable macroWindow;
+
+  if { $state == -1 } {
+       if { [llength [$macroWindow($w,path,tree) selection]] } {
+            set state 1
+          } else {
+            set state 0
+          }
+     }
+
+  if { $state == 2 } {
+       foreach x [list tree add edit delete] {
+         $macroWindow($w,path,$x) state disabled
+       }
+       foreach x [list name save cancel] {
+         $macroWindow($w,path,$x) state !disabled
+       }
+       $macroWindow($w,path,commands) configure -state normal
+       focus $macroWindow($w,path,name)
+     } else {
+       foreach x [list tree edit delete] {
+         $macroWindow($w,path,$x) state [lindex [list disabled !disabled] $state]
+       }
+       $macroWindow($w,path,add) state !disabled
+       foreach x [list name save cancel] {
+         $macroWindow($w,path,$x) state disabled
+       }
+       $macroWindow($w,path,commands) configure -state disabled
+       focus $macroWindow($w,path,tree)
+     }
+  return;
+
+};# ::potato::macroWindowState
+
+#: proc ::potato::grid_with_scrollbars
+#: arg widget The main widget
+#: arg x x-scrollbar
+#: arg y y-scrollbar
+#: desc Grid a widget with x/y scrollbars into a parent frame
+#: return nothing
+proc ::potato::grid_with_scrollbars {widget x y} {
+
+  set frame [winfo parent $widget]
+  grid $widget $y -sticky nsew
+  grid $x -sticky nswe
+  grid rowconfigure $frame $widget -weight 1
+  grid columnconfigure $frame $widget -weight 1
+  return;
+
+};# ::potato::grid_with_scrollbars
+
 #: proc ::potato::eventConfig
 #: arg w world id, defaults to ""
 #: desc show the event (gag/trigger/highlight/spawn) config window for world $w, or the world of the connection currently displayed if $w is ""
@@ -4662,10 +4919,7 @@ proc ::potato::eventConfig {{w ""}} {
   lappend leftList $lb
   set sbX [::ttk::scrollbar $frame.left.top.sbX -orient horizontal -command [list $lb xview]]
   set sbY [::ttk::scrollbar $frame.left.top.sbY -orient vertical -command [list $lb yview]]
-  grid $lb $sbY -sticky nsew
-  grid $sbX -sticky nswe
-  grid rowconfigure $frame.left.top $lb -weight 1
-  grid columnconfigure $frame.left.top $lb -weight 1
+  grid_with_scrollbars $lb $sbX $sbY
 
   # Move up/Move down buttons, and Add/Edit/Delete buttons
   pack [::ttk::frame $frame.left.btm] -side top -fill x -pady 5
@@ -5254,10 +5508,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
              -xscrollcommand [list $inner.top.left.sbx set] -show tree]
   ::ttk::scrollbar $inner.top.left.sby -orient vertical -command [list $inner.top.left.tree yview]
   ::ttk::scrollbar $inner.top.left.sbx -orient horizontal -command [list $inner.top.left.tree xview]
-  grid $inner.top.left.tree $inner.top.left.sby -sticky nsew
-  grid $inner.top.left.sbx -sticky nswe
-  grid rowconfigure $inner.top.left $inner.top.left.tree -weight 1
-  grid columnconfigure $inner.top.left $inner.top.left.tree -weight 1
+  grid_with_scrollbars $inner.top.left.tree $inner.top.left.sbx $inner.top.left.sby
 
   $inner.top add [::ttk::frame $inner.top.right]
   set canvas [canvas $inner.top.right.c -width 450 -height 350 \
@@ -5267,10 +5518,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   catch {$inner.top.right.c configure -background [::ttk::style lookup $inner -background]}
   ::ttk::scrollbar $inner.top.right.sby -orient vertical -command [list $inner.top.right.c yview]
   ::ttk::scrollbar $inner.top.right.sbx -orient horizontal -command [list $inner.top.right.c xview]
-  grid $inner.top.right.c $inner.top.right.sby -sticky nsew
-  grid $inner.top.right.sbx -sticky nswe
-  grid rowconfigure $inner.top.right $inner.top.right.c -weight 1
-  grid columnconfigure $inner.top.right $inner.top.right.c -weight 1
+  grid_with_scrollbars $inner.top.right.c $inner.top.right.sbx $inner.top.right.sby
 
   pack [::ttk::frame $inner.btm] -side top -expand 0 -fill x
   pack [::ttk::frame $inner.btm.button] -side top -pady 8 -anchor n
@@ -5638,10 +5886,7 @@ $sub.cb state disabled
               -selectmode browse -xscrollcommand [list $mc.sbx set] -yscrollcommand [list $mc.sby set]
   ::ttk::scrollbar $mc.sbx -command [list $mc.tree xview] -orient horizontal
   ::ttk::scrollbar $mc.sby -command [list $mc.tree yview] -orient vertical
-  grid $mc.tree $mc.sby -sticky nsew
-  grid $mc.sbx -sticky nswe
-  grid rowconfigure $mc $mc.tree -weight 1
-  grid columnconfigure $mc $mc.tree -weight 1
+  grid_with_scrollbars $mc.tree $mc.sbx $mc.sby
 
   set worldconfig($w,timer,tree) $mc.tree
   $mc.tree heading #0 -text "E?"
@@ -7237,10 +7482,7 @@ proc ::potato::showMSSP {} {
                   -xscrollcommand [list $win.x set] -yscrollcommand [list $win.y set]]
   set y [::ttk::scrollbar $win.y -orient vertical -command [list $tree yview]]
   set x [::ttk::scrollbar $win.x -orient horizontal -command [list $tree xview]]
-  grid $tree $y -sticky nsew
-  grid $x -sticky nswe
-  grid rowconfigure $win $tree -weight 1
-  grid columnconfigure $win $tree -weight 1
+  grid_with_scrollbars $tree $x $y
 
 
   $tree heading Variable -text Variable -anchor w
@@ -7611,10 +7853,7 @@ proc ::potato::history {{c ""}} {
   }
   ::ttk::scrollbar $frame.cmds.sby -orient vertical -command [list $frame.cmds.lb yview]
   ::ttk::scrollbar $frame.cmds.sbx -orient horizontal -command [list $frame.cmds.lb xview]
-  grid $frame.cmds.lb $frame.cmds.sby -sticky nsew
-  grid $frame.cmds.sbx -sticky nswe
-  grid rowconfigure $frame.cmds $frame.cmds.lb -weight 1
-  grid columnconfigure $frame.cmds $frame.cmds.lb -weight 1
+  grid_with_scrollbars $frame.cmds.lb $frame.cmds.sbx $frame.cmds.sby
   pack $frame.cmds -expand 1 -fill both
 
   pack [::ttk::frame $frame.filter] -side top -fill x -anchor n -padx 5 -pady 3
@@ -8057,6 +8296,7 @@ proc ::potato::build_menu_options {m} {
   createMenuTask $m programConfig
   createMenuTask $m globalEvents
   createMenuTask $m globalSlashCmds
+  createMenuTask $m globalMacros
 
   $m add separator
 
@@ -8067,6 +8307,7 @@ proc ::potato::build_menu_options {m} {
   createMenuTask $m config
   createMenuTask $m events
   createMenuTask $m slashCmds
+  createMenuTask $m macroWindow
 
   return;
 
@@ -8430,10 +8671,7 @@ proc ::potato::keyboardShortcutWin {} {
   $tree heading 0 -text [T "Command"]
   $tree heading 1 -text [T "Keyboard Shortcut"]
 
-  grid $tree $sbY -sticky nsew
-  grid $sbX -sticky nswe
-  grid rowconfigure $win.tree $tree -weight 1
-  grid columnconfigure $win.tree $tree -weight 1
+  grid_with_scrollbars $tree $sbX $sbY
 
   foreach x [array names tasks *,name] {
     set task [lindex [split $x ,] 0]
@@ -8819,10 +9057,7 @@ proc ::potato::autoConnectWindow {} {
   set sbX [::ttk::scrollbar $left.sbX -orient horizontal -command [list $nTree xview]]
   set sbY [::ttk::scrollbar $left.sbY -orient vertical -command [list $nTree yview]]
   $nTree configure -xscrollcommand [list $sbX set] -yscrollcommand [list $sbY set]
-  grid $nTree $sbY -sticky nsew
-  grid $sbX -sticky nswe
-  grid rowconfigure $left $nTree -weight 1
-  grid columnconfigure $left $nTree -weight 1
+  grid_with_scrollbars $nTree $sbX $sbY
   bind $nTree <<TreeviewSelect>> [list ::potato::autoConnectWindowSel nTree]
 
   pack [set btnAdd [::ttk::button $mid.add -text ">" \
@@ -8838,10 +9073,7 @@ proc ::potato::autoConnectWindow {} {
   set sbX [::ttk::scrollbar $right.sbX -orient horizontal -command [list $yTree xview]]
   set sbY [::ttk::scrollbar $right.sbY -orient vertical -command [list $yTree yview]]
   $yTree configure -xscrollcommand [list $sbX set] -yscrollcommand [list $sbY set]
-  grid $yTree $sbY -sticky nsew
-  grid $sbX -sticky nswe
-  grid rowconfigure $right $yTree -weight 1
-  grid columnconfigure $right $yTree -weight 1
+  grid_with_scrollbars $yTree $sbX $sbY
   bind $yTree <<TreeviewSelect>> [list ::potato::autoConnectWindowSel yTree]
 
   pack [::ttk::button $btm.save -command ::potato::autoConnectWindowSave -text [T "Save"]] \
@@ -9632,10 +9864,7 @@ proc ::potato::slashConfig {{w ""}} {
   foreach {x y} [list Name 100 Pattern 100 Type 50] {
     $tree column $x -width $y
   }
-  grid $tree $sbY -sticky nsew
-  grid $sbX -sticky nswe
-  grid rowconfigure $treeframe $tree -weight 1
-  grid columnconfigure $treeframe $tree -weight 1
+  grid_with_scrollbars $tree $sbX $sbY
 
   pack [set btns [::ttk::frame $top.btns]] -side top -anchor nw -fill both -padx 10 -pady 5
   pack [::ttk::frame $btns.add] -side left -expand 1 -fill x
@@ -10303,6 +10532,32 @@ proc ::potato::slash_cmd_at {c full str} {
 
   return;
 };# ::potato::slash_cmd_at
+
+#: proc ::potato::slash_cmd_run
+#: arg c connection id
+#: arg full was the command name typed in full?
+#: arg str Name of macro to run
+#: desc Run the user-defined macro $str
+#: return nothing
+proc ::potato::slash_cmd_run {c full str} {
+  variable world;
+  variable conn;
+
+  set w $conn($c,world)
+
+  if { [info exists world($w,macro,$str)] } {
+       set do $w,macro,$str
+     } elseif { [info exists world(-1,macro,$str] } {
+       set do -1,macro,$str
+     } else {
+       outputSystem $c [T "No such macro \"%s\"." $str]
+       return;
+     }
+
+  send_to $c $world($do) "\n" 0 ""
+
+  return;
+};# ::potato::slash_cmd_run
 
 #: proc ::potato::slash_cmd_cancelat
 #: arg c connection id
@@ -11412,10 +11667,7 @@ proc ::potato::textEditor {{c ""}} {
   set sbY [::ttk::scrollbar $frame.main.sbY -orient vertical -command [list $text yview]]
   set sbX [::ttk::scrollbar $frame.main.sbX -orient horizontal -command [list $text xview]]
   $text configure -yscrollcommand [list $sbY set] -xscrollcommand [list $sbX set]
-  grid $text $sbY -sticky nsew
-  grid $sbX -sticky nswe
-  grid rowconfigure $frame.main $text -weight 1
-  grid columnconfigure $frame.main $text -weight 1
+  grid_with_scrollbars $text $sbX $sbY
 
   set menu [menu $win.menu -tearoff 0]
   $win configure -menu $win.menu
@@ -11791,6 +12043,12 @@ proc ::potato::tasksInit {} {
        spellcheck,name     [T "Check &Spelling"] \
        spellcheck,cmd      "::potato::spellcheck" \
        spellcheck,state    {[file exists $::potato::misc(aspell)]} \
+       macroWindow,name    [T "&Macro Window"] \
+       macroWindow,cmd     "::potato::macroWindow" \
+       macroWindow,state   notZero \
+       globalMacros,name   [T "Global &Macro Window"] \
+       globalMacros,cmd    "::potato::macroWindow -1" \
+       globalMacros,state  always \
   ]
 
   return;
