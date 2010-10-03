@@ -491,6 +491,7 @@ title:Version 2.0.0b8
   * The Debug Packets window now uses the normal world colours.
   * You can now use 'Disconnect' to cancel auto-reconnect again.
   * You can now configure which Telnet options are negotiated. (Note that these options only take after the next reconnect.)
+  * It's now possible to have multiple logfiles open per-connection at the same time.
 -----------------------------
 name:changes,2.0.0b7
 title:Version 2.0.0b7
