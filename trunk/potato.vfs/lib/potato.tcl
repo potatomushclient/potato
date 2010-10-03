@@ -1463,13 +1463,7 @@ proc ::potato::logWindow {{c ""}} {
   #           -onvalue 1 -offvalue 0 -text [T "Wrap Lines?"] -underline 0] -side top -anchor w
   #lappend bindings w $frame.top.options.wrap
 
-  if { $conn($c,logFileName) ne "" } {
-       $frame.top.options.future configure -state disabled
-     }
-
   pack [::ttk::frame $frame.file] -side top -anchor center -fill x -padx 6 -pady 4
-  #pack [entry $frame.file.e -textvariable potato::conn($c,logDialog,file) \
-            -disabledbackground white -state disabled -width 30] -side left -expand 1 -fill x;#abc Make me use Tile!
   pack [::ttk::entry $frame.file.e -textvariable potato::conn($c,logDialog,file) -width 30] -side left -expand 1 -fill x
   $frame.file.e state readonly
 
@@ -1539,11 +1533,7 @@ proc ::potato::doLog {c file append buffer leave} {
        return;
      }
 
-  if { $append } {
-       set mode a
-     } else {
-       set mode w
-     }
+  set mode [lindex [list w a] $append]
 
   set err [catch {open $file $mode} fid]
   if { $err } {
@@ -1551,11 +1541,11 @@ proc ::potato::doLog {c file append buffer leave} {
        return;
      }
 
-  if { [string equal -nocase $buffer "_none"] || [string equal -nocase $buffer {No Buffer}] } {
+  if { $buffer eq "" || [string equal -nocase $buffer "_none"] || [string equal -nocase $buffer {No Buffer}] } {
        set t ""
      } elseif { [string equal -nocase $buffer {Main Window}] || [string equal -nocase $buffer "_main"] } {
        set t $conn($c,textWidget)
-     } elseif { [info exists conn($c,spawns,$buffer)] && ![string match "*,*" $buffer] } {
+     } elseif { [info exists conn($c,spawns,$buffer)] && [string first "," $buffer] == -1 } {
        set t $conn($c,spawns,$buffer)
      } else {
        set t ""
@@ -1573,10 +1563,8 @@ proc ::potato::doLog {c file append buffer leave} {
      }
 
   if { $leave } {
-       stopLog $c
        outputSystem $c [T "Now logging to \"%s\"." $file]
-       set conn($c,logFileName) $file
-       set conn($c,logFileId) $fid
+       set conn($c,log,$fid) [file nativename [file normalize $file]]
      } else {
        outputSystem $c [T "Logged to \"%s\"." $file]
        close $fid
@@ -1586,27 +1574,82 @@ proc ::potato::doLog {c file append buffer leave} {
 
 #: proc ::potato::stopLog
 #: arg c connection id. Defaults to ""
-#: desc If connection $c (or the currently shown connection, if $c is "") has a rolling log file open, close it
+#: arg file File to close, or "" (default) for all
+#: desc Stop logging to filename (or [file channel]) $file, or all files if $file is "", for connection $c.
+#: return 0 if no open logs, -1 if specified log not found, -2 if specified log is ambiguous, 1 if log(s) closed successfully.
+proc ::potato::stopLog {{c ""} {file ""}} {
+  variable conn;
+
+  if { $c eq "" } {
+       set c [up]
+     }
+  if { [set count [llength [set list [array names conn $c,log,*]]]] == 0 } {
+       return 0;# No open logs
+     }
+  if { $file eq "" } {
+       if { $count == 1 } {
+            set msg [T "Logging to \"%s\" stopped." $conn([lindex $list 0])]
+          } else {
+            set msg [T "Logging to %d logfiles stopped." $count]
+          }
+        foreach x [removePrefix $list $c,log] {
+          close $x
+          unset conn($c,log,$x)
+        }
+     } else {
+       if { ![info exists conn($c,log,$file)] } {
+            set realfile [file nativename [file normalize $file]]
+            set shortrealfile [file tail $file]
+            set count 0
+            foreach x $list {
+               if { $conn($x) eq $realfile } {
+                    set match [removePrefix $x $c,log]
+                    break;
+                  } elseif { [file tail $conn($x)] eq $shortrealfile } {
+                    set match [removePrefix $x $c,log]
+                    incr count
+                    # No break
+                  }
+            }
+            if { ![info exists match] } {
+                 return -1;
+               } elseif { $count > 1 } {
+                 return -2;
+               }
+          } else {
+            set match $file
+          }
+       set msg [T "Logging to \"%s\" stopped." $conn($c,log,$match)]
+       close $match
+       unset conn($c,log,$match)
+     }
+
+  outputSystem $c $msg
+  return 1;
+
+};# ::potato::stopLog
+
+#: proc ::potato::log
+#: arg c connection id
+#: arg str String to log
+#: desc Actually log $str to $c's open log files
 #: return nothing
-proc ::potato::stopLog {{c ""}} {
+proc ::potato::log {c str} {
   variable conn;
 
   if { $c eq "" } {
        set c [up]
      }
 
-  if { ![info exists conn($c,logFileId)] || $conn($c,logFileId) eq "" } {
-       return;
+  set logs [array names conn $c,log,*]
+  if { [llength $logs] } 
+       foreach x [removePrefix $logs $c,log] {
+         puts $x $str
+         flush $x
+       }
      }
-
-  outputSystem $c [T "Logging to \"%s\" stopped." $conn($c,logFileName)]
-  close $conn($c,logFileId)
-  set conn($c,logFileId) ""
-  set conn($c,logFileName) ""
-
   return;
-
-};# ::potato::stopLog
+};# ::potato::log
 
 #: proc ::potato::selectFile
 #: arg var name of a global variable
@@ -1707,8 +1750,6 @@ proc ::potato::newConnection {w} {
   set conn($c,world) $w
   set conn($c,id) "" ;# we hope this doesn't break anything.
   set conn($c,protocols) [list]
-  set conn($c,logFileName) ""
-  set conn($c,logFileId) ""
   set conn($c,idle) 0
   set conn($c,upload,fid) ""
   set conn($c,upload,file) ""
@@ -2865,9 +2906,8 @@ proc ::potato::get_mushageProcess {c line} {
      }
 
   array set eventInfo [events $c $lineNoansi]
-  if { $conn($c,logFileId) ne "" && (!$eventInfo(matched) || !$eventInfo(log)) } {
-       puts $conn($c,logFileId) $lineNoansi
-       flush $conn($c,logFileId)
+  if { !$eventInfo(matched) || !$eventInfo(log) } {
+       log $c $lineNoansi
      }
 
   set tagList [list margins]
@@ -3854,7 +3894,11 @@ proc ::potato::closeConn {{c ""} {autoDisconnect 0} {prompt 1}} {
 
   ::skin::$potato(skin)::export $c
   set t $conn($c,textWidget)
-
+  foreach x [removePrefix [arraySubelem conn $c,log] $c,log] {
+    catch {flush $x}
+    catch {close $x}
+    unset conn($c,log,$x)
+  }
   catch {destroy {*}$conn($c,widgets) $conn($c,input1) $conn($c,input2)}
   array unset conn $c,*
   ::skin::$potato(skin)::status $c
@@ -7945,17 +7989,48 @@ proc ::potato::build_menu_view {m} {
 #: return nothing
 proc ::potato::build_menu_log {m} {
   variable conn;
+  variable menu;
 
   $m delete 0 end
 
+  set c [up]
+
   createMenuTask $m log
-  createMenuTask $m logStop
+  $m add cascade {*}[menu_label [T "&Stop Logging"]] -menu $menu(log,stop,path)
+  if { ![llength [array names conn $c,log,*]] } {
+       $m entryconfigure end -state disabled
+     }
   $m add separator
   createMenuTask $m upload
 
   return;
 
 };# ::potato::build_menu_log
+
+#: proc ::potato::build_menu_log_stop
+#: arg m Widget path to the StopLogging menu
+#: desc The "Stop Logging" (.m.log.stop) menu is about to be posted. Configure its entries appropriately.
+#: return nothing
+proc ::potato::build_menu_log_stop {m} {
+  variable conn;
+
+  set c [up]
+
+  $m delete 0 end
+
+  createMenuTask $m logStop
+  set ids [removePrefix [arraySubelem conn $c,log] $c,log]
+  if { [llength $ids] } {
+       $m add separator
+       foreach x $ids {
+         createMenuTask $m logStop $c $c $x
+         $m entryconfigure end -label [file nativename [file normalize $conn($c,log,$x)]]
+       }
+     }
+
+  return;
+
+};# ::potato::build_menu_log_stop
 
 #: proc ::potato::build_menu_options
 #: arg m Path to Options menu widget
@@ -8037,6 +8112,7 @@ proc ::potato::setUpMenu {} {
   set menu(connect,path) [menu .m.file.connect -tearoff 0 -postcommand [list ::potato::rebuildConnectMenu .m.file.connect]]
   set menu(view,path) [menu .m.view -tearoff 0 -postcommand [list ::potato::build_menu_view .m.view]]
   set menu(log,path) [menu .m.log -tearoff 0 -postcommand [list ::potato::build_menu_log .m.log]]
+  set menu(log,stop,path) [menu .m.log.stop -tearoff 0 -postcommand [list ::potato::build_menu_log_stop .m.log.stop]]
   set menu(options,path) [menu .m.options -tearoff 0 -postcommand [list ::potato::build_menu_options .m.options]]
   set menu(tools,path) [menu .m.tools -tearoff 0 -postcommand [list ::potato::build_menu_tools .m.tools]]
   set menu(help,path) [menu .m.help -tearoff 0 -postcommand [list ::potato::build_menu_help .m.help]]
@@ -10679,9 +10755,18 @@ proc ::potato::slash_cmd_log {c full str} {
      }
 
   # Check for "/log -close"
-  if { [lsearch -exact -nocase [list -close -stop -off] [string trim $str]] != -1 } {
-       # Close the currently opened log file
-       taskRun logStop $c $c
+  set argv [split $str " "]
+  set argc [llength $argv]
+  if { [lsearch -exact -nocase [list -close -stop -off] [lindex $argv 0]] != -1 } {
+       # Close an open log file, or all open log files
+       set res [taskRun logStop $c $c [join [lrange $argv 1 end] " "]]
+       if { $res == 0 } {
+            bell -displayof .
+          } elseif { $res == -1 } {
+            outputSystem $c [T "Log file \"%s\" not found." [join [lrange $argv 1 end] " "]]
+          } elseif { $res == -2 } {
+            outputSystem $c [T "Log file \"%s\" is ambiguous." [join [lrange $argv 1 end] " "]]
+          }
        return;
      }
 
@@ -10691,8 +10776,6 @@ proc ::potato::slash_cmd_log {c full str} {
   set finished 0
   set file [list]
   set needOpt 1
-  set argv [split $str " "]
-  set argc [llength $argv]
   set i 0
   foreach x $argv {
      incr i
@@ -10747,11 +10830,6 @@ proc ::potato::slash_cmd_log {c full str} {
 
   if { $error ne "" } {
        outputSystem $c "/log: $error"
-       return;
-     }
-
-  if { $options(-leave) && $conn($c,logFileId) ne "" } {
-       outputSystem $c [T "/log: There is already an open log-file."]
        return;
      }
 
@@ -11535,9 +11613,9 @@ proc ::potato::tasksInit {} {
        log,name            [T "Show &Log Window"] \
        log,cmd             "::potato::logWindow" \
        log,state           notZero \
-       logStop,name        [T "S&top Logging"] \
+       logStop,name        [T "Close &All Logs"] \
        logStop,cmd         "::potato::stopLog" \
-       logStop,state       {[info exists ::potato::conn($c,logFileId)] && $::potato::conn($c,logFileId) ne ""} \
+       logStop,state       {[llength [array names ::potato::conn $c,log,*]] > 0} \
        upload,name         [T "&Upload File"] \
        upload,cmd          "::potato::uploadWindow" \
        upload,state        always \
