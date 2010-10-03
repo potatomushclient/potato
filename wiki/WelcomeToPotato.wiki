@@ -3,7 +3,7 @@
 
 _Potato_ is a Graphical MU`*` client for Windows and Linux written in Tcl/Tk 8.5. The latest version of _Potato_ is 2.0.0b7.
 
-It has all the standard [Features features] you'd expect in a MU* client and much more, including
+It has all the standard [Features features] you'd expect in a MU`*` client and much more, including
   * An unlimited number of customized worlds
   * Runs the same on Windows and Linux
   * Configurable colors, including

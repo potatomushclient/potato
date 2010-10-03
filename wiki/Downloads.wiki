@@ -1,6 +1,6 @@
 #summary Download links for Potato
 
-= Introduction =
+=Introduction=
 
 You can currently download binaries of _Potato_ for Windows and Linux.
 
