@@ -76,6 +76,7 @@ proc ::wikihelp::help {{topic ""}} {
   $text tag configure header1 -font [list {*}[font actual TkDefaultFont] -size 22]
   $text tag configure header2 -font [list {*}[font actual TkDefaultFont] -size 18]
   $text tag configure header3 -font [list {*}[font actual TkDefaultFont] -size 15]
+  $text tag configure hr -overstrike 1 -justify center -spacing1 15 -spacing3 15
   $text tag configure link -foreground blue
   $text tag configure badlink -foreground red
   $text tag bind link <Enter> [list $text configure -cursor hand2]
@@ -217,7 +218,7 @@ proc ::wikihelp::parse {input} {
           continue;
         } elseif { [regexp {^.*----+.*$} $line] } {
           # Horizontal rule
-          lappend values "---------------" hr "\n" ""
+          lappend values "                             " hr "\n" ""
           continue;
         } elseif { [regexp {^( {2,})([*#]) *(.+)$} $line -> newlistdepth newlisttype rest] } {
           # List
