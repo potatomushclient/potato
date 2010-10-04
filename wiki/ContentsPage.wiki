@@ -1,10 +1,35 @@
 #summary Contents Page
   * [WelcomeToPotato Welcome to Potato]
-    * [License]
-    * [ContactMe Contact Me]
     * What is a MUSH/MUD/MU`*`?
     * [Features Potato's Features]
+    * [ContactMe Contact Me]
     * [Credits Credits and Contributions]
+      * Tcl/Tk
+      * Winico and Winflash
+    * [License]
+  * Getting Started
+    * Creating a New World
+      * Configuring a World
+    * Connecting to a MU`*`
+    * Configuring Potato
+    * Events
+    * Macros
+    * 
+  * [PastVersions Version Change History]
+    * [2.0.0b7 Version 2.0.0b7]
+    * [2.0.0b6 Version 2.0.0b6]
+    * [2.0.0b5 Version 2.0.0b5]
+    * [2.0.0b4 Version 2.0.0b4]
+    * [2.0.0b3 Version 2.0.0b3]
+    * [2.0.0b2 Version 2.0.0b2]
+    * [2.0.0b1 Version 2.0.0b1]
+    * [2.0.0a15 Version 2.0.0a15]
+    * [2.0.0a14 Version 2.0.0a14]
+    * [2.0.0a13 Version 2.0.0a13]
+    * [2.0.0a12 Version 2.0.0a12]
+    * [2.0.0a11 Version 2.0.0a11]
+    
+----
   * Adding and Configuring Worlds
     * Basic Settings
     * Connection Settings

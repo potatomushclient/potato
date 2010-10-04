@@ -14,7 +14,7 @@ Comments, suggestions, ideas, bug fixes or code were previously provided by the 
   * Jobrand@ElendorMUSH
   * Karen Reynolds
   * Larry Virden
-  * `Tokeli@M*U*S*H`
+  * Tokeli@M`*`U`*`S`*`H
   * Alex Liebowitz (FW)
   * Many others mentioned in the [PastVersions Change log]
 
