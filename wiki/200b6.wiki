@@ -1,0 +1,26 @@
+=Version 2.0.0b6=
+==Released June 20 2010==
+
+  * Added /limit and /unlimit, for hiding text which doesn't match a particular pattern from the output window.
+  * Nearly all messages produced by Potato can now be translated. Requested by Stoko.
+  * Changed the default encoding for connections from ascii to iso8859-1.
+  * It's now possible to change the default encoding used for specific worlds, to allow connections to non-English games.
+  * The "Use UTF-8?" option has changed to a more general "Allow Encoding Negotiation?" option (though still works the same).
+  * Fixed bug that caused the window to flash, even when no new text was displayed. Reported by Null.
+  * Background colors are no longer shown highlighted, in line with the ANSI spec. Requested by Trinsec and Brazil.
+  * Small changes to default colors. Suggested by Trinsec.
+  * Bug in /grab fixed by Stoko.
+  * Fix bug in Custom /command window. Reported by Stoko.
+  * The "Input" option for Events was not saved correctly when set to "Focus".
+  * Bug in creating spawn windows fixed. Reported by Nathan Corbier.
+  * The Tab order became incorrect when the Spawn Toolbar was shown.
+  * Spawn windows can now be closed, by right-clicking their button on the Spawn toolbar. Reported by Nathan Corbier.
+  * The World toolbar now condenses the world name slightly for large numbers of connections. Based on suggestions from Bane, Mercutio and Kimiko Muffin.
+  * Pressing Return in an empty input window of a disconnected world now causes a reconnect. Suggested by Reaver.
+  * Added "Debug Packets" to the View menu, which shows output exactly as it's sent/received in a separate window. Needs expanding to use normal MUSH colors/fonts. Suggested by Paige.
+  * When you hover over a line of outputted text for a couple of seconds, a tooltip will pop up telling you when the message was received. Suggested by Nathan Corbier.
+  * Some stuff (like right-clicking a button on the World Toolbar and selecting Reconnect) didn't always work right, because it was checking the wrong world when seeing if a reconnect was allowed. Reported by Nathan Corbier.
+  * ANSI-inverse is now handled better, and in a way similar to other MUSH clients. Reported by Nammyung.
+  * Potato is now 100% FANSI-compatible (according to 8-bit MUSH's +setup for FANSI).
+  * Spawns now show when they have new activity. Suggested by Nathan Corbier.
+  * Added a new option to convert non-breaking spaces into regular spaces, as some fonts show nbsps as a different size to regular spaces.
