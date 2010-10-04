@@ -65,7 +65,7 @@
   * Technology Behind Potato
     * Tcl/Tk
     * Winico and Winflash
-  * [PastVersions Version Change History]
+  * Stuff
     * Version 2.0.0b6
     * Version 2.0.0b5
     * Version 2.0.0b4
