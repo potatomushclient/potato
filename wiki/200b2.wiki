@@ -1,0 +1,24 @@
+#summary Version 2.0.0b2
+=Version 2.0.0b2=
+
+  * You can now choose between having 1 or 2 input windows. Requested by Paige and Mercutio.
+  * ANSI Flashing could not be re-enabled after you'd turned it off. Found by Mercutio.
+  * When there are multiple URLs on a line, they all become hyperlinks now. URLs can also now include ':portNum', like 'http://potato.talvo.com:80'.
+  * When the background colour for a world was changed, the colour was only half updated unless you switched to another world and switched back.
+  * Changing the name of a world didn't update the Potato title bar if that world was currently being shown.
+  * You can now close the Font dialog (accepting any changes) by pressing Return.
+  * When you select an Event in the Events Config window, you now see a preview of it's settings before you choose to edit it.
+  * When a New Activity notice is shown, the previous ones can now be cleared. Requested by Sketch.
+  * Each world now has a Notes section for storing random information.
+  * On Windows, the icon in the system tray can now be hidden by right-clicking it, as well as through the Configuration Screen. Requested by Mercutio.
+  * Even if a Character Name was given for a world, connection info isn't sent. It is now, and you can also configure the way in which it's sent.
+  * New /all command. Suggested by Javelin.
+  * Right-clicking on a button the World Bar now pops up a menu, allowing you to reconnect, disconnect, or close the connection for that button without having to view the connection first. Requested by Mercutio.
+  * The Status Bar can now be hidden.
+  * Added internal representation of "Tasks". Most menu entries, toolbar buttons and many /commands now simply run a given task, rather than having large pieces of code associated with them. As well as keeping track of the code to be run, each Task also knows it's name, associated keyboard shortcut, and whether it's currently enabled or disabled, making it easier to update the accelerators in menus, etc, as required.
+  * Added more menu entries, so most things can be accessed via a menu.
+  * You can now customize the keyboard shortcuts for any Task.
+  * The Browser Command option was not properly displayed in the Configuration Window due to a typo.
+  * Remove the Console code, which didn't work and wasn't available anyway.
+  * Windows-specific code files are now removed from the Linux binary to reduce size.
+  * Windows binaries are now UPX'd to reduce file size.

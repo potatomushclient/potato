@@ -1,0 +1,26 @@
+#summary Version 2.0.0b4
+=Version 2.0.0b4=
+==Released June 01 2009==
+
+  * Custom /commands (of which /grab was the only one) were broken. Reported by Whiskey. You can now also set up your own custom /commands through the Options menu.
+  * On Linux, the "Flash Taskbar on Activity" option should actually work, now, like it does on Windows. Just download "linflash" from the website and extract it into `~/.potato/lib` before you open Potato. (Source included incase you need to compile it yourself for any reason.) Many thanks to the aMSN devs, who wrote the "linflash" library and were kind enough to let me use it too, and to Sketch who tested it for me.
+  * When you save the contents of a Text Editor, if you don't specify a file extension it now uses ".txt" by default on Windows. Requested by Jobrand.
+  * Too many mistakes to list in the Custom Keyboard Shortcuts code (hopefully all) fixed, from reports by Bryon Burgan.
+  * You can now tell Potato to connect automatically to certain worlds when the program starts, via the Auto Connects option in the File menu. Requested by Tulioz.
+  * The View->Spawns menu didn't work if you had a spawn window name beginning with an uppercase letter. Reported by AnneLions.
+  * Updated the appearance of the scrollbars, and a few other widgets, most noticable on non-Windows systems.
+  * The top input window didn't always stay the size you'd left it. Hopefully fixed, now. Reported by Jobrand.
+  * You can no longer use the 'Tab' key to move the focus to the toolbar buttons, they have to be clicked. This makes Tab much more useful for navigating the input/output windows. (If you want to run tasks using the keyboard, you can access them via the menus.)
+  * For each world, you can have 11 custom commands, which are sent to the MUSH with F2-F12. (Current users will need to set up these keyboard shortcuts in Options->Customize Keyboard Shortcuts, Run F`<`num`>` Command. It works now, honest!). Requested by Crimmy.
+  * Custom Keyboard Shortcuts did not work if the keyboard cursor/input focus was in the Output window, rather than an Input window. Now they do.
+  * You can now use the "Upload File" feature to upload code formatted with MPP (MUSHcode Pretty Printer). Potato will automatically unformat it as it uploads.
+  * Wrapping is no longer optional; Potato will now always wrap text at a set number of characters. If you previously had wrap turned off, just set it to wrap at however wide your window is. Fixes some complications and annoyances.
+  * Spawn Windows have been completely rewritten (again). Spawn windows can no longer be shared between connections (as several people had said this was no real use), which fixes several problems with them. Spawns are also no longer shown to the right of the main output window, which proved impractical - instead, to view the contents of a spawn window, click it's name on the new Spawns toolbar, or select it from the View->Spawns menu. (Select "Main Window" from View->Spawns, or click the world's button on the World toolbar again, to return to the main window.) Thanks to AnneLions, among others, for feedback on the old system's problems.
+  * The main output window for a world is now referred to as `_main`, rather than "main" in the `/log` command. Use `_none` (previously "none") to exclude buffered text. This should be less confusing, since spawn window names cannot start with underscores.
+  * We only set up fonts for worlds when we first connect, now, instead of setting up the font for every world in the address book on startup. This saves a small amount of memory.
+  * The World toolbar now uses better looking buttons. Also, instead of changing color, the buttons show a colored circle indicating world status (disconnected, new activity, currently being viewed).
+  * Some small bugs in world configuration fixed.
+  * Added support for connecting to games through a SOCKS4/4a proxy server. More proxy types to follow. Requested by Time and Mercutio.
+  * /see has been renamed to /print
+  * Added /show
+  * Updated the system tray icon on Windows to use the new Potato, rather than the old Bomb icon.

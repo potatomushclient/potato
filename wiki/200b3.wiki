@@ -1,0 +1,38 @@
+#summary Version 2.0.0b3
+=Version 2.0.0b3=
+==Released January 31st 2009==
+
+  * A bug in the Login Details code caused an error message on connection if you'd set a Character Name for a world. Reported by Trelane.
+  * You can now put Tcl code in a "potato.custom" file, which will be sourced when the program starts. On Windows, it should be in the same directory as the Potato executable. On other platforms, it should be in ~/.potato/ . A "potato.startup" file can be placed in the same location. The contents of this file will be sent, line by line, as if you'd typed it into the input window as soon as the program started.
+  * If a partial line had been received before disconnection, it was shown at the beginning of the first line received after a reconnect. Found by Mercutio.
+  * The "Connect To" menu was disabled when no worlds were defined, making it impossible to access the "Add New World" entry at the bottom. Reported by Sigc.
+  * The Input History window now uses Tile, and shows an ID number next to the command.
+  * You can now scroll the Input History in the Input Window using Control+Up and Control+Down. Pressing Escape clears the input history commands from the input window. Requested by Paige, Mercutio, Sigc and Bryon Burgan.
+  * When an Event places text in the second input window, Potato automatically reshows the window. Suggested by Paige.
+  * Added "Help" menu entry to launch the Potato website.
+  * Spawn Window names must now begin with a letter (but can still contain numbers, hyphens and underscores after that).
+  * If the /cls slash command is passed a number, it will attempt to delete the backscroll for the connection with that number. Requested by Paige.
+  * Right-clicking an Input Window displays a menu with "Copy", "Cut" and "Paste" options. Suggested by Paige.
+  * The Timers pane of the Configure World window now uses Tile.
+  * When you created a new world, the Global timers were mistakenly copied to it (so they ended up being run twice for that world).
+  * New /input slash command.
+  * Spawn Windows weren't working correctly. Reported by Colputt.
+  * Minor bug that caused the text selection background to bleed fixed. Reported by Paige.
+  * Control+Backspace now deletes the previous word. Suggested by Tulioz.
+  * Added internal code for customizable, user-defined /commands. (There is currently no way to define them from inside the program, however.) A default one, /grab, is included.
+  * You can now recall a previous command directly into the input window with /history. Requested by Paige.
+  * It's now possible to specify "the input window with focus", where one is given, with the number 3 (ie, "/input 3 Foo" places "Foo" in whichever input window has the focus).
+  * If connection failed because of invalid connection details (no host, port wasn't a number, etc), or because you weren't connected to the internet, rather than automatically disconnecting and auto-reconnecting, Potato would incorrectly give the "Do you wish to disconnect?" prompt.
+  * When you reopen Potato, the input windows come up at the same size they were when the program was last closed. Requested by Jobrand.
+  * Added a new "Send Mail" window, which allows you to type up an in-game mail and send it, in a variety of command formats.
+  * Added a "Tools" menu. The Input History is now accessed from here, and menu entries for the Mail Window and Text Editor have been added.
+  * When you add a new Event, it is now Enabled by default.
+  * If you add a new Event, but click Discard instead of Save, it's deleted.
+  * Pressing F1 in the Configure Global Settings window didn't bring up the correct helpfiles due to a typo.
+  * You can now Manage Worlds through a new option in the File menu, which also allows you to configure a world without having to be connected to it. It's also possible to sort worlds into Groups (requested by Paige).
+  * The Mail window now has an "Escape Special Characters" option, like the Text Editor window.
+  * The Mail and Text Editors now have Undo/Redo.
+  * You can now open a file into the Text Editor, and save it's contents back to a file. Requested by Jobrand.
+  * When you clicked an 'https://' link, it would mistakenly get changed to 'http://https//'.
+  * The "Search" option in the help files didn't work correctly.
+  * Some help file additions/improvements/updates. (They still suck, and there's still loads missing, but slightly less than before.)
