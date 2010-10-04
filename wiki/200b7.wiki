@@ -1,3 +1,4 @@
+#summary Version 2.0.0b7
 =Version 2.0.0b7=
 ==Released September 23 2010==
 
