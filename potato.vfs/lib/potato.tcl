@@ -2636,7 +2636,7 @@ proc ::potato::timerRun {c w timer} {
   variable conn;
   variable world;
 
-  if { ![info exists conn($c,timer,$timer-$w,count)] } {
+  if { ![info exists conn($c,timer,$timer-$w,count)] || !$world($w,timer,$timer,enabled) } {
        return;
      }
 
@@ -6576,15 +6576,18 @@ proc ::potato::configureWorldCommit {w win} {
   }
 
   # Generate list of timers
-  foreach x [array names world -regexp "^$w,timer,\[^,\]+,cmds\$"] {
-    if { ![info exists timers($x)] } {
+  set newTimers [list]
+  foreach x [array names world -regexp "^$w,timer,\[^,\]+,enabled\$"] {
+    scan $x $w,timer,%d,enabled timerId
+    if { ![info exists timers($x)] || !$timers($x) } {
          # cancel deleted timer
-         scan $x $w,timer,%d,cmds timerId
          timerCancel $w $timerId
+       } elseif { !$world($x) && $timers($x) } {
+         # Start re-enabled timer
+         lappend newTimers $timerId
        }
   }
   array unset world $w,timer,*
-  set newTimers [list]
   if { [info exists timersPos] } {
        foreach x [set timersPos [lsort -integer $timersPos]] {
          array set world [array get timers $w,timer,$x,*]
