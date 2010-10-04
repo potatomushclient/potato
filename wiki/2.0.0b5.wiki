@@ -1,0 +1,29 @@
+=Version 2.0.0b5=
+==Released December 6 2009==
+
+  * Closing the program with no worlds saved would raise an error.
+  * Added the first part of FANSI, support for 256 colors. Currently, the additional colors cannot be altered. (This may be removed later and provided as an additional package instead.)
+  * The website address, shown in the Helpfiles and used by the "Visit Website" help menu entry, hadn't been updated.
+  * Potato mistakently sent a newline after some Telnet subnegotiation commands. Found after reports from Kimiko Muffin and Brazil.
+  * When using Unicode/UTF-8 character encoding on MUX, Telnet commands were accidentally encoded as UTF-8, which stopped them working. Many thanks to Brazil for tracking down this issue.
+  * Removed some debugging statements left in from code changes in the previous version.
+  * Added a new debugging package which can be used for monitoring packets sent to/received from connections.
+  * You can now filter the Command History window with a wildcard pattern.
+  * It's now possible to Copy a world in the Manage Worlds window, to create a new world with all the same initial settings. Requested by Mercutio.
+  * Spawn windows weren't correctly destroyed when a connection was closed. Reported by Mercutio.
+  * Currently, if you're viewing a Spawn window, toggle to another connection, and toggle back, the spawn is still shown, instead of the main text widget. You can now change that with the "Toggle to Main Window" option (Options -> Configure Global Settings -> Program Settings -> Misc Settings). Requested by Mercutio.
+  * The number of Input Windows is now configurable per-world. Requested by Tulioz. Also, the "Show Two Input Windows?" option in the View menu only effects the current connection; to change the default for the world (which is used every time you connect to the world), you must edit the World Settings.
+  * Activity Settings (whether to flash the taskbar, display "New Activity" notices, etc) are now configurable per-world, rather than applying to the program as a whole. Requested by Mr L.
+  * Fixed some bugs in /cls.
+  * Old "Activity in <world>" notices are now deleted when a new one is inserted.
+  * Events now only recolour the portion of the received text which matched the event pattern. For instance, in the regexp "foo..r" and the string "This is a foobar", only the word "foobar" would be recoloured. (Use `^.*foo..r.*$` if you want the entire line recoloured.)
+  * The "beep" character, as returned by PennMUSH's beep() function, now causes Potato to play a sound, and is omitted from the display (but is used in matching events). The sound is not currently configurable, but may become so in the future. Requested by Paige.
+  * /cls with no argument now clears the backlog of the current connection's main window, instead of doing nothing. Requested by Paige.
+  * Worlds can now have two separate addresses defined; if connection to the first fails, Potato will try to connect to the second immediately. If that fails, the normal auto-reconnect behaviour occurs as before. Useful for keeping the domain and IP address of the game. Requested by Paige.
+  * The scrollbar in the "Configure World" dialog would sometimes be the wrong size to scroll the window.
+  * Timers had become completely broken, due to a stupid typo in the last version. Reported by Reaver.
+  * "Configure Global Settings" in the Options menu has been renamed to "Configure Program Settings", a more accurate description of what it does.
+  * Searching the output window backwards from the Find dialog did not work correctly.
+  * World Groups in the Manage Worlds window were not deleted properly. Reported by Mercutio.
+  * You can now minimize Potato to the System Tray on Windows. Suggested by Nobudy.
+  * Potato is now built against Tcl/Tk 8.5.7.

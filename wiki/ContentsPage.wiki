@@ -14,8 +14,16 @@
     * Configuring Potato
     * Events
     * Macros
-    * 
+  * Potato's Menus
+    * File Menu
+    * Edit Menu
+    * View Menu
+    * Logging Menu
+    * Options Menu
+    * Tools Menu
+    * Help Menu
   * [PastVersions Version Change History]
+    * [2.0.0b8 Version 2.0.0b8]
     * [2.0.0b7 Version 2.0.0b7]
     * [2.0.0b6 Version 2.0.0b6]
     * [2.0.0b5 Version 2.0.0b5]
@@ -28,7 +36,6 @@
     * [2.0.0a13 Version 2.0.0a13]
     * [2.0.0a12 Version 2.0.0a12]
     * [2.0.0a11 Version 2.0.0a11]
-    
 ----
   * Adding and Configuring Worlds
     * Basic Settings
