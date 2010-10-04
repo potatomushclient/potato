@@ -45,12 +45,12 @@ proc ::wikihelp::help {{topic ""}} {
   $path(pane) add [set right [::ttk::frame $path(pane).right -relief ridge -borderwidth 2]]
 
   set tree [::ttk::treeview $left.tree -padding [list 0 0 0 0] -selectmode browse -yscrollcommand [list $left.sb set] -show [list tree]]
-  $tree tag configure link -foreground blue -font [list {*}[font actual [ttk::style lookup Treeview -font]] -underline 1]
-  $tree tag configure badlink -foreground red
+  bind $tree <MouseWheel> "[bind Treeview <MouseWheel>];break"
+  $tree tag configure link -foreground blue
+  $tree tag configure badlink
   $tree tag configure wikilink;# used for internal links
   $tree tag configure weblink;# used for external links
   $tree tag bind wikilink <1> [list ::wikihelp::clickTopic %W %x %y]
-  $tree tag bind wikilink <3> {puts FOOO}
   set treeSB [::ttk::scrollbar $left.sb -orient vertical -command [list $tree yview]]
   grid $tree $treeSB -sticky nsew
   grid rowconfigure $left $tree -weight 1
@@ -60,6 +60,16 @@ proc ::wikihelp::help {{topic ""}} {
                              -yscrollcommand [list $right.sbY set] \
                              -xscrollcommand [list $right.sbX set] \
                              -state disabled]
+  set margin1 10
+  set margin2 [expr {[font measure TkDefaultFont -displayof $text "  \u2022  "] + $margin1}]
+  $text tag configure margins -lmargin1 $margin1 -lmargin2 $margin2
+  set listIndent [font measure TkDefaultFont -displayof $text "  \u2022  "]
+  incr listIndent 5
+  for {set i 0} {$i < 5} {incr i} {
+      $text tag configure "marginList[expr {$i+1}]" \
+           -lmargin1 [expr {$margin1 + ($listIndent*$i)}] \
+           -lmargin2 [expr {$margin2 + ($listIndent*$i)}]
+  }
   $text tag configure bold -font [list {*}[font actual TkDefaultFont] -weight bold]
   $text tag configure bolditalic -font [list {*}[font actual TkDefaultFont] -weight bold -slant italic]
   $text tag configure italic -font [list {*}[font actual TkDefaultFont] -slant italic]
@@ -162,10 +172,13 @@ proc ::wikihelp::showTopic {topic} {
   $path(text) insert end {*}[parse [read $fid]]
   $path(text) configure -state disabled
 
-  if { [$path(tree) exists $topic] } {
-       $path(tree) see $topic
-       $path(tree) selection set $topic
-       $path(tree) focus $topic
+  # Show the topic in the tree
+  set curr [lindex [$path(tree) selection] 0]
+  if { [info exists index(list,$topic)] && ($curr eq "" || $curr ni $index(list,$topic)) } {
+       set new [lindex $index(list,$topic) 0]
+       $path(tree) see $new
+       $path(tree) selection set $new
+       $path(tree) focus $new
      }
 
   return 1;
@@ -187,7 +200,9 @@ proc ::wikihelp::parse {input} {
   set values [list]
   set input [string map [list \r\n \n \r \n] $input]
   set buffer ""
+
   foreach line [split $input "\n"] {
+     set marginTag "margins"
      if { !$multinoparse && [string equal $line "\{\{\{"] } {
           set multinoparse 0
           continue;
@@ -196,18 +211,36 @@ proc ::wikihelp::parse {input} {
           continue;
         } elseif { $multinoparse } {
           # Don't parse this line
-          lappend values "$line\n" [parseTags [list] $bold $italic]
+          lappend values "$line\n" [parseTags [list $marginTag] $bold $italic]
           continue;
         } elseif { [regexp {^#(summary|labels|sidebar)} $line] } {
           continue;
         } elseif { [regexp {^.*----+.*$} $line] } {
           # Horizontal rule
-          lappend values "" hr "\n" ""
+          lappend values "---------------" hr "\n" ""
           continue;
         } elseif { [regexp {^( {2,})([*#]) *(.+)$} $line -> newlistdepth newlisttype rest] } {
           # List
-          #abc
-          lappend values "$newlistdepth $newlisttype " ""
+          #abc set marginTag to list-depth tag with extra indents, insert better list chars, etc
+          set newlistdepth [expr { [string length $newlistdepth] / 2}]
+          if { ![info exists list($newlistdepth,type)] || $list($newlistdepth,type) ne $newlisttype } {
+               set list($newlistdepth,type) $newlisttype
+               if { $newlisttype eq "#" } {
+                    set list($newlistdepth,count) 0
+
+                  }
+             }
+          if { $list($newlistdepth,type) eq "#" } {
+               set listchar [incr $list($newlistdepth,count)]
+             } else {
+               set listchar \u2022
+             }
+          if { $newlistdepth > 5 } {
+               set marginTag "marginList5"
+             } else {
+               set marginTag "marginList$newlistdepth"
+             }
+          lappend values "  $listchar  " [list $marginTag]
           set line $rest
         } else {
         }
@@ -225,7 +258,7 @@ proc ::wikihelp::parse {input} {
                  append buffer $easy
                } else {
                  # insert everything up to our special char
-                 lappend values $easy [parseTags [list] $bold $italic]
+                 lappend values $easy [parseTags [list $marginTag] $bold $italic]
                }
           }
        if { $char eq "" } {
@@ -238,7 +271,7 @@ proc ::wikihelp::parse {input} {
           \[ {set linkparse 1}
           \] {set linkparse 0
               set link [parseLink $buffer]
-              lappend values [lindex $link 1] [parseTags [lindex $link 2] $bold $italic]
+              lappend values [lindex $link 1] [parseTags [list $marginTag [lindex $link 2]] $bold $italic]
               set buffer ""
              }
            = {if { [string length $buffer] } {
@@ -249,7 +282,7 @@ proc ::wikihelp::parse {input} {
                    incr headerparse -1
                    if { !$headerparse } {
                         # Finished the close
-                        lappend values [string trim $buffer] [parseTags [list header$headersize] $bold $italic]
+                        lappend values [string trim $buffer] [parseTags [list $marginTag header$headersize] $bold $italic]
                         unset headersize
                         set buffer ""
                       }
@@ -268,7 +301,7 @@ proc ::wikihelp::parse {input} {
                set headerparse 3
              }
           if { [string length $buffer] } {
-               lappend values [string trim $buffer] [parseTags [list header$headerparse] $bold $italic]
+               lappend values [string trim $buffer] [parseTags [list $marginTag header$headerparse] $bold $italic]
              }
           set headerparse 0
           set buffer ""
@@ -350,7 +383,9 @@ proc ::wikihelp::populateTOC {} {
   variable index;
 
   set tree $path(tree)
+
   $tree delete [$tree children {}]
+  array unset index list,*
 
   # If possible, we'll use the designated Table of Contents file.
   if { [info exists info(TOC)] && [file exists [set file [file join $::potato::path(help) $info(TOC).wiki]]] && [file readable $file] } {
@@ -411,6 +446,7 @@ proc ::wikihelp::populateTOC {} {
                     set tags [list badlink]
                   }
               set last [$tree insert $parent end -text $summary -tags $tags]
+              lappend index(list,$file) $last
             }
             close $fid
             return;
@@ -420,7 +456,8 @@ proc ::wikihelp::populateTOC {} {
   
   # If we get here, we can't find the TOC file, so we'll just list every page we have.
   foreach x [lsort -dictionary [array names index filename,]] {
-    $tree insert {} end -text $index($x) -tags [list link "linkTo:[string range $x 9 end]"]
+    set last [$tree insert {} end -text $index($x) -tags [list link "linkTo:[string range $x 9 end]"]]
+    lappend index(list,[string range $x 9 end]) $last
   }
 
   return;
