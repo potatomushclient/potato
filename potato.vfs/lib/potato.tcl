@@ -3240,6 +3240,10 @@ proc ::potato::handleAnsiCodes {c codes} {
             set which bg
           }
        set num [lindex $codes 2]
+       if { ![string is integer -strict $num] || $num < 0 || $num > 255 } {
+            # Invalid FANSI color
+            return;
+          }            
        if { $num < 17 } {
             set color [lindex [list x r g y b m c w xh rh gh yh bh mh ch wh] $num]
           } else {
