@@ -73,6 +73,10 @@ proc ::wikihelp::help {{topic ""}} {
   $text tag configure bold -font [list {*}[font actual TkDefaultFont] -weight bold]
   $text tag configure bolditalic -font [list {*}[font actual TkDefaultFont] -weight bold -slant italic]
   $text tag configure italic -font [list {*}[font actual TkDefaultFont] -slant italic]
+  $text tag configure noparse -font TkFixedFont
+  $text tag configure noparsebold -font [list {*}[font actual TkFixedFont] -weight bold]
+  $text tag configure noparseitalic -font [list {*}[font actual TkFixedFont] -slant italic]
+  $text tag configure noparsebolditalic -font [list {*}[font actual TkFixedFont] -weight bold -slant italic]
   $text tag configure header1 -font [list {*}[font actual TkDefaultFont] -size 22]
   $text tag configure header2 -font [list {*}[font actual TkDefaultFont] -size 18]
   $text tag configure header3 -font [list {*}[font actual TkDefaultFont] -size 15]
@@ -212,7 +216,7 @@ proc ::wikihelp::parse {input} {
           continue;
         } elseif { $multinoparse } {
           # Don't parse this line
-          lappend values "$line\n" [parseTags [list $marginTag] $bold $italic]
+          lappend values "$line\n" [parseTags [list $marginTag] $bold $italic 1]
           continue;
         } elseif { [regexp {^#(summary|labels|sidebar)} $line] } {
           continue;
@@ -237,7 +241,7 @@ proc ::wikihelp::parse {input} {
                set listchar \u2022
              }
           if { $newlistdepth > 5 } {
-               set marginTag "marginList5"
+               set marginTag "marginList5" # We only have indent tags configured up to marginList5.
              } else {
                set marginTag "marginList$newlistdepth"
              }
@@ -259,7 +263,7 @@ proc ::wikihelp::parse {input} {
                  append buffer $easy
                } else {
                  # insert everything up to our special char
-                 lappend values $easy [parseTags [list $marginTag] $bold $italic]
+                 lappend values $easy [parseTags [list $marginTag] $bold $italic $noparse]
                }
           }
        if { $char eq "" } {
@@ -272,7 +276,7 @@ proc ::wikihelp::parse {input} {
           \[ {set linkparse 1}
           \] {set linkparse 0
               set link [parseLink $buffer]
-              lappend values [lindex $link 1] [parseTags [list $marginTag [lindex $link 2]] $bold $italic]
+              lappend values [lindex $link 1] [parseTags [concat $marginTag [lindex $link 2]] $bold $italic $noparse]
               set buffer ""
              }
            = {if { [string length $buffer] } {
@@ -283,7 +287,7 @@ proc ::wikihelp::parse {input} {
                    incr headerparse -1
                    if { !$headerparse } {
                         # Finished the close
-                        lappend values [string trim $buffer] [parseTags [list $marginTag header$headersize] $bold $italic]
+                        lappend values [string trim $buffer] [parseTags [list $marginTag header$headersize] $bold $italic $noparse]
                         unset headersize
                         set buffer ""
                       }
@@ -302,7 +306,7 @@ proc ::wikihelp::parse {input} {
                set headerparse 3
              }
           if { [string length $buffer] } {
-               lappend values [string trim $buffer] [parseTags [list $marginTag header$headerparse] $bold $italic]
+               lappend values [string trim $buffer] [parseTags [list $marginTag header$headerparse] $bold $italic $noparse]
              }
           set headerparse 0
           set buffer ""
@@ -362,11 +366,12 @@ proc ::wikihelp::parseLink {str} {
 #: arg tags Starting tags
 #: arg bold Should we bold?
 #: arg italics Should we italicize?
-#: desc Append "bolditalic", "bold" or "italic" tags, if appropriate, to $tags, and return result
+#: arg noparse Display fixed-width?
+#: desc Append "bolditalic", "bold" or "italic" tags, and/or "noparse", if appropriate, to $tags, and return result
 #: return New list of tags
-proc ::wikihelp::parseTags {tags bold italic} {
+proc ::wikihelp::parseTags {tags bold italic noparse} {
 
-  set str "[lindex [list "" "bold"] $bold][lindex [list "" "italic"] $italic]"
+  set str "[lindex [list "" "noparse"] $noparse][lindex [list "" "bold"] $bold][lindex [list "" "italic"] $italic]"
   if { $str ne "" } {
        lappend tags $str
      }
