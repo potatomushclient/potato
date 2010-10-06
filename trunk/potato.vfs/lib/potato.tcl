@@ -2559,6 +2559,10 @@ proc ::potato::connectVerifyComplete {c} {
   fileevent $id readable [list ::potato::get_mushage $c]
   timersStart $c
   skinStatus $c
+  if { [hasProtocol $c ssl] } {
+       puts $id ""; # SSL connections seem to hang, so we send a newline and flush
+       flush $id
+     }
   sendLoginInfo $c
 
   return;
@@ -12216,7 +12220,11 @@ proc ::potato::rebuildConnectMenuSub {w name m} {
 
   if { [llength $world($w,charList)] } {
        $m add cascade -label $name -menu [set sub [menu $m.$w -tearoff 0]]
-       $sub add command {*}[menu_label [T "&Default Character"]] -command [list ::potato::newConnectionDefault $w]
+       set def $world($w,charDefault)
+       if { $def eq "" } {
+            set def "None"
+          }
+       $sub add command {*}[menu_label [T "&Default Character (%s)" $def]] -command [list ::potato::newConnectionDefault $w]
        $sub add command {*}[menu_label [T "&No Character"]] -command [list ::potato::newConnection $w]
        $sub add separator
        foreach x $world($w,charList) {
