@@ -2602,7 +2602,8 @@ proc ::potato::sendLoginInfoSub {c} {
        ![catch {format $world($w,loginStr) [lindex $charinfo 0] [lindex $charinfo 1]} str] } {
        # At some point, we may want to print a message if the [format] fails, to let the user know
        # it's incorrect and needs fixing. #abc
-       send_to_real $c $str
+       send_to_real $c $str [format $world($w,loginStr) [lindex $charinfo 0] \
+                                 [string repeat \u25cf [string length [lindex $charinfo 1]]]]
      }
   if { [string length $world($w,autosend,login)] } {
        send_to $c $world($w,autosend,login) "\n" 0
@@ -9802,9 +9803,10 @@ proc ::potato::send_to_sub {c string {prefix ""}} {
 #: proc ::potato::send_to_real
 #: arg c connection id
 #: arg string string to send
+#: arg echostr If not "", use this string for output echo instead of $string. Meant for strings containing passwords. Defaults to "".
 #: desc send the string $string to connection $c, after protocol escaping. Do not parse for /commands.
 #: return nothing
-proc ::potato::send_to_real {c string} {
+proc ::potato::send_to_real {c string {echostr ""}} {
   variable conn;
   variable world;
 
@@ -9818,7 +9820,11 @@ proc ::potato::send_to_real {c string} {
 
   sendRaw $c $string 0
   if { $world($conn($c,world),echo) } {
-       outputSystem $c $string [list "echo"]
+       if { $echostr eq "" } {
+            outputSystem $c $string [list "echo"]
+          } else {
+            outputSystem $c $echostr [list "echo"]
+          }
      }
 
   return;
