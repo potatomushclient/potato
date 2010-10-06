@@ -2226,7 +2226,7 @@ proc ::potato::connZero {} {
           if { [string trim $world($w,description)] ne "" } {
                $t insert end " - $world($w,description)" [list margins]
              }
-          $t tag bind connect_$w <ButtonRelease-1> [list potato::newConnection $w]
+          $t tag bind connect_$w <ButtonRelease-1> [list potato::newConnectionDefault $w]
        }
        $t insert end "\n\n"
        $t insert end [T "Alternatively, you can use the "]
@@ -11569,7 +11569,7 @@ proc ::potato::slash_cmd_connect {c full str} {
 
   set partial [lsort -dictionary $partial]
   if { [info exists exact] } {
-       newConnection $exact
+       newConnectionDefault $exact
        return;
      } elseif { [llength $partial] == 0 } {
        if { $c != 0 } {
@@ -11577,7 +11577,7 @@ proc ::potato::slash_cmd_connect {c full str} {
           }
        return;
      } elseif { [llength $partial] == 1 || $misc(partialWorldMatch) } {
-       newConnection [lindex $partial 0]
+       newConnectionDefault [lindex $partial 0]
        return;
      } else {
        if { $c != 0 } {
@@ -11900,7 +11900,7 @@ proc ::potato::handleOutsideRequest {src addr {isWorld 0}} {
        # Do a quick-connect
        newConnection [addNewWorld $host:$port $host $port 1]
      } else {
-       newConnection $conn2World
+       newConnectionDefault $conn2World
      }
 
   return;
