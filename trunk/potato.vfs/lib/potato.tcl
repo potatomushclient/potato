@@ -12191,7 +12191,7 @@ proc ::potato::rebuildConnectMenu {m} {
        set sep 1
        foreach x [lsort -dictionary -index 1 $noGroups] {
           foreach {w name} $x {break}
-          rebuildConnectMenuSub $w $name $sub
+          rebuildConnectMenuSub $w $name $m
        }
      }
 
