@@ -54,8 +54,8 @@ proc ::potato::setPrefs {readfile} {
   set world(-1,host2) ""
   set world(-1,port2) "4201"
   set world(-1,ssl2) 0
-  set world(-1,charName) ""
-  set world(-1,charPass) ""
+  set world(-1,charList) [list]
+  set world(-1,charDefault) ""
   set world(-1,description) ""
   set world(-1,loginStr) {connect %s %s}
   set world(-1,loginDelay) 1.5
@@ -357,10 +357,29 @@ proc ::potato::manageWorldVersion {w version} {
           }
      }
 
-  if { ($version & $wf(obfusticated_pw)) && [info exists world($w,charPass)] } {
-       # Un-obfusticate the password, for actual use. It will be re-obfusticated on save.
-       set world($w,charPass) [obfusticate $world($w,charPass) 0]
+  if { ! ($version & $wf(many_chars)) } {
+       set world($w,charList) [list]
+       if { [info exists world($w,charName)] && $world($w,charName) ne "" } {
+            !set world($w,charPass) ""
+            lappend world($w,charList) [list $world($w,charName) $world($w,charPass)]
+          }
+       unset -nocomplain world($w,charName) world($w,charPass)
+    }
+
+
+  ### Somewhat separate from the above
+  if { ($version & $wf(obfusticated_pw)) && [llength $world($w,charList)] } {
+       # Un-obfusticate the passwords, for actual use. It will be re-obfusticated on save.
+       # NOTE: By the time we get here, we always have many_chars
+       set newCharList [list]
+       foreach x $world($w,charList) {
+         set char [lindex $x 0]
+         set pw [lindex $x 1]
+         lappend newCharList [list $char [obfusticate $pw 0]]
+       }
+       set world($w,charList) $newCharList
      }
+
 
   # Example:
   # if { ! ($version & $wf(some_new_feature)) } {
@@ -462,9 +481,14 @@ proc ::potato::saveWorlds {} {
              continue;
            }
         set value $world($w,$opt)
-        if { $opt eq "charPass" } {
+        if { $opt eq "charList" && [llength $world($w,$opt)] } {
              # Obfusticate!
-             set value [obfusticate $value 1]
+             set value [list]
+             foreach x $world($w,$opt) {
+               set char [lindex $x 0]
+               set pw [lindex $x 1]
+               lappend value [list $char [obfusticate $pw 1]]
+             }
            }             
         puts $fid [list set newWorld($opt) $value]
      }
@@ -504,6 +528,7 @@ proc ::potato::worldFlags {{total 0}} {
   set f(verbose_mu_type)     2    ;# Uses "MUD" and "MUSH" (not 0 and 1) for world($w,type)
   set f(new_encoding)        4    ;# Has the new $w,encoding,* options in place of $w,unicode
   set f(obfusticated_pw)     8    ;# Passwords are obfusticated
+  set f(many_chars)         16    ;# World has multiple characters in $world($w,charList) as [list [list name pw] [list name pw]], not $world($w,charName) and $world($w,charPass)
 
   if { !$total } {
        return [array get f];
@@ -1694,11 +1719,29 @@ proc ::potato::selectFile {var win save} {
 
 };# ::potato::selectFile
 
+#: proc ::potato::newConnectionDefault
+#: arg w world id
+#: desc Wrapper for [::potato::newConnection $w <defaultChar>]
+#: return nothing
+proc ::potato::newConnectionDefault {w} {
+  variable world;
+
+  if { [info exists world($w,charDefault)] } {
+       newConnection $w $world($w,charDefault)
+     } else {
+       newConnection $w
+     }
+
+  return;
+
+};# ::potato::newConnectionDefault
+
 #: proc ::potato::newConnection
 #: arg w the id of the world to connect to
+#: arg character The name of the character in world $w's char list to connect to
 #: desc do the basics of opening a new connection to a world, tell the current skin to set things up, then try and connect
 #: return nothing
-proc ::potato::newConnection {w} {
+proc ::potato::newConnection {w {character ""}} {
   variable potato;
   variable conn;
   variable world;
@@ -1749,6 +1792,7 @@ proc ::potato::newConnection {w} {
   set inputSwap($conn($c,input2),conn) $c
 
   set conn($c,world) $w
+  set conn($c,char) $character
   set conn($c,id) "" ;# we hope this doesn't break anything.
   set conn($c,protocols) [list]
   set conn($c,idle) 0
@@ -2549,8 +2593,9 @@ proc ::potato::sendLoginInfoSub {c} {
        send_to $c $world($w,autosend,connect) "\n" 0
      }
   # Don't check for pw being blank, as some games allow empty passwords
-  if { [string length $world($w,charName)] && \
-       ![catch {format $world($w,loginStr) $world($w,charName) $world($w,charPass)} str] } {
+  if { [string length $conn($c,char)] && \
+       [llength [set charinfo [lsearch -inline -index 0 $world($w,charList) $conn($c,char)]]] &&
+       ![catch {format $world($w,loginStr) [lindex $charinfo 0] [lindex $charinfo 1]} str] } {
        # At some point, we may want to print a message if the [format] fails, to let the user know
        # it's incorrect and needs fixing. #abc
        send_to_real $c $str
@@ -4385,7 +4430,7 @@ proc ::potato::manageWorldsUpdateWorlds {{keepSel 1}} {
          ( $sel eq "INT:Ungrouped" && [llength $world($w,groups)] == 0) || \
          ( $sel eq "INT:Temp" && $world($w,temp) ) || \
          [lindex $sel 0] in $world($w,groups) } {
-         lappend worlds [list $world($w,name) "$world($w,host):$world($w,port)" $world($w,charName) $w]
+         lappend worlds [list $world($w,name) "$world($w,host):$world($w,port)" $world($w,charDefault) $w]
        }
   }
   set worlds [lsort -dictionary -index 0 $worlds]
@@ -4648,7 +4693,7 @@ proc ::potato::macroWindow {{w ""}} {
   set tframe [::ttk::frame $left.tframe]
   set tree [::ttk::treeview $tframe.tree -show [list headings] -columns [list Name Commands] \
                -yscrollcommand [list $tframe.y set] \
-               -xscrollcommand [list $tframe.x set]]
+               -xscrollcommand [list $tframe.x set] -selectmode browse]
   set x [::ttk::scrollbar $tframe.x -orient horizontal -command [list $tree xview]]
   set y [::ttk::scrollbar $tframe.y -orient vertical -command [list $tree xview]]
   grid_with_scrollbars $tree $x $y
@@ -4808,7 +4853,6 @@ proc ::potato::macroWindowPopulate {w {sel ""}} {
      }
   if { $sel eq "" } {
        macroWindowState $w 0
-puts "Setting state to 0, sel is $sel for [$tree children {}]"
      } else {
        $tree selection set $sel
        $tree focus $sel
@@ -5509,7 +5553,8 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [::ttk::panedwindow $inner.top -orient horizontal] -side top -expand 1 -fill both -padx 3 -pady 3
   $inner.top add [::ttk::frame $inner.top.left]
   set tree [::ttk::treeview $inner.top.left.tree -yscrollcommand [list $inner.top.left.sby set] \
-             -xscrollcommand [list $inner.top.left.sbx set] -show tree]
+             -xscrollcommand [list $inner.top.left.sbx set] -show tree -selectmode browse]
+  set OPTIONTREE $tree
   ::ttk::scrollbar $inner.top.left.sby -orient vertical -command [list $inner.top.left.tree yview]
   ::ttk::scrollbar $inner.top.left.sbx -orient horizontal -command [list $inner.top.left.tree xview]
   grid_with_scrollbars $inner.top.left.tree $inner.top.left.sbx $inner.top.left.sby
@@ -5569,20 +5614,21 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
 
   pack [::ttk::separator $frame.sep1 -orient horizontal] -fill x -padx 20 -pady 5
 
-  pack [set sub [::ttk::frame $frame.charname]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text [T "Character Name:"] -width 17 -justify left -anchor w] -side left -padx 3
-  pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,charName) -width 50] -side left -padx 3
+  #pack [set sub [::ttk::frame $frame.charname]] -side top -pady 5 -anchor nw
+  #pack [::ttk::label $sub.label -text [T "Character Name:"] -width 17 -justify left -anchor w] -side left -padx 3
+  #pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,charName) -width 50] -side left -padx 3
 
-  pack [set sub [::ttk::frame $frame.charpass]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text [T "Character Password:"] -width 17 -justify left -anchor w] -side left -padx 3
-  pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,charPass) -width 50 ] -side left -padx 3
-  #abc This if{} commented out to avoid an unknown MacOS crash bug.
-  #if { [string equal [font actual [$sub.entry cget -font]] [font actual [$sub.entry cget -font] \u25cf]] } {
-  #     $sub.entry configure -show \u25cf
-  #   } else {
-  #     $sub.entry configure -show *
-  #   }
-  $sub.entry configure -show \u25cf
+  if { $w != -1 } {
+       pack [set sub [::ttk::frame $frame.charDefault]] -side top -pady 5 -anchor nw
+       pack [::ttk::label $sub.label -text [T "Default Char:"] -width 17 -justify left -anchor w] -side left -padx 3
+       pack [::ttk::combobox $sub.cb -textvariable ::potato::worldconfig($w,charDefault) \
+                  -postcommand [list ::potato::configureWorldCharsLBUpdate $w $sub.cb] \
+                  -width 20 -state readonly] -side left -padx 3
+       if { $worldconfig($w,charDefault) eq "" } {
+            set worldconfig($w,charDefault) "No Default Character"
+          }
+     }
+
   pack [set sub [::ttk::frame $frame.desc]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "Description:"] -width 17 -justify left -anchor w] -side left -padx 3
   pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,desc) -width 50] -side left -padx 3
@@ -5609,6 +5655,63 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [::ttk::label $sub.label -text [T "MU* Type:"] -width 17 -justify left -anchor w] -side left -padx 3
   pack [::ttk::combobox $sub.cb -textvariable ::potato::worldconfig($w,type) \
              -values [list Auto MUD MUSH] -width 20 -state readonly] -side left -padx 3
+
+  if { $w != -1 } {
+       # Character page
+       set frame [configureFrame $canvas [T "Characters"]]
+       set confChar [lindex $frame 0]
+       set frame [lindex $frame 1]
+
+       pack [set sub [::ttk::frame $frame.tree]] -anchor nw -expand 1 -fill x
+       set tree [ttk::treeview $sub.tree -show {} -selectmode browse -columns [list "Characters"] \
+                     -xscrollcommand [list $sub.x set] \
+                     -yscrollcommand [list $sub.y set] -height 5]
+       $sub.tree column Characters -width 200
+       ttk::scrollbar $sub.x -orient horizontal -command [list $sub.tree xview]
+       ttk::scrollbar $sub.y -orient vertical -command [list $sub.tree yview]
+       grid_with_scrollbars $sub.tree $sub.x $sub.y
+
+       pack [set sub [::ttk::frame $frame.edit]] -anchor nw -expand 1 -fill x -pady 7
+
+       ::ttk::label $sub.charL -text [T "Character:"]
+       set char [::ttk::entry $sub.charE -width 30]
+
+       ::ttk::label $sub.pwL -text [T "Password:"]
+       set pw [::ttk::entry $sub.pwE -width 30 -show \u25cf]
+
+
+       set save [::ttk::button $sub.save -text [T "Save"] -command [list ::potato::configureWorldCharsFinish $w 1]]
+       set cancel [::ttk::button $sub.cancel -text [T "Cancel"] -command [list ::potato::configureWorldCharsFinish $w 0]]
+
+       grid $sub.charL $sub.charE $save
+       grid $sub.pwL $sub.pwE $cancel
+       grid columnconfigure $sub $sub.charE -weight 1 -uniform entry
+       grid columnconfigure $sub $sub.pwE -weight 1 -uniform entry
+       grid columnconfigure $sub $sub.charL -uniform label
+       grid columnconfigure $sub $sub.pwL -uniform label
+       grid columnconfigure $sub $sub.save -uniform button
+       grid columnconfigure $sub $sub.cancel -uniform button
+       grid configure $sub.charE $sub.pwE -sticky ew -padx 6 -pady 6
+       grid configure $sub.save $sub.cancel -sticky ew -padx 10
+
+       pack [set sub [::ttk::frame $frame.btns]] -anchor n -expand 0 -fill none -pady 7
+       set add [::ttk::button $sub.add -text [T "Add Character"] -command [list ::potato::configureWorldCharsAddEdit $w 1]]
+       set edit [::ttk::button $sub.edit -text [T "Edit Character"] -command [list ::potato::configureWorldCharsAddEdit $w 0]]
+       set del [::ttk::button $sub.del -text [T "Delete Character"] -command [list ::potato::configureWorldCharsDelete $w]]
+       grid $sub.add $sub.edit $sub.del -padx 6
+
+       set worldconfig($w,CONFIG,chars,saveBtn) $save
+       set worldconfig($w,CONFIG,chars,cancelBtn) $cancel
+       set worldconfig($w,CONFIG,chars,tree) $tree
+       set worldconfig($w,CONFIG,chars,addBtn) $add
+       set worldconfig($w,CONFIG,chars,delBtn) $del
+       set worldconfig($w,CONFIG,chars,editBtn) $edit
+       set worldconfig($w,CONFIG,chars,charEntry) $char
+       set worldconfig($w,CONFIG,chars,pwEntry) $pw
+
+       configureWorldCharsPropagate $w ""
+     }
+
 
   # Connection page
   set frame [configureFrame $canvas [T "Connection Settings"]]
@@ -6039,7 +6142,7 @@ $sub.cb state disabled
           }
      }
 
-
+  set tree $OPTIONTREE
   if { $w == -1 } {
        set root [$tree insert {} end -text [T "Default World Settings"]]
      } else {
@@ -6047,6 +6150,9 @@ $sub.cb state disabled
      }
 
   set treeBasics [$tree insert $root end -text [T "Basics"] -tags $confBasics]
+  if { $w != -1 } {
+       set treeChar [$tree insert $root end -text [T "Characters"] -tags $confChar]
+     }
   set treeConn [$tree insert $root end -text [T "Connection"] -tags $confConn]
   set treeConnTelnet [$tree insert $treeConn end -text [T "Telnet Options"] -tags $confConnTelnet]
   set treeDisplay [$tree insert $root end -text [T "Display"]]
@@ -6107,6 +6213,218 @@ $sub.cb state disabled
   return;
 
 };# ::potato::configureWorld
+
+interp alias {} !! {} ::potato::configureWorld 19
+
+#: proc ::potato::configureWorldCharsLBUpdate
+#: arg w world id
+#: arg widget Widget path
+#: desc Configure the -values of the Default Char combobox.
+#: return nothing
+proc ::potato::configureWorldCharsLBUpdate {w widget} {
+  variable worldconfig;
+
+  set list [list "No Default Character"]
+  foreach x $worldconfig($w,charList) {
+    lappend list [lindex $x 0]
+  }
+
+  $widget configure -values $list;
+
+};# ::potato::configureWorldCharsLBUpdate
+
+#: proc ::potato::configureWorldCharsDelete
+#: arg w world id
+#: desc Delete the selected char from world $w's Char config list
+#: return nothing
+proc ::potato::configureWorldCharsDelete {w} {
+  variable worldconfig;
+
+  set tree $worldconfig($w,CONFIG,chars,tree)
+  set sel [lindex [$tree selection] 0]
+  if { $sel eq "" } {
+       return;
+     }
+  set id [lsearch -index 0 $worldconfig($w,charList) $sel]
+  if { $id == -1 } {
+       return;
+     }
+  set worldconfig($w,charList) [lreplace $worldconfig($w,charList) $id $id]
+  if { $worldconfig($w,charDefault) eq $sel } {
+       set worldconfig($w,charDefault) "No Default Character"
+     }
+
+  configureWorldCharsPropagate $w
+
+  return;
+
+
+};# ::potato::configureWorldCharsDelete
+
+#: proc ::potato::configureWorldCharsFinish
+#: arg w world id
+#: arg save Should we save (1) or just cancel (0)
+#: desc Possibly save the currently added/edited char in world $w's Char Config screen, then reset the widget states for browsing
+#: return nothing
+proc ::potato::configureWorldCharsFinish {w save} {
+  variable worldconfig;
+
+  set charEntry $worldconfig($w,CONFIG,chars,charEntry)
+  set pwEntry $worldconfig($w,CONFIG,chars,pwEntry)
+
+  if { $worldconfig($w,CONFIG,chars,editing) eq "" } {
+       set old -1
+     } else {
+       set old [lsearch -index 0 $worldconfig($w,charList) $worldconfig($w,CONFIG,chars,editing)]
+     }
+  if { $save } {
+       set newChar [$charEntry get]
+       set newPw [$pwEntry get]
+       if { [string trim $newChar] eq "" } {
+            tk_messageBox -icon error -title [T "Save Character"] -parent [winfo toplevel $charEntry] \
+                           -message [T "You must enter a character name."]
+            return;
+          } elseif { $newChar eq "No Default Character" || $newChar eq "none" } {
+            tk_messageBox -icon error -title [T "Save Character"] -parent [winfo toplevel $charEntry] \
+                          -message [T "Sorry, that's not a valid character name."]
+            return;
+          }
+       if { $newChar ne $worldconfig($w,CONFIG,chars,editing) && \
+            [set existing [lsearch -index 0 $worldconfig($w,charList) $newChar]] > -1 } {
+            set ans [tk_messageBox -icon question -title [T "Save Character"] -type yesno\
+                 -parent [winfo toplevel $charEntry] \
+                 -message [T "There is already a character with that name. Overwrite?"]]
+            if { $ans ne "yes" } {
+                 return;
+               }
+            set worldconfig($w,charList) [lreplace $worldconfig($w,charList) $existing $existing];# remove one we're replacing
+            if { $worldconfig($w,CONFIG,chars,editing) ne "" } {
+                 # Update $old in case removing $existing has shifted its position
+                 set old [lsearch -index 0 $worldconfig($w,charList) $worldconfig($w,CONFIG,chars,editing)]
+               }
+          }
+       if { $old == -1 } {
+            lappend worldconfig($w,charList) [list $newChar $newPw]
+          } else {
+            set worldconfig($w,charList) [lreplace $worldconfig($w,charList) $old $old [list $newChar $newPw]]
+          }
+     }
+
+  $worldconfig($w,CONFIG,chars,charEntry) delete 0 end
+  $worldconfig($w,CONFIG,chars,pwEntry) delete 0 end
+
+  if { $save } {
+       configureWorldCharsPropagate $w $newChar ;# Propagate sets State automatically
+       if { $worldconfig($w,CONFIG,chars,editing) eq "" && \
+            $worldconfig($w,CONFIG,chars,editing) eq $worldconfig($w,charDefault) } {
+            set worldconfig($w,charDefault) $newChar
+          }
+     } else {
+       configureWorldCharsState $w
+     }
+
+  return;
+
+};# ::potato::configureWorldCharsFinish
+
+#: proc ::potato::configureWorldCharsAddEdit
+#: arg w world id
+#: arg adding Are we adding (1) or editing (0)
+#: desc Set up the Char list in World $w's Config window for adding/editing a char
+#: return nothing
+proc ::potato::configureWorldCharsAddEdit {w adding} {
+  variable worldconfig;
+
+  set tree $worldconfig($w,CONFIG,chars,tree)
+  if { !$adding } {
+       set sel [lindex [$tree selection] 0]
+       if { $sel eq "" } {
+            return;
+          }
+       set info [lsearch -inline -index 0 $worldconfig($w,charList) $sel]
+       set char [lindex $info 0]
+       set pw [lindex $info 1]
+     } else {
+       set sel ""
+       set char ""
+       set pw ""
+     }
+
+  configureWorldCharsState $w 2
+  set worldconfig($w,CONFIG,chars,editing) $sel
+  $worldconfig($w,CONFIG,chars,charEntry) insert end $char
+  $worldconfig($w,CONFIG,chars,pwEntry) insert end $pw
+
+  return;
+
+};# ::potato::configureWorldCharsAddEdit
+
+#: proc ::potato::configureWorldCharsPropagate
+#: arg w world id
+#: arg sel Item to select
+#: desc Propagate the tree that displays chars in the config window for world $w, and select char $sel if given/possible
+#: return nothing
+proc ::potato::configureWorldCharsPropagate {w {sel ""}} {
+  variable worldconfig;
+
+  set tree $worldconfig($w,CONFIG,chars,tree)
+
+  $tree state !disabled
+  $tree delete [$tree children {}]
+  if { [llength $worldconfig($w,charList)] } {
+       foreach x [lsort -index 0 $worldconfig($w,charList)] {
+          set char [lindex $x 0]
+          $tree insert {} end -id $char -values $char
+       }
+       if { $sel eq "" || ![$tree exists $sel] } {
+            set sel [lindex [$tree children {}] 0]
+          }
+       $tree selection set [list $sel]
+       $tree focus $sel
+       configureWorldCharsState $w 1
+     } else {
+       configureWorldCharsState $w 0
+     }
+
+  return;
+
+};# ::potato::configureWorldCharsPropagate
+
+#: proc ::potato::configureWorldCharsState 
+#: arg w world id
+#: arg state state (0 = empty tree, 1 = tree with values, 2 = adding/editing, "" = check for empty tree and do 0/1 accordingly
+#: desc Set the buttons in the Char config for world $w to the appropriate states
+#: return nothing
+proc ::potato::configureWorldCharsState {w {state ""}} {
+  variable worldconfig;
+
+  if { $state eq "" } {
+       set state [expr {min(1,[llength [$worldconfig($w,CONFIG,chars,tree) selection]])}]
+     }
+  if { $state == 2 } {
+       $worldconfig($w,CONFIG,chars,tree) state disabled
+       $worldconfig($w,CONFIG,chars,addBtn) state disabled
+       $worldconfig($w,CONFIG,chars,editBtn) state disabled
+       $worldconfig($w,CONFIG,chars,delBtn) state disabled
+       $worldconfig($w,CONFIG,chars,saveBtn) state !disabled
+       $worldconfig($w,CONFIG,chars,cancelBtn) state !disabled
+       $worldconfig($w,CONFIG,chars,charEntry) state !disabled
+       $worldconfig($w,CONFIG,chars,pwEntry) state !disabled
+     } else {
+       $worldconfig($w,CONFIG,chars,tree) state !disabled
+       $worldconfig($w,CONFIG,chars,addBtn) state !disabled
+       set sel [expr {min(1,[llength [$worldconfig($w,CONFIG,chars,tree) selection]])}]
+       $worldconfig($w,CONFIG,chars,editBtn) state [lindex [list disabled !disabled] $sel]
+       $worldconfig($w,CONFIG,chars,delBtn) state [lindex [list disabled !disabled] $sel]
+       $worldconfig($w,CONFIG,chars,saveBtn) state disabled
+       $worldconfig($w,CONFIG,chars,cancelBtn) state disabled
+       $worldconfig($w,CONFIG,chars,charEntry) state disabled
+       $worldconfig($w,CONFIG,chars,pwEntry) state disabled
+     }
+
+  return;
+
+};# ::potato::configureWorldCharsState 
 
 #: proc ::potato::configureWorldCancel
 #: arg w world id
@@ -6623,6 +6941,10 @@ proc ::potato::configureWorldCommit {w win} {
      } else {
        set world($w,autosend,connect) $autosend(connect)
        set world($w,autosend,login) $autosend(login)
+     }
+
+  if { [info exists world($w,charDefault)] && $world($w,charDefault) eq "No Default Character" } {
+       set world($w,charDefault) ""
      }
 
   # A <Destroy> binding on $win triggers potato::configureWorldCancel, which unsets vars, destroys configure pop-ups, etc
@@ -9060,7 +9382,7 @@ proc ::potato::autoConnectWindow {} {
   pack [set mid [::ttk::frame $top.mid]] -side left -anchor center -expand 0 -fill none -padx 6
   pack [set right [::ttk::frame $top.right]] -side left -anchor nw -expand 1 -fill both
 
-  set nTree [::ttk::treeview $left.tree -show {} -columns Worlds]
+  set nTree [::ttk::treeview $left.tree -show {} -columns Worlds -selectmode extended]
   set sbX [::ttk::scrollbar $left.sbX -orient horizontal -command [list $nTree xview]]
   set sbY [::ttk::scrollbar $left.sbY -orient vertical -command [list $nTree yview]]
   $nTree configure -xscrollcommand [list $sbX set] -yscrollcommand [list $sbY set]
@@ -9076,7 +9398,7 @@ proc ::potato::autoConnectWindow {} {
   pack [set btnDown [::ttk::button $mid.down -text [T "Down"] \
          -command [list ::potato::autoConnectWindowReorder 1]]] -side top -anchor center -pady 4
 
-  set yTree [::ttk::treeview $right.tree -show {} -columns Worlds]
+  set yTree [::ttk::treeview $right.tree -show {} -columns Worlds -selectmode extended]
   set sbX [::ttk::scrollbar $right.sbX -orient horizontal -command [list $yTree xview]]
   set sbY [::ttk::scrollbar $right.sbY -orient vertical -command [list $yTree yview]]
   $yTree configure -xscrollcommand [list $sbX set] -yscrollcommand [list $sbY set]
@@ -9779,9 +10101,9 @@ proc ::potato::parseUserVars {c str} {
                              _w $w \
                              _name $world($w,name) \
                              _host $world($w,host) \
-                             _port $world($w,port) \
-                             _char $world($w,charName) \
-                             _chr $world($w,charName) \
+                             _port $world($w,port)];#abc \
+                             _char $conn($c,char) \
+                             _chr $world($c,char) \
                        ] ;# array set masterVars
 
   while { [set varMarker [string first $varMarkerChar $str]] > -1 } {
@@ -11315,15 +11637,26 @@ proc ::potato::slash_cmd_exit {c full str} {
 #: return nothing
 proc ::potato::slash_cmd_reconnect {c full str} {
   variable conn;
+  variable world;
 
+  set w $conn($c,world)
   if { $str eq "" } {
        taskRun reconnect
-     } else {
-       if { ![string is integer $str] || ![info exists conn($str,id)] || $str == "-1" } {
-            outputSystem $c [T "Bad connection id"]
+     } elseif { [string is integer -strict $str] && [info exists conn($str,id)] && $str > 0 } {
+       taskRun reconnect $c $str
+     } elseif { $str eq "none" } {
+       set conn($c,char) ""
+       taskRun reconnect
+     } elseif { [set chars [lsearch -exact -index 0 $world($w,charList) $str]] != -1 ||
+                [set chars [lsearch -exact -nocase -index 0 $world($w,charList) $str]] != -1 } {
+       if { [llength $chars] != 1 } {
+            outputSystem $c [T "Ambiguous character name \"%s\" $str]
           } else {
-            taskRun reconnect $c $str
+            set conn($c,char) [lindex $world($w,charList) [list $chars 0]]
+            taskRun reconnect
           }
+     } else {
+       outputSystem $c [T "Invalid connection id/character name"]
      }
   return;
 
@@ -11832,18 +12165,10 @@ proc ::potato::rebuildConnectMenu {m} {
 
   foreach w [worldIDs] {
      if { [llength $world($w,groups)] == 0 } {
-          if  { [string length [string trim $world($w,charName)]] } {
-                lappend noGroups [list $w "$world($w,name) ($world($w,charName))"]
-              } else {
-                lappend noGroups [list $w $world($w,name)]
-              }
+          lappend noGroups [list $w $world($w,name)]
         } else {
           foreach y $world($w,groups) {
-          if  { [string length [string trim $world($w,charName)]] } {
-                lappend group($y) [list $w "$world($w,name) ($world($w,charName))"]
-              } else {
-                lappend group($y) [list $w $world($w,name)]
-              }
+            lappend group($y) [list $w $world($w,name)]
           }
         }
   }
@@ -11857,16 +12182,16 @@ proc ::potato::rebuildConnectMenu {m} {
           $m add cascade -label $x -menu [set sub [menu $m.sub$i -tearoff 0]]
           foreach y [lsort -dictionary -index 1 $group($x)] {
              foreach {w name} $y {break}
-             $sub add command -label $name -command [list ::potato::newConnection $w]
+             rebuildConnectMenuSub $w $name $sub
           }
           incr i
        }
-  }
+     }
   if { [info exists noGroups] } {
        set sep 1
        foreach x [lsort -dictionary -index 1 $noGroups] {
           foreach {w name} $x {break}
-          $m add command -label $name -command [list ::potato::newConnection $w]
+          rebuildConnectMenuSub $w $name $sub
        }
      }
 
@@ -11879,6 +12204,30 @@ proc ::potato::rebuildConnectMenu {m} {
   return;
 
 };# ::potato::rebuildConnectMenu
+
+#: proc ::potato::rebuildConnectMenuSub
+#: arg w world id
+#: arg name world name
+#: arg m menu widget
+#: desc Add a menu to $m which either connects to world $w (if it has no chars defined), or cascades to a menu of chars (if it does)
+#: return nothing
+proc ::potato::rebuildConnectMenuSub {w name m} {
+  variable world;
+
+  if { [llength $world($w,charList)] } {
+       $m add cascade -label $name -menu [set sub [menu $m.$w -tearoff 0]]
+       $sub add command {*}[menu_label [T "&Default Character"]] -command [list ::potato::newConnectionDefault $w]
+       $sub add command {*}[menu_label [T "&No Character"]] -command [list ::potato::newConnection $w]
+       $sub add separator
+       foreach x $world($w,charList) {
+         set char [lindex $x 0]
+         $sub add command -label $char -command [list ::potato::newConnection $w $char]
+       }
+     } else {
+       $m add command -label $name -command [list ::potato::newConnection $w]
+     }
+  return;
+};# ::poato::rebuildConnectMenuSub
 
 #: proc ::potato::fcmd
 #: arg num F-command number
