@@ -1,16 +1,21 @@
 namespace eval ::wikihelp {
-  variable info;   # General help info
-  variable path;   # Widget paths
-  variable index;  # File and topic names
+  variable info;     # General help info
+  variable path;     # Widget paths
+  variable index;    # File and topic names
 
   set info(defaultTopic) "WelcomeToPotato"
   set info(TOC) "ContentsPage"
   set info(win) .wikihelp
-  #set info(path) $::potato::path(help)
   set info(indexed) 0
 
   namespace import ::potato::T
 }
+
+# Current, known limitations:
+#  * Does not parse markup in link names
+#  * Contents Page in Tree displays nothing but ul-list elements
+#  * Contents Page in Tree does nothing but link and nested ul-list parsing (no bold, etc)
+#  * Absolutely no HTML support. Basic parsing of entities, and parsing (and ignoring) of tags would be a good minimum.
 
 #: proc ::wikihelp::help
 #: arg topic Topic to show. Defaults to "".
@@ -60,15 +65,14 @@ proc ::wikihelp::help {{topic ""}} {
                              -yscrollcommand [list $right.sbY set] \
                              -xscrollcommand [list $right.sbX set] \
                              -state disabled]
-  set margin1 10
-  set margin2 [expr {[font measure TkDefaultFont -displayof $text "  \u2022  "] + $margin1}]
-  $text tag configure margins -lmargin1 $margin1 -lmargin2 $margin2
-  set listIndent [font measure TkDefaultFont -displayof $text "  \u2022  "]
+  set margin 20
+  $text tag configure margins -lmargin1 $margin -lmargin2 $margin
+  set listIndent [font measure TkDefaultFont -displayof $text "  \u2022 "];# deliberately missing 1 trailing space
   incr listIndent 5
-  for {set i 0} {$i < 5} {incr i} {
-      $text tag configure "marginList[expr {$i+1}]" \
-           -lmargin1 [expr {$margin1 + ($listIndent*$i)}] \
-           -lmargin2 [expr {$margin2 + ($listIndent*$i)}]
+  for {set i 1} {$i <= 16} {incr i} {
+      $text tag configure "marginList$i" \
+           -lmargin1 [expr {$margin + ($listIndent*($i-1))}] \
+           -lmargin2 [expr {$margin + ($listIndent*$i)}]
   }
   $text tag configure bold -font [list {*}[font actual TkDefaultFont] -weight bold]
   $text tag configure bolditalic -font [list {*}[font actual TkDefaultFont] -weight bold -slant italic]
@@ -158,6 +162,7 @@ proc ::wikihelp::showTopic {topic} {
   variable index;
   variable path;
   variable info;
+  variable history;
 
   if { [info exists index(file,$topic)] } {
        # Fine
@@ -184,6 +189,7 @@ proc ::wikihelp::showTopic {topic} {
        $path(tree) see $new
        $path(tree) selection set $new
        $path(tree) focus $new
+
      }
 
   return 1;
@@ -238,10 +244,10 @@ proc ::wikihelp::parse {input} {
           if { $list($newlistdepth,type) eq "#" } {
                set listchar [incr $list($newlistdepth,count)]
              } else {
-               set listchar \u2022
+               set listchar [lindex [list \u2022 \u25e6 \u25a0 \u25a1 \u25c6 \u25c7 \u25b6 \u25b7] [expr {($newlistdepth-1) % 8}]]
              }
-          if { $newlistdepth > 5 } {
-               set marginTag "marginList5" # We only have indent tags configured up to marginList5.
+          if { $newlistdepth > 16 } {
+               set marginTag "marginList16"; # We only have indent tags configured up to marginList16.
              } else {
                set marginTag "marginList$newlistdepth"
              }
@@ -404,8 +410,9 @@ proc ::wikihelp::populateTOC {} {
             set last {}
             while { [gets $fid line] >= 0 && ![eof $fid] } {
               if { ![regexp {^( {2,})\* *(.+)$} $line -> spaces topic] } {
-                   continue;
+                   continue; # Skip non-list items
                  }
+              set topic [regsub -all -- "`(.+?)`" $topic {\1}];# Since we don't parse this (but Google does), strip out any backticks protecting text
               set count [expr {[string length $spaces] / 2}]
               if { $count > $indent } {
                    lappend indents $count
