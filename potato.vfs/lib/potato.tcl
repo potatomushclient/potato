@@ -9650,7 +9650,7 @@ proc ::potato::autoConnect {} {
   }
 
   foreach x [lsort -integer -index 1 $autoconnects] {
-     after 250 [list ::potato::newConnection [lindex $x 0]]
+     after 250 [list ::potato::newConnectionDefault [lindex $x 0]]
   }
 
 };# ::potato::autoConnect
