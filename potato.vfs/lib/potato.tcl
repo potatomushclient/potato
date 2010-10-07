@@ -12372,7 +12372,7 @@ proc ::potato::tasksInit {} {
        escHistCmd,name     [T "Clear History Command"] \
        escHistCmd,cmd      "::potato::inputHistoryReset" \
        escHistCmd,state    always \
-       manageWorlds,name   [T "Manage &Worlds"] \
+       manageWorlds,name   [T "&Address Book"] \
        manageWorlds,cmd    "::potato::manageWorlds" \
        manageWorlds,state  always \
        autoConnects,name   [T "Manage &Auto-Connects"] \
