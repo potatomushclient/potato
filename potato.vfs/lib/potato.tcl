@@ -2019,7 +2019,8 @@ proc ::potato::configureTextWidget {c t} {
 
   $t tag configure timestamp -elide 1
 
-  set FANSI [list #000000 #00005F #000087 #0000AF #0000D7 #0000FF #005F00 #005F5F \
+  # XTerm / FANSI Colors
+  set XTerm [list #000000 #00005F #000087 #0000AF #0000D7 #0000FF #005F00 #005F5F \
                   #005F87 #005FAF #005FD7 #005FFF #008700 #00875F #008787 #0087AF \
                   #0087D7 #0087FF #00AF00 #00AF5F #00AF87 #00AFAF #00AFD7 #00AFFF \
                   #00D700 #00D75F #00D787 #00D7AF #00D7D7 #00D7FF #00FF00 #00FF5F \
@@ -2050,8 +2051,8 @@ proc ::potato::configureTextWidget {c t} {
                   #585858 #626262 #6C6C6C #767676 #808080 #8A8A8A #949494 #9E9E9E \
                   #A8A8A8 #B2B2B2 #BCBCBC #C6C6C6 #D0D0D0 #DADADA #E4E4E4 #EEEEEE]
   for {set i 0; set j 16} {$j < 256} {incr i ; incr j} {
-    $t tag configure ANSI_fg_fansi$j -foreground [lindex $FANSI $i]
-    $t tag configure ANSI_bg_fansi$j -background [lindex $FANSI $i]
+    $t tag configure ANSI_fg_xterm$j -foreground [lindex $XTerm $i]
+    $t tag configure ANSI_bg_xterm$j -background [lindex $XTerm $i]
   }
 
 
@@ -3282,70 +3283,97 @@ proc ::potato::atEnd {t} {
 proc ::potato::handleAnsiCodes {c codes} {
   variable conn;
 
-  # FANSI
-  if { [llength $codes] == 3 && [lindex $codes 0] in [list 38 48] && [lindex $codes 1] == 5 } {
-       if { [lindex $codes 0] == 38 } {
-            set which fg
-          } else {
-            set which bg
-          }
-       set num [lindex $codes 2]
-       if { ![string is integer -strict $num] || $num < 0 || $num > 255 } {
-            # Invalid FANSI color
-            return;
-          }            
-       if { $num < 17 } {
-            set color [lindex [list x r g y b m c w xh rh gh yh bh mh ch wh] $num]
-          } else {
-            set color fansi$num
-          }
-       set conn($c,ansi,$which) $color
-       return;
-     }
+  set xtermStarts [list 38 48]
+  set ansiColors [list x r g y b m c w]
+  set xtermAnsi [list x r g y b m c w xh rh gh yh bh mh ch wh]
+  set highlightable [concat $ansiColors [list fg bg]]
+  while { [llength $codes] } {
+    set curr [lindex $codes 0]
+    set codes [lrange $codes 1 end]
+    # We have to use a while loop, not a foreach, because XTerm/FANSI codes eat more than one
+    # list element. Boo.
 
-  # Regular ANSI
-  foreach x $codes {
-    #                 0 1 2 3 4 5 6 7
-    set colours [list x r g y b m c w]
-    switch -regexp $x {
-       ^0$ {
-             set conn($c,ansi,fg) fg
-             set conn($c,ansi,bg) bg
-             set conn($c,ansi,flash) 0
-             set conn($c,ansi,highlight) 0
-             set conn($c,ansi,underline) 0
-             set conn($c,ansi,inverse) 0
-           }
-       ^1$ {
-             if { !$conn($c,ansi,highlight) } {
-                  set conn($c,ansi,highlight) 1
-                  append conn($c,ansi,fg) h
-                  append conn($c,ansi,bg) h
-                }
-           }
-       ^4$ {
-             set conn($c,ansi,underline) 1
-           }
-       ^5$ {
-             set conn($c,ansi,flash) 1
-           }
-       ^7$ { 
-             set conn($c,ansi,inverse) 1
-           }
-       {^3[0-7]$} {
-             set conn($c,ansi,fg) [lindex $colours [string range $x end end]]
-             if { $conn($c,ansi,highlight) } {
-                  append conn($c,ansi,fg) h
-                }
-           }
-       {^4[0-7]$} {
-             set conn($c,ansi,bg) [lindex $colours [string range $x end end]]
-             if { $conn($c,ansi,highlight) } {
-                  append conn($c,ansi,bg) h
-                }
-           }
+    switch -exact -- $curr {
+       0 { # ANSI Normal
+          set conn($c,ansi,fg) fg
+          set conn($c,ansi,bg) bg
+          set conn($c,ansi,highlight) 0
+          set conn($c,ansi,underline) 0
+          set conn($c,ansi,flash) 0
+          set conn($c,ansi,inverse) 0
+         }
+       1 { # ANSI Higlight
+           if { !$conn($c,ansi,highlight) } {
+                set conn($c,ansi,highlight) 1
+                # Only add "h" if we have a normal ANSI (not XTerm/FANSI) color or normal fg/bg
+                if { $conn($c,ansi,fg) in $highlightable } {
+                     append conn($c,ansi,fg) h
+                   }
+                if { $conn($c,ansi,bg) in $highlightable } {
+                     append conn($c,ansi,bg) h
+                   }
+              }
+         }
+       4 { # ANSI Underline
+           set conn($c,ansi,underline) 1
+         }
+       5 { # ANSI Flash
+           set conn($c,ansi,flash) 1
+         }
+       7 { # ANSI Inverse
+           set conn($c,ansi,inverse) 1
+         }
+      30 -
+      31 -
+      32 -
+      33 -
+      34 -
+      35 -
+      36 -
+      37 {# ANSI foreground color
+          if { $conn($c,ansi,highlight) } {
+               set conn($c,ansi,fg) "[lindex $ansiColors [expr {$curr - 30}]]h"
+             } else {
+               set conn($c,ansi,fg) [lindex $ansiColors [expr {$curr - 30}]]
+             }
+         }
+      40 -
+      41 -
+      42 -
+      43 -
+      44 -
+      45 -
+      46 -
+      47 {# ANSI background color
+          if { $conn($c,ansi,highlight) } {
+               set conn($c,ansi,bg) "[lindex $ansiColors [expr {$curr - 40}]]h"
+             } else {
+               set conn($c,ansi,bg) [lindex $ansiColors [expr {$curr - 40}]]
+             }
+         }
+      38 -
+      48 {# XTerm color code (used by FANSI)
+          if { [llength $codes] < 2 || [lindex $codes 0] ne "5" } {
+               return;# FANSI codes are 38;5;<fgcolor> or 48;5;<bgcolor>. Abort on invalid code
+             }
+          set xterm [lindex $codes 1]
+          set codes [lrange $codes 2 end]
+          if { ![string is integer -strict $xterm] || $xterm < 0 || $xterm > 255 } {
+               return;# Invalid XTerm color
+             }
+          if { $curr == 38 } {
+               set which fg
+             } else {
+               set which bg
+             }
+          if { $xterm <= 16 } {
+               set conn($c,ansi,$which) [lindex $xtermAnsi $xterm]
+             } else {
+               set conn($c,ansi,$which) "xterm$xterm"
+             }
+         }
     };# switch
-  };# foreach
+  };# while
 
   return;
 
