@@ -1,0 +1,9 @@
+# Getting Started with Potato
+
+=Getting Started=
+
+When you first run Potato, you may want to take a few minutes to change the [ConfigurePotato program settings] (which alter how Potato works), and particularly the [ConfigureDefaultWorld default world settings] (which are used as defaults for all MU`*`s you add).
+
+After you've configured Potato the way you want it, you'll need to [AddWorlds add a new world] before you can connect. Each MU`*` is defined as a separate World in Potato's [AddressBook Address Book], with its own host, port, connection and display settings, list of characters, etc. 
+
+Once you've added a world, you're ready to [Connecting connect] and start playing your MU`*`.

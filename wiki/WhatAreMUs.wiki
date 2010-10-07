@@ -1,0 +1,5 @@
+#summary What are MUSHes/MUDs/MU*s?
+
+=What are MUSHes/MUDs/MU`*`s?=
+
+The term "MU`*`" encorporates MUSHes, MUDs, MUXes, and all other similar games. MU`*`s are online, multi-player, text-based environments where (depending on the focus of the particular MU`*`) players can explore, roleplay, chat, complete quests, slay monsters, and much more. As a general rule of thumb, MUSHes tend to be more role-play orientated, while MUDs tend to focus more on quests and hack'n'slash/combat. Potato has more features aimed at MUSHes, but can be used for playing any MU`*` server.

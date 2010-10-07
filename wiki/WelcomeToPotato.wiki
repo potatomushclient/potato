@@ -1,7 +1,7 @@
 #summary Introduction Page
 =Welcome to Potato!=
 
-_Potato_ is a Graphical MU`*` client for Windows and Linux written in Tcl/Tk 8.5. The latest version of _Potato_ is 2.0.0b7.
+*Potato* is a Graphical MU`*` Client for Windows and Linux written in Tcl/Tk 8.5. The latest version of Potato is 2.0.0b7.
 
 It has all the standard [Features features] you'd expect in a MU`*` client and much more, including
   * An unlimited number of customized worlds

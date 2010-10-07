@@ -1,17 +1,17 @@
 #summary Contents Page
   * [WelcomeToPotato Welcome to Potato]
-    * What is a MUSH/MUD/MU`*`?
+    * [WhatAreMUs What are MUSHes/MUDs/MU`*`s?]
     * [Features Potato's Features]
     * [ContactMe Contact Me]
     * [Credits Credits and Contributions]
-      * Tcl/Tk
-      * Winico and Winflash
     * [License]
-  * Getting Started
-    * Creating a New World
-      * Configuring a World
-    * Connecting to a MU`*`
-    * Configuring Potato
+  * [GettingStarted Getting Started]
+    * [AddWorlds Creating a New World]
+      * [ConfigureWorlds Configuring a World]
+    * [AddressBook Address Book] 
+    * [Connecting Connecting to a MU`*`]
+    * [ConfigurePotato Configuring Potato]
+      * [ConfigureDefaultWorld Default World Settings]
     * Events
     * Macros
   * Potato's Menus
@@ -32,21 +32,6 @@
     * [200b2 Version 2.0.0b2]
     * [200b1 Version 2.0.0b1]
 ----
-  * Adding and Configuring Worlds
-    * Basic Settings
-    * Connection Settings
-      * Telnet Protocols
-    * Display Settings
-      * ANSI, Colours and Fonts
-      * Misc Display Options
-    * Misc Options
-    * Notes
-    * Timers
-    * F-Commands
-  * Configuring Potato
-    * Activity Settings
-    * Misc Settings
-      * Valid Clock Formats
   * Events
     * Event Patterns
     * Processing Order
@@ -57,23 +42,7 @@
     * Sending a Command
     * Placing text in an Input Window
     * Examples
-  * Technology Behind Potato
-    * Tcl/Tk
-    * Winico and Winflash
-  * Stuff
-    * Version 2.0.0b6
-    * Version 2.0.0b5
-    * Version 2.0.0b4
-    * Version 2.0.0b3
-    * Version 2.0.0b2
-    * Version 2.0.0b1
-    * Version 2.0.0a15
-    * Version 2.0.0a14
-    * Version 2.0.0a13
-    * Version 2.0.0a12
-    * Version 2.0.0a11
   * Downloads
-    * Features
 
 More stuff to add:
   * /commands
