@@ -11415,7 +11415,7 @@ proc ::potato::slash_cmd_tcl {c full str} {
 #: return nothing
 proc ::potato::slash_cmd_eval {c full str} {
 
-  set err [catch {eval $str} msg]
+  set err [catch {uplevel #0 $str} msg]
   if { $err } {
        outputSystem $c [T "Error (%d): %s" [string length $msg] $msg]
      } else {
@@ -11423,6 +11423,20 @@ proc ::potato::slash_cmd_eval {c full str} {
      }
 
 };# ::potato::slash_cmd_eval
+
+#: proc ::potato::slash_cmd_eval
+#: arg c connection id
+#: arg full was the command named typed in full?
+#: arg str Command to run
+#: desc Eval the Tcl command $str, but do not print the result/a confirmation.
+#: return nothing
+proc ::potato::slash_cmd_evalsilent {c full str} {
+
+  catch {uplevel #0 $str}
+
+  return;
+
+};# ::potato::slash_cmd_evalsilent
 
 #: proc ::potato::slash_cmd_speedwalk
 #: arg c connection id
