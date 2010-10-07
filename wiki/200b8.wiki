@@ -2,7 +2,7 @@
 =Version 2.0.0b8=
 ==Unreleased==
 
-  * Help fixes.
+  * A new Help window, with lots of new and updated helpfiles.
   * MUSH passwords are now obfusticated on save.
   * Added Prefixes/Auto-Says, which can be accessed via the Edit menu, or the /setprefix command. Use `/send <text>` to send text without the prefix. Requested by Nathan Corbier.
   * Added a window (accessed via the File menu) for viewing MSSP info from the MUSH.
