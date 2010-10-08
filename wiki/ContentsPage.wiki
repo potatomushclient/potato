@@ -9,17 +9,17 @@
     * [AddWorlds Creating a New World]
       * [ConfigureWorlds Configuring a World]
         * [ConfigureWorldsBasic Basics]
-			  * [ConfigureWorldsChars Characters]
-			  * [ConfigureWorldsConnection Connections]
-			    * [ConfigureWorldsConnectionTelnet Telnet Options]
-			  * Display
-			    * [ConfigureWorldsDisplayANSI ANSI, Colours and Fonts]
-			    * [ConfigureWorldsDisplayMisc Miscellaneous]
-			  * [ConfigureWorldsActivity Activity Settings]
-			  * [ConfigureWorldsMisc Miscellaneous]
-			  * [ConfigureWorldsFCommands F-Commands]
-			  * [ConfigureWorldsTimers Timers]
-			  * [ConfigureWorldsAutoSends Auto-Sends]
+        * [ConfigureWorldsChars Characters]
+        * [ConfigureWorldsConnection Connections]
+          * [ConfigureWorldsConnectionTelnet Telnet Options]
+        * Display
+          * [ConfigureWorldsDisplayANSI ANSI, Colours and Fonts]
+          * [ConfigureWorldsDisplayMisc Miscellaneous]
+        * [ConfigureWorldsActivity Activity Settings]
+        * [ConfigureWorldsMisc Miscellaneous]
+        * [ConfigureWorldsFCommands F-Commands]
+        * [ConfigureWorldsTimers Timers]
+        * [ConfigureWorldsAutoSends Auto-Sends]
   * [ConfigureWorldsNotes Notes]
     * [AddressBook Address Book]
     * [Connecting Connecting to a MU`*`]
@@ -65,4 +65,3 @@ More stuff to add:
   * Making Potato the default Telnet Client
 
 [http://code.google.com/p/potatomushclient/w/list All Wiki Pages]
-  
