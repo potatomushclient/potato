@@ -409,7 +409,7 @@ proc ::wikihelp::populateTOC {} {
             set indent 1
             set last {}
             while { [gets $fid line] >= 0 && ![eof $fid] } {
-              if { ![regexp {^( {2,})\* *(.+)$} $line -> spaces topic] } {
+              if { ![regexp {^( {2,})\* *(.+?) *$} $line -> spaces topic] } {
                    continue; # Skip non-list items
                  }
               set topic [regsub -all -- "`(.+?)`" $topic {\1}];# Since we don't parse this (but Google does), strip out any backticks protecting text
