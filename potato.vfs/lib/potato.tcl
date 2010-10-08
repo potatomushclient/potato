@@ -10653,16 +10653,19 @@ proc ::potato::slashConfigSelect {w} {
 #: proc ::potato::process_slash_command
 #: arg c connection id
 #: arg str the string entered ("/command arg arg arg")
+#: arg silent Suppress confirmation/error system messages from /command?
 #: desc process $str as a slash command and perform the necessary action
 #: return nothing
-proc ::potato::process_slash_command {c str} {
+proc ::potato::process_slash_command {c str {silent 0}} {
   variable conn;
   variable world;
 
   set cmd [string range $str 1 end]
   if { $cmd eq "" } {
-       if { $c != 0 } {
+       if { $c != 0 && !$silent } {
             outputSystem $c [T "Which /command?"]
+          } else {
+            bell -displayof .
           }
        return;
      }
@@ -10701,11 +10704,11 @@ proc ::potato::process_slash_command {c str} {
             customSlashCommand $c $custom $exact $cmdArgs
           } else {
             # Built-in /command
-            $exact $c 1 $cmdArgs
+            $exact $c 1 $cmdArgs $silent
           }
        return;
      } elseif { [llength $partial] == 1 } {
-       [lindex $partial 0] $c 0 $cmdArgs
+       [lindex $partial 0] $c 0 $cmdArgs $silent
        return;
      } elseif { [llength $partial] == 0 } {
        # Check for unique abbreviations of custom /commands.
@@ -10726,23 +10729,46 @@ proc ::potato::process_slash_command {c str} {
             }
           }
        if { [llength $partial] == 0 } {
-            if { $c != 0 } {
+            if { $c != 0 && !$silent } {
                  outputSystem $c [T "Unknown /command \"%s\". Use //command to send directly to MU*." $cmd]
+               } else {
+                 bell -displayof .
                }
             return;
           } elseif { [llength $partial] > 1 } {
-            outputSystem $c [T "Ambiguous /command \"%s\"." $cmd]
+            if { $silent } {
+                 bell -displayof .
+               } else {
+                 outputSystem $c [T "Ambiguous /command \"%s\"." $cmd]
+               }
             return;
           }
        customSlashCommand $c $custom [lindex $partial 0] $cmdArgs
      } else {
        if { $c != 0 } {
-            outputSystem $c [T "Ambiguous /command \"%s\"." $cmd]
+            if { $silent } {
+                 bell -displayof .
+               } else {
+                 outputSystem $c [T "Ambiguous /command \"%s\"." $cmd]
+               }
           }
        return;
      }
 
 };# ::potato::process_slash_command
+
+#: proc ::potato::define_slash_cmd
+#: arg cmd Name of /command
+#: arg code body of /command
+#: desc Add a new ::potato::slash_cmd_$cmd proc with the appropriate args, and a body of $code.
+#: return nothing.
+proc ::potato::define_slash_cmd {cmd code} {
+
+  proc ::potato::slash_cmd_$cmd {c full str {silent 0}} $code;
+
+  return;
+
+};# ::potato::define_slash_cmd
 
 #: proc ::potato::customSlashCommand
 #: arg c connection id
@@ -10782,20 +10808,30 @@ proc ::potato::customSlashCommand {c w cmd str} {
 
 };# ::potato::customSlashCommand
 
-#: proc ::potato::slash_cmd_input
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str string to parse
-#: desc $str should be [1|2] <stuff> - parse, print error if not, and if so, put <stuff> in input window [1|2]
-#: return nothing
-proc ::potato::slash_cmd_input {c full str} {
+#: /silent <slashcmd>
+#: Run the /command <slashcmd> without producing errors/confirmations
+::potato::define_slash_cmd silent {
+
+  if { [string index $str 0] ne "/" || [string index $str 1] eq "/" } {
+       bell -displayof .
+       return;
+     } else {
+       process_slash_command $c $str 1
+     }
+
+};# /silent
+
+#: /input [1|2] <stuff> - print <stuff> to input window [1|2]
+::potato::define_slash_cmd input {
 
   set str [string trimleft $str]
   set list [split $str " "]
   # We use string comparison, not numerical, otherwise "/input 3.0 foo" will pass, but will fail
   # as we don't have conn($c,input3.0) vars.
   if { [lindex $list 0] ne 1 && [lindex $list 0] ne 2 && [lindex $list 0] ne 3 } {
-       outputSystem $c [T "Invalid input window \"%s\": must be 1, 2 or 3" [lindex $list 0]]
+       if { !$silent } {
+            outputSystem $c [T "Invalid input window \"%s\": must be 1, 2 or 3" [lindex $list 0]]
+          }
        return;
      }
   
@@ -10803,15 +10839,11 @@ proc ::potato::slash_cmd_input {c full str} {
 
   return;
 
-};# ::potato::slash_cmd_input
+};# /input
 
-#: proc ::potato::slash_cmd_setprefix
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str [[<window>]=]<prefix>
-#: desc Set the prefix for <window>, or the current output window, to <prefix>.
-#: return nothing
-proc ::potato::slash_cmd_setprefix {c full str} {
+#: /setprefix [[<window>]=<prefix>]
+#: Set the prefix for <window>, or the current output window (if not given) to <prefix>.
+::potato::define_slash_cmd setprefix {
   variable potato;
   variable conn;
   variable world;
@@ -10851,28 +10883,20 @@ proc ::potato::slash_cmd_setprefix {c full str} {
 
   return;
 
-};# ::potato::slash_cmd_setprefix
+};# /setprefix
 
-#: proc ::potato::slash_cmd_print
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str the string to print
-#: desc Print $str in the output window as a system message
-#: return nothing
-proc ::potato::slash_cmd_print {c full str} {
+#: /print <str>
+#: Print <str> as a system message
+::potato::define_slash_cmd print {
 
   outputSystem $c $str
   return;
 
-};# ::potato::slash_cmd_print
+};# /print
 
-#: proc ::potato::slash_cmd_at
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str A string in the format <time>=<action>
-#: desc At <time> (a [clock scan] time) send <action> to the MUSH
-#: return nothing
-proc ::potato::slash_cmd_at {c full str} {
+#: /at <time>=<action>
+#: At [clock scan <time>] send <action> to the MUSH
+::potato::define_slash_cmd at {
   variable conn;
 
   set equals [string first "=" $str]
@@ -10889,63 +10913,85 @@ proc ::potato::slash_cmd_at {c full str} {
 
   set now [clock seconds]
   if { $now >= $inttime } {
-       outputSystem $c [T "/at: Time must be in the future."]
+       if { $silent } {
+            bell -display of .
+          } else {
+            outputSystem $c [T "/at: Time must be in the future."]
+          }
        return;
      }
   set when [expr {($inttime - [clock scan "now"]) * 1000}]
   lappend conn($c,userAfterIDs) [set afterid [after $when [list ::potato::send_to $c $action "\n" 0 ""]]]
-  outputSystem $c [T "Command will run at %s, id %s" [clock format $inttime -format "%D %T"] $afterid]
+  if { !$silent } {
+       outputSystem $c [T "Command will run at %s, id %s" [clock format $inttime -format "%D %T"] $afterid]
+     }
   after [expr {$when + 1200}] [list ::potato::cleanup_afters $c]
 
   return;
-};# ::potato::slash_cmd_at
+};# /at
 
-#: proc ::potato::slash_cmd_run
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str Name of macro to run
-#: desc Run the user-defined macro $str
-#: return nothing
-proc ::potato::slash_cmd_run {c full str} {
+#: /run <macro>
+#: Run the given macro
+::potato::define_slash_cmd run {
   variable world;
   variable conn;
 
   set w $conn($c,world)
 
-  if { [info exists world($w,macro,$str)] } {
-       set do $w,macro,$str
-     } elseif { [info exists world(-1,macro,$str] } {
-       set do -1,macro,$str
+  set argList [list]
+  set onearg ""
+  if { [set equals [string first "=" $str]] == -1 } {
+       set macro $str
+     } elseif { 1 } {
+       set macro $str
      } else {
-       outputSystem $c [T "No such macro \"%s\"." $str]
+       set macro [string range $str 0 $equals-1]
+       set argstr [string range $str $equals+1 end]
+       while { [string length $argstr] } {
+         break;
+       }
+     }
+
+  if { [info exists world($w,macro,$macro)] } {
+       set do $w,macro,$macro
+     } elseif { [info exists world(-1,macro,$macro)] } {
+       set do -1,macro,$macro
+     } else {
+       if { $silent } {
+            bell -displayof .
+          } else {
+            outputSystem $c [T "No such macro \"%s\"." $str]
+          }
        return;
      }
 
   send_to $c $world($do) "\n" 0 ""
 
   return;
-};# ::potato::slash_cmd_run
+};# /run
 
-#: proc ::potato::slash_cmd_cancelat
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str A string in the format <time>=<action>
-#: desc At <time> (a [clock scan] time) send <action> to the MUSH
-#: return nothing
-proc ::potato::slash_cmd_cancelat {c full str} {
+#: /cancelat <id>
+#: Cancel a previous /at using the after id given by /at
+::potato::define_slash_cmd cancelat {
   variable conn;
 
   if { $str ni $conn($c,userAfterIDs) } {
-       outputSystem $c [T "Invalid /at ID."]
+       if { $silent } {
+            bell -displayof .
+          } else {
+            outputSystem $c [T "Invalid /at ID."]
+          }
        return;
      }
 
   after cancel $str
-  outputSystem $c [T "/at cancelled."]
+  if { !$silent } {
+       outputSystem $c [T "/at cancelled."]
+     }
   cleanup_afters $c
 
   return;
-};# ::potato::slash_cmd_at
+};# /cancelat
 
 #: proc ::potato::cleanup_afters
 #: arg c connection id
@@ -10967,13 +11013,9 @@ proc ::potato::cleanup_afters {c} {
 
 };# ::potato::cleanup_afters
 
-#: proc ::potato::slash_cmd_addspawn
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str the name of the spawn windows to add
-#: desc Add each of $str (a space-separated list of spawn windows) to the spawn-all list for $c
-#: return nothing
-proc ::potato::slash_cmd_addspawn {c full str} {
+#: /addspawn <spawn>[ <spawnN>]
+#: Add each of the space-separated list of spawns to the spawn-all list for the connection
+::potato::define_slash_cmd addspawn {
   variable conn;
 
   set spawns [split $conn($c,spawnAll) " "]
@@ -10987,15 +11029,11 @@ proc ::potato::slash_cmd_addspawn {c full str} {
   set conn($c,spawnAll) [join $spawns " "]
   return;
 
-};# ::potato::slash_cmd_addspawn
+};# /addspawn
 
-#: proc ::potato::slash_cmd_delspawn
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str the name of the spawn windows to delete
-#: desc Remove each of $str (a space-separated list of spawn windows) from the spawn-all list for $c
-#: return nothing
-proc ::potato::slash_cmd_delspawn {c full str} {
+#: /delspawn <spawn>[ <spawnN>]
+#: Delete each of the space-separated list of spawns from the spawn-all list for the connection
+::potato::define_slash_cmd delspawn {
   variable conn;
 
   set spawns [split $conn($c,spawnAll) " "]
@@ -11010,15 +11048,11 @@ proc ::potato::slash_cmd_delspawn {c full str} {
   set conn($c,spawnAll) [join $spawns " "]
   return;
 
-};# ::potato::slash_cmd_delspawn
+};# /delspawn
 
-#: proc ::potato::slash_cmd_limit
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str the pattern to filter by, possibly with leading args
-#: desc Filter the contents of the output window for connection $c
-#: return nothing
-proc ::potato::slash_cmd_limit {c full str} {
+#: /limit [-<options>][ -- ]<pattern>
+#: Filter output based on the given options and pattern
+::potato::define_slash_cmd limit {
   variable conn;
 
   if { ![info exists conn($c,textWidget)] || ![winfo exists $conn($c,textWidget)]} {
@@ -11077,7 +11111,11 @@ proc ::potato::slash_cmd_limit {c full str} {
       glob {set caught [catch {string match {*}$case $str $line} match]}
     }
     if { $caught } {
-         outputSystem $c [T "Invalid %s pattern \"%s\": %s" $matchType $str $match]
+         if { $silent } {
+              bell -displayof .
+            } else {
+              outputSystem $c [T "Invalid %s pattern \"%s\": %s" $matchType $str $match]
+            }
          return;
        }
     if { !$match || $invert } {
@@ -11089,15 +11127,11 @@ proc ::potato::slash_cmd_limit {c full str} {
 
   return;
 
-};# ::potato::slash_cmd_limit
+};# /limit
 
-#: proc ::potato::slash_cmd_unlimit
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str the name of the window to clear
-#: desc Reverse the effects of /limit
-#: return nothing
-proc ::potato::slash_cmd_unlimit {c full str} {
+#: /unlimit
+#: Show all output, when output is reduced by /limit
+::potato::define_slash_cmd unlimit {
   variable conn;
 
   if { [info exists conn($c,textWidget)] && [winfo exists $conn($c,textWidget)] } {
@@ -11108,15 +11142,11 @@ proc ::potato::slash_cmd_unlimit {c full str} {
 
   return;
 
-};# ::potato::slash_cmd_unlimit
+};# /unlimit
 
-#: proc ::potato::slash_cmd_cls
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str the name of the window to clear
-#: desc Clear the text in window $str, which is either _main or the name of a spawn window, possibly preprended with "connectionNumber."
-#: return nothing
-proc ::potato::slash_cmd_cls {c full str} {
+#: /cls [<c>]  |  /cls [<c>.][<window>]
+#: Clear the <window> output window for conn <c>, defaulting to _main and the current connection respectively
+::potato::define_slash_cmd cls {
   variable conn;
 
   if { !$full } {
@@ -11166,42 +11196,31 @@ proc ::potato::slash_cmd_cls {c full str} {
 
   return;
 
-};# ::potato::slash_cmd_cls
+};# /cls
 
-#: proc ::potato::slash_cmd_send
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str the string to send
-#: desc Send $str to the connection
-#: return nothing
-proc ::potato::slash_cmd_send {c full str} {
+#: /send <str>
+#: Send <str> to the connection
+::potato::define_slash_cmd send {
 
   send_to_real $c $str
   return;
 
-};# ::potato::slash_cmd_send
+};# /send
 
-#: proc ::potato::slash_cmd_all
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str the string to send
-#: desc Send $str to all currently open connections
-#: return nothing
-proc ::potato::slash_cmd_all {c full str} {
+#: /all <str>
+#: Send <str> to all connections
+::potato::define_slash_cmd all {
 
   foreach x [connList] {
     send_to_real [lindex $x 0] $str
   }
   return;
 
-};# ::potato::slash_cmd_all
+};# /all
 
-#: proc ::potato::slash_cmd_show
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str A reference to the window we want to see, in the format [<connNum>][.<spawnName>]
-#: desc Parse $str to figure out which window/spawn should be shown, and display it if it exists
-proc ::potato::slash_cmd_show {c full str} {
+#: /show <c>  |  /show [<c>.]<window>
+#: Show <window> in connection <c>, defaulting to <main> and current connection
+::potato::define_slash_cmd show {
   variable conn;
 
 
@@ -11228,15 +11247,11 @@ proc ::potato::slash_cmd_show {c full str} {
        return;
      }
 
-};# proc ::potato::slash_cmd_show
+};# /show
 
-#: proc ::potato::slash_cmd_slash
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str unused
-#: desc display a list of available /commands in the output window
-#: return nothing
-proc ::potato::slash_cmd_slash {c full str} {
+#: /slash
+#: Print a list of all /commands
+::potato::define_slash_cmd slash {
   variable world;
 
   set list [list]
@@ -11254,7 +11269,7 @@ proc ::potato::slash_cmd_slash {c full str} {
 
   return;
 
-};# ::potato::slash_cmd_slash
+};# /slash
 
 #: proc ::potato::itemize
 #: arg list The list to itemize
@@ -11275,43 +11290,31 @@ proc ::potato::itemize {list {join "and"}} {
 
 };# ::potato::itemize
 
-#: proc ::potato::slash_cmd_set
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str The varname/value to set, in the form "name=value"
-#: desc Attempt to set the connection-local variable "name" to "value" (parsed from $str)
-#: return nothing
-proc ::potato::slash_cmd_set {c full str} {
+#: /set <varname>=<value>
+#: Set a connection-local variable <varname> (accessed in /commands as $<varname>$ to <value>
+::potato::define_slash_cmd set {
 
   setUserVar $c 0 $str
   return;
 
-};# ::potato::slash_cmd_set
+};# /set
 
-#: proc ::potato::slash_cmd_unset
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str The varname to clear
-#: desc Attempt to unset the connection-local variable $str
-#: return nothing
-proc ::potato::slash_cmd_unset {c full str} {
+#: /unset <varname>
+#: Unset the connection-local variable <varname>
+::potato::define_slash_cmd unset {
 
   unsetUserVar $c 0 $str
   return;
 
-};# ::potato::slash_cmd_unset
+};# /unset
 
-#: proc ::potato::slash_cmd_vars
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str Possible args -all, -global or -local to control which to show
-#: desc Show a list of all vars set for the current world, and globally
-#: return nothing
-proc ::potato::slash_cmd_vars {c full str} {
+#: /vars [-all|-global|-local]
+#: Print a list of all, global or local vars
+::potato::define_slash_cmd vars {
   variable conn;
 
-  set local 1
-  set global 1
+  set local 0
+  set global 0
 
   foreach x [split $str " "] {
     if { $x eq "-all" } {
@@ -11319,16 +11322,23 @@ proc ::potato::slash_cmd_vars {c full str} {
          set global 1
        } elseif { $x eq "-local" } {
          set local 1
-         set global 0
        } elseif { $x eq "-global" } {
-         set local 0
          set global 1
        } else {
-         outputSystem $c "/vars: Invalid arg \"$x\": Must be one of -all, -global or -local"
+         if { $silent } {
+              bell -displayof .
+            } else {
+              outputSystem $c "/vars: Invalid arg \"$x\": Must be one of -all, -global or -local"
+            }
          return;
        }
-  }   
+  }
 
+  if { !($global || $local) } {
+       set local 1
+       set global 1
+     }
+       
   if { $local && $c != 0 } {
        outputSystem $c "World vars:"
        foreach x [lsort -dictionary [removePrefix [array names conn $c,uservar,*] $c,uservar]] {
@@ -11346,41 +11356,29 @@ proc ::potato::slash_cmd_vars {c full str} {
        }
      }
 
-};# ::potato::slash_cmd_vars
+};# /vars
 
-#: proc ::potato::slash_cmd_setglobal
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str The varname/value to set, in the form "name=value"
-#: desc Attempt to set the global (all connections) variable "name" to "value" (parsed from $str)
-#: return nothing
-proc ::potato::slash_cmd_setglobal {c full str} {
+#: /setglobal <varname>=<value>
+#: Set a global (all connections) variable <varname> to <value>
+::potato::define_slash_cmd setglobal {
 
   setUserVar $c 1 $str
   return;
 
-};# ::potato::slash_cmd_setglobal
+};# /setglobal
 
-#: proc ::potato::slash_cmd_unsetglobal
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str The varname to clear
-#: desc Attempt to unset the global (all connections) variable $str
-#: return nothing
-proc ::potato::slash_cmd_unsetglobal {c full str} {
+#: /unsetglobal <varname>
+#: Unset global var <varname>
+::potato::define_slash_cmd unsetglobal {
 
   unsetUserVar $c 1 $str
   return;
 
-};# ::potato::slash_cmd_unsetglobal
+};# /unsetglobal
 
-#: proc ::potato::slash_cmd_edit
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str Unused
-#: desc Show the "Edit Settings" window for the current connection's world
-#: return nothing
-proc ::potato::slash_cmd_edit {c full str} {
+#: /edit
+#: Show the Edit Settings window
+::potato::define_slash_cmd edit {
   variable conn;
 
   if { $c == 0 } {
@@ -11390,64 +11388,49 @@ proc ::potato::slash_cmd_edit {c full str} {
      }
   return;
 
-};# ::potato::slash_cmd_edit
+};# /edit
 
-#: proc ::potato::slash_cmd_tcl
-#: arg c connection id
-#: arg full was the command named typed in full?
-#: arg str Unused
-#: desc Show the Tcl console.
-#: return nothing
-proc ::potato::slash_cmd_tcl {c full str} {
+#: /tcl
+#: Show the Tcl code console if available
+::potato::define_slash_cmd tcl {
 
   if { [catch {console show}] } {
        bell -displayof .
        return;
      }
 
-};# ::potato::slash_cmd_tcl
+};# /tcl
 
-#: proc ::potato::slash_cmd_eval
-#: arg c connection id
-#: arg full was the command named typed in full?
-#: arg str Command to run
-#: desc Eval the Tcl command $str and print the result in the output window
-#: return nothing
-proc ::potato::slash_cmd_eval {c full str} {
+#: /eval <code>
+#: Evaluate the Tcl code <code> and print the result to the output window
+::potato::define_slash_cmd eval {
 
   set err [catch {uplevel #0 $str} msg]
+  if { $silent } {
+       if { $err } {
+            bell -displayof .
+          }
+       return;
+     }
+
   if { $err } {
        outputSystem $c [T "Error (%d): %s" [string length $msg] $msg]
      } else {
        outputSystem $c [T "Return (%d): %s" [string length $msg] $msg]
      }
 
-};# ::potato::slash_cmd_eval
+};# /eval
 
-#: proc ::potato::slash_cmd_eval
-#: arg c connection id
-#: arg full was the command named typed in full?
-#: arg str Command to run
-#: desc Eval the Tcl command $str, but do not print the result/a confirmation.
-#: return nothing
-proc ::potato::slash_cmd_evalsilent {c full str} {
-
-  catch {uplevel #0 $str}
-
-  return;
-
-};# ::potato::slash_cmd_evalsilent
-
-#: proc ::potato::slash_cmd_speedwalk
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str Args for /speedwalk
-#: desc Parse the args given as a list of speedwalk directions, in the form [<num1>]<dir1>[ ][<numN>]<dirN> and send the resulting commands
-#: return nothing
-proc ::potato::slash_cmd_speedwalk {c full str} {
+#: /speedwalk <dirs>
+#: Speedwalk in the given directions. <dirs> is a string in the format [<number>][ ]<direction>[[ ][<numberN>][ ]<directionN>]
+::potato::define_slash_cmd speedwalk {
 
   if { ![regexp {^ *([0-9]+ *([ns][ew]|[nsweudo]) *)+ *$} $str] } {
-       outputSystem $c [T "Invalid speedwalk command"]
+       if { $silent } {
+            bell -displayof .
+          } else {
+            outputSystem $c [T "Invalid speedwalk command"]
+          }
        return;
      }
 
@@ -11463,18 +11446,14 @@ proc ::potato::slash_cmd_speedwalk {c full str} {
 
   return;
 
-};# ::potato::slash_cmd_speedwalk
+};# /speedwalk
 
 # Create a /sw alias for /speedwalk
 interp alias {} ::potato::slash_cmd_sw {} ::potato::slash_cmd_speedwalk
 
-#: proc ::potato::slash_cmd_log
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str Args for the /log command
-#: desc Parse the args given in $str, and either show the log window, perform logging, or error
-#: return nothing
-proc ::potato::slash_cmd_log {c full str} {
+#: /log  |  /log -close [<path>] |  /log [-options] <path>
+#: Either show the logging window, close open log(s) or start logging to a new file
+::potato::define_slash_cmd log {
   variable conn;
 
   if { $c == 0 } {
@@ -11494,7 +11473,9 @@ proc ::potato::slash_cmd_log {c full str} {
   if { [lsearch -exact -nocase [list -close -stop -off] [lindex $argv 0]] != -1 } {
        # Close an open log file, or all open log files
        set res [taskRun logStop $c $c [join [lrange $argv 1 end] " "]]
-       if { $res == 0 } {
+       if { $res < 1 && $silent } {
+            bell -displayof .
+          } elseif { $res == 0 } {
             bell -displayof .
           } elseif { $res == -1 } {
             outputSystem $c [T "Log file \"%s\" not found." [join [lrange $argv 1 end] " "]]
@@ -11563,7 +11544,11 @@ proc ::potato::slash_cmd_log {c full str} {
      }
 
   if { $error ne "" } {
-       outputSystem $c "/log: $error"
+       if { $silent } {
+            bell -displayof .
+          } else {
+            outputSystem $c "/log: $error"
+          }
        return;
      }
 
@@ -11577,29 +11562,21 @@ proc ::potato::slash_cmd_log {c full str} {
   doLog $c $file $options(-append) $options(-buffer) $options(-leave)
   return;     
 
-};# ::potato::slash_cmd_log
+};# /log
 
-#: proc ::potato::slash_cmd_close
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str unused
-#: desc close the current window
-#: return nothing
-proc ::potato::slash_cmd_close {c full str} {
+#: /close
+#: Close the current connection
+::potato::define_slash_cmd close {
 
   taskRun close $c $c
 
   return;
 
-};# ::potato::slash_cmd_close
+};# /close
 
-#: proc ::potato::slash_cmd_connect
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str name of world to connect to
-#: desc connect to world $str, if it's a valid name.
-#: return nothing
-proc ::potato::slash_cmd_connect {c full str} {
+#: /connect <worldname>
+#: Connect to the saved world <worldname>
+::potato::define_slash_cmd connect {
   variable world;
   variable misc;
 
@@ -11624,29 +11601,29 @@ proc ::potato::slash_cmd_connect {c full str} {
        newConnectionDefault $exact
        return;
      } elseif { [llength $partial] == 0 } {
-       if { $c != 0 } {
+       if { $c != 0 && !$silent } {
             outputSystem $c [T "No such world \"%s\". Use \"/quick host port\" to connect to a world that isn't in the address book." $str]
+          } else {
+            bell -displayof .
           }
        return;
      } elseif { [llength $partial] == 1 || $misc(partialWorldMatch) } {
        newConnectionDefault [lindex $partial 0]
        return;
      } else {
-       if { $c != 0 } {
+       if { $c != 0 && !$silent } {
             outputSystem $c [T "Ambiguous world name \"%s\"." $str]
+          } else {
+            bell -displayof .
           }
        return;
      }
 
 };# ::potato::slash_cmd_connect
 
-#: proc ::potato::slash_cmd_quick
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str arg for the quick connection
-#: desc Show the quick-connect dialog, parsing $str for world info
-#: return nothing
-proc ::potato::slash_cmd_quick {c full str} {
+#: /quick [<host>:<port>]
+#: Connect to the given address, or show the Quick Connect window
+::potato::define_slash_cmd quick {
 
   set hostAndPort [parseTelnetAddress $str]
   if { [llength $hostAndPort] == 2 } {
@@ -11661,15 +11638,10 @@ proc ::potato::slash_cmd_quick {c full str} {
 
   return;
 
-};# ::potato::slash_cmd_quick
+};# /quick
 
-#: proc ::potato::slash_cmd_exit
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str unused
-#: desc exit the program
-#: return nothing
-proc ::potato::slash_cmd_exit {c full str} {
+#: /exit
+::potato::define_slash_cmd exit {
 
   if { $full } {
        set prompt 0
@@ -11679,15 +11651,11 @@ proc ::potato::slash_cmd_exit {c full str} {
   taskRun exit $c $prompt
   return;
 
-};# ::potato::slash_cmd_exit
+};# /exit
 
-#: proc ::potato::slash_cmd_reconnect
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str the arg typed by the user, which should correspond to a connection id
-#: desc reconnect connection $c
-#: return nothing
-proc ::potato::slash_cmd_reconnect {c full str} {
+#: /reconnect [<character>]  |  /reconnect <connection>
+#: Reconnect the current, possibly as <character>, or reconnect in connection <connection>
+::potato::define_slash_cmd reconnect {
   variable conn;
   variable world;
 
@@ -11702,38 +11670,39 @@ proc ::potato::slash_cmd_reconnect {c full str} {
      } elseif { [set chars [lsearch -exact -index 0 $world($w,charList) $str]] != -1 ||
                 [set chars [lsearch -exact -nocase -index 0 $world($w,charList) $str]] != -1 } {
        if { [llength $chars] != 1 } {
-            outputSystem $c [T "Ambiguous character name \"%s\" $str]
+            if { $silent } {
+                 bell -displayof .
+               } else {
+                 outputSystem $c [T "Ambiguous character name \"%s\" $str]
+               }
           } else {
             set conn($c,char) [lindex $world($w,charList) [list $chars 0]]
             taskRun reconnect
           }
      } else {
-       outputSystem $c [T "Invalid connection id/character name"]
+       if { $silent } {
+            bell -displayof .
+          } else {
+            outputSystem $c [T "Invalid connection id/character name"]
+          }
      }
+
   return;
 
-};# ::potato::slash_cmd_reconnect
+};# /reconnect
 
-#: proc ::potato::slash_cmd_disconnect
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str unused
-#: desc disconnect connection $c
-#: return nothing
-proc ::potato::slash_cmd_disconnect {c full str} {
+#: /disconnect
+#: Disconnect the current connection
+::potato::define_slash_cmd disconnect {
 
   taskRun disconnect
   return;
 
-};# ::potato::slash_cmd_disconnect
+};# /disconnect
 
-#: proc ::potato::slash_cmd_toggle
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str direction to toggle (up/1, down/-1). Defaults to "up"
-#: desc toggle connection $c
-#: return nothing
-proc ::potato::slash_cmd_toggle {c full str} {
+#: /toggle [<direction>]
+#: Toggle the shown connection forward/backwards one connection
+::potato::define_slash_cmd toggle {
 
   if { $str eq "down" || $str == -1 } {
        taskRun prevConn
@@ -11742,28 +11711,20 @@ proc ::potato::slash_cmd_toggle {c full str} {
      }
   return;
 
-};# ::potato::slash_cmd_toggle
+};# /toggle
 
-#: proc ::potato::slash_cmd_web
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str webpage to launch
-#: desc launch a web page
-#: return nothing
-proc ::potato::slash_cmd_web {c full str} {
+#: /web <address>
+#: Launch a web browser to show <address>
+::potato::define_slash_cmd web {
 
   launchWebPage $str
   return;
 
-};# ::potato::slash_cmd_web
+};# /web
 
-#: proc ::potato::slash_cmd_history
-#: arg c connection id
-#: arg full was the command name typed in full?
-#: arg str not used
-#: desc display the command history window for connection $c
-#: return nothing
-proc ::potato::slash_cmd_history {c full str} {
+#: /history [<number>]
+#: Show the history window, or place the <number>th history item into the input window
+::potato::define_slash_cmd history {
   variable conn;
 
   if { [string trim $str] eq "" } {
@@ -11791,7 +11752,7 @@ proc ::potato::slash_cmd_history {c full str} {
       
   return;
 
-};# ::potato::slash_cmd_history
+};# /history
 
 #: proc ::potato::timeFmt
 #: arg seconds a number of seconds
