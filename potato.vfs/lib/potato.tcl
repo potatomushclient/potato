@@ -10730,7 +10730,7 @@ proc ::potato::process_slash_command {c str {silent 0}} {
           }
        if { [llength $partial] == 0 } {
             if { $c != 0 && !$silent } {
-                 outputSystem $c [T "Unknown /command \"%s\". Use //command to send directly to MU*." $cmd]
+                 outputSystem $c [T "Unknown /command \"%s\". Use /slash for a list. Use //command to send directly to MU*." $cmd]
                } else {
                  bell -displayof .
                }
@@ -10930,9 +10930,9 @@ proc ::potato::customSlashCommand {c w cmd str} {
   return;
 };# /at
 
-#: /run <macro>
+#: /runmacro <macro>
 #: Run the given macro
-::potato::define_slash_cmd run {
+::potato::define_slash_cmd runmacro {
   variable world;
   variable conn;
 
@@ -10968,7 +10968,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
   send_to $c $world($do) "\n" 0 ""
 
   return;
-};# /run
+};# /runmacro
 
 #: /cancelat <id>
 #: Cancel a previous /at using the after id given by /at
