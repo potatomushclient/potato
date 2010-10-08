@@ -1,0 +1,13 @@
+#summary Address Book
+
+=Address Book=
+
+Potato's Address Book contains all the worlds you've added. You can access it via *File* -> *Address Book*.
+
+On the left of the Address Book is a list of World Groups. These Groups make it easier for you to organise your worlds - for instance, you might have a group for all the worlds you're an admin on, a group for RP worlds, a group for MUDs, etc. You can add and remove groups using the *New Group* and *Delete Group* buttons at the bottom of the window. You can add or remove a world from a group by right-clicking the world name and selecting the group.
+
+On the right of the window is a list of Worlds in the currently selected group, sorted by name. The list shows the world name, host/port, and default character. You can add a new world here in two ways:
+  * Use the *New World* button to create a new world using the Default World settings.
+  * Use the *Copy World* button to add a new world which uses the settings from the selected world as defaults.
+
+You can also edit or delete the currently selected world with the *Edit World* and *Delete World* buttons. Note that when you delete a world, it does not get removed immediately - instead, the world will turn red in the list, and will automatically be added to the "Temp/Deleted" group. The world will not be saved unless you use the *Undelete* button to restore it.

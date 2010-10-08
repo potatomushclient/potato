@@ -6,7 +6,7 @@ There are two different methods for adding a new world in Potato:
 
   * Click the "New World" button in the [AddressBook Address Book]
   * Perform a Quick Connect
-    * Select _Quick Connect_ from the _Connect To..._ menu, or
+    * Select *Quick Connect* from the *Connect To...* menu, or
     * Use the `/quick` [SlashCommands /command].
 
 Both methods ask you to enter a name, host (ip/address), and port number for the new world. A Quick Connect adds the world using the default world settings and then connects immediately, while adding a world through the Address Book brings up the [ConfigureWorlds World Configuration window] for you to change the new world's settings.

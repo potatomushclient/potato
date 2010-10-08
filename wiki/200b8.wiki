@@ -14,6 +14,8 @@
   * Added /cancelat to cancel a previously entered /at.
   * Added support for Macros. Define macros via the Options menu, and run with `/run <macro>`.
   * Disabling/re-enabling Timers didn't work correctly. Reported by Paige.
-  * Malformed FANSI codes were handled badly. Reported by Paige.
   * You can now define multiple characters for each world, choose which to connect to, and set a default to connect to.
   * When Echo Input was enabled, connection strings were echoed with passwords visible. Now they're elided.
+  * The ANSI parsing routine has been rewritten, for better parsing of XTerm/FANSI color codes. Reported by Paige.
+  * Added the `/silent` command, which runs another /command but suppresses its success/error messages. Example: `/silent /at 1s=/print foo`. 
+  

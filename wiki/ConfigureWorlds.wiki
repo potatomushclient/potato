@@ -1,0 +1,23 @@
+#summary Configuring a World
+
+=Configuring a World=
+
+To configure a world in Potato, open the [Address Book], select the world, and click the *Edit World* button. If you're already connected to the world, you can also select *Options* -> *Configure World*, or click the Globe icon on the toolbar.
+
+This will bring up the Configure World window. Changes made here do not take effect until you click *OK* to close the window.
+
+World Options are grouped into a number of sections, which are shown on the left of the window. When you select a section, the options are shown on the right. The sections are
+
+  * [ConfigureWorldsBasic Basics]
+  * [ConfigureWorldsChars Characters]
+  * [ConfigureWorldsConnection Connections]
+    * [ConfigureWorldsConnectionTelnet Telnet Options]
+  * Display
+    * [ConfigureWorldsDisplayANSI ANSI, Colours and Fonts]
+    * [ConfigureWorldsDisplayMisc Miscellaneous]
+  * [ConfigureWorldsActivity Activity Settings]
+  * [ConfigureWorldsMisc Miscellaneous]
+  * [ConfigureWorldsFCommands F-Commands]
+  * [ConfigureWorldsTimers Timers]
+  * [ConfigureWorldsAutoSends Auto-Sends]
+  * [ConfigureWorldsNotes Notes]
