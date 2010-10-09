@@ -349,7 +349,7 @@ proc ::potato::telnet::process_sub_3_1 {c str} {
                  if { [info exists cs(serverName)] } {
                        # We have a match. IAC-SB-CHARSET-ACCEPTED-<charset>-IAC-SE
                        ::potato::sendRaw $c "$tCmd(IAC)$tCmd(SB)$tOpt(CHARSET)$subCmd(CHARSET,ACCEPTED)[escape $cs(serverName)]$tCmd(IAC)$tCmd(SE)" 1
-                       catch {fconfigure $conn($c,id) -encoding $cs(clientName)}
+                       set conn($c,id,encoding) $cs(clientName)
                        ::potato::verbose $c [::potato::T "Encoding changed to $cs(clientName)"]
                     } else {
                       # No match. IAC-SB-CHARSET-REJECTED-IAC-SE
