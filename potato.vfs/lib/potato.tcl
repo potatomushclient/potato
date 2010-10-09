@@ -1900,19 +1900,10 @@ proc ::potato::sendRaw {c str telnet} {
                  debug_packet $c 0 "$str\n"
                }
           }
-       set cmd [list ioWrite]
        if { $telnet } {
-            lappend cmd "-nonewline"
-          }
-       lappend cmd $conn($c,id) $str
-       if { $telnet } {
-            set encoding [fconfigure $conn($c,id) -encoding]
-            fconfigure $conn($c,id) -encoding binary
-          }
-       catch {{*}$cmd}
-       if { $telnet } {
-            catch {flush $conn($c,id)}
-            fconfigure $conn($c,id) -encoding $encoding
+            ioWrite -nonewline $conn($c,id) $str
+          } else {
+            ioWrite $conn($c,id) [encoding convertto $conn($c,id,encoding) $str]
           }
      }
 
@@ -2526,23 +2517,25 @@ proc ::potato::connectVerifyComplete {c} {
   fileevent $id writable {}
 
   switch $world($w,type) {
-     "MUSH" {set translation crlf}
-     "MUD"  {set translation cr}
-     "Auto" {set translation auto}
-     default {set translation auto}
+     "MUSH" {set translation "\r\n"}
+     "MUD"  {set translation "\n"}
+     default {set translation "\r\n"}
   }
   if { [hasProtocol $c ssl] } {
        tls::import $id
      }
-
-  fconfigure $id -translation $translation -encoding iso8859-1 -eof {} -blocking 0 -buffering none
-
-  set encErr [catch {fconfigure $id -encoding $world($w,encoding,start)} encErrTxt];# change to preferred encoding if possible
-  if { $encErr } {
-       verbose $c [T "Unable to set encoding to %s: %s", $world($w,encoding,start) $encErrTxt]
-     } elseif { $world($w,encoding,start) ne "iso8859-1" } {
-       verbose $c [T "Encoding changed to %s." $world($w,encoding,start)]
+  set conn($c,id,lineending) $translation
+  set conn($c,id,lineending,length) [string length $conn($c,id,lineending)]
+  if { $world($w,encoding,start) in [encoding names] } {
+       set conn($c,id,encoding) $world($w,encoding,start)
+     } else {
+       set conn($c,id,encoding) iso8859-1
      }
+  # Set encoding/translation to binary, otherwise Tcl will helpfully automatically translate
+  # \u00ff (y-umlat) into char 255 (y-umlat), and we can't distinguish between the unicode char
+  # and a telnet IAC. So, get data in binary format, and convert manually after telnet parsing.
+  fconfigure $id -translation binary -encoding binary -eof {} -blocking 0 -buffering none
+
   set peer [fconfigure $id -peername]
   if { [lindex $peer 0] == [lindex $peer 1] } {
        set str [lindex $peer 0]
@@ -2887,10 +2880,11 @@ proc ::potato::get_mushage {c} {
   if { $world($conn($c,world),telnet) || [hasProtocol $c telnet] } {
        set text [::potato::telnet::process $c $text]
      }
-  append conn($c,outputBuffer) $text
-  while { [set nextNewline [string first "\n" $conn($c,outputBuffer)]] > -1 } {
+
+  append conn($c,outputBuffer) [encoding convertfrom $conn($c,id,encoding) $text]
+  while { [set nextNewline [string first $conn($c,id,lineending) $conn($c,outputBuffer)]] > -1 } {
           set toProcess [string range $conn($c,outputBuffer) 0 [expr {$nextNewline-1}]]
-          set conn($c,outputBuffer) [string range $conn($c,outputBuffer) [expr {$nextNewline+1}] end]
+          set conn($c,outputBuffer) [string range $conn($c,outputBuffer) [expr {$nextNewline+$conn($c,id,lineending,length)}] end]
                get_mushageProcess $c $toProcess
         }
   return;
