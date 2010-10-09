@@ -2532,7 +2532,7 @@ proc ::potato::connectVerifyComplete {c} {
        set conn($c,id,encoding) iso8859-1
      }
   # Set encoding/translation to binary, otherwise Tcl will helpfully automatically translate
-  # \u00ff (y-umlat) into char 255 (y-umlat), and we can't distinguish between the unicode char
+  # \u00ff (y-umlaut) into char 255 (y-umlaut), and we can't distinguish between the unicode char
   # and a telnet IAC. So, get data in binary format, and convert manually after telnet parsing.
   fconfigure $id -translation binary -encoding binary -eof {} -blocking 0 -buffering none
 
@@ -12377,7 +12377,7 @@ proc ::potato::tasksInit {} {
        autoConnects,state  always \
        fcmd2,cmd           "::potato::fcmd 2" \
        fcmd2,name          [T "Run F2 Command"] \
-       fcmd3,state         always \
+       fcmd2,state         always \
        fcmd3,cmd           "::potato::fcmd 3" \
        fcmd3,name          [T "Run F3 Command"] \
        fcmd4,state         always \
