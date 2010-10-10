@@ -211,9 +211,17 @@ proc ::wikihelp::parse {input} {
   set values [list]
   set input [string map [list \r\n \n \r \n] $input]
   set buffer ""
+  set past_pragma 0
 
   foreach line [split $input "\n"] {
      set marginTag "margins"
+     if { !$past_pragma } {
+          if { [string index $line 0] eq "#" } {
+               continue; # skip #pragma lines like #summary
+             } else {
+               set past_pragma 1
+             }
+        }
      if { !$multinoparse && [string equal $line "\{\{\{"] } {
           set multinoparse 0
           continue;
