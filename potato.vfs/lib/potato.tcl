@@ -10130,9 +10130,9 @@ proc ::potato::parseUserVars {c str} {
                              _w $w \
                              _name $world($w,name) \
                              _host $world($w,host) \
-                             _port $world($w,port)];#abc \
+                             _port $world($w,port) \
                              _char $conn($c,char) \
-                             _chr $world($c,char) \
+                             _chr $conn($c,char) \
                        ] ;# array set masterVars
 
   while { [set varMarker [string first $varMarkerChar $str]] > -1 } {
