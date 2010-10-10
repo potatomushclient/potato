@@ -20,3 +20,5 @@
   * Added the `/silent` command, which runs another /command but suppresses its success/error messages. Example: `/silent /at 1s=/print foo`.
   * The customizable 'F2' command didn't work due to a typo. Reported by Brev@ElendorMUSH.
   * Due to an encoding issue, Potato would mistake all y-umlaut characters for telnet IACs, even if they weren't. Much thanks to Brazil for finding this.
+  * As a side effect of the encoding fix, the "Auto" option for MU`*` Type is no longer available.
+  * You can now use %0-%9 subs for matched subexpressions in the "Spawn To" field for events. This means that, for instance, an Event pattern of `<*> *` and a "Spawn To" of `%0` would spawn anything said on the Public channel to the "Public" spawn, on Softcode to the "Softcode" spawn, etc. Suggested by Merin.
