@@ -2011,7 +2011,9 @@ proc ::potato::configureTextWidget {c t} {
   $t tag configure timestamp -elide 1
 
   # XTerm / FANSI Colors
-  set XTerm [list #000000 #00005F #000087 #0000AF #0000D7 #0000FF #005F00 #005F5F \
+  set XTerm [list #000000 #AA0000 #00AA00 #AA5500 #0000AA #AA00AA #00AAAA #AAAAAA \
+                  #555555 #FF5555 #55FF55 #FFFF55 #5555FF #FF55FF #55FFFF #FFFFFF \
+                  #000000 #00005F #000087 #0000AF #0000D7 #0000FF #005F00 #005F5F \
                   #005F87 #005FAF #005FD7 #005FFF #008700 #00875F #008787 #0087AF \
                   #0087D7 #0087FF #00AF00 #00AF5F #00AF87 #00AFAF #00AFD7 #00AFFF \
                   #00D700 #00D75F #00D787 #00D7AF #00D7D7 #00D7FF #00FF00 #00FF5F \
@@ -2041,9 +2043,9 @@ proc ::potato::configureTextWidget {c t} {
                   #000000 #121212 #1C1C1C #262626 #303030 #3A3A3A #444444 #4E4E4E \
                   #585858 #626262 #6C6C6C #767676 #808080 #8A8A8A #949494 #9E9E9E \
                   #A8A8A8 #B2B2B2 #BCBCBC #C6C6C6 #D0D0D0 #DADADA #E4E4E4 #EEEEEE]
-  for {set i 0; set j 16} {$j < 256} {incr i ; incr j} {
-    $t tag configure ANSI_fg_xterm$j -foreground [lindex $XTerm $i]
-    $t tag configure ANSI_bg_xterm$j -background [lindex $XTerm $i]
+  for {set i 0} {$i < 256} {incr i} {
+    $t tag configure ANSI_fg_xterm$i -foreground [lindex $XTerm $i]
+    $t tag configure ANSI_bg_xterm$i -background [lindex $XTerm $i]
   }
 
 
@@ -2885,7 +2887,7 @@ proc ::potato::get_mushage {c} {
   while { [set nextNewline [string first $conn($c,id,lineending) $conn($c,outputBuffer)]] > -1 } {
           set toProcess [encoding convertfrom $conn($c,id,encoding) [string range $conn($c,outputBuffer) 0 [expr {$nextNewline-1}]]]
           set conn($c,outputBuffer) [string range $conn($c,outputBuffer) [expr {$nextNewline+$conn($c,id,lineending,length)}] end]
-               get_mushageProcess $c $toProcess
+          get_mushageProcess $c $toProcess
         }
   return;
 
@@ -3279,7 +3281,6 @@ proc ::potato::handleAnsiCodes {c codes} {
 
   set xtermStarts [list 38 48]
   set ansiColors [list x r g y b m c w]
-  set xtermAnsi [list x r g y b m c w xh rh gh yh bh mh ch wh]
   set highlightable [concat $ansiColors [list fg bg]]
   while { [llength $codes] } {
     set curr [lindex $codes 0]
@@ -3360,11 +3361,7 @@ proc ::potato::handleAnsiCodes {c codes} {
              } else {
                set which bg
              }
-          if { $xterm <= 16 } {
-               set conn($c,ansi,$which) [lindex $xtermAnsi $xterm]
-             } else {
-               set conn($c,ansi,$which) "xterm$xterm"
-             }
+          set conn($c,ansi,$which) "xterm$xterm"
          }
     };# switch
   };# while
