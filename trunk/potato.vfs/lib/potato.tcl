@@ -2881,9 +2881,9 @@ proc ::potato::get_mushage {c} {
        set text [::potato::telnet::process $c $text]
      }
 
-  append conn($c,outputBuffer) [encoding convertfrom $conn($c,id,encoding) $text]
+  append conn($c,outputBuffer) $text
   while { [set nextNewline [string first $conn($c,id,lineending) $conn($c,outputBuffer)]] > -1 } {
-          set toProcess [string range $conn($c,outputBuffer) 0 [expr {$nextNewline-1}]]
+          set toProcess [encoding convertfrom $conn($c,id,encoding) [string range $conn($c,outputBuffer) 0 [expr {$nextNewline-1}]]]
           set conn($c,outputBuffer) [string range $conn($c,outputBuffer) [expr {$nextNewline+$conn($c,id,lineending,length)}] end]
                get_mushageProcess $c $toProcess
         }
