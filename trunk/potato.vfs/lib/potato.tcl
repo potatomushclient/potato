@@ -3523,12 +3523,21 @@ proc ::potato::events {c str} {
         if { [catch {{*}$matchCmd} result] || $result == $failStr } {
              continue;
            }
+        set mapList [list "%%" "%"]
+        for {set i 0} {$i < 10} {incr i} {
+             lappend mapList %$i
+             if { [info exists arg($i)] } {
+                  lappend mapList [string range $str {*}$arg($i)]
+                } else {
+                  lappend mapList ""
+                }
+           }
         if { !$retVals(matched) } {
              array set retVals [list matched 1 result $result pattern $world($w,events,$x,pattern) \
                      matchtype $world($w,events,$x,matchtype)]
            }
         if { !$retVals(spawn) && $world($w,events,$x,spawn) } {
-             set retVals(spawnTo) [parseUserVars $c $world($w,events,$x,spawnTo)]
+             set retVals(spawnTo) [parseUserVars $c [string map $mapList $world($w,events,$x,spawnTo)]]
            }
         if { !$retVals(omit) } {
              set retVals(omit) $world($w,events,$x,omit)
@@ -3552,15 +3561,6 @@ proc ::potato::events {c str} {
                   foreach {retVals(start) retVals(end)} [set ->] {break}
                 }
             }
-        set mapList [list "%%" "%"]
-        for {set i 0} {$i < 10} {incr i} {
-             lappend mapList %$i
-             if { [info exists arg($i)] } {
-                  lappend mapList [string range $str {*}$arg($i)]
-                } else {
-                  lappend mapList ""
-                }
-           }
         if { $retVals(input,window) eq 0 && $world($w,events,$x,input,window) != 0 } {
              set retVals(input,window) $world($w,events,$x,input,window)
              set retVals(input,string) [string map $mapList $world($w,events,$x,input,string)]
