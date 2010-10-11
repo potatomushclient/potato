@@ -20,7 +20,7 @@
         * [ConfigureWorldsFCommands F-Commands]
         * [ConfigureWorldsTimers Timers]
         * [ConfigureWorldsAutoSends Auto-Sends]
-  * [ConfigureWorldsNotes Notes]
+        * [ConfigureWorldsNotes Notes]
     * [AddressBook Address Book]
     * [Connecting Connecting to a MU`*`]
     * [ConfigurePotato Configuring Potato]
