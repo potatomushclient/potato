@@ -2,7 +2,7 @@
 
 =Configuring a World=
 
-To configure a world in Potato, open the [AddressBook Address Book], select the world, and click the *Edit World* button. If you're already connected to the world, you can also select *Options* &#8594; *Configure World*, or click the Globe icon on the toolbar.
+To configure a world in Potato, open the [AddressBook Address Book], select the world, and click the *Edit World* button. If you're already connected to the world, you can also select *Options* -> *Configure World*, or click the Globe icon on the toolbar.
 
 This will bring up the Configure World window. Changes made here do not take effect until you click *OK* to close the window.
 

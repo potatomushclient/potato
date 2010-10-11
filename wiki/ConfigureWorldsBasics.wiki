@@ -1,8 +1,8 @@
 # Configure World -> Basic Settings
 
-=Configure World &#8594; Basic Settings=
+=Configure World -> Basic Settings=
 
-The *Basic Settings* &#8594; page of the World Configuration window holds some standard information about the world.
+The *Basic Settings* page of the World Configuration window holds some standard information about the world.
 
   * *World Name*: The name of the world, as it appears in the [AddressBook Address Book], *Connect To...* Menu, etc
   * *1st Address* and *1st Port*: The first address/port to attempt to connecting to for the world.
