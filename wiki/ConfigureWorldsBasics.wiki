@@ -9,7 +9,7 @@ The *Basic Settings* page of the World Configuration window holds some standard 
   * *Use SSL?*: Connect to the 1st Address using SSL encryption?
   * *2nd Address* and *2nd Port*: The address/port to attempt to connect to when the 1st Address is unavilable.
   * *Use SSL?*: Connect to the 2nd Address using SSL encryption?
-  * *Default Char*: The character to use by default when connecting to the world. This is the character used by [Auto-Connects] and the `/connect` /command. You can add/edit characters on the [ConfigureWorldChars Characters] page of the World Configuration window.
+  * *Default Char*: The character to use by default when connecting to the world. This is the character used by [AutoConnects Auto-Connects] and the `/connect` /command. You can add/edit characters on the [ConfigureWorldChars Characters] page of the World Configuration window.
   * *Description*: A brief description of the world. Not used anywhere, purely for your own reference.
   * *Proxy Type*: The type of proxy to use, if you need to connect through one. Currently only SOCKS4 is supported.
   * *Proxy Host* and *Proxy Port*: The address and port of the proxy to connect through.

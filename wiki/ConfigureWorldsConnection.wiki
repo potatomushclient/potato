@@ -1,0 +1,12 @@
+#summary Configure World -> Connection
+
+=Configure World -> Connection=
+
+The *Connection* page of the World Configuration holds some basic settings about how *Potato* attempts to connect to a world.
+
+  * *Auto-Reconnect when booted?*: When Potato fails to connect to this world, or gets disconnected unexpectedly, should it attempt to reconnect automatically?
+  * *Auto-Reconnect after (seconds):* When Auto-Reconnect is enabled, how long should Potato wait before attempting to auto-reconnect? This is in seconds, so 60 is 1 minutes, 300 is 5 minutes, etc.
+  * *Starting Encoding*: The encoding to use for the connection. The default is iso8859-1 - this is probably correct for most games, though some may use ascii or unicode/utf-8, and games in other languages may use something else.
+  * *Negotiate Encoding?*: If the MU`*` supports negotiating encoding via telnet, should we do so? Generally a good idea to leave this enabled, although not many MU`*` servers support this (MUX being a notable exception).
+  * *Login Format*: When *Potato* connects to the MUSH automatically, what format should the username and password be in? The first `%s` represents the username, and the second `%s` the password - if you need to send the password first, use `%1$s` for the username and `%2$s` for the password.
+  * *Send Login Details after (seconds)*: How many seconds to wait between successfully establishing a connection and sending the login string.
