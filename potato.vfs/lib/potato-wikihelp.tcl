@@ -15,7 +15,7 @@ namespace eval ::wikihelp {
 #  * Does not parse markup in link names
 #  * Contents Page in Tree displays nothing but ul-list elements
 #  * Contents Page in Tree does nothing but link and nested ul-list parsing (no bold, etc)
-#  * Absolutely no HTML support. Basic parsing of entities, and parsing (and ignoring) of tags would be a good minimum.
+#  * Very little HTML support. There is some handling of entities, but parsing (and ignoring) tags too would be good.
 
 #: proc ::wikihelp::help
 #: arg topic Topic to show. Defaults to "".
@@ -182,6 +182,8 @@ proc ::wikihelp::showTopic {topic} {
   $path(text) insert end {*}[parse [read $fid]]
   $path(text) configure -state disabled
 
+  catch {close $fid}
+
   # Show the topic in the tree
   set curr [lindex [$path(tree) selection] 0]
   if { [info exists index(list,$topic)] && ($curr eq "" || $curr ni $index(list,$topic)) } {
@@ -212,6 +214,9 @@ proc ::wikihelp::parse {input} {
   set input [string map [list \r\n \n \r \n] $input]
   set buffer ""
   set past_pragma 0
+
+  set html_entity_names [list lt gt copy nbsp amp]
+  set html_entity_chars [list "<" ">" [format %c 169] " " "&"];# <-- this uses a regular space for &nbsp; since we don't squish anyway 
 
   foreach line [split $input "\n"] {
      set marginTag "margins"
@@ -284,6 +289,34 @@ proc ::wikihelp::parse {input} {
             continue; # nothing special to parse
           }
        switch -exact -- $char {
+          &  {# HTML entity. NOTE: This never matches due to the regexps above not including &, because although
+              # Google's Wiki accepts some HTML tags, it apparantly doesn't accept entities. Damn.
+              if { [regexp "^([join $html_entity_names "|"]|#\[0-9\]+|#\[xX\]\[A-Fa-f0-9\]+);(.*)" $line -> entity line] } {
+                   if { [string index $entity 0] ne "#" } {
+                        set string [lindex $html_entity_chars [lsearch -exact $html_entity_names $entity]]
+                      } elseif { [string index $entity 1] ni [list x X] } {
+                        set string [format %c [string range $entity 1 end]]
+                      } else {
+                        set entity [string range $entity 2 end]
+                        if { [scan $entity %x num] != 1 } {
+                             # Bad value
+                             set string "&"
+                             set line "$entity;$line"
+                           } else {
+                             set string [format %c $num]
+                           }
+                      }
+                 } else {
+                   # We'll just ignore the entity
+                   set string "&"
+                   set line [string range $line 1 end]
+                 }
+              if { $linkparse || $headerparse } {
+                   append buffer $string
+                 } else {
+                   lappend values $string [parseTags [list $marginTag] $bold $italic $noparse]
+                 }
+             }
           *  {set bold [expr {!$bold}]}
           _  {set italic [expr {!$italic}]}
           `  {set noparse [expr {!$noparse}]}
@@ -453,6 +486,7 @@ proc ::wikihelp::populateTOC {} {
                        } else {
                          set tags [list badlink]
                        }
+                    set file $topic
                   } elseif { [info exists index(file,$topic)] } {
                     set file $topic
                     set summary $index(file,$topic)
