@@ -11,6 +11,7 @@ Below is a list of the main features supported by Potato.
     * 16 colours (8 normal, plus 8 highlight)
     * Underline and Flash
     * 256 XTerm Colours
+    * [http://www.fansi.org FANSI support]
   * Logging support
   * Upload files directly to the game. Useful for code
   * Full Unicode support, and the ability to negotiate encoding

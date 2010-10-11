@@ -8,7 +8,7 @@
   * [GettingStarted Getting Started]
     * [AddWorlds Creating a New World]
       * [ConfigureWorlds Configuring a World]
-        * [ConfigureWorldsBasic Basics]
+        * [ConfigureWorldsBasics Basics]
         * [ConfigureWorldsChars Characters]
         * [ConfigureWorldsConnection Connections]
           * [ConfigureWorldsConnectionTelnet Telnet Options]

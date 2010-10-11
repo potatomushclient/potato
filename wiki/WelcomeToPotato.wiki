@@ -9,6 +9,7 @@ It has all the standard [Features features] you'd expect in a MU`*` client and m
   * Configurable colors, including
     * 16 standard ANSI colors (8 normal and 8 highlight)
     * Flash and Underline
+    * 256 XTerm Colours
     * [http://www.fansi.org FANSI support]
   * Logging
   * Upload a file to the MU`*`, useful for code

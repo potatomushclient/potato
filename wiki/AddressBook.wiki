@@ -2,7 +2,7 @@
 
 =Address Book=
 
-Potato's Address Book contains all the worlds you've added. You can access it via *File* -> *Address Book*.
+Potato's Address Book contains all the worlds you've added. You can access it via *File* &#8594; *Address Book*.
 
 On the left of the Address Book is a list of World Groups. These Groups make it easier for you to organise your worlds - for instance, you might have a group for all the worlds you're an admin on, a group for RP worlds, a group for MUDs, etc. You can add and remove groups using the *New Group* and *Delete Group* buttons at the bottom of the window. You can add or remove a world from a group by right-clicking the world name and selecting the group.
 

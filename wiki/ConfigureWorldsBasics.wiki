@@ -1,0 +1,16 @@
+# Configure World -> Basic Settings
+
+=Configure World &#8594; Basic Settings=
+
+The *Basic Settings* &#8594; page of the World Configuration window holds some standard information about the world.
+
+  * *World Name*: The name of the world, as it appears in the [AddressBook Address Book], *Connect To...* Menu, etc
+  * *1st Address* and *1st Port*: The first address/port to attempt to connecting to for the world.
+  * *Use SSL?*: Connect to the 1st Address using SSL encryption?
+  * *2nd Address* and *2nd Port*: The address/port to attempt to connect to when the 1st Address is unavilable.
+  * *Use SSL?*: Connect to the 2nd Address using SSL encryption?
+  * *Default Char*: The character to use by default when connecting to the world. This is the character used by [Auto-Connects] and the `/connect` /command. You can add/edit characters on the [ConfigureWorldChars Characters] page of the World Configuration window.
+  * *Description*: A brief description of the world. Not used anywhere, purely for your own reference.
+  * *Proxy Type*: The type of proxy to use, if you need to connect through one. Currently only SOCKS4 is supported.
+  * *Proxy Host* and *Proxy Port*: The address and port of the proxy to connect through.
+  * *MU`*` Type*: Are you connecting to a MUSH, or a MUD? This controls the line-endings used - MUSHes (and telnet servers) typically send crlf (`\r\n`) while MUDs typically only send lf (`\n`). If in doubt, start with MUD, and if you see a weird symbol on the end of every line, switch to MUSH.
