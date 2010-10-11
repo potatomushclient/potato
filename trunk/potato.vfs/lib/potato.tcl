@@ -1897,7 +1897,7 @@ proc ::potato::sendRaw {c str telnet} {
             if { $telnet } {
                  debug_packet $c 0 $str
                } else {
-                 debug_packet $c 0 "$str\n"
+                 debug_packet $c 0 "$str$conn($c,id,lineending)"
                }
           }
        if { $telnet } {
@@ -10920,6 +10920,28 @@ proc ::potato::customSlashCommand {c w cmd str} {
 
   return;
 };# /at
+
+#: /debug [--on | --off | --toggle]
+#: Show the Debug Packets window
+::potato::define_slash_cmd debug {
+  variable conn;
+
+  if { $c == 0 } {
+       bell -displayof .
+       return;
+     }
+
+  if { $str eq "--on" } {
+       set conn($c,debugPackets) 1
+     } elseif { $str eq "--off" } {
+       set conn($c,debugPackets) 0
+     } else {
+       set conn($c,debugPackets) [lindex [list 1 0] $conn($c,debugPackets)]
+     }
+
+  return;
+
+};# /debug
 
 #: /runmacro <macro>
 #: Run the given macro
