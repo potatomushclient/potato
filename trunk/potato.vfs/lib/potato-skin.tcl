@@ -629,7 +629,7 @@ proc ::skin::potato::init {} {
   set widgets(statusbar,modes,sub) [::ttk::frame $widgets(statusbar,modes).sub]
   pack $widgets(statusbar,modes,sub) -padx 4
   set widgets(statusbar,modes,sub,label) [::ttk::label $widgets(statusbar,modes,sub).label -text "Mode: "]
-  set widgets(statusbar,modes,sub,multi) [::ttk::label $widgets(statusbar,modes,sub).multi -text "unknown"]
+  set widgets(statusbar,modes,sub,multi) [::ttk::label $widgets(statusbar,modes,sub).multi -text "???" -width 6]
   pack $widgets(statusbar,modes,sub,label) $widgets(statusbar,modes,sub,multi) -side left -anchor w
   $widgets(statusbar,clock,label) configure -textvariable ::potato::potato(clock)
 
@@ -1179,7 +1179,7 @@ proc ::skin::potato::unshow {c} {
   set input2 [::potato::connInfo $c input2]
 
   set widgets(conn,$c,withInput) [set input[::potato::connInfo $c inputFocus]]
-  $widgets(statusbar,modes,sub,multi) configure -textvariable "" -text "unknown"
+  $widgets(statusbar,modes,sub,multi) configure -textvariable "" -text "???"
 
   $input1 configure -yscrollcommand ""
   $widgets(pane,btm,pane,top,sb) configure -command ""
