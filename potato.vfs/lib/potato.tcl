@@ -59,7 +59,7 @@ proc ::potato::setPrefs {readfile} {
   set world(-1,description) ""
   set world(-1,loginStr) {connect %s %s}
   set world(-1,loginDelay) 1.5
-  set world(-1,type) "Auto"
+  set world(-1,type) "MUD"
   set world(-1,telnet) 1
   set world(-1,telnet,ssl) 0
   set world(-1,telnet,naws) 1
@@ -7323,7 +7323,7 @@ proc ::potato::main {} {
   set potato(up) ""
 
   # Regexp which spawn names must match
-  set potato(spawnRegexp) {^[A-Za-z][A-Za-z0-9_-]{0,49}$}
+  set potato(spawnRegexp) {^[A-Za-z][A-Za-z0-9_!+="*#@'-]{0,49}$}
 
   set potato(skinMinVersion) "1.3" ;# The minimum version of the skin spec this Potato supports.
                                    ;# All skins must be at least this to be usable.
