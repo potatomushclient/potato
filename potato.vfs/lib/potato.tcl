@@ -3977,6 +3977,11 @@ proc ::potato::closeConn {{c ""} {autoDisconnect 0} {prompt 1}} {
     unset conn($c,log,$x)
   }
   catch {destroy {*}$conn($c,widgets) $conn($c,input1) $conn($c,input2)}
+  if { [info exists conn($c,userAfterIDs)] } {
+       foreach x $conn($c,userAfterIDs) {
+         after cancel $x ;# Cancel all "/at"s.
+       }
+     }
   array unset conn $c,*
   ::skin::$potato(skin)::status $c
   destroy $t
@@ -10123,17 +10128,30 @@ proc ::potato::parseUserVars {c str} {
   set return ""
   set inVar 0
   set varMarkerChar {$}
-  set w $conn($c,world)
-  # $_chr$ was a typo, but is left as an alias for $_char$ for backwards compatability
-  array set masterVars [list _u [up] \
-                             _c $c \
-                             _w $w \
-                             _name $world($w,name) \
-                             _host $world($w,host) \
-                             _port $world($w,port) \
-                             _char $conn($c,char) \
-                             _chr $conn($c,char) \
-                       ] ;# array set masterVars
+  if { [info exists conn($c,world)] } {
+       set w $conn($c,world)
+       # $_chr$ was a typo, but is left as an alias for $_char$ for backwards compatability
+       array set masterVars [list _u [up] \
+                                  _c $c \
+                                  _w $w \
+                                  _name $world($w,name) \
+                                  _host $world($w,host) \
+                                  _port $world($w,port) \
+                                  _char $conn($c,char) \
+                                  _chr $conn($c,char) \
+                            ] ;# array set masterVars
+     } else {
+       set w -1;
+       array set masterVars [list _u [up] \
+                                  _c 0 \
+                                  _w -1 \
+                                  _name "Potato" \
+                                  _host "unknown" \
+                                  _port 0 \
+                                  _char "" \
+                                  _chr "" \
+                            ] ;# array set masterVars
+     }
 
   while { [set varMarker [string first $varMarkerChar $str]] > -1 } {
           if { !$inVar } {
@@ -10651,6 +10669,9 @@ proc ::potato::process_slash_command {c str {silent 0}} {
   variable conn;
   variable world;
 
+  if { ![info exists conn($c,id)] } {
+       return; # Running a /command for a closed connection - maybe on a timer that didn't cancel?
+     }
   set cmd [string range $str 1 end]
   if { $cmd eq "" } {
        if { $c != 0 && !$silent } {
