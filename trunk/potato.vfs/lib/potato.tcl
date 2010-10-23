@@ -1892,7 +1892,7 @@ proc ::potato::sendRaw {c str telnet} {
   variable conn;
 
   # Make sure we have an id to send to, and that we're not still trying to connect
-  if { $conn($c,id) ne "" && $conn($c,connected) == 1 } {
+  if { $conn($c,id) ne "" && $conn($c,connected) == 1 && $conn($c,id) in [chan names] } {
        if { $conn($c,debugPackets) } {
             if { $telnet } {
                  debug_packet $c 0 $str
