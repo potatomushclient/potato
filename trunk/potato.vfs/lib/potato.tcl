@@ -11034,6 +11034,10 @@ proc ::potato::customSlashCommand {c w cmd str} {
 proc ::potato::cleanup_afters {c} {
   variable conn;
 
+  if { ![info exists conn($c,userAfterIDs)] } {
+       return;
+     }
+
   set new [list]
   set all [after info]
   foreach x $conn($c,userAfterIDs) {
