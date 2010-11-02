@@ -6336,6 +6336,9 @@ proc ::potato::configureWorldCharsFinish {w save} {
             lappend worldconfig($w,charList) [list $newChar $newPw]
           } else {
             set worldconfig($w,charList) [lreplace $worldconfig($w,charList) $old $old [list $newChar $newPw]]
+            if { $worldconfig($w,charDefault) eq $worldconfig($w,CONFIG,chars,editing) } {
+                 set worldconfig($w,charDefault) $newChar
+               }
           }
      }
 
