@@ -3093,7 +3093,7 @@ proc ::potato::get_mushageProcess {c line} {
   if { !$empty && $eventInfo(matched) && $eventInfo(spawnTo) ne "" } {
        set spawns "$spawns $eventInfo(spawnTo)"
      }
-  if { [string trim $spawns] ne "" } {
+  if { !$empty && [string trim $spawns] ne "" } {
        set limit [expr {$world($w,spawnLimit,on) ? $world($w,spawnLimit,to) : 0}]
        set insertedAnything 1
        foreach {x y} [parseSpawnList $spawns $c] {
@@ -7678,6 +7678,10 @@ proc ::potato::showMessageTimestamp {widget x y} {
   set timestamp [$widget get {*}$stamp]
   # Find coords to show it
   set coords [$widget bbox $index]
+  if { [llength $coords] < 2 || [lindex $coords 0] eq "" || [lindex $coords 1] eq "" } {
+       tooltipLeave $widget
+       return;
+     }
   set x [expr {[lindex $coords 0] + [winfo rootx $widget]}]
   set y [expr {[lindex $coords 1] + [winfo rooty $widget]}]
   tooltipEnter $widget 900 [clock format $timestamp -format $misc(clockFormat)] $x $y
@@ -11145,7 +11149,7 @@ proc ::potato::cleanup_afters {c} {
     if { "system" in [$t tag names $i.0] } {
          continue;
        }
-    set line [$t get $i.0 "$i.0 lineend"]
+    set line [$t get -displaychars $i.0 "$i.0 lineend"]
     switch -exact -- $matchType {
       regexp {set caught [catch {regexp {*}$case $str $line} match]}
       literal {set caught [catch {string equal {*}$case $str $line} match]}
@@ -11159,7 +11163,7 @@ proc ::potato::cleanup_afters {c} {
             }
          return;
        }
-    if { !$match || $invert } {
+    if { ($invert ? $match : !$match) } {
          $t tag add limited $i.0 "$i.0 lineend+1char"
        }
   }
