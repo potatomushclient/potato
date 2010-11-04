@@ -7,6 +7,8 @@ namespace eval ::wikihelp {
   set info(TOC) "ContentsPage"
   set info(win) .wikihelp
   set info(indexed) 0
+  set info(disppath) "Potato Help"
+  set info(sb) $info(disppath)
 
   namespace import ::potato::T
 }
@@ -46,6 +48,8 @@ proc ::wikihelp::help {{topic ""}} {
 
   pack [set frame [ttk::frame $info(win).frame]] -expand 1 -fill both
   pack [set path(pane) [::ttk::panedwindow $frame.pane -orient horizontal]] -side top -expand 1 -fill both
+  pack [::ttk::frame $frame.sb] -side top -fill x -padx 3 -pady 2
+  pack [set path(sb) [ttk::label $frame.sb.l -textvariable ::wikihelp::info(sb) -width 75]] -side left -expand 0 -fill none
   $path(pane) add [set left [::ttk::frame $path(pane).left -relief ridge]]
   $path(pane) add [set right [::ttk::frame $path(pane).right -relief ridge -borderwidth 2]]
 
@@ -91,6 +95,10 @@ proc ::wikihelp::help {{topic ""}} {
   $text tag bind link <Leave> [list $text configure -cursor {}]
   $text tag bind wikilink <1> [list ::wikihelp::clickTopic %W %x %y]
   $text tag bind weblink <1> [list ::wikihelp::webLink %W]
+  $text tag bind weblink <Enter> [list ::wikihelp::linkHover $text 1]
+  $text tag bind weblink <Leave> [list ::wikihelp::linkHover $text 0]
+  $text tag bind wikilink <Enter> [list ::wikihelp::linkHover $text 2]
+  $text tag bind wikilink <Leave> [list ::wikihelp::linkHover $text 0]
   set textSBY [::ttk::scrollbar $right.sbY -orient vertical -command [list $text yview]]
   set textSBX [::ttk::scrollbar $right.sbX -orient horizontal -command [list $text xview]]
   grid $text $textSBY -sticky nsew
@@ -108,6 +116,43 @@ proc ::wikihelp::help {{topic ""}} {
 
   return;
 };# ::wikihelp::help
+
+#: proc ::wikihelp::linkHover
+#: arg widget widget path
+#: arg type 1 = hovering web link, 2 = hovering wiki link, 0 = leaving link
+#: desc When hovering a link, set the status bar appropriately. (When leaving a link, set to the path of the current page.)
+#: return nothing
+proc ::wikihelp::linkHover {widget type} {
+  variable path;
+  variable info;
+
+  if { !$type } {
+       $path(sb) configure -textvariable ::wikihelp::info(disppath)
+       return;
+     }
+  if { $type == 1 } {
+       set type "weblink"
+     } elseif { $type == 2 } {
+       set type "wikilink"
+     } else {
+       return;
+     }
+  set tags [$widget tag names current]
+  if { [set where [lsearch -glob $tags "linkTo:*"]] >= 0 } {
+       set topic [string range [lindex $tags $where] 7 end]
+     } else {
+       set topic [$widget get {*}[$widget tag prevrange $type "current + 1 char"]]
+     }
+  if { $type eq "weblink" } {
+       set info(sb) [T "Go to webpage: %s" $topic]
+     } else {
+       set info(sb) [T "View helpfile '%s'" $topic]
+     }
+  $path(sb) configure -textvariable ::wikihelp::info(sb)
+
+  return;
+
+};# ::wikihelp::linkHover
 
 #: proc ::wikihelp::webLink
 #: arg widget widget path
@@ -191,7 +236,15 @@ proc ::wikihelp::showTopic {topic} {
        $path(tree) see $new
        $path(tree) selection set $new
        $path(tree) focus $new
-
+       set join ""
+       set disppath ""
+       while { $new ne "" } {
+         set text [$path(tree) item $new -text]
+         set disppath "$text$join$disppath"
+         set join " -> "
+         set new [$path(tree) parent $new]
+       }
+       set info(disppath) $disppath
      }
 
   return 1;
