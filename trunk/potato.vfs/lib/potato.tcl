@@ -8920,7 +8920,8 @@ proc ::potato::setUpBindings {} {
 
   # Use Control-Return for a newline, and Return to send text
   bind PotatoInput <Control-Return> "[bind Text <Return>] ; break"
-  bind PotatoInput <Return> "::potato::send_mushage %W ; break"
+  bind PotatoInput <Return> "::potato::send_mushage %W 0 ; break"
+  bind PotatoInput <Shift-Return> "::potato::send_mushage %W 1; break"
 
   # Counteract the annoying case-sensitiveness of bindings
   foreach x [list Text PotatoInput PotatoOutput] {
@@ -9712,9 +9713,10 @@ proc ::potato::mouseWheel {widget delta} {
 
 #: proc ::potato::send_mushage
 #: arg window the text widget to send from
+#: arg saveonly if true, don't actually send the text, just add to the input history buffer
 #: desc send the text currently in $window to the connection currently up, parsing for /commands
 #: return nothing
-proc ::potato::send_mushage {window} {
+proc ::potato::send_mushage {window saveonly} {
   variable inputSwap;
   variable conn;
   variable world;
@@ -9763,9 +9765,19 @@ proc ::potato::send_mushage {window} {
   $window edit separator
   $window replace 1.0 end ""
   if { $mode eq "multi" } {
-       send_to "" $txt \n 1 $prefix
+       if { $saveonly } {
+            foreach x [split $txt "\n"] {
+              addToInputHistory $c $x ""
+            }
+          } else {
+            send_to "" $txt \n 1 $prefix
+          }
      } else {
-       send_to "" $txt "" 1 $prefix
+       if { $saveonly } {
+            addToInputHistory $c $txt ""
+          } else {
+            send_to "" $txt "" 1 $prefix
+          }
      }
   set inputSwap($window,count) -1
   set inputSwap($window,backup) ""
@@ -10783,6 +10795,8 @@ proc ::potato::process_slash_command {c str {silent 0}} {
 #: return nothing.
 proc ::potato::define_slash_cmd {cmd code} {
 
+  # c = connection id, full = was the command name typed in full?, str = the arg given to the /command,
+  # silent = suppress messages?
   proc ::potato::slash_cmd_$cmd {c full str {silent 0}} $code;
 
   return;
