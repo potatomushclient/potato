@@ -22,3 +22,7 @@
   * Due to an encoding issue, Potato would mistake all y-umlaut characters for telnet IACs, even if they weren't. Much thanks to Brazil for finding this.
   * As a side effect of the encoding fix, the "Auto" option for MU`*` Type is no longer available.
   * You can now use %0-%9 subs for matched subexpressions in the "Spawn To" field for events. This means that, for instance, an Event pattern of `<*> *` and a "Spawn To" of `%0` would spawn anything said on the Public channel to the "Public" spawn, on Softcode to the "Softcode" spawn, etc. Suggested by Merin.
+  * Bugs in `/limit` fixed. Found by Paige and Cheetah.
+  * Shift-Return saves the current text to the Input History without sending it to the MUSH. (Keybinding cannot currently be customised, hopefully later.) Suggested by BlackRookSix.
+
+
