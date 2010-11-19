@@ -173,6 +173,8 @@ proc processFile {fname fin var} {
                      break;
                    }
               }
+            } elseif { [regexp {\$[a-zA-Z0-9]+\]} $tmp] } {
+              continue;
             } else {
               for {set i 0} {$i < [string length $tmp]} {incr i} {
                 if { [string index $tmp $i] in [list " " "\]"] } {
