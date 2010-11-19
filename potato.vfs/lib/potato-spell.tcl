@@ -111,7 +111,7 @@ proc ::potato::spellcheck::spellcheck {string} {
     foreach {count corrections} $corrections {break;}
     if { $count == 0 } {
          $tree delete [$tree children {}]
-         $tree insert {} end -values [list [T "Unable to spell-check text: $spellcheck(error)"]] -tags wrong
+         $tree insert {} end -values [list [T "Unable to spell-check text: %s" $spellcheck(error)]] -tags wrong
          set total -1
          $right.frameDone.sub.b state disabled
          break;

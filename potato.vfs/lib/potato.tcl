@@ -11732,7 +11732,7 @@ interp alias {} ::potato::slash_cmd_sw {} ::potato::slash_cmd_speedwalk
             if { $silent } {
                  bell -displayof .
                } else {
-                 outputSystem $c [T "Ambiguous character name \"%s\" $str]
+                 outputSystem $c [T "Ambiguous character name \"%s\"" $str]
                }
           } else {
             set conn($c,char) [lindex $world($w,charList) [list $chars 0]]
