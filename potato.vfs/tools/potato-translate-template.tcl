@@ -195,6 +195,7 @@ proc processFile {fname fin var} {
 
 }
 
+package require Tk
 cd [file dirname [info script]]
 set initialdir ../lib
 set outputdir ../../i18n
