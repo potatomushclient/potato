@@ -119,6 +119,10 @@ proc buildNewTemplate {} {
   global inputfiles;
   global outputfile;
 
+  if { [catch {open $outputfile w} fout] } {
+       tk_messageBox -message "Unable to open output file:\n[file nativename [file normalize $outputfile]]\nError: $fout" -icon error -title "Potato-Translate"
+       return;
+     }
   set fout [open $outputfile w]
   puts $fout "LOCALE: en_gb.template"
   puts $fout "ENCODING: [fconfigure $fout -encoding]"
@@ -128,7 +132,12 @@ proc buildNewTemplate {} {
   puts $fout "\n\n"
   set msgs 0
   foreach x $inputfiles {
-    set fin [open $x r]
+    if { [catch {open $x r} fin] } {
+         set ans [tk_messageBox -title "Potato-Translate" -icon error -type yesno -message "Unable to open input file:\n[file nativename [file normalize $x]]\nError: $fin\nAbort?]
+         if { $ans eq "yes" } {
+              return;
+            }
+       }
     incr msgs [processFile $x $fin potatoMessages]
     close $fin
     incr files
@@ -146,7 +155,7 @@ proc buildNewTemplate {} {
   close $fout
 
   tk_messageBox -title "Build Template" -icon info -type ok \
-                -message "Built template with $msgs messages from $files files"
+                -message "Built template with $msgs messages from $files files to:\n[file nativename [file normalize $outputfile]]"
 }
 
 proc processFile {fname fin var} {
