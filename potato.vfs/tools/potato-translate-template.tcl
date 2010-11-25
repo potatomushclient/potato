@@ -64,7 +64,7 @@ proc addFiles {t {files ""}} {
          lappend inputfiles [file native [file normal $x]]
        }
      } else {
-       set files [tk_getOpenFile -initialdir $initiadirl -multiple 1]
+       set files [tk_getOpenFile -initialdir $initialdir -multiple 1]
        if { $files eq "" } {
             return;
           }
