@@ -196,7 +196,7 @@ puts $initial
      }
   set files($type) $file
 };# setFile
-
+package require Tk
 main
 bind . <F2> {console show}
 
