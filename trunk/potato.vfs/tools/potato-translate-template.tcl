@@ -123,7 +123,6 @@ proc buildNewTemplate {} {
        tk_messageBox -message "Unable to open output file:\n[file nativename [file normalize $outputfile]]\nError: $fout" -icon error -title "Potato-Translate"
        return;
      }
-  set fout [open $outputfile w]
   puts $fout "LOCALE: en_gb.template"
   puts $fout "ENCODING: [fconfigure $fout -encoding]"
   puts $fout "# Generated on [clock format [clock seconds] -format "%A, %B %d %Y at %T"]\n"
@@ -135,6 +134,7 @@ proc buildNewTemplate {} {
     if { [catch {open $x r} fin] } {
          set ans [tk_messageBox -title "Potato-Translate" -icon error -type yesno -message "Unable to open input file:\n[file nativename [file normalize $x]]\nError: $fin\nAbort?]
          if { $ans eq "yes" } {
+              close $fout
               return;
             }
        }
