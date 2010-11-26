@@ -60,10 +60,10 @@ proc ::potato::spellcheck::spellcheck {string} {
     bind $win <Control-$letter> [list $right.frame$btn.sub.b invoke]
   }
   # Make sure these are included for translation:
-  # [T Done]
-  # [T Cancel]
-  # [T Replace]
-  # [T Ignore]
+  # [T "Done"]
+  # [T "Cancel"]
+  # [T "Replace"]
+  # [T "Ignore"]
   $right.frameDone.sub.b configure -command [list ::potato::spellcheck::finish 1]
   $right.frameCancel.sub.b configure -command [list ::potato::spellcheck::finish 0]
   $right.frameReplace.sub.b configure -command [list ::potato::spellcheck::replaceWord 1]
