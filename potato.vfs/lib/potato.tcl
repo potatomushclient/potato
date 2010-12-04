@@ -1903,7 +1903,7 @@ proc ::potato::sendRaw {c str telnet} {
        if { $telnet } {
             ioWrite -nonewline $conn($c,id) $str
           } else {
-            ioWrite $conn($c,id) [encoding convertto $conn($c,id,encoding) $str]
+            ioWrite -nonewline $conn($c,id) "[encoding convertto $conn($c,id,encoding) $str]$conn($c,id,lineending)"
           }
      }
 
