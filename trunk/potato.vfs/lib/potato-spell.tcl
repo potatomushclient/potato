@@ -111,6 +111,9 @@ proc ::potato::spellcheck::spellcheck {string} {
     foreach {count corrections} $corrections {break;}
     if { $count == 0 } {
          $tree delete [$tree children {}]
+         if { $spellcheck(error) eq "" } {
+              set spellcheck(error) "An unknown error occurred with ASpell."
+            }
          $tree insert {} end -values [list [T "Unable to spell-check text: %s" $spellcheck(error)]] -tags wrong
          set total -1
          $right.frameDone.sub.b state disabled
