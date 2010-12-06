@@ -133,7 +133,7 @@ proc ::potato::spellcheck::spellcheck {string} {
   if { $total == 0 } {
        tk_messageBox -icon info -parent $top -message [T "All words are spelled correctly."]
        destroy $win;
-       return $spellcheck(string);
+       return [list 0 $spellcheck(string)];
      } elseif { $total > 0 } {
        $tree delete [$tree children {}]
        $tree insert {} end -values [list [T "Click a misspelled word to begin"]] -tags wrong
