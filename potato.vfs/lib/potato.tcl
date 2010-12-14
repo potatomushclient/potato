@@ -172,6 +172,8 @@ proc ::potato::setPrefs {readfile} {
 
   set misc(showSysTray) 1
   set misc(minToTray) 0
+  set misc(startMaximized) 1
+  set misc(windowSize) "zoomed"
   set misc(confirmExit) 1
   set misc(clockFormat) "%d/%m/%Y  -  %T"
   set misc(browserCmd) ""
@@ -259,6 +261,12 @@ proc ::potato::savePrefs {} {
      puts $fid [list set ::potato::world($x) $world($x)]
   }
 
+  # Save the current window size, in case we don't start maximized
+  if { [wm state .] eq "zoomed" } {
+       set misc(windowSize) "zoomed"
+     } else {
+       set misc(windowSize) [wm geometry .]
+     }
   puts $fid "\n\n# $potato(name) Preference Settings"
   foreach x [lsort -dictionary [array names misc]] {
      puts $fid [list set ::potato::misc($x) $misc($x)]
@@ -6137,6 +6145,12 @@ $sub.cb state disabled
                           -onvalue 1 -offvalue 0] -side left
        set potato::worldconfig(MISC,showSysTray) $misc(showSysTray)
 
+       pack [set sub [::ttk::frame $frame.startMaximized]] -side top -pady 5 -anchor nw
+       pack [::ttk::label $sub.l -text [T "Start Maximized?"] -width $lW -anchor w -justify left] -side left
+       pack [::ttk::checkbutton $sub.c -variable ::potato::worldconfig(MISC,startMaximized) \
+                          -onvalue 1 -offvalue 0] -side left
+       set potato::worldconfig(MISC,startMaximized) $misc(startMaximized)
+
        pack [set sub [::ttk::frame $frame.minToTray]] -side top -pady 5 -anchor nw
        pack [::ttk::label $sub.l -text [T "Minimize to SysTray?"] -width $lW -anchor w -justify left] -side left
        pack [::ttk::checkbutton $sub.c -variable ::potato::worldconfig(MISC,minToTray) \
@@ -7394,7 +7408,14 @@ proc ::potato::main {} {
 
   tooltipInit
 
-  catch {wm state . zoomed}
+  if { $misc(windowSize) eq "zoomed" || $misc(startMaximized) } {
+       set zoom 1
+     } else {
+       set zoom 0
+     }
+  if { !$zoom || [catch {wm state . zoomed}] } {
+       catch {wm geometry . $misc(windowSize)}
+     }
   wm protocol . WM_DELETE_WINDOW "::potato::chk_exit"
   setUpMenu
 
