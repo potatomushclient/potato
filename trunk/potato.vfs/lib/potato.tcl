@@ -3297,7 +3297,7 @@ proc ::potato::handleAnsiCodes {c codes} {
           set conn($c,ansi,flash) 0
           set conn($c,ansi,inverse) 0
          }
-       1 { # ANSI Higlight
+       1 { # ANSI Highlight
            if { !$conn($c,ansi,highlight) } {
                 set conn($c,ansi,highlight) 1
                 # Only add "h" if we have a normal ANSI (not XTerm/FANSI) color or normal fg/bg
@@ -5081,23 +5081,26 @@ proc ::potato::eventConfig {{w ""}} {
               -textvariable potato::eventConfig($w,inactive) -state readonly] -side left -anchor nw -padx 2
   lappend rightList $frame.right.row04.inactive.cb
 
-  set values [list "Don't Change" "Normal FG" "Normal BG" "ANSI Highlight"]
+  set bg [list "Don't Change" "Normal FG" "Normal BG"]
+  set fg $bg
+  lappend fg "ANSI Highlight"
   foreach x [list Red Green Blue Cyan Magenta Yellow Black White] {
-     lappend values "$x" "$x Highlight"
+     lappend fg $x "$x Highlight"
+     lappend bg $x
   }
-  unset x
+
   pack [::ttk::frame $frame.right.row05] -side top -anchor nw -fill x -padx 5 -pady 2
   pack [::ttk::label $frame.right.row05.l -text [T "Change FG:"] -width 10 -justify left -anchor w] -side left -anchor nw -padx 2
-  pack [::ttk::combobox $frame.right.row05.cb -values $values -textvariable potato::eventConfig($w,fg) -state readonly] \
+  pack [::ttk::combobox $frame.right.row05.cb -values $fg -textvariable potato::eventConfig($w,fg) -state readonly] \
               -side left -anchor nw -padx 2
   lappend rightList $frame.right.row05.cb
 
   pack [::ttk::frame $frame.right.row06] -side top -anchor nw -fill x -padx 5 -pady 2
   pack [::ttk::label $frame.right.row06.l -text [T "Change BG:"] -width 10 -justify left -anchor w] -side left -anchor nw -padx 2
-  pack [::ttk::combobox $frame.right.row06.cb -values $values -textvariable potato::eventConfig($w,bg) -state readonly] \
+  pack [::ttk::combobox $frame.right.row06.cb -values $bg -textvariable potato::eventConfig($w,bg) -state readonly] \
               -side left -anchor nw -padx 2
   lappend rightList $frame.right.row06.cb
-  unset values
+  unset fg bg
 
   pack [::ttk::frame $frame.right.row07] -side top -anchor nw -fill x -padx 5 -pady 2
   pack [::ttk::label $frame.right.row07.l -text [T "Omit From:"] -width 10 -justify left -anchor w] -side left -anchor nw -padx 2
@@ -5346,6 +5349,8 @@ proc ::potato::eventSave {w} {
         } else {
           if { [lindex $lower 0] eq "black" } {
                set world($w,events,$this,$x) "x"
+             } elseif { [lindex $lower 0] eq "ansi" } {
+               set world($w,events,$this,$x) "$x"
              } else {
                set world($w,events,$this,$x) [string range [lindex $lower 0] 0 0]
              }
@@ -5448,6 +5453,8 @@ proc ::potato::eventConfigSelect {w states} {
   foreach x [list fg bg] {
      if { $world($w,events,$this,$x) eq "" } {
           set eventConfig($w,$x) "Don't Change"
+        } elseif { [string length $world($w,events,$this,$x)] == 3 } {
+          set eventConfig($w,$x) "ANSI Highlight"
         } else {
           set eventConfig($w,$x) [string map $colours $world($w,events,$this,$x)]
         }
