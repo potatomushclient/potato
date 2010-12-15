@@ -14,6 +14,7 @@ proc ::potato::setPrefs {readfile} {
   variable path;
   variable misc;
   variable keyShorts;
+  variable tinyurl;
 
   # START DEFAULT WORLD SETTINGS
   # default ansi colors
@@ -180,6 +181,7 @@ proc ::potato::setPrefs {readfile} {
   set misc(partialWorldMatch) 0
   set misc(outsideRequestMethod) 1 ;# 0 = always quick, 1 = always use world, 2 = ask
   set misc(toggleShowMainWindow) 0;# when moving to a conn, show it's main window, even if we last saw a spawn?
+  set misc(tinyurlProvider) "TinyURL"
 
   # Default locale
   set misc(locale) "en_gb";# Colour, not Color :)
@@ -199,6 +201,20 @@ proc ::potato::setPrefs {readfile} {
        set misc(tileTheme) alt
      }
   set defaultTheme $misc(tileTheme)
+
+
+  # These are static, but this is still probably the best place to set them
+  set tinyurl(TinyURL,post) "url"
+  set tinyurl(TinyURL,address) "http://tinyurl.com/create.php"
+  set tinyurl(TinyURL,regexp) {<blockquote><b>(.+?)</b>}
+
+  set tinyurl(AltURL,post) "longurl"
+  set tinyurl(AltURL,address) "http://alturl.com/make_url.php"
+  set tinyurl(AltURL,regexp) {<input .*?id="txtfld".*?\s+value *= *"(.+?)">}
+
+  set tinyurl(NotLong,post) "url"
+  set tinyurl(NotLong,address) "http://notlong.com/"
+  set tinyurl(NotLong,regexp) {<blockquote>\s*<a href="(.+?)">\1</a>}
 
   if { $readfile } {
        array set prefFlags [prefFlags]
@@ -5570,6 +5586,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   variable worldconfig;
   variable potato;
   variable misc;
+  variable tinyurl;
 
   if { $w eq "" } {
        set w $conn([up],world)
@@ -6182,6 +6199,20 @@ $sub.cb state disabled
                         -side left -padx 3
        set potato::worldconfig(MISC,outsideRequestMethod) \
               [lindex [list "Quick Connect" "Use World Settings" "Prompt"] $misc(outsideRequestMethod)]
+
+       set temp [array names tinyurl *,post]
+       foreach x $temp {
+         lappend tinyurls [string range $x 0 end-5]
+       }
+       unset temp x
+       pack [set sub [::ttk::frame $frame.tinyurl]] -side top -pady 5 -anchor nw
+       pack [::ttk::label $sub.l -text [T "TinyURL Provider:"] -width $lW -anchor w -justify left] -side left
+       pack [::ttk::combobox $sub.cb -textvariable ::potato::worldconfig(MISC,tinyurlProvider) \
+                        -values $tinyurls -width 20 -state readonly] \
+                        -side left -padx 3
+       set potato::worldconfig(MISC,tinyurlProvider) $misc(tinyurlProvider)
+
+       unset tinyurls
 
        if { ![catch {::ttk::style theme names} styles] } {
             pack [set sub [::ttk::frame $frame.tileTheme]] -side top -pady 5 -anchor nw
@@ -10902,6 +10933,42 @@ proc ::potato::customSlashCommand {c w cmd str} {
 
 };# /input
 
+# /tinyurl <url> - print a TinyURL'd version of <url>
+# /tinyurl <string> - replace all URLs in <string> with TinyURLs, and send modified <string> to MUSH
+::potato::define_slash_cmd tinyurl {
+
+  if { [up] == 0 } {
+       bell -displayof .
+       return;
+     }
+
+  set re {\m(?:(?:(?:f|ht)tps?://)|www\.)(?:(?:[a-zA-Z_\.0-9%+/@~=&,;-]*))?(?::[0-9]+/)?(?:[a-zA-Z_\.0-9%+/@~=&,;-]*)(?:\?(?:[a-zA-Z_\.0-9%+/@~=&,;:-]*))?(?:#[a-zA-Z_\.0-9%+/@~=&,;:-]*)?}
+  set where [regexp -inline -indices -all $re $str]
+  if { [llength $where] == 0 } {
+       send_to_real [up] $str
+       return;
+     }
+  set all_url [regexp "^$re$" $str]
+  for {set i 0} {$i < [llength $where]} {incr i} {
+    set indices [lindex $where end-$i]
+    foreach {start end} $indices {break}
+    set url [string range $str $start $end]
+    if { [string range $url 0 2] ni [list "htt" "ftp"] } {
+         set url "http://$url"
+       }
+    if { ![catch {TinyURL $url} result] } {
+         set str [string replace $str $start $end $result]
+       } else {
+       }
+  }
+  if { $all_url} {
+       potato::slash_cmd_print $c 1 $str 0
+     } else {
+       send_to_real [up] $str
+     }
+
+};# ::potato::slash_cmd_tinyurl
+
 #: /setprefix [[<window>]=<prefix>]
 #: Set the prefix for <window>, or the current output window (if not given) to <prefix>.
 ::potato::define_slash_cmd setprefix {
@@ -11357,6 +11424,47 @@ proc ::potato::cleanup_afters {c} {
   return;
 
 };# /slash
+
+# proc ::potato::TinyURL
+#: arg url The URL to shorten
+#: desc Return a TinyURL'd/shortened version of $url, using the website specified in settings (like tinyurl.com)
+#: return shortened url, or -error and error message on failure
+proc ::potato::TinyURL {url} {
+  variable misc;
+  variable tinyurl;
+
+  set type $misc(tinyurlProvider)
+
+  if { ![info exists tinyurl($type,post)] } {
+       set type "TinyURL"
+     }
+
+  if { [catch {package present http}] } {
+       return -code error [T "Unable to create TinyURL: %s" [T "http package not available"]]
+     }
+
+  set post $tinyurl($type,post)
+  set address $tinyurl($type,address)
+  set regexp $tinyurl($type,regexp)
+
+  set token [::http::geturl $address -query [::http::formatQuery $post $url]]
+  if { [::http::ncode $token] != 200 } {
+       catch {::http::cleanup $token}
+       return -code error [T "Unable to create TinyURL: %s" [::http::data $token]];
+     }
+  if { ![regexp $regexp [::http::data $token] -> turl] } {
+       catch {::http::cleanup $token}
+       return -code error [T "Unable to create TinyURL: %s" [T "Unable to parse results."]];
+    }
+  ::http::cleanup $token
+
+  if { [string length $url] <= [string length $turl] } {
+       return $url;
+     } else {
+       return $turl;
+     }
+
+};# ::potato::TinyURL
 
 #: proc ::potato::itemize
 #: arg list The list to itemize
@@ -12759,6 +12867,7 @@ namespace eval ::potato {
 ##################################
 # Everything below this should be somewhere more sensible, please. Thank you. #abc
 package require Tcl 8.5 ; package require Tk 8.5; # this should be redone more elegantly #abc
+catch {package require http}
 option add *Listbox.activeStyle dotbox
 option add *TEntry.Cursor xterm
 
