@@ -24,5 +24,8 @@
   * You can now use %0-%9 subs for matched subexpressions in the "Spawn To" field for events. This means that, for instance, an Event pattern of `<*> *` and a "Spawn To" of `%0` would spawn anything said on the Public channel to the "Public" spawn, on Softcode to the "Softcode" spawn, etc. Suggested by Merin.
   * Bugs in `/limit` fixed. Found by Paige and Cheetah.
   * Shift-Return saves the current text to the Input History without sending it to the MUSH. (Keybinding cannot currently be customised, hopefully later.) Suggested by BlackRookSix.
-
-
+  * Bug in spellchecking when all words are spelled correctly fixed. Reported by Paige.
+  * Events which recoloured text to "ANSI Highlight" failed. Reported by Javelin.
+  * Removed all BG Highlight options for events, since BG highlighting is (correctly) no longer possible.
+  * Potato now remembers the last window position, and attempts to reopen at the same size/position. The "Start Maximized?" config option overrides this. From a suggestion by Javelin.
+  * Added /tinyurl, which turns URLs into shorter URLs using a website like TinyURL.com (you can pick from a few similar sites). From a suggestion by Paige.
