@@ -206,7 +206,7 @@ proc ::potato::setPrefs {readfile} {
   # These are static, but this is still probably the best place to set them
   set tinyurl(TinyURL,post) "url"
   set tinyurl(TinyURL,address) "http://tinyurl.com/create.php"
-  set tinyurl(TinyURL,regexp) {<blockquote><b>(.+?)</b>}
+  set tinyurl(TinyURL,regexp) {<blockquote><b>(\S+?)</b>}
 
   set tinyurl(AltURL,post) "longurl"
   set tinyurl(AltURL,address) "http://alturl.com/make_url.php"
