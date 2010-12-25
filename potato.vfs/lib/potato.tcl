@@ -11957,20 +11957,27 @@ interp alias {} ::potato::slash_cmd_sw {} ::potato::slash_cmd_speedwalk
 proc ::potato::timeFmt {seconds full} {
   set timeList [list]
   if { $full } {
-       set words [list " day" " hour" " minute" " second"]
+       set singles [list [T "day"] [T "hour"] [T "minute"] [T "second"]]
+       set plurals [list [T "days"] [T "hours"] [T "minutes"] [T "seconds"]]
      } else {
-       set words [list d h m s]
+       set singles [list [T "d"] [T "h"] [T  "m"] [T "s"]]
+       set plurals $singles
      }
-  foreach div {86400 3600 60 1} mod {0 24 60 60} name $words {
+  foreach div {86400 3600 60 1} mod {0 24 60 60} single $singles plural $plurals {
      set n [expr {$seconds / $div}]
      if {$mod > 0} {
          set n [expr {$n % $mod}]
         }
      if { $n > 0 } {
-          if { $n > 1 && $full } {
-               append name s
+          if { $full } {
+               append n " "
              }
-          lappend timeList "$n$name"
+          if { $n > 1 } {
+               append n $plural
+             } else {
+               append n $single
+             }
+          lappend timeList "$n"
         }
   }
   return [join $timeList " "];
