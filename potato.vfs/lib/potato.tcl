@@ -15,6 +15,7 @@ proc ::potato::setPrefs {readfile} {
   variable misc;
   variable keyShorts;
   variable tinyurl;
+  variable gameMail;
 
   # START DEFAULT WORLD SETTINGS
   # default ansi colors
@@ -215,6 +216,12 @@ proc ::potato::setPrefs {readfile} {
   set tinyurl(NotLong,post) "url"
   set tinyurl(NotLong,address) "http://notlong.com/"
   set tinyurl(NotLong,regexp) {<blockquote>\s*<a href="(.+?)">\1</a>}
+
+  set gameMail(MUSH\ @mail) "@mail %to%=%subject%/%body%"
+  set gameMail(MUX\ @mail) "@mail %to%=%subject% ;; -%body% ;; --"
+  set gameMail(Multi-Command\ +mail) "+mail %to%=%subject% ;; -%body% ;; --"
+  set gameMail(MUSE\ +mail) "+mail %to%=%body%"
+  set gameMail(Myrddin's\ BB) "+bbpost %to%/%subject%=%body%"
 
   if { $readfile } {
        array set prefFlags [prefFlags]
@@ -916,6 +923,7 @@ proc ::potato::prefixWindowPostMenu {w} {
 proc ::potato::mailWindow {{c ""}} {
   variable conn; 
   variable world;
+  variable gameMail;
 
   if { $c eq "" } {
        set c [up]
@@ -945,42 +953,49 @@ proc ::potato::mailWindow {{c ""}} {
   pack [set to [::ttk::frame $frame.to]] -side top -anchor nw -expand 0 -fill x -padx 5 -pady 3
   pack [::ttk::label $to.l -text [T "Recipient:"] -width 10] -side left -anchor nw
   pack [::ttk::entry $to.e -textvariable ::potato::conn($c,mailWindow,to) -width 40] -side left -anchor nw -fill x
-  set ::potato::conn($c,mailWindow,to) ""
 
   pack [set cc [::ttk::frame $frame.cc]] -side top -anchor nw -expand 0 -fill x -padx 5 -pady 3
   pack [::ttk::label $cc.l -text [T "CC:"] -width 10] -side left -anchor nw
   pack [::ttk::entry $cc.e -textvariable ::potato::conn($c,mailWindow,cc) -width 40] -side left -anchor nw -fill x
-  set ::potato::conn($c,mailWindow,cc) ""
 
   pack [set bcc [::ttk::frame $frame.bcc]] -side top -anchor nw -expand 0 -fill x -padx 5 -pady 3
   pack [::ttk::label $bcc.l -text [T "BCC:"] -width 10] -side left -anchor nw
   pack [::ttk::entry $bcc.e -textvariable ::potato::conn($c,mailWindow,bcc) -width 40] -side left -anchor nw -fill x
-  set ::potato::conn($c,mailWindow,bcc) ""
 
   pack [set subject [::ttk::frame $frame.subject]] -side top -anchor nw -expand 0 -fill x -padx 5 -pady 3
   pack [::ttk::label $subject.l -text [T "Subject:"] -width 10] -side left -anchor nw
   pack [::ttk::entry $subject.e -textvariable ::potato::conn($c,mailWindow,subject) -width 40] \
       -side left -anchor nw -fill x
-  set ::potato::conn($c,mailWindow,subject) ""
 
+  foreach x [list to cc bcc subject] {
+    set conn($c,mailWindow,$x) ""
+    set conn($c,mailWindow,${x}Widget) "[set $x].e"
+  }
+
+  set formats [array names gameMail]
+  lappend formats "Custom"
   pack [set format [::ttk::frame $frame.format]] -side top -anchor nw -expand 0 -fill x -padx 5 -pady 3
   pack [::ttk::label $format.l -text [T "Format:"] -width 10] -side left -anchor nw
   pack [::ttk::combobox $format.cb -justify left -state normal -width 40 \
                -textvariable ::potato::conn($c,mailWindow,format) \
-               -values [list "MUSH @mail" "MUX @mail" "Multi-Command +mail" "MUSE +mail" "Custom"]] -side left -anchor nw -fill x
+               -values $formats -state readonly] -side left -anchor nw -fill x
   set ::potato::conn($c,mailWindow,format) $world($w,mailFormat)
   set ::potato::conn($c,mailWindow,formatWidget) $format.cb
 
+  set entries [list %to% $to.e %cc% $cc.e %bcc% $bcc.e %subject% $subject.e]
+
   pack [set custom [::ttk::frame $frame.custom]] -side top -anchor nw -expand 0 -fill x -padx 5 -pady 3
   pack [::ttk::label $custom.l -text [T "Custom:"] -width 10] -side left -anchor nw
-  pack [::ttk::entry $custom.e -textvariable ::potato::conn($c,mailWindow,custom) -width 40] \
+  pack [::ttk::entry $custom.e -textvariable ::potato::conn($c,mailWindow,custom) -width 40 -validate focusout \
+                               -validatecommand [list ::potato::mailWindowFormatChange $c]] \
      -side left -anchor nw -fill x
-  set ::potato::conn($c,mailWindow,custom) $world($w,mailFormat,custom)
+  set conn($c,mailWindow,custom) $world($w,mailFormat,custom)
+  set conn($c,mailWindow,customWidget) $custom.e
   if { $conn($c,mailWindow,format) ne "Custom" } {
        $custom.e state disabled
      }
 
-  bind $format.cb <<ComboboxSelected>> [list ::potato::mailWindowFormatChange %W $custom.e]
+  bind $format.cb <<ComboboxSelected>> [list ::potato::mailWindowFormatChange $c]
 
   pack [set txt [::ttk::frame $frame.txt]] -side top -anchor nw -expand 1 -fill both -padx 5 -pady 3
   pack [set textWidget [text $txt.t -height 12 -width 40 -wrap word -background white -foreground black \
@@ -1005,6 +1020,8 @@ proc ::potato::mailWindow {{c ""}} {
   bind $win <Escape> [list $btns.cancel invoke]
   bind $win <Destroy> [list ::potato::mailWindowCleanup $c]
 
+  mailWindowFormatChange $c
+
   reshowWindow $win 0
 
   return;
@@ -1012,19 +1029,32 @@ proc ::potato::mailWindow {{c ""}} {
 };# ::potato::mailWindow
 
 #: proc ::potato::mailWindowFormatChange
-#: arg cb combobox widget path
-#: arg e entry widget path
-#: desc Change the state of the entry widget based on the combo's value
-#: return nothing
-proc ::potato::mailWindowFormatChange {cb e} {
+#: arg c connection id
+#: desc Adjust the states of the entries in $c's mail window, based on the currently selected mail format
+#: return 1 (b/c this command is used as a -validatecommand for a ttk::entry widget)
+proc ::potato::mailWindowFormatChange {c} {
+  variable conn;
+  variable gameMail;
 
-  if { [$cb get] eq "Custom" } {
-       $e state !disabled
+  set type [$conn($c,mailWindow,formatWidget) get]
+  set custom $conn($c,mailWindow,customWidget)
+  if { $type eq "Custom" } {
+       $custom state !disabled
+       set format [$custom get]
      } else {
-       $e state disabled
+       $custom state disabled
+       set format $gameMail($type)
      }
 
-  return;
+  foreach field {to cc bcc subject} {
+    if { [string first "%$field%" $format] > -1 } {
+         $conn($c,mailWindow,${field}Widget) state !disabled
+       } else {
+         $conn($c,mailWindow,${field}Widget) state disabled
+       }
+  }
+
+  return 1;
 
 };# ::potato::mailWindowFormatChange
 
@@ -1036,6 +1066,7 @@ proc ::potato::mailWindowFormatChange {cb e} {
 proc ::potato::mailWindowSend {c win} {
   variable conn;
   variable world;
+  variable gameMail;
 
   set w $conn($c,world)
 
@@ -1047,18 +1078,23 @@ proc ::potato::mailWindowSend {c win} {
        set cmd [string map [list ";;" \b] $world($w,mailFormat,custom)]
      } else {
        set world($w,mailFormat) $format
-       set cmds [list "@mail %to%=%subject%/%body%" "@mail %to%=%subject% \b -%body% \b --" "+mail %to%=%subject% \b -%body^ \b --" "+mail %to%=%body%"]
-       set names [list "MUSH @mail" "MUX @mail" "Multi-Command +mail" "MUSE +mail"]
-       set cmd [lindex $cmds [lsearch $names $format]]
+       set cmd $gameMail($format)
      }
+
 
   set msg [$conn($c,mailWindow,bodyWidget) get 1.0 end-1char]
   if { $world($w,mailConvertReturns) } {
        set msg [string map [list "\n" $world($w,mailConvertReturns,to)] $msg]
      }
-  set mailcmd [string map [list %to% $conn($c,mailWindow,to) %cc% $conn($c,mailWindow,cc) \
-              %bcc% $conn($c,mailWindow,bcc) %subject% $conn($c,mailWindow,subject) \
-              %body% $msg] $cmd]
+
+  set cmd [string map [list " ;; " "\b" ";;" "\b"] $cmd]
+  set maps [list "%body%" $msg]
+  foreach x [list to cc bcc subject] {
+    if { [string first "%$x%" $cmd] > -1 } {
+         lappend maps "%$x%" $conn($c,mailWindow,$x)
+       }
+  }
+  set mailcmd [string map $maps $cmd]
 
   send_to $c $mailcmd \b 1
 
