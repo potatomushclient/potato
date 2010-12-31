@@ -982,8 +982,6 @@ proc ::potato::mailWindow {{c ""}} {
   set ::potato::conn($c,mailWindow,format) $world($w,mailFormat)
   set ::potato::conn($c,mailWindow,formatWidget) $format.cb
 
-  set entries [list %to% $to.e %cc% $cc.e %bcc% $bcc.e %subject% $subject.e]
-
   pack [set custom [::ttk::frame $frame.custom]] -side top -anchor nw -expand 0 -fill x -padx 5 -pady 3
   pack [::ttk::label $custom.l -text [T "Custom:"] -width 10] -side left -anchor nw
   pack [::ttk::entry $custom.e -textvariable ::potato::conn($c,mailWindow,custom) -width 40 -validate focusout \
