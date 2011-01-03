@@ -123,11 +123,7 @@ proc ::potato::setPrefs {readfile} {
 
   set world(-1,verbose) 0;# show extra system messages when things happen?
 
-  set world(-1,slashcmd) [list grab]
-  set world(-1,slashcmd,grab) "^(.+)$"
-  set world(-1,slashcmd,grab,type) "regexp"
-  set world(-1,slashcmd,grab,send) "@decompile/tf %0"
-  set world(-1,slashcmd,grab,case) 1
+  set world(-1,slashcmd) [list]
 
   set world(-1,fcmd,2) ""
   set world(-1,fcmd,3) ""
@@ -4664,6 +4660,33 @@ proc ::potato::addNewWorld {name host port temp} {
   incr potato(worlds)
 
   loadWorldDefaults $w 0
+
+  # Add a /grab slash command, and an event for matching it.
+  # We do it here so they can delete/edit it if they want,
+  # without us automatically re-adding it.
+  set world($w,events) [list 0]
+  set world($w,events,0,bg) ""
+  set world($w,events,0,case) 1
+  set world($w,events,0,continue) 0
+  set world($w,events,0,enabled) 1
+  set world($w,events,0,fg) ""
+  set world($w,events,0,inactive) "always"
+  set world($w,events,0,input,string) "%0"
+  set world($w,events,0,input,window) 3
+  set world($w,events,0,log) 0
+  set world($w,events,0,matchtype) "wildcard"
+  set world($w,events,0,omit) 1
+  set world($w,events,0,pattern) "FugueEdit > *"
+  set world($w,events,0,pattern,int) "^FugueEdit > (.*)$"
+  set world($w,events,0,send) ""
+  set world($w,events,0,spawn) 0
+  set world($w,events,0,spawnTo) ""
+
+  set world($w,slashcmd) [list grab]
+  set world($w,slashcmd,grab) "^(.+)$"
+  set world($w,slashcmd,grab,type) "regexp"
+  set world($w,slashcmd,grab,send) "@decompile/tf %0"
+  set world($w,slashcmd,grab,case) 1
 
   set world($w,name) $name
   set world($w,temp) $temp
