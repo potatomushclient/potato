@@ -29,3 +29,5 @@
   * Removed all BG Highlight options for events, since BG highlighting is (correctly) no longer possible.
   * Potato now remembers the last window position, and attempts to reopen at the same size/position. The "Start Maximized?" config option overrides this. From a suggestion by Javelin.
   * Added /tinyurl, which turns URLs into shorter URLs using a website like TinyURL.com (you can pick from a few similar sites). From a suggestion by Paige.
+  * Bugfix in the Mail Window when using Multi-Command +Mail format. Also, added a new format for posting to Myrddin's BB system. And fields (CC, BCC, etc) which are not used by the current mail format are now greyed out. Suggested by Paige.
+  * The /grab command is now added automatically for any new world created, instead of existing as a Global Custom /command. Also, we now create a matching event for it (which works for MUSHes) automatically, too, so that /grab works out of the box.

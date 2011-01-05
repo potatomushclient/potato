@@ -1,0 +1,11 @@
+#summary Configure World -> Display -> ANSI, Colours and Fonts
+
+=Configure World -> Display -> ANSI, Colours and Fonts=
+
+The *ANSI, Colours and Fonts* page of the Display World Configuration can be used to alter way output for a world is displayed. The current interface for doing so is likely to change soon, to make it easier to use.
+
+The top of the page contains a mock-up of the output and input windows for the MU`*`, displaying the correct fonts and background/foreground colours. The Output window also displays the ANSI colours for *N*ormal, *R*ed, *G*reen, *Bl*ue, *C*yan, *M*agenta, *Y*ellow, Black (*Bk*) and *W*hite, and the same colours highlighted, along with the *Sys*tem message colour, the *Echo* input colour, and the URL/*Link* colour. To edit the foreground colours, click the text. To edit the background colours, click an area of the background. A Colour Selection dialog will be displayed, letting you select a new colour.
+
+Below that are two buttons, which allow you to *Change Output Font* and *Change Input Font*. Each button opens a Font Selection dialog. There are also checkbuttons to control whether ANSI Colours are displayed at all, and whether ANSI Underline and ANSI Flash are displayed.
+
+The *Force ANSI Normal?* checkbutton causes a forced normal foreground/background colour at the end of each line. It is strongly recommended that you leave this option off, unless the MU`*` you're playing has very broken ANSI support which causes colours to bleed from one line to the next incorrectly.

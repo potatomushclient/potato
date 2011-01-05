@@ -1,0 +1,13 @@
+#summary Configure World -> Display -> Miscellaneous
+
+=Configure World -> Display -> Miscellaneous=
+
+The *Miscellaneous* page of the Display World Configuration sets various options affecting what is output, and how.
+
+  * *Wrap Text At*: Controls the number of characters per-line, before the text wraps. The *Current Window Size* button sets it to the maximum number of characters that will fit, for the current window size.
+  * *Indent By*: When text is wrapped, any wrapped lines will be indented by this many characters.
+  * *Echo Sent Commands?*: When enabled, any command sent to the MU`*` is also displayed in the output window, in an [ConfigureWorldsDisplayANSI Echo Colour].
+  * *Ignore Empty Lines?*: Omit completely empty lines?
+  * *Spawn Sys Messages?*: Should System Messages be shown in spawn windows?
+  * *Two Input Windows?*: Should we display two input windows for this MU`*`? Useful for social games, so you can write a roleplay pose or code in one input window, and use the other for chatting.
+  * *Convert NBSPs?*: Should non-breaking spaces be converted to regular spaces for display? Useful on games with Pueblo support if your font displays nbsps differently/a different size to regular spaces.

@@ -5,7 +5,7 @@ Potato MU`*` Client 2.0.0b7 was written by Mike Griffiths (talvo@talvo.com). Bas
   * Some ideas for the telnet processing code were taken from code written by Todd Martin, available from [http://wiki.tcl.tk/5644]
   * The Winflash library used on MS Windows was written by Youness El Alaoui (KaKaRoTo).
   * Potato uses the Winico extension on MS Windows to display an icon in the system tray.
-  * The Font Selection and Help dialogs are based heavily on code written by (a different) Keith Vetter, and are available from [http://wiki.tcl.tk/16074] and [http://wiki.tcl.tk/19649] respectively.
+  * The Font Selection dialog is based heavily on code written by (a different) Keith Vetter, and is available from [http://wiki.tcl.tk/16074].
 
 Special thanks to Evelyn K. Vides for help and support, bug finding, and much much more. Eve also designed the Potato logo.
 

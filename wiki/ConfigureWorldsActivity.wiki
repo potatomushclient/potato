@@ -1,0 +1,12 @@
+# Configure World -> Activity
+
+=Configure World -> Activity=
+
+The *Activity* section of the World Configuration controls what happens when there's new activity (new text received) for the MU`*`.
+
+	* *Flash Taskbar?*: Flash *Potato*'s taskbar icon, when there's activity and the user is in another application? (On Windows, this works automatically. On Linux, you may wish to install the Linflash add-on to improve behaviour. The procedure for this is not currently documented, please [ContactMe contact me] if you need it.)
+	* *Flash SysTray Icon?*: Animate Potato's icon in the system tray when there's activity and the user is in another application? Only available on Windows.
+	* *Show 'Activity in `<`World`>`'?*: Show a 'New Activity in `<`World`>`' prompt in the output window of the current connection, when there's new activity in this world?
+	* *Show 'New Activity'?*: When there's activity in the world, but it is not currently active (either because the user is viewing another connection, or using another application), show a 'New Activity' marker to make it easy to find where the new activity begins?
+	* *Clear Previous 'New Activity'?*: Should we clear old 'New Activity' notices when a new one is displayed, to reduce spam?
+

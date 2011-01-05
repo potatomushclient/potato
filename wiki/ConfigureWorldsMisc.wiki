@@ -1,0 +1,13 @@
+# Configure World -> Miscellaneous Options
+
+=Configure World -> Miscellaneous Options=
+
+The *Miscellaneous* section of the World Configuration contains an assortment of options which don't quite fit into any of the other categories.
+
+  * *Limit Output Lines?* allows you to set a limit on how many (unwrapped) lines of output are displayed in the output window. To enable, tick the box and enter the desired number beside it.
+  * *Limit Spawn Lines?* limits the number of lines of output displayed in spawn windows in the same way.
+  * *Limit Input Lines?* lets you limit the number of commands stored in the Input History.
+  * *Split Input Cmds?*: When you enter multiple lines in the Input window at once, they are normally stored in the Input History as a single entry. If this option is on, each line is stored as a separate entry.
+  * *Show Verbose Messages?*: Show lengthier system messages in some circumstances. Not currently used.
+  * *Show Beeps?*: Display the Beep/Bell character in output? (It may be displayed as a square or question mark, depending on your font.)
+  * *Play Beeps?*: When Beep/Bell characters are received, make a 'beep' sound? "All" causes Potato to beep once for each bell character, "Once" causes it to beep once for each line containing a bell character, and "None" stops it beeping at all.
