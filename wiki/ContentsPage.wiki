@@ -12,7 +12,7 @@
         * [ConfigureWorldsChars Characters]
         * [ConfigureWorldsConnection Connections]
           * [ConfigureWorldsConnectionTelnet Telnet Options]
-        * [ConfigureWorldDisplay Display]
+        * [ConfigureWorldsDisplay Display]
           * [ConfigureWorldsDisplayANSI ANSI, Colours and Fonts]
           * [ConfigureWorldsDisplayMisc Miscellaneous]
         * [ConfigureWorldsActivity Activity Settings]
