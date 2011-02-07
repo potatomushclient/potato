@@ -48,7 +48,7 @@ proc ::potato::setPrefs {readfile} {
   set world(-1,ansi,force-normal) 0
 
   # Defaults about the world
-  set world(-1,name) "New World"
+  set world(-1,name) [T "New World"]
   set world(-1,id) -1
   set world(-1,host) ""
   set world(-1,port) "4201"
@@ -635,7 +635,7 @@ proc ::potato::prefixWindow {{w ""}} {
   $tree column #0  -width 70 -stretch 0 -anchor center
   $tree column Window -width 90 -stretch 1 -anchor e
   $tree column Prefix -width 250 -stretch 1 -anchor w
-  $tree heading #0 -text "Enabled?"
+  $tree heading #0 -text [T "Enabled?"]
   $tree heading Window -text "   [T "Window"]   "
   $tree heading Prefix -text "   [T "Prefix"]   " -anchor w
 
@@ -669,12 +669,12 @@ proc ::potato::prefixWindow {{w ""}} {
   menu $win.m.prefix -tearoff 0 -postcommand [list ::potato::prefixWindowPostMenu $w]
   set prefixWindow($w,path,menu) $win.m.prefix
   $win.m add cascade {*}[menu_label [T "&Prefix..."]] -menu $win.m.prefix
-  $win.m.prefix add command {*}[menu_label "&Add New Prefix"] -command [list ::potato::prefixWindowAdd $w]
-  $win.m.prefix add command {*}[menu_label "&Edit Prefix"] -command [list ::potato::prefixWindowEdit $w]
-  $win.m.prefix add command {*}[menu_label "&Delete Prefix"] -command [list ::potato::prefixWindowDelete $w]
-  $win.m.prefix add command {*}[menu_label "&Cancel Add/Edit"] -command [list ::potato::prefixWindowCancel $w]
+  $win.m.prefix add command {*}[menu_label [T "&Add New Prefix"]] -command [list ::potato::prefixWindowAdd $w]
+  $win.m.prefix add command {*}[menu_label [T "&Edit Prefix"]] -command [list ::potato::prefixWindowEdit $w]
+  $win.m.prefix add command {*}[menu_label [T "&Delete Prefix"]] -command [list ::potato::prefixWindowDelete $w]
+  $win.m.prefix add command {*}[menu_label [T "&Cancel Add/Edit"]] -command [list ::potato::prefixWindowCancel $w]
   $win.m.prefix add separator
-  $win.m.prefix add command {*}[menu_label "C&lose Window"] -command [list destroy $win]
+  $win.m.prefix add command {*}[menu_label [T "C&lose Window"]] -command [list destroy $win]
 
   bind $win <Destroy> [list array unset ::potato::prefixWindow $w,*]
 
@@ -4731,31 +4731,32 @@ proc ::potato::copyWorld {w} {
   # Possible formats:
   # Copy of OriginalName[ (X)]
   # OriginalName (Copy[ X]) <-- current favourite
-  # Unfortunately, we can't easily translate the word 'Copy' due to the regsub below.
+  set copyWord [T "Copy"]
+  set copyWordRe [regsub -all {([^a-zA-Z0-9?*])} $copyWord {\\\1}] 
   set hasCopy 0
   set copyCount [list]
-  set namePtn "^[regsub -all {([^a-zA-Z0-9?*])} $world($new,name) {\\\1}] \\(Copy (\[0-9\]+)\\)$"
+  set namePtn "^[regsub -all {([^a-zA-Z0-9?*])} $world($new,name) {\\\1}] \\($copyWordRe (\[0-9\]+)\\)$"
   foreach x [array names world *,name] {
     if { $x eq "$w,name" || $x eq "$new,name" } {
          continue;
        }
-    if { $world($x) eq "$world($new,name) (Copy)" } {
+    if { $world($x) eq "$world($new,name) ($copyWord)" } {
          set hasCopy 1
        } elseif { [regexp $namePtn $world($x) {} num] } {
          lappend copyCount $num
        }
   }
   if { !$hasCopy } {
-       set world($new,name) "$world($new,name) (Copy)"
+       set world($new,name) "$world($new,name) ($copyWord)"
      } else {
        # First available number...
        set copyCount [lsort -integer $copyCount]
        for {set num 1} {$num < 100 && $num in $copyCount} {incr num} {continue}
        if { $num == 100 } {
             # We already have 99 copies. Feh, just use (Copy) again
-            set world($new,name) "$world($new,name) (Copy)"
+            set world($new,name) "$world($new,name) ($copyWord)"
           } else {
-            set world($new,name) "$world($new,name) (Copy $num)"
+            set world($new,name) "$world($new,name) ($copyWord $num)"
           }
      }
 
@@ -4808,8 +4809,8 @@ proc ::potato::macroWindow {{w ""}} {
   set y [::ttk::scrollbar $tframe.y -orient vertical -command [list $tree xview]]
   grid_with_scrollbars $tree $x $y
 
-  $tree heading Name -text Name
-  $tree heading Commands -text Commands
+  $tree heading Name -text [T "Name"]
+  $tree heading Commands -text [T "Commands"]
   $tree column Name -width 80 -stretch 0
   $tree column Commands -width 150 -stretch 1
   bind $tree <<TreeviewSelect>> [list ::potato::macroWindowState $w]
@@ -12490,7 +12491,7 @@ proc ::potato::rebuildConnectMenuSub {w name m} {
        $m add cascade -label $name -menu [set sub [menu $m.$w -tearoff 0]]
        set def $world($w,charDefault)
        if { $def eq "" } {
-            set def "None"
+            set def [T "None"]
           }
        $sub add command {*}[menu_label [T "&Default Character (%s)" $def]] -command [list ::potato::newConnectionDefault $w]
        $sub add command {*}[menu_label [T "&No Character"]] -command [list ::potato::newConnection $w]
