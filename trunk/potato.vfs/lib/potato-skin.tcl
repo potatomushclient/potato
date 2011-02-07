@@ -628,7 +628,7 @@ proc ::skin::potato::init {} {
   pack $widgets(statusbar,connstatus,sub,time) -side left -anchor w
   set widgets(statusbar,modes,sub) [::ttk::frame $widgets(statusbar,modes).sub]
   pack $widgets(statusbar,modes,sub) -padx 4
-  set widgets(statusbar,modes,sub,label) [::ttk::label $widgets(statusbar,modes,sub).label -text "Mode: "]
+  set widgets(statusbar,modes,sub,label) [::ttk::label $widgets(statusbar,modes,sub).label -text [T "Mode: "]]
   set widgets(statusbar,modes,sub,multi) [::ttk::label $widgets(statusbar,modes,sub).multi -text "???" -width 6]
   pack $widgets(statusbar,modes,sub,label) $widgets(statusbar,modes,sub,multi) -side left -anchor w
   $widgets(statusbar,clock,label) configure -textvariable ::potato::potato(clock)
