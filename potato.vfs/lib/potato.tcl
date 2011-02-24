@@ -7463,10 +7463,10 @@ proc ::potato::errorLogWindow {} {
 
 #: proc ::potato::errorLog
 #: arg msg Message to display
-#: arg level The priority level of the message. One of "error", "warning" or "message"
+#: arg level The priority level of the message. One of "error", "warning" or "message". Defaults to "error"
 #: desc Print the given message to the Error Log window with the given priority level
 #: return nothing
-proc ::potato::errorLog {msg level} {
+proc ::potato::errorLog {msg {level "error"}} {
 
   .errorLogWin.frame.top.text insert end $msg $level \n
   .errorLogWin.frame.top.text see end
@@ -7546,7 +7546,7 @@ proc ::potato::main {} {
      }
   set path(help) [file join $potato(vfsdir) lib help]
   if { [catch {source [file join $potato(homedir) potato.dev]} err] } {
-       errorLog "Unable to source \"[file nativename [file normalize [file join $potato(homedir) potato.dev]]]\": $err"
+       errorLog "Unable to source \"[file nativename [file normalize [file join $potato(homedir) potato.dev]]]\": $err" error
      }
   foreach x [list world skins lib] {
      catch {file mkdir $path($x)}
