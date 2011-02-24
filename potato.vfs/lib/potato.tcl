@@ -87,7 +87,7 @@ proc ::potato::setPrefs {readfile} {
   set world(-1,splitInputCmds) 0
 
   set world(-1,beep,show) 1
-  set world(-1,beep,sound) "All" ;# All, Once or None
+  set world(-1,beep,sound) "Once" ;# All, Once or None
 
   set world(-1,temp) 0
   set world(-1,autoconnect) -1
@@ -227,6 +227,8 @@ proc ::potato::setPrefs {readfile} {
             set retval [split $retval .]
             managePrefVersion [lindex $retval 0]
             manageWorldVersion -1 [lindex $retval 1]
+          } else {
+            errorLog "Unable to load prefs from \"[file nativename [file normalize $path(preffile)]]\": $retval" error
           }
      }
 
@@ -2239,7 +2241,10 @@ proc ::potato::launchWebPage {url} {
        }
      }
 
-  if { ![info exists command] || [catch {exec {*}$command &}] } {
+  if { ![info exists command] || [catch {exec {*}$command &} err] } {
+       if { [info exists err] } {
+            errorLog "Unable to launch browser via \"$command\": $err" warning
+          }
        bell -displayof .
      }
 
@@ -2651,12 +2656,13 @@ proc ::potato::sendLoginInfoSub {c} {
      }
   # Don't check for pw being blank, as some games allow empty passwords
   if { [string length $conn($c,char)] && \
-       [llength [set charinfo [lsearch -inline -index 0 $world($w,charList) $conn($c,char)]]] &&
-       ![catch {format $world($w,loginStr) [lindex $charinfo 0] [lindex $charinfo 1]} str] } {
-       # At some point, we may want to print a message if the [format] fails, to let the user know
-       # it's incorrect and needs fixing. #abc
-       send_to_real $c $str [format $world($w,loginStr) [lindex $charinfo 0] \
+       [llength [set charinfo [lsearch -inline -index 0 $world($w,charList) $conn($c,char)]]] } {
+       if { ![catch {format $world($w,loginStr) [lindex $charinfo 0] [lindex $charinfo 1]} str] } {
+            send_to_real $c $str [format $world($w,loginStr) [lindex $charinfo 0] \
                                  [string repeat \u25cf [string length [lindex $charinfo 1]]]]
+          } else {
+            errorLog "Invalid Connect String format for world $w ($world($w,name)): $str"
+          }
      }
   if { [string length $world($w,autosend,login)] } {
        send_to $c $world($w,autosend,login) "\n" 0
@@ -7417,6 +7423,56 @@ proc ::potato::statsFormat {secs} {
 
 };# ::potato::statsFormat
 
+#: proc ::potato::errorLogWindow
+#: desc Create a window for displaying an Error Log of bugs/errors that occur while Potato is running (failure to load package, execute external commands, etc). If the window already exists, deiconify it.
+#: return nothing
+proc ::potato::errorLogWindow {} {
+
+  set win .errorLogWin
+  if { [winfo exists $win] } {
+       reshowWindow $win 0
+       return;
+     }
+
+  toplevel $win
+  wm withdraw $win
+  wm title $win [T "Potato Error Log"]
+
+  pack [set frame [::ttk::frame $win.frame]] -side left -anchor nw -expand 1 -fill both
+  pack [set cont [::ttk::frame $frame.top]] -side top -anchor nw -expand 1 -fill both
+
+  set text [text $cont.text -width 120 -height 35 -wrap word -undo 1]
+  set sbY [::ttk::scrollbar $cont.sbY -orient vertical -command [list $text yview]]
+  set sbX [::ttk::scrollbar $cont.sbX -orient horizontal -command [list $text xview]]
+  $text configure -yscrollcommand [list $sbY set] -xscrollcommand [list $sbX set]
+  grid_with_scrollbars $text $sbX $sbY
+
+  $text tag configure error -foreground #ee0000 -lmargin2 25
+  $text tag configure warning -foreground #4f4fff -lmargin2 25
+  $text tag configure message -foreground #00c131 -lmargin2 25
+
+  pack [set btns [::ttk::frame $frame.btm]] -side top -anchor nw -expand 0 -fill x
+  pack [::ttk::button $btns.close -text [T "Close"] -underline 0 -command [list wm withdraw $win]]
+
+  wm protocol $win WM_DELETE_WINDOW [list wm withdraw $win];# don't destroy, just hide
+
+  return;
+
+
+};# ::potato::errorLogWindow
+
+#: proc ::potato::errorLog
+#: arg msg Message to display
+#: arg level The priority level of the message. One of "error", "warning" or "message"
+#: desc Print the given message to the Error Log window with the given priority level
+#: return nothing
+proc ::potato::errorLog {msg level} {
+
+  .errorLogWin.frame.top.text insert end $msg $level \n
+  .errorLogWin.frame.top.text see end
+
+};# ::potato::errorLog
+
 #: proc ::potato::main
 #: desc called when the program starts, to do some basic init
 #: return nothing
@@ -7463,6 +7519,12 @@ proc ::potato::main {} {
 
   treeviewHack;# hackily fix the fact that Treeviews can still be played with when disabled
 
+  errorLogWindow;# create a window for displaying error log messages
+
+  if { [catch {package require http} err] } {
+       errorLog "Unable to load http package: $err" warning
+     }
+
   set path(log) $potato(homedir)
   set path(upload) $potato(homedir)
   if { $::tcl_platform(platform) eq "windows" } {
@@ -7483,7 +7545,9 @@ proc ::potato::main {} {
        set path(i18n) [file join ~ .potato i18n]
      }
   set path(help) [file join $potato(vfsdir) lib help]
-  catch {source [file join $potato(homedir) potato.dev]}
+  if { [catch {source [file join $potato(homedir) potato.dev]} err] } {
+       errorLog "Unable to source [file nativename \"[file normalize [file join $potato(homedir)] potato.dev]]\": $err"
+     }
   foreach x [list world skins lib] {
      catch {file mkdir $path($x)}
   }
@@ -7498,7 +7562,12 @@ proc ::potato::main {} {
   tasksInit
 
   # Load TLS if available, for SSL connections
-  set potato(hasTLS) [expr {![catch {package require tls}]}]
+  if { [catch {package require tls} err] } {
+       set potato(hasTLS) 0
+       errorLog "Unable to load TLS for SSL connecions: $err" warning
+     } else {
+       set potato(hasTLS) 1
+     }
 
   # Set the ttk theme to use
   setTheme
@@ -7539,14 +7608,18 @@ proc ::potato::main {} {
   setUpFlash
 
   if { $::tcl_platform(platform) eq "windows" && $potato(wrapped) } {
-       if { ![catch {package require dde 1.3}] } {
+       if { ![catch {package require dde 1.3} err] } {
             # Start the DDE server in case we're the default telnet app. Only do this on Windows when
             # DDE is available, and we're running as a wrapped app, not a script.
             ::potato::ddeStart
+          } else {
+            errorLog "Unable to load DDE extension: $err" warning
           }
      }
 
-  catch {source $path(custom)}
+  if { [catch {source $path(custom)} err] } {
+       errorLog "Unable to source Custom file \"[file nativename [file normalize $path(custom)]]\": $err" warning
+     }
   if { [file exists $path(startupCmds)] && ![catch {open $path(startupCmds) r} fid] } {
        while { [gets $fid startupCmd] >= 0 } {
                send_to "" $startupCmd "" 0
@@ -7575,7 +7648,7 @@ proc ::potato::i18nPotato {} {
   variable path;
 
   if { [catch {package require msgcat 1.4.2} err] } {
-       # We should probably log this somewhere #abc
+       errorLog "Unable to load msgcat for translations: $err" error
        return;
      }
 
@@ -7634,28 +7707,32 @@ proc ::potato::loadTranslationFile {file} {
   # of translatable messages which will "work" but do nothing.
 
   if { [catch {open $file r} fid] } {
-       # Should probably report this somewhere. #abc
+       errorLog "Unable to load translation file \"[file nativename [file normalize $file]]\": $fid" warning
        return;
      }
 
   if { [catch {gets $fid line} count] || $count < 0 } {
        catch {close $fid}
+       errorLog "Translation file \"[file nativename [file normalize $file]]\" is empty." warning
        return;
      }
 
   if { ![string match "LOCALE: *" $line] } {
        # Malformed translation file
+       errorLog "Translation file \"[file nativename [file normalize $file]]\" is malformed: No 'Locale' line"
        catch {close $fid}
        return;
      }
 
   set locale [string trim [string range $line 8 end]]
   if { $locale eq "" } {
+       errorLog "Translation file \"[file nativename [file normalize $file]]\" is malformed: Invalid 'Locale' line"
        catch {close $fid}
        return;
      }
 
   if { [catch {gets $fid line} count] || $count < 0 } {
+       errorLog "Translation file \"[file nativename [file normalize $file]]\" is malformed: No 'Encoding' line"
        catch {close $fid}
        return;
      }
@@ -7663,6 +7740,7 @@ proc ::potato::loadTranslationFile {file} {
        # Process for encoding
        catch {fconfigure $fid -encoding [string range $line 10 end]}
        if { [catch {gets $fid line} count] || $count < 0 } {
+       errorLog "Translation file \"[file nativename [file normalize $file]]\" is malformed: Invalid 'Encoding' line"
             catch {close $fid}
             return;
           }
@@ -7712,8 +7790,8 @@ proc ::potato::treeviewHack {} {
 proc ::potato::setTheme {} {
   variable misc;
 
-  if { [catch {::ttk::style theme use $misc(tileTheme)}] } {
-       catch {::ttk::setTheme $misc(tileTheme)}
+  if { [catch {::ttk::style theme use $misc(tileTheme)} err1] && [catch {::ttk::setTheme $misc(tileTheme)} err2] } {
+       errorLog "Unable to set style: $err1 // $err2" error
      }
 
   return;
@@ -8107,7 +8185,12 @@ proc ::potato::setUpWinico {} {
   set winico(loaded) 0
   set winico(mapped) 0
   set winico(flashing) 0
-  if { $::tcl_platform(platform) ne "windows" || [catch {package require Winico 0.6}] } {
+  if { $::tcl_platform(platform) ne "windows" } {
+       return;
+     }
+
+  if { [catch {package require Winico 0.6} err] } {
+       errorLog "Unable to load Winico: $err" warning
        return;
      }
 
@@ -8501,9 +8584,10 @@ proc ::potato::setUpFlash {} {
   variable winico;
 
   if { $::tcl_platform(platform) eq "windows" } {
-       if { ![catch {package require potato-winflash}] } {
+       if { ![catch {package require potato-winflash} err] } {
             set taskbarCmd {winflash . -count 3 -appfocus 1}
           } else {
+            errorLog "Unable to load potato-winflash package: $err" error
             set taskbarCmd {wm deiconify .}
           }
        if { $winico(loaded) } {
@@ -8511,10 +8595,11 @@ proc ::potato::setUpFlash {} {
           } else {
             set sysTrayCmd {# nothing}
           }
-     } elseif { ![catch {package require potato-linflash}] } {
+     } elseif { ![catch {package require potato-linflash} err] } {
        set taskbarCmd {linflash .}
        set sysTrayCmd {# nothing}
      } else {
+       errorLog "Unable to load potato-linflash package: $err"
        set taskbarCmd {wm deiconify .}
        set sysTrayCmd {# nothing}
      }
@@ -8836,6 +8921,8 @@ proc ::potato::build_menu_help {m} {
   if { [catch {console title "$::potato::potato(name) - Tcl Code Console"}] } {
        $m entryconfigure end -state disabled
      }
+  $m add separator
+  $m add command {*}[menu_label [T "&Error Log Window"]] -command [list ::potato::errorLogWindow]
   $m add separator
   createMenuTask $m about
   $m add command {*}[menu_label [T "Visit Potato &Website"]] -command [list ::potato::launchWebPage $::potato::potato(webpage)]
@@ -11033,6 +11120,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
     if { ![catch {TinyURL $url} result] } {
          set str [string replace $str $start $end $result]
        } else {
+         errorLog "Unable to launch TinyURL at \"$url\": $result" warning
        }
   }
   if { $all_url} {
@@ -12929,7 +13017,7 @@ proc ::potato::inputHistoryReset {{win ""}} {
 proc ::potato::T {msgformat args} {
 
   if { [catch {::msgcat::mc $msgformat {*}$args} i18n] } {
-       # We should probably report this error somewhere, but not sure where. #abc
+       errorLog "Unable to format message for translation: [buildErrorReport]" error
        if { [llength $args] && ![catch {format $msgformat {*}$args} formatted] } {
             return $formatted;
           } else {
@@ -12948,7 +13036,7 @@ namespace eval ::potato {
 ##################################
 # Everything below this should be somewhere more sensible, please. Thank you. #abc
 package require Tcl 8.5 ; package require Tk 8.5; # this should be redone more elegantly #abc
-catch {package require http}
+
 option add *Listbox.activeStyle dotbox
 option add *TEntry.Cursor xterm
 
