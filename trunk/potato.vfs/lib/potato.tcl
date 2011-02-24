@@ -7628,7 +7628,7 @@ proc ::potato::main {} {
        errorLog "Unable to source Custom file \"[file nativename [file normalize $path(custom)]]\": $err" warning
      }
 
-  if { [file exists $path(startupCmds)] } {
+  if { ![file exists $path(startupCmds)] } {
        errorLog "Startup Commands file \"[file nativename [file normalize $path(startupCmds)]]\" does not exist." message
      } elseif { [catch {open $path(startupCmds) r} fid] } {
        errorLog "Unable to open Startup Commands file \"[file nativename [file normalize $path(startupCmds)]]\": $fid"
