@@ -180,11 +180,13 @@ proc ::potato::setPrefs {readfile} {
   set misc(toggleShowMainWindow) 0;# when moving to a conn, show it's main window, even if we last saw a spawn?
   set misc(tinyurlProvider) "TinyURL"
 
+  set misc(autoConnect) 1 ;# should we run autoconnects?
+
   # Default locale
   set misc(locale) "en_gb";# Colour, not Color :)
 
   # Default skin
-  set misc(skin) "potato"
+  set misc(skin) "potato";# Hah. Not that there will ever be another skin this century.
 
   set misc(aspell) "";# path to aspell executable. None by default.
 
@@ -2364,10 +2366,11 @@ proc ::potato::ioRead {args} {
 #: proc ::potato::ioWrite
 #: arg args Arguments to pass
 #: desc Write data to a socket connection. Wrapper for [puts]
-#: return Data read
+#: return Nothing
 proc ::potato::ioWrite {args} {
 
-  return [puts {*}$args]
+  catch {puts {*}$args}
+  return;
 
 };# ::potato::ioWrite
 
@@ -6279,6 +6282,14 @@ $sub.cb state disabled
                         -values $styles -width 20 -state readonly] -side left -padx 3
             set potato::worldconfig(MISC,tileTheme) $misc(tileTheme)
           }
+
+       pack [set sub [::ttk::frame $frame.autoConnect]] -side top -pady 5 -anchor nw
+       pack [::ttk::label $sub.l -text [T "Allow Auto-Connects?"] -width $lW -anchor w -justify left] -side left
+       pack [::ttk::checkbutton $sub.c -variable ::potato::worldconfig(MISC,autoConnect) \
+                          -onvalue 1 -offvalue 0] -side left
+       set potato::worldconfig(MISC,autoConnect) $misc(autoConnect)
+
+
      }
 
   set tree $OPTIONTREE
@@ -9789,6 +9800,11 @@ proc ::potato::autoConnectWindowRemove {} {
 #: return nothing
 proc ::potato::autoConnect {} {
   variable world;
+  variable misc;
+
+  if { !$misc(autoConnect) } {
+       return;# auto connects disabled
+     }
 
   set autoconnects [list]
   foreach w [worldIDs] {
