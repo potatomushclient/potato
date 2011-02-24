@@ -7546,7 +7546,7 @@ proc ::potato::main {} {
      }
   set path(help) [file join $potato(vfsdir) lib help]
   if { [catch {source [file join $potato(homedir) potato.dev]} err] } {
-       errorLog "Unable to source [file nativename \"[file normalize [file join $potato(homedir)] potato.dev]]\": $err"
+       errorLog "Unable to source \"[file nativename [file normalize [file join $potato(homedir) potato.dev]]]\": $err"
      }
   foreach x [list world skins lib] {
      catch {file mkdir $path($x)}
