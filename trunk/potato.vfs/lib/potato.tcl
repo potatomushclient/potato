@@ -350,6 +350,8 @@ proc ::potato::loadWorlds {} {
               }
               set world($w,id) $w
               manageWorldVersion $w [lindex [split $return " "] 3]
+            } else {
+              errorLog "Unable to load world file \"[file nativename [file normalize $x]]\": $return" error
             }
        }
      }
@@ -7545,8 +7547,11 @@ proc ::potato::main {} {
        set path(i18n) [file join ~ .potato i18n]
      }
   set path(help) [file join $potato(vfsdir) lib help]
-  if { [catch {source [file join $potato(homedir) potato.dev]} err] } {
-       errorLog "Unable to source \"[file nativename [file normalize [file join $potato(homedir) potato.dev]]]\": $err" error
+  set dev [file join $potato(homedir) potato.dev]
+  if { ![file exists $dev] } {
+       errorLog "Dev file \"[file nativename [file normalize $dev]]\" does not exist." message
+     } elseif { [catch {source $dev} err] } {
+       errorLog "Unable to source \"[file nativename [file normalize $dev]]\": $err" warning
      }
   foreach x [list world skins lib] {
      catch {file mkdir $path($x)}
@@ -7617,10 +7622,17 @@ proc ::potato::main {} {
           }
      }
 
-  if { [catch {source $path(custom)} err] } {
+  if { ![file exists $path(custom)] } {
+       errorLog "Custom code file \"[file nativename [file normalize $path(custom)]]\" does not exist." message
+     } elseif { [catch {source $path(custom)} err] } {
        errorLog "Unable to source Custom file \"[file nativename [file normalize $path(custom)]]\": $err" warning
      }
-  if { [file exists $path(startupCmds)] && ![catch {open $path(startupCmds) r} fid] } {
+
+  if { [file exists $path(startupCmds)] } {
+       errorLog "Startup Commands file \"[file nativename [file normalize $path(startupCmds)]]\" does not exist." message
+     } elseif { [catch {open $path(startupCmds) r} fid] } {
+       errorLog "Unable to open Startup Commands file \"[file nativename [file normalize $path(startupCmds)]]\": $fid"
+     } else {
        while { [gets $fid startupCmd] >= 0 } {
                send_to "" $startupCmd "" 0
              }
