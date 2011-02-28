@@ -1853,6 +1853,7 @@ proc ::potato::newConnection {w {character ""}} {
 
   set conn($c,world) $w
   set conn($c,char) $character
+  updateConnName $c;# sets conn($c,name)
   set conn($c,id) "" ;# we hope this doesn't break anything.
   set conn($c,protocols) [list]
   set conn($c,idle) 0
@@ -1913,6 +1914,28 @@ proc ::potato::newConnection {w {character ""}} {
   return;
 
 };# ::potato::newConnection
+
+#: proc ::potato::updateConnName
+#: arg c connection id
+#: desc Update the connection name for conn $c based on the world name and the character connected to, if a custom name is not set
+#: return nothing
+proc ::potato::updateConnName {c} {
+  variable conn;
+  variable world;
+
+  if { [info exists conn($c,name)] && [llength $conn($c,name)] && [lindex $conn($c,name) 0] } {
+       return;# custom name set, don't override
+     }
+
+  set connname $world($conn($c,world),name)
+  if { [string length $conn($c,char)] } {
+       append connname " ($conn($c,char))"
+     }
+  set conn($c,name) [list 0 $connname]
+
+  return;
+
+};# ::potato::updateConnName
 
 #: proc ::potato::addProtocol
 #: arg c connection id
@@ -2401,6 +2424,7 @@ proc ::potato::connect {c first {hostlist ""}} {
   after cancel $conn($c,reconnectId)
   set conn($c,reconnectId) ""
 
+  updateConnName $c
   set conn($c,connected) -1 ;# trying to connect
 
   set up [up]
@@ -7151,6 +7175,7 @@ proc ::potato::configureWorldCommit {w win} {
           foreach s [arraySubelem conn $c,spawns] {
              configureTextWidget $c $conn($s)
           }
+          updateConnName $c
           if { [winfo exists .debug_packet_$c.txt.t] } {
                configureTextWidget $c .debug_packet_$c.txt.t
              }
@@ -7318,6 +7343,7 @@ proc ::potato::connInfo {c type} {
     widget -
     textWidget -
     textwidget { return $conn($c,textWidget);}
+    connname { return [lindex $conn($c,name) 1];}
     input1 { return $conn($c,input1);}
     input2 { return $conn($c,input2);}
     input3 { return $conn($c,input[connInfo $c inputFocus]);}
@@ -11072,6 +11098,27 @@ proc ::potato::customSlashCommand {c w cmd str} {
   return;
 
 };# ::potato::customSlashCommand
+
+#: /rename [<name>]
+#: Set (or clear) the custom name for a connection
+::potato::define_slash_cmd rename {
+  variable conn;
+
+  if { $c == 0 } {
+       bell -displayof .
+       return;
+     }
+
+  set name [string trim $str]
+  if { $name eq "" } {
+       set conn($c,name) [list 0 ""]
+     } else {
+       set conn($c,name) [list 1 $str]
+     }
+  updateConnName $c
+  skinStatus $c
+
+};# /rename
 
 #: /silent <slashcmd>
 #: Run the /command <slashcmd> without producing errors/confirmations
