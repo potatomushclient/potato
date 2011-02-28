@@ -31,3 +31,6 @@
   * Added /tinyurl, which turns URLs into shorter URLs using a website like TinyURL.com (you can pick from a few similar sites). From a suggestion by Paige.
   * Bugfix in the Mail Window when using Multi-Command +Mail format. Also, added a new format for posting to Myrddin's BB system. And fields (CC, BCC, etc) which are not used by the current mail format are now greyed out. Suggested by Paige.
   * The /grab command is now added automatically for any new world created, instead of existing as a Global Custom /command. Also, we now create a matching event for it (which works for MUSHes) automatically, too, so that /grab works out of the box.
+  * Added an option to disable all auto-connects, without having to delete them all.
+  * Added an Error Log Window, accessed from the Help menu, which shows various errors/failures which were previously ignored silently. (Packages which could not be found/loaded, failure to launch browser windows, etc.)
+  * The character name is now shown in the World Bar buttons, to make distinguishing between multi-connects to a world easier. Also, added a new /rename command which allows you to set a custom name for a connection. Suggested by Paige and ChandraMagic.
