@@ -799,7 +799,7 @@ proc ::skin::potato::worldBarButtonNames {} {
   set after [list]
   foreach x [lsort -dictionary [array names widgets worldbar,*]] {
      foreach {tmp c} [split $x ,] {break;}
-     set name "$c. [::potato::connInfo $c name]"
+     set name "$c. [::potato::connInfo $c connname]"
      ::potato::tooltip $widgets($x) $name
      if { [string length $name] > [expr {$clip + 3}] } {
           $widgets($x) configure -text "[string range $name 0 $clip]..."
@@ -918,8 +918,12 @@ proc ::skin::potato::status {c} {
   set status [::potato::status $c]
   set cstatus [::potato::connStatus $c]
 
-  if { $c != 0 && ![info exists widgets(worldbar,$c)] && $cstatus != "closed" } {
-       doWorldBarButton $c
+  if { $c != 0 && $cstatus != "closed" } {
+       if { ![info exists widgets(worldbar,$c)] } {
+            doWorldBarButton $c
+          } else {
+            worldBarButtonNames
+          }
      }
 
   if { [::potato::up] == $c } {
