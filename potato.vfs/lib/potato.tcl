@@ -7458,6 +7458,9 @@ proc ::potato::errorLogWindow {} {
 
   set win .errorLogWin
   if { [winfo exists $win] } {
+       # These messages are reset because we create the window, initially, before translation files are loaded
+       # (so we can report errors in doing so), so need to be translated later, when the window is displayed.
+       catch {wm title $win [T "Potato Error Log"] ; $win.frame.btm.close configure -text [T "Close"]}
        reshowWindow $win 0
        return;
      }
