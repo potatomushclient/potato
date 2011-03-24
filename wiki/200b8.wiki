@@ -34,3 +34,5 @@
   * Added an option to disable all auto-connects, without having to delete them all.
   * Added an Error Log Window, accessed from the Help menu, which shows various errors/failures which were previously ignored silently. (Packages which could not be found/loaded, failure to launch browser windows, etc.)
   * The character name is now shown in the World Bar buttons, to make distinguishing between multi-connects to a world easier. Also, added a new /rename command which allows you to set a custom name for a connection. Suggested by Paige and ChandraMagic.
+  * A new Auto-Send sends a string only the first time you connect, and not when you reconnect. Useful for running macros which should only run once. Patch by Ryan Dowell.
+  * The connect and disconnect messages now include a timestamp.
