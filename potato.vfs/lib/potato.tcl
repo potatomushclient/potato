@@ -138,6 +138,7 @@ proc ::potato::setPrefs {readfile} {
   set world(-1,fcmd,12) ""
 
   set world(-1,autosend,connect) ""
+  set world(-1,autosend,firstconnect) ""
   set world(-1,autosend,login) ""
 
   set world(-1,act,flashTaskbar) 1
@@ -1883,12 +1884,12 @@ proc ::potato::newConnection {w {character ""}} {
   set conn($c,ansi,underline) 0
   set conn($c,ansi,highlight) 0
   set conn($c,ansi,inverse) 0
-  set conn($c,reconnectId) ""
   set conn($c,inputHistory) [list]
   set conn($c,inputHistory,count) 0
   set conn($c,stats,prev) 0
   set conn($c,stats,connAt) -1
   set conn($c,stats,formatted) ""
+  set conn($c,numConnects) 0
   set conn($c,twoInputWindows) $world($w,twoInputWindows)
   set conn($c,widgets) [list]
   set conn($c,spawnAll) ""
@@ -2602,6 +2603,7 @@ proc ::potato::connectVerifyComplete {c} {
 
   set conn($c,stats,connAt) [clock seconds]
   set conn($c,stats,formatted) [statsFormat 0]
+  incr conn($c,numConnects)
   incr world($w,stats,conns)
 
   fileevent $id writable {}
@@ -2632,7 +2634,7 @@ proc ::potato::connectVerifyComplete {c} {
      } else {
        set str "[lindex $peer 0] ([lindex $peer 1])"
      }
-  outputSystem $c [T "Connected - %s" $str]
+  outputSystem $c [T "Connected - %s - %s" $str [timestamp]]
 
   set conn($c,telnet,state) 0
   set conn($c,telnet,subState) 0
@@ -2677,6 +2679,9 @@ proc ::potato::sendLoginInfoSub {c} {
   variable conn;
 
   set w $conn($c,world)
+  if { [string length $world($w,autosend,firstconnect)] && $conn($c,numConnects) == 1 } {
+       send_to $c $world($w,autosend,firstconnect) "\n" 0
+     }
   if { [string length $world($w,autosend,connect)] } {
        send_to $c $world($w,autosend,connect) "\n" 0
      }
@@ -2884,7 +2889,7 @@ proc ::potato::disconnect {{c ""} {prompt 1}} {
   if { $conn($c,connected) == 1 } {
        # Only print message if we were fully connected, otherwise the "failed to connect" message is sufficient, and
        # we don't need to spam.
-       outputSystem $c [T "Disconnected from host."]
+       outputSystem $c [T "Disconnected from host. - %s" [timestamp]]
      }
   set conn($c,connected) 0
   timersStop $c
@@ -2907,6 +2912,16 @@ proc ::potato::disconnect {{c ""} {prompt 1}} {
   return;
 
 };# ::potato::disconnect
+
+#: proc ::potato::timestamp
+#: desc Return the current time, appropriately formatted
+#: return time string
+proc ::potato::timestamp {} {
+  variable misc;
+
+  return [clock format [clock seconds] -format $misc(clockFormat)];
+
+};# ::potato::timestamp
 
 #: proc ::potato::debug_packet
 #: arg c connection id
@@ -6203,6 +6218,16 @@ $sub.cb state disabled
        set confAutoSends [lindex $frame 0]
        set frame [lindex $frame 1]
 
+       pack [set sub [::ttk::frame $frame.firstconnect]] -side top -pady 5 -anchor nw
+       pack [::ttk::label $sub.l -text [T "Send upon first connect, before Login info:"]] -side top
+       pack [set sub [::ttk::frame $sub.tframe]] -side top -pady 3 -anchor nw
+       pack [text $sub.txt -height 10 -width 78 -undo 0 -wrap word -font TkFixedFont \
+                    -yscrollcommand [list $sub.sb set]] -side left -anchor nw -fill both
+       pack [::ttk::scrollbar $sub.sb -orient vertical -command [list $sub.txt yview]] -side right -fill y
+       $sub.txt insert end $world($w,autosend,firstconnect)
+       $sub.txt configure -undo 1
+       set worldconfig($w,CONFIG,autosend,firstconnect) $sub.txt
+
        pack [set sub [::ttk::frame $frame.connect]] -side top -pady 5 -anchor nw
        pack [::ttk::label $sub.l -text [T "Send before Login info:"]] -side top
        pack [set sub [::ttk::frame $sub.tframe]] -side top -pady 3 -anchor nw
@@ -7062,6 +7087,7 @@ proc ::potato::configureWorldCommit {w win} {
   array set fonts [array get worldconfig $w,*,font]
   set notes [$worldconfig($w,CONFIG,notes) get 1.0 end-1char]
   if { $w != -1 } {
+       set autosend(firstconnect) [$worldconfig($w,CONFIG,autosend,firstconnect) get 1.0 end-1char]
        set autosend(connect) [$worldconfig($w,CONFIG,autosend,connect) get 1.0 end-1char]
        set autosend(login) [$worldconfig($w,CONFIG,autosend,login) get 1.0 end-1char]
      }
@@ -7124,6 +7150,7 @@ proc ::potato::configureWorldCommit {w win} {
        array set MISC [array get worldconfig MISC,*]
        array unset worldconfig MISC,*
      } else {
+       set world($w,autosend,firstconnect) $autosend(firstconnect)
        set world($w,autosend,connect) $autosend(connect)
        set world($w,autosend,login) $autosend(login)
      }
