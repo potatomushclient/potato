@@ -1014,9 +1014,7 @@ proc ::potato::mailWindow {{c ""}} {
              -command [list ::potato::mailWindowSend $c $win]] -side left -padx 8
   pack [::ttk::button $btns.cancel -text [T "Cancel"] -width 8 -command [list destroy $win]] -side left -padx 8
 
-  $fileMenu add command {*}[menu_label [T "&Escape Special Characters"]] \
-           -command [format {::potato::textFindAndReplace %s {"%c" %%t %c \\%c %c \\%c %c \\%c %c \\%c %c \\%c %c \\%c %c \\%c %c \\%c %c \\%c \%c \\\%c \%c \\\%c \%c \\\%c}} $textWidget 9 37 37 59 59 91 91 93 93 40 40 41 41 44 44 94 94 36 36 123 123 125 125 92 92]
-
+  $fileMenu add command {*}[menu_label [T "&Escape Special Characters"]] -command [list ::potato::escapeChars $textWidget]
 
   bind $win <Escape> [list $btns.cancel invoke]
   bind $win <Destroy> [list ::potato::mailWindowCleanup $c]
@@ -8860,6 +8858,8 @@ proc ::potato::build_menu_edit {m} {
   $m add checkbutton {*}[menu_label [T "Input2 Multi-Line Mode?"]] \
               -variable ::potato::conn($c,input2,mode) -onvalue "multi" -offvalue "single"
 
+  $m add cascade -menu $menu(edit,convert,path) {*}[menu_label [T "&Convert..."]]
+
   return;
 
 };# ::potato::build_menu_edit
@@ -9013,6 +9013,7 @@ proc ::potato::setUpMenu {} {
   . configure -menu .m
   set menu(file,path) [menu .m.file -tearoff 0 -postcommand [list ::potato::build_menu_file .m.file]]
   set menu(edit,path) [menu .m.edit -tearoff 0 -postcommand [list ::potato::build_menu_edit .m.edit]]
+  set menu(edit,convert,path) [menu .m.edit.convert -tearoff 0]
   set menu(connect,path) [menu .m.file.connect -tearoff 0 -postcommand [list ::potato::rebuildConnectMenu .m.file.connect]]
   set menu(view,path) [menu .m.view -tearoff 0 -postcommand [list ::potato::build_menu_view .m.view]]
   set menu(log,path) [menu .m.log -tearoff 0 -postcommand [list ::potato::build_menu_log .m.log]]
@@ -9035,6 +9036,10 @@ proc ::potato::setUpMenu {} {
   set menu(tools) [.m index end]
   .m add cascade -menu .m.help {*}[menu_label [T "&Help"]]
   set menu(help) [.m index end]
+
+  createMenuTask $menu(edit,convert,path) convertNewlines
+  createMenuTask $menu(edit,convert,path) convertSpaces
+  createMenuTask $menu(edit,convert,path) convertChars
 
   return;
 
@@ -12502,17 +12507,18 @@ proc ::potato::textEditor {{c ""}} {
   $menuAction add command {*}[menu_label [T "&Open..."]] -command [list ::potato::textEditorOpen $text]
   $menuAction add command {*}[menu_label [T "&Save As..."]] -command [list ::potato::textEditorSave $text]
 
-  $menuConvert add command {*}[menu_label [T "&Returns to %r"]] \
-           -command [list ::potato::textFindAndReplace $text [list \n %r]]
-  $menuConvert add command {*}[menu_label [T "&Spaces to %b"]] \
-           -command [list ::potato::textFindAndReplace $text [list " " %b]]
-  $menuConvert add command {*}[menu_label [T "&Escape Special Characters"]] \
-           -command [format {::potato::textFindAndReplace %s {"%c" %%t %c \\%c %c \\%c %c \\%c %c \\%c %c \\%c %c \\%c %c \\%c %c \\%c %c \\%c \%c \\\%c \%c \\\%c \%c \\\%c}} $text 9 37 37 59 59 91 91 93 93 40 40 41 41 44 44 94 94 36 36 123 123 125 125 92 92]
+  $menuConvert add command {*}[menu_label [T "&Returns to %r"]] -command [list ::potato::escapeChars $text 0 1 0] -accelerator Ctrl+R
+  $menuConvert add command {*}[menu_label [T "&Spaces to %b"]] -command [list ::potato::escapeChars $text 0 0 1] -accelerator Ctrl+S
+  $menuConvert add command {*}[menu_label [T "&Escape Special Characters"]] -command [list ::potato::escapeChars $text] -accelerator Ctrl+E
+
   # $menuConvert add comand {*}[menu_label [T "&ANSI Colours to Tags"]] -command [list ::potato::textEditorConvertANSI $text]
   
   # Allow for saving to a file, including hard-wrapping and auto-indenting! #abc
   # Do ANSI Colour conversion stuff! #abc
 
+  bind $text <Control-r> [list ::potato::escapeChars $text 0 1 0]
+  bind $text <Control-s> [list ::potato::escapeChars $text 0 0 1]
+  bind $text <Control-e> [list ::potato::escapeChars $text]
 
   update idletasks
   center $win
@@ -12570,6 +12576,41 @@ proc ::potato::textEditorSave {text} {
   return;
 
 };# ::potato::textEditorSave
+
+#: proc ::potato::escapeChars
+#: arg win path to text widget
+#: arg specials 
+#: arg newlines Convert newlines to "%r"? Defaults to 0
+#: desc Replace all MUSH-special chars in text widget $win with escaped equivilents. Wrapper around textFindAndReplace.
+#: return nothing
+proc ::potato::escapeChars {win {specials 1} {newlines 0} {spaces 0}} {
+
+  set charmap [list]
+
+  if { $specials } {
+       foreach x [list 37 59 91 93 40 41 44 94 36 123 125 92] {
+         lappend charmap [format %c $x] "\\[format %c $x]"
+       }
+       lappend charmap "\t" "%t"
+     }
+
+  if { $newlines } {
+       lappend charmap "\n" "%r"
+     }
+
+  if { $spaces } {
+       lappend charmap "  " " %b"
+     }
+
+  if { $win eq "" } {
+       set win [connInfo "" input3]
+     }
+
+  textFindAndReplace $win $charmap
+
+  return;
+
+};# ::potato::escapeChars
 
 #: proc ::potato::textFindAndReplace
 #: arg win path to text widget
@@ -12879,6 +12920,15 @@ proc ::potato::tasksInit {} {
        globalMacros,name   [T "Global &Macro Window"] \
        globalMacros,cmd    "::potato::macroWindow -1" \
        globalMacros,state  always \
+       convertNewlines,name [T "Convert &Returns to %r"] \
+       convertNewlines,cmd  [list ::potato::escapeChars "" 0 1 0] \
+       convertNewlines,state always \
+       convertSpaces,name  [T "Convert &Spaces to %b"] \
+       convertSpaces,cmd   [list ::potato::escapeChars "" 0 0 1] \
+       convertSpaces,state always \
+       convertChars,name   [T "&Escape Special Chars"] \
+       convertChars,cmd    [list ::potato::escapeChars ""] \
+       convertChars,state  always \
   ]
 
   return;
