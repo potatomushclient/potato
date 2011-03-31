@@ -7579,6 +7579,9 @@ proc ::potato::main {} {
 
   treeviewHack;# hackily fix the fact that Treeviews can still be played with when disabled
 
+  option add *Listbox.activeStyle dotbox
+  option add *TEntry.Cursor xterm
+
   errorLogWindow;# create a window for displaying error log messages
 
   if { [catch {package require http} err] } {
@@ -13176,22 +13179,60 @@ namespace eval ::potato {
   namespace export T
 }
 
-##################################
-# Everything below this should be somewhere more sensible, please. Thank you. #abc
-package require Tcl 8.5 ; package require Tk 8.5; # this should be redone more elegantly #abc
+#: proc ::potato::basic_reqs
+#: desc Load the basic requirements for Potato - ensure we have a sufficient Tcl and Tk version, required packages, etc
+#: return nothing
+proc ::potato::basic_reqs {} {
+  variable potato;
 
-option add *Listbox.activeStyle dotbox
-option add *TEntry.Cursor xterm
+  if { [catch {package require Tcl 8.5}] } {
+       puts "WARNING! You need to be using at least Tcl 8.5 to run Potato (you only have [package version Tcl])."
+       puts "Please download a newer version of Tcl, or download a binary of Potato from"
+       puts "the website ($potato(webpage)) which includes everything you need."
+       exit;
+     }
 
-package require potato-telnet 1.1
-package require potato-proxy
-package require potato-wikihelp
-package require potato-help
-package require potato-font
-package require potato-spell
-package require potato-encoding
+  if { [catch {package require Tk 8.5}] } {
+       if { [catch {package require Tk}] } {
+            # No Tk -at all-
+            puts "WARNING! Potato is a graphical client, and requires Tk version 8.5. Please"
+            puts "install Tk before trying to run Potato, or download a binary of Potato from"
+            puts "the website at $potato(webpage)"
+          } else {
+            # We have Tk, but not a good enough version
+            set msg "WARNING! Potato requires Tk 8.5 to run (you only have Tk [package version Tk]).\n"
+            append msg "Please install a newer version of Tk, or download a binary of Potato from\n"
+            append msg "the website ($potato(webpage)) which includes everything you need."
+            tk_messageBox -icon error -title "Potato" -message $msg -type ok
+          }
+        exit;
+     }
 
-::potato::main
+  # OK, that's Tcl and Tk sorted. Now let's load in the other parts of Potato from separate
+  # files. These really shouldn't be an issue....
+
+  if { [catch {
+               package require potato-telnet 1.1 ;
+               package require potato-proxy ;
+               package require potato-wikihelp ;
+               package require potato-help ;
+               package require potato-font ;
+               package require potato-spell ;
+               package require potato-encoding
+              }] } {
+        set msg "WARNING! Your Potato installation appears to be corrupt or incomplete -\n"
+        append msg "you are missing part of the Potato code. Please re-download Potato from\n"
+        append msg "the website ($potato(webpage)), and contact the author if you have\n"
+        append msg "any further problems."
+        tk_messageBox -icon error -title "Potato" -type ok -message $msg
+        exit;
+     }
+
+  # Hooray, all good.
+
+  return;
+
+};# ::potato::basic_reqs
 
 #########################
 # Things below this line are temporary. #abc
@@ -13212,8 +13253,20 @@ proc winover {} {
 
 }
 
-parray potato::world *,name
 
 
+##################################
+# Run it!
+
+::potato::basic_reqs
+
+::potato::main
+
+#
+#########################
+
+if { $tcl_platform(platform) eq "windows" } {
+     parray potato::world *,name
+   }
 
 
