@@ -1987,6 +1987,10 @@ proc ::potato::sendRaw {c str telnet} {
        if { $telnet } {
             ioWrite -nonewline $conn($c,id) $str
           } else {
+            if { $conn($c,id,encoding) eq "iso8859-1" } {
+                 # Convert Unicode chars to latin equivilents
+                 set str [unicode-to-latin1 $str]
+               }
             ioWrite -nonewline $conn($c,id) "[encoding convertto $conn($c,id,encoding) $str]$conn($c,id,lineending)"
           }
      }
@@ -13135,6 +13139,7 @@ package require potato-wikihelp
 package require potato-help
 package require potato-font
 package require potato-spell
+package require potato-encoding
 
 ::potato::main
 
