@@ -1,6 +1,6 @@
 #summary Version 2.0.0b8
 =Version 2.0.0b8=
-==Unreleased==
+==Released March 31st 2011==
 
   * A new Help window, with lots of new and updated helpfiles.
   * MUSH passwords are now obfusticated on save.
