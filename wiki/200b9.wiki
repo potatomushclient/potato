@@ -2,4 +2,5 @@
 =Version 2.0.0b9=
 ==Unreleased==
 
-  * New options in the Edit menu to Escape Special Chars, and to Convert Newlines and Spaces to appropriate MUSH substitutions, in the current input window. Custom keyboard shortcuts can be set for these.
+  * New options in the Edit menu to Escape Special Chars, and to Convert Newlines and Spaces to appropriate MUSH substitutions, in the current input window. Custom keyboard shortcuts can be set for these. Suggested by Paige.
+  * The Packet Debugger now shows hex codes for each byte sent/received. Patch by Ryan Dowell.
