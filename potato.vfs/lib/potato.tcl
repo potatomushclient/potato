@@ -7541,6 +7541,9 @@ proc ::potato::main {} {
   variable path;
   variable skins;
   variable misc;
+  variable running;
+
+  set running 1;# so potato.tcl can be re-sourced without re-running this proc
 
   set potato(name) "Potato MU* Client"
   set potato(version) [source [file join [file dirname [info script]] "potato-version.tcl"]]
@@ -13257,6 +13260,10 @@ proc winover {} {
 
 ##################################
 # Run it!
+
+if { [info exists ::potato::running] && $potato::running } {
+     return;
+   }
 
 ::potato::basic_reqs
 
