@@ -2931,29 +2931,75 @@ proc ::potato::timestamp {} {
 #: arg text the text to print
 #: return nothing
 proc ::potato::debug_packet {c dir text} {
+  variable conn;
 
   set win(toplevel) .debug_packet_$c
   set win(txt,frame) $win(toplevel).txt
-  set win(txt,txt) $win(txt,frame).t
+  set win(txt,btxt) $win(txt,frame).btxt
+  set win(txt,bhex) $win(txt,frame).bhex
   set win(txt,sb) $win(txt,frame).sb
   if { ![winfo exists $win(toplevel)] } {
        toplevel $win(toplevel)
        wm title $win(toplevel) [T "Packet Debugger for \[%d. %s\]" $c [connInfo $c name]]
        pack [::ttk::frame $win(txt,frame)] -side top -expand 1 -fill both
-       pack [text $win(txt,txt) -wrap word -yscrollcommand [list $win(txt,sb) set]] -side left -expand 1 -fill both
-       configureTextWidget $c $win(txt,txt)
-       pack [scrollbar $win(txt,sb) -orient vertical -command [list $win(txt,txt) yview]] -side left -fill y
+       pack [text $win(txt,btxt) -wrap word -yscrollcommand [list $win(txt,sb) set]] -side left -expand 0 -fill y
+       configureTextWidget $c $win(txt,btxt)
+       # Widths need to be set after running configureTextWidget.
+       $win(txt,btxt) configure -width 37
+       pack [text $win(txt,bhex) -wrap word -yscrollcommand [list $win(txt,sb) set]] -side left -expand 0 -fill y
+       configureTextWidget $c $win(txt,bhex)
+       $win(txt,bhex) configure -width 102
+       pack [scrollbar $win(txt,sb) -orient vertical -command [list ::potato::multiscroll [list $win(txt,btxt) $win(txt,bhex)] yview]] -side left -fill y
        bind $win(toplevel) <Destroy> [list set ::potato::conn($c,debugPackets) 0]
-     }
-  set aE [atEnd $win(txt,txt)]
-  if { $dir } {
-       $win(txt,txt) insert end $text
+       update idletasks
+       wm maxsize $win(toplevel) [winfo reqwidth $win(toplevel)] 0
      } else {
-       $win(txt,txt) insert end $text echo
+       $win(txt,btxt) configure -state normal
+       $win(txt,bhex) configure -state normal
+     }
+  set aE [atEnd $win(txt,btxt)]
+
+  if { !$dir } {
+       $win(txt,bhex) insert end "\n"
+       $win(txt,btxt) insert end "\n"
+       set tag "echo"
+     } else {
+       set tag ""
+     }
+  set linelen [$win(txt,btxt) count -chars "end-1char linestart" "end-1char"]
+  set prev ""
+  for {set i 0} {$i < [string length $text]} {incr i} {
+    set char [string index $text $i]
+    scan $char %c num
+    $win(txt,bhex) insert end [format %02X $num] $tag
+    $win(txt,bhex) insert end " " $tag
+    switch -exact $char {
+      "\n"      {set dchar \u21B5}
+      "\r"      {set dchar \u240D}
+      "\u0020"  {set dchar \u2423}
+      default   {set dchar $char}
+    }
+    $win(txt,btxt) insert end $dchar $tag
+    incr linelen
+    if { $char eq $conn($c,id,lineending) || "$prev$char" eq $conn($c,id,lineending) || 
+         ($linelen > 0 && ($linelen % 32) == 0) } {
+         $win(txt,btxt) insert end "\n"
+         $win(txt,bhex) insert end "\n"
+         set linelen 0
+       }
+    set prev $char
+  }
+  if { !$dir } {
+       $win(txt,bhex) insert end "\n\n"
+       $win(txt,btxt) insert end "\n\n"
      }
   if { $aE } {
-       $win(txt,txt) see end
+       $win(txt,btxt) see end
+       $win(txt,bhex) see end
      }
+  $win(txt,btxt) configure -state disabled
+  $win(txt,bhex) configure -state disabled
+
   return;
 
 };# ::potato::debug_packet
