@@ -5556,6 +5556,7 @@ proc ::potato::eventSave {w} {
      }
   set eventConfig($w,saved) 1
   eventConfigClear $w
+  saveWorlds
   return;
 
 };# ::potato::eventSave
