@@ -12932,9 +12932,10 @@ proc ::potato::tasksInit {} {
        autoConnects,name   [T "Manage &Auto-Connects"] \
        autoConnects,cmd    "::potato::autoConnectWindow" \
        autoConnects,state  always \
+       fcmd2,state         always \
        fcmd2,cmd           "::potato::fcmd 2" \
        fcmd2,name          [T "Run F2 Command"] \
-       fcmd2,state         always \
+       fcmd3,state         always \
        fcmd3,cmd           "::potato::fcmd 3" \
        fcmd3,name          [T "Run F3 Command"] \
        fcmd4,state         always \
