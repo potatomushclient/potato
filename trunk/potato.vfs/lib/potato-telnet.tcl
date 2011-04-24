@@ -19,28 +19,29 @@ proc ::potato::telnet::init {} {
      set tCmd($name,int) $int
   }
 
+  # OPTION-NAME TELNET-CODE WILL? RFC
   foreach {x} [list \
-                 [list ECHO 1 0] \
-                 [list SGA  3 1] \
-                 [list STATUS 5 0] \
-                 [list TMRK 6 0] \
-                 [list TERM 24 1] \
-                 [list EOR 25 0] \
-                 [list NAWS 31 1] \
-                 [list TSPEED 32 0] \
-                 [list FLOW 33 0] \
-                 [list LINE 34 0] \
-                 [list XDISP 35 0] \
-                 [list ENV 36 0] \
-                 [list NEWENV 39 0] \
-                 [list CHARSET 42 1] \
-                 [list STARTTLS 46 0] \
-                 [list MSSP 70 1] \
-                 [list MCP 86 0] \
-                 [list MSP 90 0] \
-                 [list MXP 91 0] \
+                 [list ECHO 1 0 857] \
+                 [list SGA  3 1 858] \
+                 [list STATUS 5 0 859] \
+                 [list TIMING-MARK 6 0 860] \
+                 [list TTYPE 24 1 1091] \
+                 [list EOR 25 0 885] \
+                 [list NAWS 31 1 1073] \
+                 [list TERMINAL-SPEED 32 0 1079] \
+                 [list FLOW 33 0 1372] \
+                 [list LINE 34 0 1184] \
+                 [list XDISP 35 0 1096] \
+                 [list ENV 36 0 1401] \
+                 [list NEWENV 39 0 1572] \
+                 [list CHARSET 42 1 2066] \
+                 [list STARTTLS 46 0 ???] \
+                 [list MSSP 70 1 ???] \
+                 [list MCP 86 0 ???] \
+                 [list MSP 90 0 ???] \
+                 [list MXP 91 0 ???] \
                ] {
-      foreach {name int will} $x {break}
+      foreach {name int will rfc} $x {break}
       set tOpt($int) $name
       set tOpt($name) [format %c $int]
       set tOpt($int,will) $will
