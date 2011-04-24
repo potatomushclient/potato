@@ -356,8 +356,9 @@ proc ::potato::telnet::process_sub_3_1 {c str} {
                       ::potato::sendRaw $c \
                             "$tCmd(IAC)$tCmd(SB)$tOpt(CHARSET)$subCmd(CHARSET,REJECTED)$tCmd(IAC)$tCmd(SE)" 1
                     }
-               } else {
-                 # Nothing. We don't support any CHARSET options but REQUEST. We probably should. #abc
+               } elseif { [string index $subStr 0] == $subCmd(CHARSET,TTABLE-IS) } {
+                 # We don't support TTABLE. Just send a refusal. IAC-SB-CHARSET-TTABLE_REJECTED-IAC-SE
+                 ::potato::sendRaw $c "$tCmd(IAC)$tCmd(SB)$tOpt(CHARSET)$subCmd(CHARSET,TTABLE-REJECTED)$tCmd(IAC)$tCmd(SE)" 1
                }
           } elseif { $optChar eq $tOpt(MSSP) } {
             # Store MSSP info
