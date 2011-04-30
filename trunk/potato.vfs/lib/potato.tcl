@@ -6227,8 +6227,8 @@ $sub.cb state disabled
   # Now we need to populate the list.
   set worldconfig($w,timer) -1
   set worldconfig($w,timer,active) {}
-  foreach x [array names world -regexp "$w,timer,\[0-9\]+,cmds\$"] {
-    if { ![scan $x $w,timer,%d,cmds timerId] } {
+  foreach x [array names world -regexp "^$w,timer,\[0-9\]+,cmds\$"] {
+    if { [scan $x $w,timer,%d,cmds timerId] < 1 } {
          continue;
        } 
     set worldconfig($w,timer,$timerId,delay) $world($w,timer,$timerId,delay)
