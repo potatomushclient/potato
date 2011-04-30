@@ -3066,7 +3066,7 @@ proc ::potato::get_mushageProcess {c line} {
   regsub -all {\x1B.*?m} $line "" lineNoansi
 
   # set matchLinks {\m((https?://)|www\.)(([a-zA-Z_\.0-9%+/@~=&,;-]*))?([a-zA-Z_\.0-9%+/@~=&,;-]*)(\?([a-zA-Z_\.0-9%+/@~=&,;:-]*))?(#[a-zA-Z_\.0-9%+/@~=&,;:-]*)?}
-  set matchLinks {\m(?:(?:(?:f|ht)tps?://)|www\.)(?:(?:[a-zA-Z_\.0-9%+/@~=&,;-]*))?(?::[0-9]+/)?(?:[a-zA-Z_\.0-9%+/@~=&,;-]*)(?:\?(?:[a-zA-Z_\.0-9%+/@~=&,;:-]*))?(?:#[a-zA-Z_\.0-9%+/@~=&,;:-]*)?}
+  set matchLinks {\m(?:(?:(?:f|ht)tps?://)|www\.)(?:(?:[a-zA-Z_\.0-9%+/@~=&,;-]*))?(?::[0-9]+/)?(?:[a-zA-Z_\.0-9%+/@~=&,;!-]*)(?:\?(?:[a-zA-Z_\.0-9%+/@~=&,;:!-]*))?(?:#[a-zA-Z_\.0-9%+/@~=&,;:!-]*)?}
   set tmp [regexp -all -inline -indices -- $matchLinks $lineNoansi]
   # '\a' is the beep char defined in PennMUSH in ansi.h. If a game has changed this, or another codebase uses something
   # else, you can change it by.. hrm, nope, you're just screwed.
