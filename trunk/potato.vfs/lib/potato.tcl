@@ -61,7 +61,7 @@ proc ::potato::setPrefs {readfile} {
   set world(-1,description) ""
   set world(-1,loginStr) {connect %s %s}
   set world(-1,loginDelay) 1.5
-  set world(-1,type) "MUD"
+  set world(-1,type) "MUSH"
   set world(-1,telnet) 1
   set world(-1,telnet,ssl) 0
   set world(-1,telnet,naws) 1
@@ -1609,6 +1609,8 @@ proc ::potato::logWindowInvoke {c win} {
 #: return nothing
 proc ::potato::doLog {c file append buffer leave} {
   variable conn;
+  variable world;
+  variable misc;
 
   if { ![info exists conn($c,world)] } {
        return;
@@ -1625,6 +1627,13 @@ proc ::potato::doLog {c file append buffer leave} {
        outputSystem $c "Unable to log to \"$file\": $fid"
        return;
      }
+
+  set header "Logfile from $world($conn($c,world),name)"
+  if { $conn($c,char) ne "" } {
+       append header " ($conn($c,char))"
+     }
+  puts $fid $header
+  puts $fid "Log opened [clock format [clock seconds] -format $misc(clockFormat)]\n"
 
   if { $buffer eq "" || [string equal -nocase $buffer "_none"] || [string equal -nocase $buffer {No Buffer}] } {
        set t ""
@@ -1664,6 +1673,7 @@ proc ::potato::doLog {c file append buffer leave} {
 #: return 0 if no open logs, -1 if specified log not found, -2 if specified log is ambiguous, 1 if log(s) closed successfully.
 proc ::potato::stopLog {{c ""} {file ""}} {
   variable conn;
+  variable misc;
 
   if { $c eq "" } {
        set c [up]
@@ -1671,6 +1681,7 @@ proc ::potato::stopLog {{c ""} {file ""}} {
   if { [set count [llength [set list [array names conn $c,log,*]]]] == 0 } {
        return 0;# No open logs
      }
+  set footer "\nLogging stopped at [clock format [clock seconds] -format $misc(clockFormat)]"
   if { $file eq "" } {
        if { $count == 1 } {
             set msg [T "Logging to \"%s\" stopped." $conn([lindex $list 0])]
@@ -1678,6 +1689,7 @@ proc ::potato::stopLog {{c ""} {file ""}} {
             set msg [T "Logging to %d logfiles stopped." $count]
           }
         foreach x [removePrefix $list $c,log] {
+          catch {puts $x $footer}
           close $x
           unset conn($c,log,$x)
         }
@@ -1705,6 +1717,7 @@ proc ::potato::stopLog {{c ""} {file ""}} {
             set match $file
           }
        set msg [T "Logging to \"%s\" stopped." $conn($c,log,$match)]
+       catch {puts $match $footer}
        close $match
        unset conn($c,log,$match)
      }
