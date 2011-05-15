@@ -9173,6 +9173,10 @@ proc ::potato::setUpBindings {} {
   # it causes "bleed" of the selection tag if new text is inserted.
   bind Text <<Selection>> {%W tag remove sel end-1c end}
 
+  # The help for the Listbox widget says that it will only take focus on click if -takefocus is true.
+  # It's lying. Let's make it actually do that.
+  bind Listbox <1> {    if {[winfo exists %W]} { tk::ListboxBeginSelect %W [%W index @%x,%y] [%W cget -takefocus] }}
+
   # When "Up" is pressed and we're already at the start, or "Down" is pressed and
   # we're already at the end, scroll the output window in that direction instead.
   bind PotatoInput <Up> { if { [%W compare "insert display linestart" == 1.0] } {
