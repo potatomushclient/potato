@@ -2174,6 +2174,10 @@ proc ::potato::createOutputTags {t} {
         $t tag configure ANSI_${ground}_${x}h
      }
   }
+  for {set i 0} {$i < 256} {incr i} {
+    $t tag configure ANSI_fg_xterm$i
+    $t tag configure ANSI_bg_xterm$i
+  }
   $t tag configure ANSI_fg_bg
   $t tag configure center -justify center -lmargin1 0 -lmargin2 0
   $t tag raise ANSI_underline
@@ -8461,7 +8465,7 @@ proc ::potato::winicoFlashOn {} {
   set winico(flashing) 1
   return;
 
-};#
+};# ::potato::winicoFlashOn
 
 #: proc ::potato::winicoFlashOff
 #: desc Stop the winico icon on the taskbar from flashing by resetting to the default icon and cancelling the flash
@@ -8475,7 +8479,7 @@ proc ::potato::winicoFlashOff {} {
   set winico(flashing) 0
   winico taskbar modify $winico(main) -pos 0 -text $potato(name)
   return;
-}
+};# ::potato::winicoFlashOff
 
 #: proc ::potato::loadSkins
 #: desc load all the skins available, adding them to the $::potato::skins list
