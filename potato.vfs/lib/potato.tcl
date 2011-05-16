@@ -9179,7 +9179,7 @@ proc ::potato::setUpBindings {} {
 
   # The help for the Listbox widget says that it will only take focus on click if -takefocus is true.
   # It's lying. Let's make it actually do that.
-  bind Listbox <1> {    if {[winfo exists %W]} { tk::ListboxBeginSelect %W [%W index @%x,%y] [%W cget -takefocus] }}
+  bind Listbox <1> {    if {[winfo exists %W]} { tk::ListboxBeginSelect %W [%W index @%x,%y] [string is true [%W cget -takefocus]] }}
 
   # When "Up" is pressed and we're already at the start, or "Down" is pressed and
   # we're already at the end, scroll the output window in that direction instead.
