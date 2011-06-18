@@ -11185,7 +11185,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
   variable conn;
   variable world;
 
-  if { $world($w,slashcmd,$cmd,type) == "regexp" } {
+  if { $world($w,slashcmd,$cmd,type) in [list "regexp" "Regexp"] } {
        set pattern $world($w,slashcmd,$cmd)
      } else {
        set pattern [glob2Regexp $world($w,slashcmd,$cmd)]
