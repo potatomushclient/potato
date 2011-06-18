@@ -9287,7 +9287,6 @@ proc ::potato::setUpBindings {} {
   # Use Control-Return for a newline, and Return to send text
   bind PotatoInput <Control-Return> "[bind Text <Return>] ; break"
   bind PotatoInput <Return> "::potato::send_mushage %W 0 ; break"
-  bind PotatoInput <Shift-Return> "::potato::send_mushage %W 1; break"
 
   # Counteract the annoying case-sensitiveness of bindings
   foreach x [list Text PotatoInput PotatoOutput] {
@@ -9754,6 +9753,7 @@ proc ::potato::loadDefaultUserBindings {} {
   set keyShorts(fcmd10) "F10"
   set keyShorts(fcmd11) "F11"
   set keyShorts(fcmd12) "F12"
+  set keyShorts(save2history) "Shift-Escape"
 
   return;
 
@@ -10093,6 +10093,11 @@ proc ::potato::send_mushage {window saveonly} {
   variable world;
 
   set c [up]
+
+  if { $window eq "" } {
+       set window [connInfo $c input3]
+     }
+
 
   if { [$window count -chars 1.0 end-1c] == 0 && $conn($c,connected) == 0 } {
        reconnect [up]
@@ -13004,6 +13009,10 @@ proc ::potato::tasksInit {} {
        convertChars,name   [T "&Escape Special Chars"] \
        convertChars,cmd    [list ::potato::escapeChars ""] \
        convertChars,state  always \
+       save2history,name   [T "Save to Input History"] \
+       save2history,cmd    [list ::potato::send_mushage "" 1] \
+       save2history,state  notZero \
+
   ]
 
   return;
