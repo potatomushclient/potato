@@ -3,4 +3,13 @@
 ==Unreleased==
 
   * New options in the Edit menu to Escape Special Chars, and to Convert Newlines and Spaces to appropriate MUSH substitutions, in the current input window. Custom keyboard shortcuts can be set for these. Suggested by Paige.
-  * The Packet Debugger now shows hex codes for each byte sent/received. Patch by Ryan Dowell.
+  * The Packet Debugger is now much niftier, and shows hex codes for each byte sent/received. Patch by Ryan Dowell.
+  * Potato now saves world settings immediately after Events are changed.
+  * The 'F3' command didn't work. Reported by James.
+  * URL links can now contain '!' characters. Requested by Andrew Perron and Cheetah@M*U*S*H.
+  * Bug in the Configure World window reported by Ryunosuke Yamaguchi.
+  * Logfiles now show the world name, character and time at the beginning. Suggested by ihavenomouth.
+  * ANSI flash/underline didn't work on Xterm colors. Reported by Paige.
+  * The keyboard shortcut to save a string to the Input History without sending it to the MUSH -- formerly "Shift-Return" -- has been changed to Shift-Escape, to avoid accidental triggering. It can also now be configured in the usual way.
+  * Regexp Custom Slash Commands didn't work correctly. Reported by Paige.
+  * Added 'Reconnect All' feature, to reconnect all disconnected worlds. Suggested by Fally.
