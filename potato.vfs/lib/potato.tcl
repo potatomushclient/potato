@@ -2382,6 +2382,22 @@ proc ::potato::reconnect {{c ""}} {
 
 };# ::potato::reconnect
 
+#: proc ::potato:reconnectAll
+#: desc Reconnect all disconnected worlds.
+#: return nothing
+proc ::potato::reconnectAll {} {
+
+  set ids [connIDs]
+  if { ![llength $ids] } {
+       bell -displayof .
+       return;
+     }
+  foreach c [connIDs] {
+    reconnect $c;
+  }
+
+};# ::potato::reconnectAll
+
 #: proc ::potato::ioOpen
 #: arg host host to connect to
 #: arg port port to connect to
@@ -8897,6 +8913,9 @@ proc ::potato::build_menu_file {m} {
   createMenuTask $m close
 
   $m add separator
+  createMenuTask $m reconnectAll
+
+  $m add separator
   $m add command {*}[menu_label [T "&Show Connection Stats"]] \
               -command ::potato::showStats -state $state
   $m add command {*}[menu_label [T "Show &MSSP Info"]] \
@@ -12883,6 +12902,9 @@ proc ::potato::tasksInit {} {
        reconnect,name      [T "&Reconnect"] \
        reconnect,cmd       "::potato::reconnect" \
        reconnect,state     {$c != 0 && $conn($c,connected) == 0} \
+       reconnectAll,name   [T "Reconnect All"] \
+       reconnectAll,cmd    "::potato::reconnectAll" \
+       reconnectAll,state  {[llength [connIDs]] != 0} \
        close,name          [T "&Close Connection"] \
        close,cmd           "::potato::closeConn" \
        close,state         notZero \
@@ -13142,8 +13164,7 @@ proc ::potato::spellcheck {} {
 proc ::potato::glob2Regexp {pattern} {
 
   regsub -all {([^a-zA-Z0-9?*])} $pattern {\\\1} temp
-  regsub -all {\?} $temp {(.)} temp
-  regsub -all {\*} $temp {(.*)} temp
+  set temp [string map [list "?" "." "*" ".*?"] $temp]
 
   return "^$temp\$";
 
