@@ -76,6 +76,7 @@ proc ::potato::setPrefs {readfile} {
   set world(-1,proxy,port) ""
 
   set world(-1,echo) 0
+  set world(-1,echo,timers) 0
   set world(-1,ignoreEmpty) 0
 
   set world(-1,outputLimit,on) 0
@@ -2816,7 +2817,7 @@ proc ::potato::timerRun {c w timer} {
      }
 
   # Send the command
-  send_to $c $world($w,timer,$timer,cmds) "\n" 0
+  send_to $c $world($w,timer,$timer,cmds) "\n" 0 "" [expr {$world($w,echo,timers)}]
 
   if { $conn($c,timer,$timer-$w,count) != 0 } {
        timerQueue $c $w $timer 0
@@ -6134,6 +6135,10 @@ $sub.cb state disabled
   pack [set sub [::ttk::frame $frame.echo]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.l -text [T "Echo Sent Commands?"] -width 20 -anchor w -justify left] -side left
   pack [::ttk::checkbutton $sub.cb -variable potato::worldconfig($w,echo) -onvalue 1 -offvalue 0] -side left
+
+  pack [set sub [::ttk::frame $frame.echoTimers]] -side top -pady 5 -anchor nw
+  pack [::ttk::label $sub.l -text [T "Echo Timer Commands?"] -width 20 -anchor w -justify left] -side left
+  pack [::ttk::checkbutton $sub.cb -variable potato::worldconfig($w,echo,timers) -onvalue 1 -offvalue 0] -side left
 
   pack [set sub [::ttk::frame $frame.empty]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.l -text [T "Ignore Empty Lines?"] -width 20 -anchor w -justify left] -side left
@@ -10187,9 +10192,10 @@ proc ::potato::send_mushage {window saveonly} {
 #: arg sep separator character
 #: arg history add commands to history?
 #: arg prefix Prefix (auto-say) to add, if text isn't a /command. Defaults to nothing.
+#: arg echo Should we echo (if so configured)? If 0, we won't echo no matter what. If 1, we echo if the option is on. Defaults to 1.
 #: desc for every line in $string (lines are delimited by $sep), parse (it may be a /command) and send to connection $c (or current connection, if $c is "") with prefix. If $sep is "" (empty string), treat as one line.
 #: return nothing
-proc ::potato::send_to {c string sep history {prefix ""}} {
+proc ::potato::send_to {c string sep history {prefix ""} {echo 1}} {
   variable conn;
   variable world;
 
@@ -10198,10 +10204,10 @@ proc ::potato::send_to {c string sep history {prefix ""}} {
      }
 
   if { $sep eq "" } {
-       send_to_sub $c $string $prefix
+       send_to_sub $c $string $prefix $echo
      } else {
        foreach x [split $string $sep] {
-          send_to_sub $c $x $prefix
+          send_to_sub $c $x $prefix $echo
        }
      }
 
@@ -10222,14 +10228,15 @@ proc ::potato::send_to {c string sep history {prefix ""}} {
 #: arg c connection id
 #: arg string string to process
 #: arg prefix Prefix to add to non-/command lines. Defaults to "".
+#: arg echo Echo if the option is on?
 #: desc parse $string to see if it's a /command, and send to connection $c
 #: return nothing
-proc ::potato::send_to_sub {c string {prefix ""}} {
+proc ::potato::send_to_sub {c string {prefix ""} {echo 1}} {
 
   if { [string index $string 0] ne "/" } {
-       send_to_real $c "$prefix$string"
+       send_to_real $c "$prefix$string" $echo
      } elseif { [string index $string 1] eq "/" } {
-       send_to_real $c "$prefix[string range $string 1 end]"
+       send_to_real $c "$prefix[string range $string 1 end]" $echo
      } else {
        process_slash_command $c $string
      }
@@ -10241,10 +10248,10 @@ proc ::potato::send_to_sub {c string {prefix ""}} {
 #: proc ::potato::send_to_real
 #: arg c connection id
 #: arg string string to send
-#: arg echostr If not "", use this string for output echo instead of $string. Meant for strings containing passwords. Defaults to "".
+#: arg echo If 1, echo the string (if the echo option is on). if 0, don't ever echo. For anything else, echo that value instead of $string.
 #: desc send the string $string to connection $c, after protocol escaping. Do not parse for /commands.
 #: return nothing
-proc ::potato::send_to_real {c string {echostr ""}} {
+proc ::potato::send_to_real {c string {echo 1}} {
   variable conn;
   variable world;
 
@@ -10258,10 +10265,10 @@ proc ::potato::send_to_real {c string {echostr ""}} {
 
   sendRaw $c $string 0
   if { $world($conn($c,world),echo) } {
-       if { $echostr eq "" } {
+       if { $echo eq "1" } {
             outputSystem $c $string [list "echo"]
-          } else {
-            outputSystem $c $echostr [list "echo"]
+          } elseif { $echo ne "0" } {
+            outputSystem $c $echo [list "echo"]
           }
      }
 
