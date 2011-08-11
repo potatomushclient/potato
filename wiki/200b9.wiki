@@ -13,3 +13,4 @@
   * The keyboard shortcut to save a string to the Input History without sending it to the MUSH -- formerly "Shift-Return" -- has been changed to Shift-Escape, to avoid accidental triggering. It can also now be configured in the usual way.
   * Regexp Custom Slash Commands didn't work correctly. Reported by Paige.
   * Added 'Reconnect All' feature, to reconnect all disconnected worlds. Suggested by Fally.
+  * New option lets you disable Echo of commands in timers. Suggested by Lo.
