@@ -3176,7 +3176,9 @@ proc ::potato::get_mushageProcess {c line} {
          literal {set limit [string equal {*}$case $limit $lineNoansi]}
          glob {set limit [string match {*}$case $limit $lineNoansi]}
        }
-       set limit [expr {!$limit || [lindex $conn($c,limited) 1]}]
+       if { ![lindex $conn($c,limited) 1] } {
+            set limit [expr {!$limit}]
+          }
        if { $limit } {
             lappend tagList "limited"
           }
