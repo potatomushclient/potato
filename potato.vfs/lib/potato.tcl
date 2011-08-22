@@ -310,7 +310,8 @@ proc ::potato::savePrefs {} {
 
 #: proc ::potato::managePrefVersion
 #: arg version The version of the pref file, or an empty string if none was present (ie, the pref file pre-dates versions)
-#: desc Prefs were loaded from a version $version pref  file; make any changes necessary to bring it up to date with a current pref file. NOTE: Does not manage "world -1", the default world settings, as they're generally identical to normal world settings
+#: desc Prefs were loaded from a version $version pref  file; make any changes necessary to bring it up to date with a
+#: desc current pref file. NOTE: Does not manage "world -1", the default world settings, as they're generally identical to normal world settings
 #: return nothing
 proc ::potato::managePrefVersion {version} {
   variable misc;
@@ -1139,7 +1140,8 @@ proc ::potato::reshowWindow {win {bell 1}} {
 
 #: proc ::potato::uploadWindow
 #: arg c connection id, defaults to ""
-#: desc For connection $c (or the currently displayed connection, if $c is ""), show the dialog to allow the user to select a file to upload (if they aren't already doing so), or the dialog for them to cancel, if they are.
+#: desc For connection $c (or the currently displayed connection, if $c is ""), show the dialog to 
+#: desc allow the user to select a file to upload (if they aren't already doing so), or the dialog for them to cancel, if they are.
 #: return nothing
 proc ::potato::uploadWindow {{c ""}} {
   variable conn;
@@ -1337,7 +1339,6 @@ proc ::potato::uploadBegin {c} {
                } else {
                  append conn($c,upload,mpp,buffer) "%r"
                }
-            #append conn($c,upload,mpp,buffer) [string map [format {" " %%b "%c" %%t %c \\%c %c \\%c %c \\%c %c \\%c %c \\%c %c \\%c %c \\%c %c \\%c %c \\%c \%c \\\%c \%c \\\%c \%c \\\%c} 9 37 37 59 59 91 91 93 93 40 40 41 41 44 44 94 94 36 36 123 123 125 125 92 92] [string range $line 1 end]]
             append conn($c,upload,mpp,buffer) [string map [list " " %b "\t" %t % \\% {;} {\;} \[ \\\[ \] \\\] ( \\( ) \\) , \\, ^ \\^ $ \\$ \{ \\\{ \} \\\} \\ \\\\] [string range $line 1 end]]
           } elseif { [string range $line 0 0] eq " " || [string range $line 0 0] eq "\t" } {
             # Unformatted continuation
@@ -1606,7 +1607,8 @@ proc ::potato::logWindowInvoke {c win} {
 #: arg append to file if it exists, instead of overwriting?
 #: arg buffer "No Buffer" or "_none" to not include buffered output, "Main Window" or "_main" for $c's main window, or the name of a spawn window
 #: arg leave leave the logfile open for future output?
-#: desc Create a log file for connection $c, writing to file $file (and appending, if $append is true and the file exists). If $buffer != "_none"/"No Buffer", include output from one of the windows. If $leave, don't close the file, leave it open to log incoming text to, possibly causing us to close an already-open log file.
+#: desc Create a log file for connection $c, writing to file $file (and appending, if $append is true and the file exists). If $buffer != "_none"/"No Buffer",
+#: desc include output from one of the windows. If $leave, don't close the file, leave it open to log incoming text to, possibly causing us to close an already-open log file.
 #: return nothing
 proc ::potato::doLog {c file append buffer leave} {
   variable conn;
@@ -2445,7 +2447,9 @@ proc ::potato::ioWrite {args} {
 #: arg c the connection to connect
 #: arg first is this the first time we've tried to connect here? Affects messages, etc.
 #: arg hostlist List of hosts to attempt to connect to; some combination of "host" and "host2", or "". Defaults to "".
-#: desc start connecting to a world. This doesn't handle the full connection, as we connect -async and wait for a response. This connection may be to a proxy server, not the actual game. $hostlist contains a list telling us whether to attempt to connect to the primary host ("host"), the secondary host ("host2"), or both ("").
+#: desc start connecting to a world. This doesn't handle the full connection, as we connect -async and wait for a response.
+#: desc This connection may be to a proxy server, not the actual game. $hostlist contains a list telling us whether to attempt
+#: desc to connect to the primary host ("host"), the secondary host ("host2"), or both ("").
 #: return nothing
 proc ::potato::connect {c first {hostlist ""}} {
   variable conn;
@@ -2583,7 +2587,9 @@ proc ::potato::connectVerify {c hostlist} {
 #: proc ::potato::connectVerifyProxy
 #: arg c connection id
 #: arg hostlist List of hosts ("host", "host2") we should attempt to connect to through the proxy
-#: desc Called when a connection has been successfully established to connection $c's proxy host; do the required work to negotiate with the proxy to establish a connection to the end game server. Call connectVerifyComplete on success, or abort, [close] the connection and do standard reconnect if the proxy doesn't play nice.
+#: desc Called when a connection has been successfully established to connection $c's proxy host;
+#: desc do the required work to negotiate with the proxy to establish a connection to the end game server.
+#: desc Call connectVerifyComplete on success, or abort, [close] the connection and do standard reconnect if the proxy doesn't play nice.
 #: return nothing
 proc ::potato::connectVerifyProxy {c hostlist} {
   variable conn;
@@ -2600,7 +2606,9 @@ proc ::potato::connectVerifyProxy {c hostlist} {
 #: arg proxy The proxy type (SOCKS4, SOCKS5, HTTP)
 #: arg hostlist List of hosts ("host"/"host2") we're attempting to connect to.
 #: arg err A string containing the error encountered. Defaults to ""
-#: desc Called when we've connected to a proxy server, but failed to negotiate for it to handle our connection to a MUSH. If we have multiple hosts to try, reconnect to the proxy and try the next. Else, do the "failed connect" stuff like print a message (including $err, or a default fail message if $err is ""), set up auto-reconnect, etc
+#: desc Called when we've connected to a proxy server, but failed to negotiate for it to handle our connection to a MUSH.
+#: desc If we have multiple hosts to try, reconnect to the proxy and try the next. Else, do the "failed connect" stuff like print
+#: desc a message (including $err, or a default fail message if $err is ""), set up auto-reconnect, etc
 #: return nothing
 proc ::potato::connectVerifyProxyFail {c proxy hostlist err} {
   variable conn;
@@ -2764,7 +2772,8 @@ proc ::potato::timersStart {c} {
 #: arg c connection id
 #: arg w world id
 #: arg timer timer id
-#: desc Begin running timer $timer from world $w in connection $c. Called by [timersStart] for each timer, and also by [configureWorldCommit] for new timers. Note that the timer must not be running already, as this proc will not cancel the current instance.
+#: desc Begin running timer $timer from world $w in connection $c. Called by [timersStart] for each timer, and also by
+#: desc [configureWorldCommit] for new timers. Note that the timer must not be running already, as this proc will not cancel the current instance.
 #: return nothing
 proc ::potato::timersStartOne {c w timer} {
   variable world;
@@ -2789,7 +2798,8 @@ proc ::potato::timersStartOne {c w timer} {
 #: arg w world id
 #: arg timerId timer id
 #: arg first Is this the first time this timer has been queued?
-#: desc Queue timer $timer from world $w (which is either $c's world or -1 for a global timer) to run for connection $c. If $first, use the timer's delay interval as the [after] time, otherwise use it's every interval.
+#: desc Queue timer $timer from world $w (which is either $c's world or -1 for a global timer) to run for
+#: desc connection $c. If $first, use the timer's delay interval as the [after] time, otherwise use it's every interval.
 #: return nothing
 proc ::potato::timerQueue {c w timerId first} {
   variable world;
@@ -3040,7 +3050,8 @@ proc ::potato::debug_packet {c dir text} {
 
 #: proc ::potato::get_mushage
 #: arg c connection id
-#: desc Get pending output for connection $c, parse through any necessary protocols and, if a complete line is present, display it. Must also watch for the connection being closed and act accordingly.
+#: desc Get pending output for connection $c, parse through any necessary protocols and, if a complete
+#: desc line is present, display it. Must also watch for the connection being closed and act accordingly.
 #: return nothing
 proc ::potato::get_mushage {c} {
   variable conn;
@@ -3563,7 +3574,8 @@ proc ::potato::handleAnsiCodes {c codes} {
 #: arg eventfg the event fg colour, or empty string if none
 #: arg eventbg the event bg colour, or empty string if none
 #: arg extraTags a list of extra tags to apply
-#: desc return a list of all the tags needed to apply the correct ANSI colour for text in connection $c, based on the gag colours given and the current state of connection $c as obtained through $conn($c,ansi,*), plus the $extraTags
+#: desc return a list of all the tags needed to apply the correct ANSI colour for text in connection $c,
+#: desc based on the gag colours given and the current state of connection $c as obtained through $conn($c,ansi,*), plus the $extraTags
 #: return [list] of text widget tags
 proc ::potato::get_mushageColours {c eventfg eventbg extraTags} {
   variable conn;
@@ -3642,7 +3654,9 @@ proc ::potato::removePrefix {list prefix} {
 #: proc ::potato::events
 #: arg c connection id
 #: arg str string to match
-#: desc return a list, suitable for [array set], of the events (gag/trigger/highlight/spawn) info that matches $str on connection $c, including "matched", set to 1 if a g/t/h matched and 0 if not, and "result", set to what the match-checking command returned.
+#: desc return a list, suitable for [array set], of the events (gag/trigger/highlight/spawn) info that matches $str on 
+#: desc connection $c, including "matched", set to 1 if a g/t/h matched and 0 if not, and "result",
+#: desc set to what the match-checking command returned.
 #: return [array get] list
 proc ::potato::events {c str} {
   variable conn;
@@ -3927,7 +3941,8 @@ proc ::potato::toggleConn {dir} {
 #: proc ::potato::showConn
 #: arg c the connection to show
 #: arg main if misc(toggleShowMainWindow) is true, should we show _main instead of a spawn?
-#: desc show the window holding connection $c. This may require updating the list of worlds with new activity (and setting the idle var for the connection), and so on (meaning: maybe more?).
+#: desc show the window holding connection $c. This may require updating the list of worlds 
+#: desc with new activity (and setting the idle var for the connection), and so on (meaning: maybe more?).
 #: return nothing
 proc ::potato::showConn {c {main 1}} {
   variable potato;
@@ -4229,7 +4244,8 @@ proc ::potato::connList {} {
 };# ::potato::connList
 
 #: proc ::potato::worldList
-#: desc returns a list, where each element is a sublist of world id and world name. The list is not sorted in any particular order. Does not include world "-1", which is internal and used for "connection 0", the welcome screen.
+#: desc returns a list, where each element is a sublist of world id and world name. The list is not sorted in any particular order.
+#: desc Does not include world "-1", which is internal and used for "connection 0", the welcome screen.
 #: return [list] of world [list]s
 proc ::potato::worldList {} {
   variable world;
@@ -5771,7 +5787,11 @@ proc ::potato::center {win} {
 #: proc ::potato::configureWorld
 #: arg w world id, defaults to ""
 #: arg autosave Automatically invoke the 'Save' button after creating the window? defaults to 0
-#: desc show the configuration dialog for world $w, or the world of the connection currently displayed if $w is "". If any part of this needs to create a popup, it should be named ${worldConfigToplevel}_subToplevel_<description> - this will cause it to be automatically destroyed when the $worldConfigToplevel is destroyed. If $autosave is true, as soon as the window is correctly set up, invoke the save button to destroy it and initiate an update of the settings. Used if settings are changed programatically (via Import Settings, etc) to trigger a full update.
+#: desc show the configuration dialog for world $w, or the world of the connection currently displayed if $w is "".
+#: desc If any part of this needs to create a popup, it should be named ${worldConfigToplevel}_subToplevel_<description> - 
+#: desc this will cause it to be automatically destroyed when the $worldConfigToplevel is destroyed. 
+#: desc If $autosave is true, as soon as the window is correctly set up, invoke the save button to destroy it and initiate an
+#: desc update of the settings. Used if settings are changed programatically (via Import Settings, etc) to trigger a full update.
 #: return nothing
 proc ::potato::configureWorld {{w ""} {autosave 0}} {
   variable world;
@@ -6728,7 +6748,9 @@ proc ::potato::configureWorldCharsState {w {state ""}} {
 #: proc ::potato::configureWorldCancel
 #: arg w world id
 #: arg win main configure window
-#: desc Called when the Configure window for a world is destroyed. Close all sub-windows, and unset the vars used by the config window. This is called both when the Configure World is cancelled, but also when the window is destroyed after the settings are saved (via a <Destroy> binding), so everything from the vars must be saved before the window is destroyed! ($win is already going when this is called)
+#: desc Called when the Configure window for a world is destroyed. Close all sub-windows, and unset the vars used by the config window.
+#: desc This is called both when the Configure World is cancelled, but also when the window is destroyed after the settings are saved 
+#: desc (via a <Destroy> binding), so everything from the vars must be saved before the window is destroyed! ($win is already going when this is called)
 #: return nothing
 proc ::potato::configureWorldCancel {w win} {
   variable worldconfig;
@@ -6746,7 +6768,9 @@ proc ::potato::configureWorldCancel {w win} {
 #: arg _var Variable to store result in
 #: arg w World whose font we should use for measurement
 #: arg max Maximum number of chars
-#: desc Measure how many chars, for world $w, it would take to fill the main window at current size (capping at $max). Set result in $var. NOTE: This is really quite skin dependant, and needs recoding better to interface with the skin, instead of cheating and assuming the default skin. Not that I'm ever likely to get around to writing another one. #abc
+#: desc Measure how many chars, for world $w, it would take to fill the main window at current size (capping at $max). Set result in $var. 
+#: desc NOTE: This is really quite skin dependant, and needs recoding better to interface with the skin, instead of cheating and assuming the 
+#: desc default skin. Not that I'm ever likely to get around to writing another one. #abc
 #: return nothing
 proc ::potato::currentWindowSize {_var w max} {
   variable world;
@@ -6846,7 +6870,9 @@ proc ::potato::configureTimerAddEdit {w add win} {
 
   pack [::ttk::frame $frame.delay] {*}$styles
   pack [::ttk::label $frame.delay.l1 -text [T "After connecting, wait"]] -side left -anchor w
-  pack [spinbox $frame.delay.sb -from 0 -to 18000 -increment 1 -width 5 -justify right -validate key -validatecommand {string is integer %P} -textvariable potato::worldconfig($w,timer,ae,delay)] -side left -anchor w -padx 5
+  pack [spinbox $frame.delay.sb -from 0 -to 18000 -increment 1 -width 5 -justify right -validate key \
+                                 -validatecommand {string is integer %P} \
+                                 -textvariable potato::worldconfig($w,timer,ae,delay)] -side left -anchor w -padx 5
   pack [::ttk::label $frame.delay.l2 -text [T "seconds"]] -side left -anchor w
 
   pack [::ttk::frame $frame.cmds] {*}$styles -expand 1 -fill both
@@ -6858,7 +6884,9 @@ proc ::potato::configureTimerAddEdit {w add win} {
 
   pack [::ttk::frame $frame.every] {*}$styles
   pack [::ttk::label $frame.every.l1 -text [T "And repeat every"]] -side left -anchor w
-  pack [spinbox $frame.every.sb -from 0 -to 18000 -increment 1 -width 5 -justify right -validate key -validatecommand {string is integer %P} -textvariable potato::worldconfig($w,timer,ae,every)] -side left -anchor w -padx 5
+  pack [spinbox $frame.every.sb -from 0 -to 18000 -increment 1 -width 5 -justify right \
+                                -validate key -validatecommand {string is integer %P} \
+                                -textvariable potato::worldconfig($w,timer,ae,every)] -side left -anchor w -padx 5
   pack [::ttk::label $frame.every.l2 -text [T "seconds"]] -side left -anchor w
 
   pack [::ttk::frame $frame.howmany] {*}$styles
@@ -6886,7 +6914,8 @@ proc ::potato::configureTimerAddEdit {w add win} {
 
   pack [::ttk::frame $frame.buttons] {*}$styles -fill x -pady 10
   pack [::ttk::frame $frame.buttons.ok] -side left -expand 1 -fill x
-  pack [::ttk::button $frame.buttons.ok.btn -text [T "OK"] -width 8 -default active -command [list potato::configureTimerSave $w $text]] -side right -padx 8 -anchor e
+  pack [::ttk::button $frame.buttons.ok.btn -text [T "OK"] -width 8 -default active 
+                                   -command [list potato::configureTimerSave $w $text]] -side right -padx 8 -anchor e
   pack [::ttk::frame $frame.buttons.cancel] -side left -expand 1 -fill x
   pack [::ttk::button $frame.buttons.cancel.btn -text [T "Cancel"] -width 8 -command [list destroy $win]] -side left -padx 8 -anchor w
   
@@ -6904,7 +6933,9 @@ proc ::potato::configureTimerAddEdit {w add win} {
 #: proc ::potato::configureTimerSave
 #: arg w world id
 #: arg text path to text widget containing command string
-#: desc For world $w, use the info saved in worldconfig($w,timer,ae,*) and the text in the $text widget (which holds the cmds to run for the timer), save the timer info. worldconfig($w,timer,ae) is the id of the timer to edit, or the empty string to add a timer. We must also update the info displayed
+#: desc For world $w, use the info saved in worldconfig($w,timer,ae,*) and the text in the $text widget 
+#: desc (which holds the cmds to run for the timer), save the timer info. worldconfig($w,timer,ae) is the id of the timer to edit, 
+#: descor the empty string to add a timer. We must also update the info displayed
 #: return nothing
 proc ::potato::configureTimerSave {w text} {
   variable worldconfig;
@@ -6966,7 +6997,8 @@ proc ::potato::configureTimerDelete {w} {
 #: proc ::potato::configureTimerShowRow
 #: arg w world id
 #: arg timer timer id
-#: desc For world $w's configure window, add (or update, if it exists) the treeview row for timer $timer, using the info in the $worldconfig($w,timer,$timer,*) vars
+#: desc For world $w's configure window, add (or update, if it exists) the treeview row for
+#: desc timer $timer, using the info in the $worldconfig($w,timer,$timer,*) vars
 #: return nothing
 proc ::potato::configureTimerShowRow {w timer} {
   variable worldconfig;
@@ -7062,7 +7094,8 @@ proc ::potato::configureHelp {canvas helplist helplist2} {
 #: arg parent the parent window that the font dialog should be a transient of
 #: arg text the text widget to reconfigure for display purposes
 #: arg where one of "top" or "bottom"
-#: desc pop up a font selection dialog so the $where font for world $w can be changed. If a new one is selected, update the worldconfig var and configure the font for $text to show it. Make the dialog a transient of $parent.
+#: desc pop up a font selection dialog so the $where font for world $w can be changed. If a new one 
+#: desc is selected, update the worldconfig var and configure the font for $text to show it. Make the dialog a transient of $parent.
 #: return nothing
 proc ::potato::configureFont {w parent text where} {
   variable worldconfig;
@@ -7101,7 +7134,8 @@ proc ::potato::configureFont {w parent text where} {
 #: arg event the event triggering the proc
 #: arg text the text widget the event is happening in
 #: arg colour the colour name to be configured, if any. Defaults to "" (none)
-#: desc for Enter or Leave events, reconfigure $text's cursor. For Click events, pop up a colourchoose dialog to change $color, and if a new one is selected, update the worldconfig var for the world.
+#: desc for Enter or Leave events, reconfigure $text's cursor. For Click events, pop up a colourchoose dialog to change $color, 
+#: desc and if a new one is selected, update the worldconfig var for the world.
 #: return nothing
 proc ::potato::configureText {w event text {colour ""}} {
   variable worldconfig;
@@ -7164,7 +7198,8 @@ proc ::potato::configureText {w event text {colour ""}} {
 #: proc ::potato::configureWorldCommit
 #: arg w world id
 #: arg win config window
-#: desc save all the settings for world $w, destroy the config window used for changing them, change the tags, etc, for any connections using this world, and if the currently-shown connection uses it, tell the skin to re-show.
+#: desc save all the settings for world $w, destroy the config window used for changing them, change the tags, etc, 
+#: desc for any connections using this world, and if the currently-shown connection uses it, tell the skin to re-show.
 #: return nothing
 proc ::potato::configureWorldCommit {w win} {
   variable world;
@@ -7351,7 +7386,8 @@ proc ::potato::configureWorldCommit {w win} {
 #: proc ::potato::configureFrame
 #: arg canvas path to canvas widget
 #: arg title string to display as title
-#: desc creates a frame to display inside the scrolled canvas $canvas to contain config options. Then creates a subframe, packed inside with some padding, and a label to display $title as a heading for the "page".
+#: desc creates a frame to display inside the scrolled canvas $canvas to contain config options. Then creates a subframe, packed 
+#: desc inside with some padding, and a label to display $title as a heading for the "page".
 #: return [list] of the outer frame (for embedding in the canvas) and inner frame (for packing widgets in)
 proc ::potato::configureFrame {canvas title} {
 
@@ -7532,7 +7568,8 @@ proc ::potato::focusIn {win} {
 };# ::potato::focusIn
 
 #: proc ::potato::setClock
-#: desc set potato(clock) to the current time, formatted according to misc(clockFormat), and queue an update in 1 second. Also set the formatted connection stats.
+#: desc set potato(clock) to the current time, formatted according to misc(clockFormat), 
+#: desc and queue an update in 1 second. Also set the formatted connection stats.
 #: return nothing
 proc ::potato::setClock {} {
   variable potato;
@@ -7568,7 +7605,8 @@ proc ::potato::statsFormat {secs} {
 };# ::potato::statsFormat
 
 #: proc ::potato::errorLogWindow
-#: desc Create a window for displaying an Error Log of bugs/errors that occur while Potato is running (failure to load package, execute external commands, etc). If the window already exists, deiconify it.
+#: desc Create a window for displaying an Error Log of bugs/errors that occur while Potato 
+#: desc is running (failure to load package, execute external commands, etc). If the window already exists, deiconify it.
 #: return nothing
 proc ::potato::errorLogWindow {} {
 
@@ -8574,7 +8612,8 @@ proc ::potato::history {{c ""}} {
 
   pack [set frame [::ttk::frame $win.frame]] -side left -expand 1 -fill both -anchor nw
 
-  set text [T "Select a command and press 1 to place it in the top input window, 2 to place it in the lower input window, or 3 to send it directly to the MU*. Press 4 to copy it to the clipboard. Press escape to close the window."]
+  set text [T "Select a command and press 1 to place it in the top input window, 2 to place it in the lower input window, or 3 to send it directly to the MU*. \
+               Press 4 to copy it to the clipboard. Press escape to close the window."]
   ::ttk::label $frame.label -text $text -wraplength 350
   pack $frame.label -side top -pady 5 -padx 10 -fill x
 
@@ -8741,7 +8780,9 @@ proc ::potato::createImages {} {
 };# ::potato::createImages
 
 #: proc ::potato::setUpFlash
-#: desc Set up the ::potato::flash proc, which flashes the taskbar icon and systray icon for the app. If we're on Windows, we try to load the potato-winflash package and use that. On Linux, we try potato-linflash. Else, we just "wm deiconify .". For Win we also try and flash the Winico systray icon if requested.
+#: desc Set up the ::potato::flash proc, which flashes the taskbar icon and systray icon for the app. 
+#: desc If we're on Windows, we try to load the potato-winflash package and use that. On Linux, we try potato-linflash. 
+#: desc Else, we just "wm deiconify .". For Win we also try and flash the Winico systray icon if requested.
 #: return nothing
 proc ::potato::setUpFlash {} {
   variable winico;
@@ -8783,7 +8824,8 @@ proc ::potato::setUpFlash {} {
 };# ::potato::setUpFlash
 
 #: proc ::potato::chk_exit
-#: arg prompt If 0, do not prompt. If 1, prompt. If -1, prompt only if there are open (meaning "not closed", as opposed to "connected") connections. NOTE: We always prompt if there are still active connections
+#: arg prompt If 0, do not prompt. If 1, prompt. If -1, prompt only if there are open (meaning "not closed", as 
+#: desc opposed to "connected") connections. NOTE: We always prompt if there are still active connections
 #: desc if they want to quit, do so correctly
 #: return nothing
 proc ::potato::chk_exit {{prompt 0}} {
@@ -8851,7 +8893,8 @@ proc ::potato::chk_exit {{prompt 0}} {
 
 #: proc ::potato::menu_label
 #: arg str String to parse
-#: desc Parse $str and return a -label and -underline option. The -label is $str with the first "&" removed, and the -underline is the position of that first & (or -1 if there is none).
+#: desc Parse $str and return a -label and -underline option. The -label is $str with the first "&" 
+#: desc removed, and the -underline is the position of that first & (or -1 if there is none).
 #: return Tcl list of -label $label -underline $position
 proc ::potato::menu_label {str} {
 
@@ -9302,7 +9345,15 @@ proc ::potato::setUpBindings {} {
 
   # Copy some bindings from Text to PotatoOutput, so we can remove the 'Text' bindtags from it.
   # (safer to copy those we want than block those we don't, as more we don't want might be added later)
-  foreach x [list B2-Motion Button-2 Meta-Key-greater Meta-Key-less Meta-f Meta-b Control-t Control-p Control-n Control-f Control-e Control-b Control-a Escape Control-Key Alt-Key <Copy> Control-backslash Control-slash Shift-Select Control-Shift-End Control-End Control-Shift-Home Control-Home Shift-End Shift-Home Home End Next Prior Shift-Next Shift-Prior Control-Shift-Up Control-Shift-Left Control-Shift-Right Control-Down Control-Up Control-Right Control-Left Up Down Left Right Shift-Up Shift-Down Shift-Left Shift-Right Control-Button-1 ButtonRelease-1 B1-Enter B1-Leave Triple-Shift-Button-1 Double-Shift-Button-1 Shift-Button-1 Triple-Button-1 Double-Button-1 B1-Motion Button-1 <Selection>] {
+  foreach x [list B2-Motion Button-2 Meta-Key-greater Meta-Key-less Meta-f Meta-b Control-t Control-p \
+                  Control-n Control-f Control-e Control-b Control-a Escape Control-Key Alt-Key <Copy> \
+                  Control-backslash Control-slash Shift-Select Control-Shift-End Control-End \
+                  Control-Shift-Home Control-Home Shift-End Shift-Home Home End Next Prior \
+                  Shift-Next Shift-Prior Control-Shift-Up Control-Shift-Left Control-Shift-Right \
+                  Control-Down Control-Up Control-Right Control-Left Up Down Left Right \
+                  Shift-Up Shift-Down Shift-Left Shift-Right Control-Button-1 ButtonRelease-1 B1-Enter B1-Leave \
+                  Triple-Shift-Button-1 Double-Shift-Button-1 Shift-Button-1 Triple-Button-1 Double-Button-1 \
+                  B1-Motion Button-1 <Selection>] {
      bind PotatoOutput <$x> [bind Text <$x>]
   }
   bind PotatoOutput <<Copy>> [list ::potato::textCopy %W]
@@ -10282,7 +10333,8 @@ proc ::potato::send_to_real {c string {echo 1}} {
 #: arg c connection id
 #: arg cmd command to add
 #: arg sep the character separating multiple commands in the string, or "" if none
-#: desc add the given command to the input history for connection $c. If $sep != "", the command is a list of commands with each individual command separated by the character $sep
+#: desc add the given command to the input history for connection $c. If $sep != "", 
+#: desc the command is a list of commands with each individual command separated by the character $sep
 #: return nothing
 proc ::potato::addToInputHistory {c cmd sep} {
   variable conn;
@@ -10522,7 +10574,9 @@ proc ::potato::setUserVar {c global str} {
 #: arg c connection id var is set from
 #: arg global Is the var we're unsetting global?
 #: arg varName the name of the variable to unset
-#: desc Unset the (possibly global) user-defined variable $varName, if it exists and isn't a pre-defined one. Attempting to set a variable that doesn't exist (including ones with invalid names) is not an error. Attempting to unset a pre-defined var (ie, one starting with an underscore) is, but we fail silently.
+#: desc Unset the (possibly global) user-defined variable $varName, if it exists and isn't a pre-defined one. 
+#: desc Attempting to set a variable that doesn't exist (including ones with invalid names) is not an error.
+#: desc Attempting to unset a pre-defined var (ie, one starting with an underscore) is, but we fail silently.
 #: return nothing
 proc ::potato::unsetUserVar {c global varName} {
   variable conn;
@@ -10828,7 +10882,8 @@ proc ::potato::slashConfigSave {w} {
 
 #: proc ::potato::slashConfigDiscard
 #: arg w world id
-#: desc A custom slash command was being edited (or added), but we're done with the changes made (either we've already saved them, or we don't want to because "Discard" was clicked), so clear them out and set up for tree selection again.
+#: desc A custom slash command was being edited (or added), but we're done with the changes made (either we've already saved them, or 
+#: desc we don't want to because "Discard" was clicked), so clear them out and set up for tree selection again.
 #: return nothing
 proc ::potato::slashConfigDiscard {w} {
   variable slashConfig;
@@ -10910,7 +10965,10 @@ proc ::potato::slashConfigDelete {w} {
 
 #: proc ::potato::slashConfigEdit
 #: arg w world id
-#: desc The "Edit /command" button has been clicked. De/re-activate the appropriate widgets. We don't need to check for a selection (as the button is disabled when there isn't one), or set the vars to the /command's current values (that's already done on selection), but we do need to record that we're now editing, and which.
+#: desc The "Edit /command" button has been clicked. De/re-activate the appropriate widgets.
+#: desc We don't need to check for a selection (as the button is disabled when there isn't one), 
+#: desc or set the vars to the /command's current values (that's already done on selection), but we
+#: desc do need to record that we're now editing, and which.
 #: return nothing
 proc ::potato::slashConfigEdit {w} {
   variable slashConfig;
@@ -10945,7 +11003,8 @@ proc ::potato::slashConfigEdit {w} {
 
 #: proc ::potato::slashConfigAdd
 #: arg w world id
-#: desc The "Add /command" button has been clicked. De/re-activate the appropriate widgets, set default values for the /command, and set vars to show we're editing a new /command
+#: desc The "Add /command" button has been clicked. De/re-activate the appropriate widgets,
+#: desc set default values for the /command, and set vars to show we're editing a new /command
 #: return nothing
 proc ::potato::slashConfigAdd {w} {
   variable slashConfig;
@@ -11212,7 +11271,8 @@ proc ::potato::define_slash_cmd {cmd code} {
 #: arg w world id
 #: arg cmd /command name
 #: arg str args to /command
-#: desc Try and run the custom slash command $cmd, defined in world $w, for connection $c, using args $str. We pass $w rather than checking $c's world b/c the command might be defined in -1
+#: desc Try and run the custom slash command $cmd, defined in world $w, for connection $c, using args $str. We pass
+#: desc $w rather than checking $c's world b/c the command might be defined in -1
 #: return nothing
 proc ::potato::customSlashCommand {c w cmd str} {
   variable conn;
@@ -12412,7 +12472,8 @@ proc ::potato::ddeStart {} {
 
 #: proc ::potato::parseTelnetAddress
 #: arg addr the address to parse
-#: desc Attempt to parse $addr as a world address. Ignore the optional "telnet://" prefix, then attempt to match a string (host), followed by either a space or a colon, then a group of ints (port).
+#: desc Attempt to parse $addr as a world address. Ignore the optional "telnet://" prefix, then attempt to match a string (host),
+#: desc followed by either a space or a colon, then a group of ints (port).
 #: return [list $host $port] on success, or empty [list] on failure
 proc ::potato::parseTelnetAddress {addr} {
 
@@ -12428,7 +12489,8 @@ proc ::potato::parseTelnetAddress {addr} {
 #: arg src where the request came from. One of "cl" (from potato.exe <address>), "clP" (from potato.exe -arg <foo>) or "dde" (from a Windows DDE server)
 #: arg addr the address we've been asked to connect to
 #: arg isWorld if 1, $addr is the name of a world to connect to, else it's a host and port. Defaults to 0
-#: desc $addr is an address we've been asked to connect to, either via DDE on Windows or on the command line. Attempt to do so, respecting the potato::misc(outsideRequestMethod) var
+#: desc $addr is an address we've been asked to connect to, either via DDE on Windows or on the command line. 
+#: desc Attempt to do so, respecting the potato::misc(outsideRequestMethod) var
 #: return nothing
 proc ::potato::handleOutsideRequest {src addr {isWorld 0}} {
   variable world;
@@ -13149,7 +13211,8 @@ proc ::potato::taskLabel {task {menu 0}} {
 };# ::potato::taskLabel
 
 #: proc ::potato::spellcheck
-#: desc Launch the spellchecker for the current input window. Note: the actual spellchecking code is in potato-spell.tcl, this simply launches it with the correct text and processes the result.
+#: desc Launch the spellchecker for the current input window. Note: the actual spellchecking code is in 
+#: desc potato-spell.tcl, this simply launches it with the correct text and processes the result.
 #: return nothing
 proc ::potato::spellcheck {} {
 
@@ -13182,7 +13245,8 @@ proc ::potato::glob2Regexp {pattern} {
 #: proc ::potato::inputHistoryScroll
 #: arg dir Direction to scroll, either -1 (older commands), or 1 (newer commands)
 #: arg Win Window to do stuff in. Defaults to ""
-#: desc Scroll the text in the input window $win (or the window with focus if $win is "") to show the prev/next input history command. If window with focus isn't an input window, do nothing
+#: desc Scroll the text in the input window $win (or the window with focus if $win is "") to show the 
+#: desc prev/next input history command. If window with focus isn't an input window, do nothing
 #: return nothing
 proc ::potato::inputHistoryScroll {dir {win ""}} {
   variable conn;
@@ -13243,7 +13307,8 @@ proc ::potato::inputHistoryScroll {dir {win ""}} {
 
 #: proc ::potato::inputHistoryReset
 #: arg Win Window to do stuff in. Defaults to ""
-#: desc If input window $win (or the window with focus if $win is "") is showing an input history cmd, reset it to the stored cmd. If window with focus isn't an input window, do nothing
+#: desc If input window $win (or the window with focus if $win is "") is showing an input history 
+#: desc cmd, reset it to the stored cmd. If window with focus isn't an input window, do nothing
 #: return nothing
 proc ::potato::inputHistoryReset {{win ""}} {
   variable inputSwap;
