@@ -10,3 +10,4 @@ The *Activity* section of the World Configuration controls what happens when the
   * *Show 'New Activity'?*: When there's activity in the world, but it is not currently active (either because the user is viewing another connection, or using another application), show a 'New Activity' marker to make it easy to find where the new activity begins?
   * *Clear Previous 'New Activity'?*: Should we clear old 'New Activity' notices when a new one is displayed, to reduce spam?
 
+[http://potatomushclient.googlecode.com/svn/wiki/ConfigureWorldsActivity.gif]

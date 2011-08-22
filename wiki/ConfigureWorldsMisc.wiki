@@ -11,3 +11,5 @@ The *Miscellaneous* section of the World Configuration contains an assortment of
   * *Show Verbose Messages?*: Show lengthier system messages in some circumstances. Not currently used.
   * *Show Beeps?*: Display the Beep/Bell character in output? (It may be displayed as a square or question mark, depending on your font.)
   * *Play Beeps?*: When Beep/Bell characters are received, make a 'beep' sound? "All" causes Potato to beep once for each bell character, "Once" causes it to beep once for each line containing a bell character, and "None" stops it beeping at all.
+
+[http://potatomushclient.googlecode.com/svn/wiki/ConfigureWorldsMisc.gif]

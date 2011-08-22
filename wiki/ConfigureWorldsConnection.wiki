@@ -10,3 +10,5 @@ The *Connection* page of the World Configuration holds some basic settings about
   * *Negotiate Encoding?*: If the MU`*` supports negotiating encoding via telnet, should we do so? Generally a good idea to leave this enabled, although not many MU`*` servers support this (MUX being a notable exception).
   * *Login Format*: When *Potato* connects to the MUSH automatically, what format should the username and password be in? The first `%s` represents the username, and the second `%s` the password - if you need to send the password first, use `%1$s` for the username and `%2$s` for the password.
   * *Send Login Details after (seconds)*: How many seconds to wait between successfully establishing a connection and sending the login string.
+
+[http://potatomushclient.googlecode.com/svn/wiki/ConfigureWorldsConnection.gif]

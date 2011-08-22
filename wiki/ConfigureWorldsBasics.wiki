@@ -14,3 +14,6 @@ The *Basic Settings* page of the World Configuration window holds some standard 
   * *Proxy Type*: The type of proxy to use, if you need to connect through one. Currently only SOCKS4 is supported.
   * *Proxy Host* and *Proxy Port*: The address and port of the proxy to connect through.
   * *MU`*` Type*: Are you connecting to a MUSH, or a MUD? This controls the line-endings used - MUSHes (and telnet servers) typically send crlf (`\r\n`) while MUDs typically only send lf (`\n`). If in doubt, start with MUD, and if you see a weird symbol on the end of every line, switch to MUSH.
+
+
+[http://potatomushclient.googlecode.com/svn/wiki/ConfigureWorldsBasics.gif]

@@ -8,4 +8,4 @@
   * Use the `/quick` [SlashCommands /command]. With no arguments, the Quick Connect Window is opened. If given a host and port (`/quick mush.pennmush.org:4201` or `/quick mush.pennmush.org 4201`) it will connect without opening the window.
 
 
-[http://potatomushclient.googlecode.com/svn/wiki/quickconnect.gif]
+[http://potatomushclient.googlecode.com/svn/wiki/QuickConnect.gif]
