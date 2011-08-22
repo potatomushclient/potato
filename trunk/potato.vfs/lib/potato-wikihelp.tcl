@@ -13,6 +13,15 @@ namespace eval ::wikihelp {
   namespace import ::potato::T
 }
 
+namespace eval ::wikihelp::images {
+  variable wikiImages;
+  variable wikiImagesLen;
+  
+  # Path that Wiki images are stored in
+  set wikiImages "http://potatomushclient.googlecode.com/svn/wiki/"
+  set wikiImagesLen [string length $wikiImages]
+}
+
 # Current, known limitations:
 #  * Does not parse markup in link names
 #  * Contents Page in Tree displays nothing but ul-list elements
@@ -224,7 +233,14 @@ proc ::wikihelp::showTopic {topic} {
 
   $path(text) configure -state normal
   $path(text) delete 1.0 end
-  $path(text) insert end {*}[parse [read $fid]]
+  foreach {text tags} [parse [read $fid]] {
+    if { $text eq "<<IMAGE>>" } {
+         $path(text) insert end "\n"
+         $path(text) image create end -image $tags -padx 20
+       } else {
+         $path(text) insert end $text $tags
+       }
+  }
   $path(text) configure -state disabled
 
   catch {close $fid}
@@ -342,41 +358,17 @@ proc ::wikihelp::parse {input} {
             continue; # nothing special to parse
           }
        switch -exact -- $char {
-          &  {# HTML entity. NOTE: This never matches due to the regexps above not including &, because although
-              # Google's Wiki accepts some HTML tags, it apparantly doesn't accept entities. Damn.
-              if { [regexp "^([join $html_entity_names "|"]|#\[0-9\]+|#\[xX\]\[A-Fa-f0-9\]+);(.*)" $line -> entity line] } {
-                   if { [string index $entity 0] ne "#" } {
-                        set string [lindex $html_entity_chars [lsearch -exact $html_entity_names $entity]]
-                      } elseif { [string index $entity 1] ni [list x X] } {
-                        set string [format %c [string range $entity 1 end]]
-                      } else {
-                        set entity [string range $entity 2 end]
-                        if { [scan $entity %x num] != 1 } {
-                             # Bad value
-                             set string "&"
-                             set line "$entity;$line"
-                           } else {
-                             set string [format %c $num]
-                           }
-                      }
-                 } else {
-                   # We'll just ignore the entity
-                   set string "&"
-                   set line [string range $line 1 end]
-                 }
-              if { $linkparse || $headerparse } {
-                   append buffer $string
-                 } else {
-                   lappend values $string [parseTags [list $marginTag] $bold $italic $noparse]
-                 }
-             }
           *  {set bold [expr {!$bold}]}
           _  {set italic [expr {!$italic}]}
           `  {set noparse [expr {!$noparse}]}
           \[ {set linkparse 1}
           \] {set linkparse 0
               set link [parseLink $buffer]
-              lappend values [lindex $link 1] [parseTags [concat $marginTag [lindex $link 2]] $bold $italic $noparse]
+              if { [lindex $link 0] eq "text" } {
+                   lappend values [lindex $link 2] [parseTags [concat $marginTag [lindex $link 3]] $bold $italic $noparse]
+                 } elseif { [lindex $link 0] eq "image" } {
+                   lappend values [list "<<IMAGE>>"] [list [lindex $link 2]]
+                 }
               set buffer ""
              }
            = {if { [string length $buffer] } {
@@ -429,7 +421,8 @@ proc ::wikihelp::parse {input} {
 #: proc ::wikihelp::parseLink
 #: arg str String to parse
 #: desc Parse out WikiLink text, which will be in the format "<linkto>[ <name>]". (If no <name>, it defaults to <linkto>.)
-#: return [list <linkto> <name> [list <tags>]] where <tags> are the appropriate text widget tags (badlink, or link + weblink/wikilink, possibly + linkTo:<linkto>)
+#: desc If the link is to a Wiki-hosted image, try and convert to display the image instead. Otherwise, link as normal.
+#: return [list <type> <linkto> <name> [list <tags>]] where <type> is "text" or "image", and where <tags> are the appropriate text widget tags (badlink, or link + weblink/wikilink, possibly + linkTo:<linkto>)
 proc ::wikihelp::parseLink {str} {
   variable index;
 
@@ -442,6 +435,19 @@ proc ::wikihelp::parseLink {str} {
      }
   if { $name eq $linkto } {
        set name ""
+     }
+  # Check for a Wiki Image
+  if { [string equal -length $::wikihelp::images::wikiImagesLen $::wikihelp::images::wikiImages $linkto] } {
+       # Looks like we have one.
+       set imagename [file tail $linkto]
+       set dir $::potato::path(help)
+       if { [file extension $imagename] eq ".gif" && [file exists [file join $dir $imagename]] } {
+            if { "::wikihelp::images::$imagename" ni [image names] } {
+                 image create photo ::wikihelp::images::$imagename -file [file join $dir $imagename]
+               }
+            return [list "image" $linkto ::wikihelp::images::$imagename];
+          }
+       # If we get here, we didn't find the image, so we continue as normal with a link.
      }
   if { [regexp {^(f|ht)tps?://.+} $linkto] } {
        set tags [list weblink link "linkTo:$linkto"]
@@ -458,7 +464,7 @@ proc ::wikihelp::parseLink {str} {
   if { $name eq "" } {
        set name $linkto
      }
-  return [list $linkto $name $tags];
+  return [list "text" $linkto $name $tags];
 
 };# ::wikihelp::parseLink
 

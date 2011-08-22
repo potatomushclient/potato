@@ -4710,7 +4710,7 @@ proc ::potato::newWorld {quick {hostAddr ""} {portNum ""}} {
      } else {
        set title [T "Add New World"]
      }
-  wm title $win "$potato(name) - $title"
+  wm title $win "$title - $potato(name)"
 
   pack [set frame [::ttk::frame $win.frame]] -side left -expand 1 -fill both -anchor nw
 
