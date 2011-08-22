@@ -1,0 +1,11 @@
+#summary Quick Connect
+
+=Quick Connect=
+
+*Quick Connect* allows you to connect to a new world immediately, by just entering the host address and the port, and optionally a name for the world. It can be accessed in two ways:
+
+  * Select *Quick Connect* from the *Connect To...* menu to display the Quick Connect window, or
+  * Use the `/quick` [SlashCommands /command]. With no arguments, the Quick Connect Window is opened. If given a host and port (`/quick mush.pennmush.org:4201` or `/quick mush.pennmush.org 4201`) it will connect without opening the window.
+
+
+[http://potatomushclient.googlecode.com/svn/wiki/quickconnect.gif]
