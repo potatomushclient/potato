@@ -1,0 +1,6 @@
+This is a test page. The content is just for me to test stuff in WikiSyntax.
+
+
+http://potatomushclient.googlecode.com/svn/wiki/cake.jpg
+
+Foo.
