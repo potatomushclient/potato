@@ -5,7 +5,7 @@
 There are two different methods for adding a new world in Potato:
 
   * Click the "New World" button in the [AddressBook Address Book]
-  * Perform a Quick Connect
+  * Perform a [QuickConnect Quick Connect]
     * Select *Quick Connect* from the *Connect To...* menu, or
     * Use the `/quick` [SlashCommands /command].
 
