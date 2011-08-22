@@ -14,3 +14,4 @@
   * Regexp Custom Slash Commands didn't work correctly. Reported by Paige.
   * Added 'Reconnect All' feature, to reconnect all disconnected worlds. Suggested by Fally.
   * New option lets you disable Echo of commands in timers. Suggested by Lo.
+  * Stupid bug in /limit fixed. Reported by Padraic.
