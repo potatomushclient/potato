@@ -1,0 +1,72 @@
+# Events
+
+=Events=
+
+Events allow you to perform actions when text matching a pattern is received. You can do numerous things - change the colour of the text, omit it from the display or from log files, or spawn it to a separate window. You can also send text back to the MU`*` (including running [SlashCommands /commands] or [Macros]), or place a string of text in the input window.
+
+Each world has its own set of Events, and there are also Global Events which are matched after World Events. They can be configured via the *Options...* menu, by selecting either *Configure Events* or *Global Events*.
+
+[http://potatomushclient.googlecode.com/svn/wiki/Events.gif]
+
+The fields are:
+  * *Pattern*: The pattern to match.
+  * *Type*: The pattern type; one of Wildcard (glob matching), Regexp (regular expression match), or Contains (literal substring matching).
+  * *Case?*: Match the pattern case-sensitively?
+  * *Enabled?*: Is this Event enabled? Must be ticked to use this Event.
+  * *Continue?*: If this Event matches, should we continue matching further events?
+  * *Run When*: When this event can be matched. One of:
+    * Always:
+    * Not Up:
+    * No Focus:
+    * Inactive:
+  * *Change FG*: Whether to recolour the text, and to what colour
+  * *Change BG*: Whether to recolour the background of the text, and to what colour
+  * *Omit From*: Do not print this text to
+    * Display: The main output window
+    * Log: Any log files
+  * *Spawn?*: Should we spawn this text? Must be ticked to enable spawning.
+    * To: A space-separated list of spawn windows to spawn the text to
+  * *Send*: Text to send to the MU`*`. Multiple lines can be entered, and will be sent separately. Can include [SlashCommands /commands].
+  * *Input*: Enter text to place into an input window, and select which input window to use. Can be "One" for the top input, "Two" for the bottom, or "Focus" for the one which currently has focus.
+
+For wildcard patterns, the first ten wildcards (`*` for 0 or more chars, ? for exactly one char) are captured into `%0` to `%9`, which can be used in the Spawn, Send and Input fields. For regexp patterns, the first 10 subexpressions (in parenthesis) are captured into `%0` to `%9`.
+
+Some common examples are:
+  * [#Spawn_Channels Spawning Channel text]
+  * [#Spawn_Pages Spawning Pages]
+  * [#Omit_OOC_Speech_From_Logs Omitting OOC speech from logs]
+  * [#Recolour_Puppets Recolouring Puppet output]
+  * [#Newbie_Greeter Automatically greeting new players]
+
+For all of these examples, "Enabled" is ticked and "Continue" is not. Nothing else is selected, unless otherwise stated.
+
+===Spawn Channels===
+  * *Pattern*: `<*> *`
+  * *Type*: Wildcard
+  * *Spawn*: Ticked.
+    * To: Use `channels` to spawn all channels into a single spawn window, or use `%0` to spawn each to its own, individual spawn window.
+
+===Spawn Pages===
+  * *Pattern*: `^(From afar|Long distance to|\S.{1,20} pages|You paged .+? with).*$`
+  * *Type*: Regexp
+  * *Spawn*: Ticked.
+    * To: `pages`
+
+Tip: You can also alter the pattern so that pages to/from particular people go to a separate window.
+
+===Omit OOC Speech From Logs===
+  * *Pattern*: `[OOC] *`
+  * *Type*: Wildcard
+  * *Omit From*: Display
+
+===Recolour Puppets===
+  * *Pattern*: `My Puppet> *`
+  * *Type*: Wildcard
+  * *Change FG*: Green (or the colour of your choice)
+
+===Newbie Greeter===
+  * *Pattern*: `<Newbie> * has joined the MUSH!`
+  * *Type*: Wildcard
+  * *Send*: `+newbie Welcome, %0!`
+
+

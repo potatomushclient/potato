@@ -1,0 +1,27 @@
+# Configuring Potato
+
+=Configuring Potato=
+
+You can set Potato's options by selecting *Options...*, *Configure Program Settings*. The Configure Program Settings window lets you configure two different sets of options:
+
+  * The *Default World Settings* set the world options used for new worlds, and are set in the same way as the [ConfigureWorlds individual world settings].
+  * The *Program Settings* affect how Potato works. They're split into two sections:
+    * *Misc Settings* set various options for the program.
+    * *Global Timers* allows you to set timers that run for all worlds, alongside the world's individual timers, and are configured the same as [ConfigureWorldsTimers] world-specific timers.
+
+==Misc Settings==
+
+  * *Browser Command*: The path to your web browser, for clickable web links. If the path contains any spaces, you may need to put it in quotes. The string `%1` is replaced with the URL. If this option is left empty, Potato will attempt to use the default system browser. Example: `"C:\Program Files\Mozilla Firefox\firefox.exe" %1`
+  * *ASpell Executable*: The full path to ASpell, if you have it installed, for spell-checking. This should not be in quotes. Example: `C:\Program Files\Aspell\bin\aspell.exe`
+  * *Clock Format*: The [ClockFormats format] to display the date/time in, on the system tray and in log files.
+  * *Show SysTray Icon?*: Show an icon for Potato in the System Tray? Only available on Windows.
+  * *Start Maximized?*: Start Potato maximized? If this option is not checked, Potato will attempt to start at the same size/position it was in when last run.
+  * *Minimize to SysTray?*: When minimized, should Potato remove itself from the taskbar? Only works if Show Systray Icon is on.
+  * *Confirm Exit?*: Ask for confirmation on exit?
+  * *Allow Partial Names?*: In the `/connect` [SlashCommands /command], if an ambiguous partial name is given, should we use the first matching name instead of reporting an error?
+  * *Toggle to Main Window?*: When switching between worlds, should we always go to the world's main output window, even if we were previously viewing a spawn window?
+  * *External Requests*: When an external request is made for Potato to connect to an address (via DDE on Windows if Potato is set as the default Telnet application, or via command-line arguments), if the address is in the [AddressBook Address Book], should we use the stored world settings, perform a [QuickConnect quick connect] (add the address as a new world with default settings), or ask?
+  * *TinyURL Provider*: Which website should we use for creating short URLs via the `/tinyurl` [SlashCommands /command]?
+  * *Widget Theme*: Allows you to adjust the appearance of Potato slightly. Native looks are available on Windows and MacOS X, and are recommended.
+  * *Allow Auto-Connects?*: Should we allow [AutoConnects Auto-Connects]?
+

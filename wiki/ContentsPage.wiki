@@ -25,8 +25,8 @@
     * [Connecting Connecting to a MU`*`]
     * [ConfigurePotato Configuring Potato]
       * [ConfigureDefaultWorld Default World Settings]
-    * Events
-    * Macros
+    * [Events]
+    * [Macros]
   * Potato's Menus
     * File Menu
     * Edit Menu
@@ -45,20 +45,10 @@
     * [200b2 Version 2.0.0b2]
     * [200b1 Version 2.0.0b1]
 ----
-  * Events
-    * Event Patterns
-    * Processing Order
-    * When to run Events
-    * Recolouring Matched Text
-    * Omitting from Display/Logs
-    * Spawning
-    * Sending a Command
-    * Placing text in an Input Window
-    * Examples
   * Downloads
 
 More stuff to add:
-  * /commands
+  * [SlashCommands /commands]
   * Keyboard Shortcuts
   * Logging
   * Uploading Files
