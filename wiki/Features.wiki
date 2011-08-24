@@ -5,9 +5,9 @@
 Below is a list of the main features supported by Potato.
 
   * Runs on Windows and Linux
-  * Unlimited number of worlds, each fully customizable
+  * [AddressBook Unlimited number of worlds], each fully customizable
   * Unlimited number of connections to worlds
-  * ANSI Colour support, customizable per-world:
+  * [ConfigureWorldsDisplayANSI ANSI Colour support], customizable per-world:
     * 16 colours (8 normal, plus 8 highlight)
     * Underline and Flash
     * 256 XTerm Colours
@@ -15,7 +15,7 @@ Below is a list of the main features supported by Potato.
   * Logging support
   * Upload files directly to the game. Useful for code
   * Full Unicode support, and the ability to negotiate encoding
-  * Customizable Events, triggered when output matches a specified pattern:
+  * [Events Customizable Events], triggered when output matches a specified pattern:
     * Regexp, glob (wildcard) or exact-string matching
     * Recolour matched string (foreground and/or background) in output window
     * Omit line from the display

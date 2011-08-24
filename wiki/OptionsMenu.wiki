@@ -1,0 +1,15 @@
+#summary Options Menu
+
+=Options Menu=
+
+The following commands are available from the Options menu:
+
+  * [ConfigurePotato Configure Program Settings]
+  * [Events Global Events]
+  * [SlashCommands Global Slash Commands]
+  * [Macros Global Macro Window]
+  * Customize Keyboard Shortcuts
+  * [ConfigureWorlds Configure World]
+  * [Events Configure Events]
+  * [SlashCommands Slash Commands]
+  * [Macros Macro Window]

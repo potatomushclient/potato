@@ -1,0 +1,16 @@
+#summary File Menu
+
+=File Menu=
+
+The following commands are available from the File menu:
+
+  * [AddressBook Address Book]
+  * Connect To...
+  * Manage Auto-Reconnects
+  * Reconnect
+  * Disconnect
+  * Close Connection
+  * Reconnect All
+  * Show Connection Stats
+  * Show MSSP Info
+  * Exit

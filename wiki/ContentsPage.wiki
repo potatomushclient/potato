@@ -24,18 +24,18 @@
     * [AddressBook Address Book]
     * [Connecting Connecting to a MU`*`]
     * [ConfigurePotato Configuring Potato]
-      * [ConfigureDefaultWorld Default World Settings]
     * [Events]
     * [Macros]
   * Potato's Menus
-    * File Menu
-    * Edit Menu
-    * View Menu
-    * Logging Menu
-    * Options Menu
-    * Tools Menu
-    * Help Menu
+    * [FileMenu File Menu]
+    * [EditMenu Edit Menu]
+    * [ViewMenu View Menu]
+    * [LoggingMenu Logging Menu]
+    * [OptionsMenu Options Menu]
+    * [ToolsMenu Tools Menu]
+    * [HelpMenu Help Menu]
   * [PastVersions Version Change History]
+    * [200b9 Current Version]
     * [200b8 Version 2.0.0b8]
     * [200b7 Version 2.0.0b7]
     * [200b6 Version 2.0.0b6]

@@ -1,0 +1,14 @@
+#summary Edit Menu
+
+=Edit Menu=
+
+The following commands are available from the Edit menu:
+
+  * Check Spelling
+  * Configure Prefixes/Auto-Say
+  * Input1 Multi-Line Mode
+  * Input2 Multi-Line Mode
+  * Convert...
+    * Returns to `%r`
+    * Spaces to `%b`
+    * Escape Special Characters

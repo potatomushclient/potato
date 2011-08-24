@@ -1,0 +1,9 @@
+#summary Tools Menu
+
+=Tools Menu=
+
+The following commands are available from the Tools menu:
+
+  * Show Input History Window
+  * Open Mail Window
+  * Text Editor

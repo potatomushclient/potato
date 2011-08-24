@@ -1,0 +1,15 @@
+#summary Configure World -> Timers
+
+=Configure World -> Timers=
+
+Timers let you send a command to the MU`*` repeatedly at regular intervals (either continuously while you're connected, or a set number of times). It's useful for idle triggers (to stop you idling out if you're behind a firewall), or for checking something regularly for a log.
+
+The main window shows a table of existing timers, including whether they're enabled, how often the command is sent, the commands to send, and how many times it runs.
+
+Beneath are buttons allowing you to add, edit or delete a timer.
+
+When you add/edit a timer, a new window is shown, which allows you to choose how long to wait after connecting before first sending the command, the commands to be sent (multiple commands can be entered, one per line), and how often to repeat the command, in seconds. You can also choose whether to repeat the commands indefinitely, or send a fixed number of times. It's also possible to disable the timer.
+
+[http://potatomushclient.googlecode.com/svn/wiki/ConfigureWorldsTimersMain.gif]
+
+[http://potatomushclient.googlecode.com/svn/wiki/ConfigureWorldsTimersSub.gif]

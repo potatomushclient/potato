@@ -1,0 +1,16 @@
+#summary View Menu
+
+=View Menu=
+
+The following commands are available from the View menu:
+
+  * Show Two Input Windows?
+
+The rest of the View menu differs depending on which skin you're using. The default skin has the following options:
+
+  * Show World Toolbar?
+  * Show Spawns Toolbar?
+  * Show Status Bar?
+  * Spawns...
+  * Show Toolbar Labels?
+  * Debug Packets

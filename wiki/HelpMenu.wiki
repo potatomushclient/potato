@@ -1,0 +1,11 @@
+#summary Help Menu
+
+=Help Menu=
+
+The following commands are available from the Help menu:
+
+  * Show Helpfiles
+  * Tcl Code Console
+  * Error Log Window
+  * About Potato
+  * Visit Website

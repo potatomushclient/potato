@@ -1,0 +1,9 @@
+#summary Logging Menu
+
+=Logging Menu=
+
+The following commands are available from the Logging menu:
+
+  * Show Log Window
+  * Stop Logging
+  * Upload File
