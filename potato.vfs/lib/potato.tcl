@@ -6914,7 +6914,7 @@ proc ::potato::configureTimerAddEdit {w add win} {
 
   pack [::ttk::frame $frame.buttons] {*}$styles -fill x -pady 10
   pack [::ttk::frame $frame.buttons.ok] -side left -expand 1 -fill x
-  pack [::ttk::button $frame.buttons.ok.btn -text [T "OK"] -width 8 -default active 
+  pack [::ttk::button $frame.buttons.ok.btn -text [T "OK"] -width 8 -default active  \
                                    -command [list potato::configureTimerSave $w $text]] -side right -padx 8 -anchor e
   pack [::ttk::frame $frame.buttons.cancel] -side left -expand 1 -fill x
   pack [::ttk::button $frame.buttons.cancel.btn -text [T "Cancel"] -width 8 -command [list destroy $win]] -side left -padx 8 -anchor w
