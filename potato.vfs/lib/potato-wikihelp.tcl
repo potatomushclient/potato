@@ -64,8 +64,8 @@ proc ::wikihelp::help {{topic ""}} {
 
   set tree [::ttk::treeview $left.tree -padding [list 0 0 0 0] -selectmode browse -yscrollcommand [list $left.sb set] -show [list tree]]
   bind $tree <MouseWheel> "[bind Treeview <MouseWheel>];break"
-  $tree tag configure link -foreground blue
-  $tree tag configure badlink
+  $tree tag configure link -foreground black
+  $tree tag configure badlink -foreground red
   $tree tag configure wikilink;# used for internal links
   $tree tag configure weblink;# used for external links
   $tree tag bind wikilink <1> [list ::wikihelp::clickTopic %W %x %y]
@@ -74,7 +74,7 @@ proc ::wikihelp::help {{topic ""}} {
   grid rowconfigure $left $tree -weight 1
   grid $tree $treeSB -sticky nsew
 
-  set text [text $right.text -font TkDefaultFont -width 80 -wrap word \
+  set text [text $right.text -font TkDefaultFont -width 115 -height 30 -wrap word \
                              -yscrollcommand [list $right.sbY set] \
                              -xscrollcommand [list $right.sbX set] \
                              -state disabled]
@@ -364,10 +364,13 @@ proc ::wikihelp::parse {input} {
           \[ {set linkparse 1}
           \] {set linkparse 0
               set link [parseLink $buffer]
-              if { [lindex $link 0] eq "text" } {
+              if { [lindex $link 0] eq "link" } {
                    lappend values [lindex $link 2] [parseTags [concat $marginTag [lindex $link 3]] $bold $italic $noparse]
                  } elseif { [lindex $link 0] eq "image" } {
                    lappend values [list "<<IMAGE>>"] [list [lindex $link 2]]
+                 } elseif { [lindex $link 0] eq "plain" } {
+                   # Was probably an anchor which we don't support, but are good enough to ignore gracefully
+                   lappend values [lindex $link 1] [parseTags $marginTag $bold $italic $noparse]
                  }
               set buffer ""
              }
@@ -436,6 +439,13 @@ proc ::wikihelp::parseLink {str} {
   if { $name eq $linkto } {
        set name ""
      }
+  if { [string index $linkto 0] eq "#" } {
+       # An anchor on the current page - abort!
+       if { $name eq "" } {
+            set name $linkto
+          }
+       return [list "plain" $name];
+     }       
   # Check for a Wiki Image
   if { [string equal -length $::wikihelp::images::wikiImagesLen $::wikihelp::images::wikiImages $linkto] } {
        # Looks like we have one.
@@ -452,6 +462,10 @@ proc ::wikihelp::parseLink {str} {
   if { [regexp {^(f|ht)tps?://.+} $linkto] } {
        set tags [list weblink link "linkTo:$linkto"]
      } else {
+       # Check for an anchor, and strip it if found
+       if { [set anchor [string first "#" $linkto]] > -1 } {
+            set linkto [string range $linkto 0 $anchor-1]
+          }
        if { [info exists index(file,$linkto)] } {
             set tags [list link wikilink]
             if { $name ne "" } {
@@ -464,7 +478,7 @@ proc ::wikihelp::parseLink {str} {
   if { $name eq "" } {
        set name $linkto
      }
-  return [list "text" $linkto $name $tags];
+  return [list "link" $linkto $name $tags];
 
 };# ::wikihelp::parseLink
 

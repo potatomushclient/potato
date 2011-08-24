@@ -7701,7 +7701,7 @@ proc ::potato::main {} {
   set potato(skinMinVersion) "1.3" ;# The minimum version of the skin spec this Potato supports.
                                    ;# All skins must be at least this to be usable.
 
-  set potato(skinCurrVersion) "1.2" ;# The current version of the skin spec. If changes made aren't
+  set potato(skinCurrVersion) "1.3" ;# The current version of the skin spec. If changes made aren't
                                     ;# incompatible, this may be higher than skinMinVersion
   cd $potato(homedir)
 
@@ -7785,6 +7785,7 @@ proc ::potato::main {} {
   if { $misc(skin) in $skins(int) } {
        set potato(skin) $misc(skin)
      } else {
+       errorLog "Requested skin, $misc(skin), is not available. Switching to default skin, potato, instead." warning
        set potato(skin) "potato";# default skin
      }
   showSkin $potato(skin)
@@ -12006,7 +12007,7 @@ proc ::potato::itemize {list {join "and"}} {
   if { $c == 0 } {
        taskRun programConfig
      } else {
-       taskRun config $c $c
+       taskRun config $conn($c,world) $conn($c,world)
      }
   return;
 
