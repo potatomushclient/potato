@@ -1,4 +1,4 @@
-=License=
+﻿=License=
 
 _Potato is released under the MIT License._
 
