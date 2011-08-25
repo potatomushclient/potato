@@ -1,4 +1,4 @@
-=Credits and Contributions=
+﻿=Credits and Contributions=
 
 Potato MU`*` Client was written by Mike Griffiths (talvo@talvo.com). Based loosely on earlier code which was originally written by Keith Vetter (Brinli@ElendorMUSH).
 
@@ -20,6 +20,6 @@ Comments, suggestions, ideas, bug fixes or code were previously provided by the 
 
 Potato is powered by the Tcl/Tk programming language and several extensions to it, and would not be possible without them.
 
-On MS Windows, Potato includes the Winico extension for Tk, which is available from SourceForge ([http://tktable.sourceforge.net]). Winico is used to place an icon in the system tray, and is Copyright � 1997-1998, Brueckner&Jarosch.
+On MS Windows, Potato includes the Winico extension for Tk, which is available from SourceForge ([http://tktable.sourceforge.net]). Winico is used to place an icon in the system tray, and is Copyright © 1997-1998, Brueckner&Jarosch.
 
 The Winflash extension is also used, for flashing windows on the taskbar to show activity. Winflash was written by Youness El Alaoui (!KaKaRoTo - kakaroto@users.sourceforge.net), and the version used in Potato was compiled by Evelyn K. Vides.

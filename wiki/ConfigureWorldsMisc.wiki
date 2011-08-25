@@ -1,6 +1,6 @@
 # Configure World -> Miscellaneous Options
 
-=Configure World -> Miscellaneous Options=
+=Configure World → Miscellaneous Options=
 
 The *Miscellaneous* section of the World Configuration contains an assortment of options which don't quite fit into any of the other categories.
 
