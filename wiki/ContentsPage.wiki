@@ -6,6 +6,7 @@
     * [Credits Credits and Contributions]
     * [License]
   * [GettingStarted Getting Started]
+    * [GUI Potato's Interface]
     * [AddWorlds Creating a New World]
       * [ConfigureWorlds Configuring a World]
         * [ConfigureWorldsBasics Basics]

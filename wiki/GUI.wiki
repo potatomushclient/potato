@@ -1,0 +1,16 @@
+#summary Potato's Interface
+
+=Potato's Interface=
+
+Below is a picture of the main Potato window, with each of the compontents labelled:
+
+  * The [Menus Menu Bar] gives you access to all of Potato's features.
+  * The [#Toolbar] buttons let you use some of the more common features quickly and easily.
+  * The World Bar shows all the connections you have open. The connection you're currently viewing is shown with a blue orb, connections with new activity have an orange orb, and connections which are disconnected have a red orb.
+  * The Spawn Bar appears when you have a Spawn Window open, and lists all the Spawns for the current connection. An orange orb shows that a spawn has new activity, while a green tick shows that you are currently viewing the spawn window. Click the connection's button the World Bar to return to the main window.
+  * The Output Window is where text received from the MU`*` is displayed.
+  * Potato has two Input Windows, which is useful if you're role-playing, coding or building - you can write a long pose in one window, and use the other to chat or answer pages, etc.
+  * The Active World Notifications shows a list of worlds with new activity; click a world to switch to it.
+  * The Status Bar shows some information about the current connection, as well as a clock.
+  
+[http://potatomushclient.googlecode.com/svn/wiki/GUImain.gif]
