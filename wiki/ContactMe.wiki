@@ -6,3 +6,7 @@ Bug reports and feature requests can be made by opening a ticket on Potato's [ht
 If you're reporting a bug, please include the version of Potato, your operating system, and anything else you think is relevant.
 
 Potato is completely free, but if you've found it useful and would like to make a donation towards its development, you can do so at [http://www.potatomushclient.com www.potatomushclient.com]. (Thank you!)
+
+-- _Mike_
+
+[http://potatomushclient.googlecode.com/svn/wiki/mike.gif]
