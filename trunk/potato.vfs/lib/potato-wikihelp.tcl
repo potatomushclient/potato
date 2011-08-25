@@ -9,6 +9,7 @@ namespace eval ::wikihelp {
   set info(indexed) 0
   set info(disppath) "Potato Help"
   set info(sb) $info(disppath)
+  set info(filepath) $::potato::path(help)
 
   namespace import ::potato::T
 }
@@ -227,7 +228,7 @@ proc ::wikihelp::showTopic {topic} {
        return 0;
      }
 
-  if { [catch {open [file join $::potato::path(help) $topic.wiki] r} fid] } {
+  if { [catch {open [file join $info(filepath) $topic.wiki] r} fid] } {
        return 0;# can't open file
      }
 
@@ -451,10 +452,9 @@ proc ::wikihelp::parseLink {str} {
   if { [string equal -length $::wikihelp::images::wikiImagesLen $::wikihelp::images::wikiImages $linkto] } {
        # Looks like we have one.
        set imagename [file tail $linkto]
-       set dir $::potato::path(help)
-       if { [file extension $imagename] eq ".gif" && [file exists [file join $dir $imagename]] } {
+       if { [file extension $imagename] eq ".gif" && [file exists [file join $info(filepath) $imagename]] } {
             if { "::wikihelp::images::$imagename" ni [image names] } {
-                 image create photo ::wikihelp::images::$imagename -file [file join $dir $imagename]
+                 image create photo ::wikihelp::images::$imagename -file [file join $info(filepath) $imagename]
                }
             return [list "image" $linkto ::wikihelp::images::$imagename];
           }
@@ -515,7 +515,7 @@ proc ::wikihelp::populateTOC {} {
   array unset index list,*
 
   # If possible, we'll use the designated Table of Contents file.
-  if { [info exists info(TOC)] && [file exists [set file [file join $::potato::path(help) $info(TOC).wiki]]] && [file readable $file] } {
+  if { [info exists info(TOC)] && [file exists [set file [file join $info(filepath) $info(TOC).wiki]]] && [file readable $file] } {
        # We have a TOC file, use that.
        if { ![catch {open $file r} fid] } {
             set parents [list {}]
@@ -601,8 +601,7 @@ proc ::wikihelp::index {} {
   variable path;
   variable index;
 
-  set dir $::potato::path(help)
-  foreach x [glob -nocomplain -dir $dir *.wiki] {
+  foreach x [glob -nocomplain -dir $info(filepath) *.wiki] {
     if { [catch {open $x r} fid] } {
           continue; # Don't even track the filename, since we can't open it to read
        }

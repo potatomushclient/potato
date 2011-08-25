@@ -2230,7 +2230,7 @@ proc ::potato::doWebLink {t tagname} {
 
 #: proc ::potato::launchWebPage
 #: arg url the webpage to launch
-#: desc attempt to load the webpage $page in a browser. This proc may need to be more robust at detecting default browsers.
+#: desc attempt to load the webpage $url in a browser. This proc may need to be more robust at detecting default browsers.
 #: return nothing
 proc ::potato::launchWebPage {url} {
   variable misc;
@@ -7696,7 +7696,7 @@ proc ::potato::main {} {
   set potato(up) ""
 
   # Regexp which spawn names must match
-  set potato(spawnRegexp) {^[A-Za-z][A-Za-z0-9_!+="*#@'-]{0,49}$}
+  set potato(spawnRegexp) {^[A-Za-z][A-Za-z0-9_!+=""*#@'-]{0,49}$};# doubled-up " for syntax highlighting
 
   set potato(skinMinVersion) "1.3" ;# The minimum version of the skin spec this Potato supports.
                                    ;# All skins must be at least this to be usable.
@@ -7704,17 +7704,6 @@ proc ::potato::main {} {
   set potato(skinCurrVersion) "1.3" ;# The current version of the skin spec. If changes made aren't
                                     ;# incompatible, this may be higher than skinMinVersion
   cd $potato(homedir)
-
-  treeviewHack;# hackily fix the fact that Treeviews can still be played with when disabled
-
-  option add *Listbox.activeStyle dotbox
-  option add *TEntry.Cursor xterm
-
-  errorLogWindow;# create a window for displaying error log messages
-
-  if { [catch {package require http} err] } {
-       errorLog "Unable to load http package: $err" warning
-     }
 
   set path(log) $potato(homedir)
   set path(upload) $potato(homedir)
@@ -7737,6 +7726,20 @@ proc ::potato::main {} {
      }
   set path(help) [file join $potato(vfsdir) lib help]
   set dev [file join $potato(homedir) potato.dev]
+  
+  basic_reqs
+
+  if { [catch {package require http} err] } {
+       errorLog "Unable to load http package: $err" warning
+     }
+
+  treeviewHack;# hackily fix the fact that Treeviews can still be played with when disabled
+
+  option add *Listbox.activeStyle dotbox
+  option add *TEntry.Cursor xterm
+
+  errorLogWindow;# create a window for displaying error log messages
+
   if { ![file exists $dev] } {
        errorLog "Dev file \"[file nativename [file normalize $dev]]\" does not exist." message
      } elseif { [catch {source $dev} err] } {
@@ -13362,13 +13365,6 @@ namespace eval ::potato {
 proc ::potato::basic_reqs {} {
   variable potato;
 
-  if { [catch {package require Tcl 8.5}] } {
-       puts "WARNING! You need to be using at least Tcl 8.5 to run Potato (you only have [package version Tcl])."
-       puts "Please download a newer version of Tcl, or download a binary of Potato from"
-       puts "the website ($potato(webpage)) which includes everything you need."
-       exit;
-     }
-
   if { [catch {package require Tk 8.5}] } {
        if { [catch {package require Tk}] } {
             # No Tk -at all-
@@ -13384,6 +13380,13 @@ proc ::potato::basic_reqs {} {
           }
         exit;
      }
+	 
+  if { [catch {package require Tcl 8.5}] } {
+       puts "WARNING! You need to be using at least Tcl 8.5 to run Potato (you only have [package version Tcl])."
+       puts "Please download a newer version of Tcl, or download a binary of Potato from"
+       puts "the website ($potato(webpage)) which includes everything you need."
+       exit;
+     }
 
   # OK, that's Tcl and Tk sorted. Now let's load in the other parts of Potato from separate
   # files. These really shouldn't be an issue....
@@ -13396,7 +13399,7 @@ proc ::potato::basic_reqs {} {
                package require potato-font ;
                package require potato-spell ;
                package require potato-encoding
-              }] } {
+              } err] } {
         set msg "WARNING! Your Potato installation appears to be corrupt or incomplete -\n"
         append msg "you are missing part of the Potato code. Please re-download Potato from\n"
         append msg "the website ($potato(webpage)), and contact the author if you have\n"
@@ -13438,8 +13441,6 @@ proc winover {} {
 if { [info exists ::potato::running] && $potato::running } {
      return;
    }
-
-::potato::basic_reqs
 
 ::potato::main
 
