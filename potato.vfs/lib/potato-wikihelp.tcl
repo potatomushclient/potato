@@ -231,6 +231,7 @@ proc ::wikihelp::showTopic {topic} {
        return 0;# can't open file
      }
 
+  fconfigure $fid -encoding utf-8
   $path(text) configure -state normal
   $path(text) delete 1.0 end
   foreach {text tags} [parse [read $fid]] {
@@ -571,7 +572,7 @@ proc ::wikihelp::populateTOC {} {
                   } else {
                     set file $topic
                     set summary $topic
-                    set tags [list badlink]
+                    set tags [list];# don't badlink things that weren't linked anyway [list badlink]
                   }
               set last [$tree insert $parent end -text $summary -tags $tags]
               lappend index(list,$file) $last
