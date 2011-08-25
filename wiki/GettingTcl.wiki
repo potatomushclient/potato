@@ -1,4 +1,4 @@
-#summary Installing Tcl when running from source
+﻿#summary Installing Tcl when running from source
 = Downloading Tcl =
 
 Potato is written in [http://www.tcl.tk Tcl/Tk], an interpreted language available for many platforms. The [Downloads binary downloads] of Potato include a Tcl interpreter, so you don't need to install one. However, if you're [RunFromSource running Potato from SVN or the source], you'll need a copy of Tcl, too. Potato uses Tcl/Tk 8.5.

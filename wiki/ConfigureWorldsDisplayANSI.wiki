@@ -1,6 +1,6 @@
-#summary Configure World -> Display -> ANSI, Colours and Fonts
+﻿#summary Configure World → Display → ANSI, Colours and Fonts
 
-=Configure World -> Display -> ANSI, Colours and Fonts=
+=Configure World → Display → ANSI, Colours and Fonts=
 
 The *ANSI, Colours and Fonts* page of the Display World Configuration can be used to alter way output for a world is displayed. The current interface for doing so is likely to change soon, to make it easier to use.
 

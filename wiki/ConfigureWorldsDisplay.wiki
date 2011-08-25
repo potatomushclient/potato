@@ -1,6 +1,6 @@
-# Configure World -> Display
+﻿# Configure World → Display
 
-=Configure World -> Display=
+=Configure World → Display=
 
 The *Display* section of the World Configuration has no options itself, but contains the following sub-sections:
 

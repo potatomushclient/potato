@@ -1,4 +1,4 @@
-#summary Version 2.0.0b8
+﻿#summary Version 2.0.0b8
 =Version 2.0.0b8=
 ==Released March 31st 2011==
 

@@ -1,6 +1,6 @@
-#summary Configure World -> Display -> Miscellaneous
+﻿#summary Configure World → Display → Miscellaneous
 
-=Configure World -> Display -> Miscellaneous=
+=Configure World → Display → Miscellaneous=
 
 The *Miscellaneous* page of the Display World Configuration sets various options affecting what is output, and how.
 

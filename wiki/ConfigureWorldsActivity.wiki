@@ -1,6 +1,6 @@
-# Configure World -> Activity
+﻿# Configure World → Activity
 
-=Configure World -> Activity=
+=Configure World → Activity=
 
 The *Activity* section of the World Configuration controls what happens when there's new activity (new text received) for the MU`*`.
 

@@ -1,6 +1,6 @@
-# Configure World -> Basic Settings
+﻿# Configure World → Basic Settings
 
-=Configure World -> Basic Settings=
+=Configure World → Basic Settings=
 
 The *Basic Settings* page of the World Configuration window holds some standard information about the world.
 

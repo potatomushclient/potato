@@ -1,6 +1,6 @@
-#summary Configure World -> Timers
+﻿#summary Configure World → Timers
 
-=Configure World -> Timers=
+=Configure World → Timers=
 
 Timers let you send a command to the MU`*` repeatedly at regular intervals (either continuously while you're connected, or a set number of times). It's useful for idle triggers (to stop you idling out if you're behind a firewall), or for checking something regularly for a log.
 

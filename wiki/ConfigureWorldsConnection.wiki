@@ -1,6 +1,6 @@
-#summary Configure World -> Connection
+﻿#summary Configure World → Connection
 
-=Configure World -> Connection=
+=Configure World → Connection=
 
 The *Connection* page of the World Configuration holds some basic settings about how *Potato* attempts to connect to a world.
 

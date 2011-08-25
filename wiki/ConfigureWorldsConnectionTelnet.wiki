@@ -1,6 +1,6 @@
-#summary Configure World -> Connection -> Telnet
+﻿#summary Configure World → Connection → Telnet
 
-=Configure World -> Connection -> Telnet=
+=Configure World → Connection → Telnet=
 
 The *Telnet* page of the Connection World Configuration can be used to alter the telnet negotiation performed when connected to a MU`*`, or to disable it entirely, if the MU`*` does not perform telnet negotiation.
 

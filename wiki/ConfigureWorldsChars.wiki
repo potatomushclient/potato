@@ -1,6 +1,6 @@
-# Configure World -> Characters
+﻿# Configure World → Characters
 
-=Configure World -> Characters=
+=Configure World → Characters=
 
 The *Characters* page of the World Configuration has a list of existing characters at the top. You can select a character there and either *Edit Character* or *Delete Character* using the buttons at the bottom. When you edit a character (or *Add Character*), you can enter the character name and password in the *Character* and *Password* entry fields, then click *Save* to save the changes, or *Cancel* to discard them.
 

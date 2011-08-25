@@ -1,4 +1,4 @@
-#summary Contact Me
+﻿#summary Contact Me
 =Contact Me=
 
 Bug reports and feature requests can be made by opening a ticket on Potato's [http://code.google.com/p/potatomushclient/issues/list Google Code Issue Tracker] - please check for a similar issue first! You can also email me (Mike Griffiths) directly at talvo-at-talvo-dot-com. All contributions will be fully credited.

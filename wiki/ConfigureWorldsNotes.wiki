@@ -1,6 +1,6 @@
-#summary Configure World -> Notes
+﻿#summary Configure World → Notes
 
-=Configure World -> Notes=
+=Configure World → Notes=
 
 The Notes section allows you to enter any text you'd like about the MU`*`. It has no built-in function, it's just a useful place to store information you'll want later.
 

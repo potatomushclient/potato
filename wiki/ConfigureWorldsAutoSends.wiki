@@ -1,6 +1,6 @@
-#summary Configure World -> Auto-Sends
+﻿#summary Configure World → Auto-Sends
 
-=Configure World -> Auto-Sends=
+=Configure World → Auto-Sends=
 
 The Auto-Sends page allows you to enter commands to be sent to the MU`*` automatically upon connection. There are three; one is sent when you first connect, and is useful for running commands/macros which do not need to be repeated each time you disconnect/reconnect. The second is commands to send after connecting and before logging in, and the third is sent after logging in.
 

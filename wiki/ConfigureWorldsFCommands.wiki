@@ -1,6 +1,6 @@
-# Configure World -> F-Commands
+﻿# Configure World → F-Commands
 
-=Configure World -> F-Commands=
+=Configure World → F-Commands=
 
 The *F-Commands* section of the World Configuration contains eleven inputs, labelled F2 to F12. You can enter commands to be sent (including /commands) to the MU`*` when any of these buttons are pressed. (F1 shows this Help window.)
 

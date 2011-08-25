@@ -7,7 +7,7 @@ A "/command" is a special command you can type into the input box (or anywhere e
   * `/at <time>=<command>` - At `<time>`, send the command `<command>` to the MU`*`. See detailed help for [SlashCommandsAt /at] for more information.
   * `/cancelat <id>` - Cancel the specified [SlashCommandsAt /at].
   * `/close` - Close the current connection.
-  * `/cls [<conn>[.<window>]]` - Clear the screen for the specified connection, or the current connection if one isn't given. If a <window> is given, it clears that spawn window instead.
+  * `/cls [<conn>[.<window>]]` - Clear the screen for the specified connection, or the current connection if one isn't given. If a `<window>` is given, it clears that spawn window instead.
   * `/connect <address>` - Connect to an address. Can be either the name of a defined world from the Address Book, a `host:port` string or a `host port` string.
   * `/debug` - Toggle Debug Packets on and off.
   * `/delspawn <spawn1> [<spawn2> [<spawnN>]]` - Stop spawning all output (started via `/addspawn`) to the specified spawn windows.
@@ -19,7 +19,7 @@ A "/command" is a special command you can type into the input box (or anywhere e
   * `/input <num> <string>` - Print `<string>` into the `<num>`th input window. `<num>` can be 1 for the top input, 2 for the bottom, or 3 for the one which currently has focus.
   * `/limit` - Filters output. See the help for [SlashCommandsLimit /limit] for more details.
   * `/log` - Start or stop logging. See the help for [Logging#/log /log] for more details.
-  * `/print <message>` - Print <message> as a system message.
+  * `/print <message>` - Print `<message>` as a system message.
   * `/quick <address>` - Perform a [QuickConnect quick connect] to `<address>`, which is either a `host:port` or `host port` string.
   * `/reconnect` - Reconnect the current connection.
   * `/rename [<name>]` - Set a temporary name for the current connection, or clear the existing temporary name. Useful if you connect to one world multiple times, to make them easier to distinguish.
