@@ -258,7 +258,7 @@ proc ::wikihelp::showTopic {topic} {
        while { $new ne "" } {
          set text [$path(tree) item $new -text]
          set disppath "$text$join$disppath"
-         set join " -> "
+         set join " [format %c 8594] "
          set new [$path(tree) parent $new]
        }
        set info(disppath) $disppath
@@ -298,10 +298,10 @@ proc ::wikihelp::parse {input} {
              }
         }
      if { !$multinoparse && [string equal $line "\{\{\{"] } {
-          set multinoparse 0
+          set multinoparse 1
           continue;
         } elseif { $multinoparse && [string equal $line "\}\}\}"] } {
-          set multinoparse 1
+          set multinoparse 0
           continue;
         } elseif { $multinoparse } {
           # Don't parse this line
