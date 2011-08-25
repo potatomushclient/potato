@@ -1,4 +1,4 @@
-﻿#summary Add a new World
+#summary Add a new World
 
 =Adding a New World=
 

@@ -1,4 +1,4 @@
-﻿#summary Configuring a World
+#summary Configuring a World
 
 =Configuring a World=
 

@@ -1,4 +1,4 @@
-﻿#summary Version 2.0.0b2
+#summary Version 2.0.0b2
 =Version 2.0.0b2=
 
   * You can now choose between having 1 or 2 input windows. Requested by Paige and Mercutio.

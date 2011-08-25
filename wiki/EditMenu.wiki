@@ -1,4 +1,4 @@
-﻿#summary Edit Menu
+#summary Edit Menu
 
 =Edit Menu=
 

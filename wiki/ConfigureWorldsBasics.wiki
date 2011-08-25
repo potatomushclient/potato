@@ -1,4 +1,4 @@
-﻿#summary Configure World → Basic Settings
+#summary Configure World → Basic Settings
 
 =Configure World → Basic Settings=
 

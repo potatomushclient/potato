@@ -1,4 +1,4 @@
-﻿#summary How to run Potato from source code, or from SVN
+#summary How to run Potato from source code, or from SVN
 = Running Potato from Source =
 
 The simplest way to run Potato is using a [Downloads binary], which contains the Potato source and a Tcl interpreter in a single file. However, if you don't wish to do this (either because a binay is not available for your platform, because you already have Tcl installed on your system, or because you wish to make changes to the source), you can run Potato from source. There are three ways to do this:

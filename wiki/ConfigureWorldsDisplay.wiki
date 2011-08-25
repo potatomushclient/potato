@@ -1,4 +1,4 @@
-﻿#summary Configure World → Display
+#summary Configure World → Display
 
 =Configure World → Display=
 

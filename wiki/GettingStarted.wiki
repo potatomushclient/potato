@@ -1,4 +1,4 @@
-﻿# Getting Started with Potato
+#summary Getting Started with Potato
 
 =Getting Started=
 

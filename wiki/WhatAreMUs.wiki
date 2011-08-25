@@ -1,4 +1,4 @@
-﻿#summary What are MUSHes/MUDs/MU*s?
+#summary What are MUSHes/MUDs/MU*s?
 
 =What are MUSHes/MUDs/MU`*`s?=
 

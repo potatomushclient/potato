@@ -1,4 +1,4 @@
-﻿#summary Configure World → Notes
+#summary Configure World → Notes
 
 =Configure World → Notes=
 

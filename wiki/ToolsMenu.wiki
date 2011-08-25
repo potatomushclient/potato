@@ -1,4 +1,4 @@
-﻿#summary Tools Menu
+#summary Tools Menu
 
 =Tools Menu=
 

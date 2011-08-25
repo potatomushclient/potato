@@ -1,4 +1,4 @@
-﻿#summary File Menu
+#summary File Menu
 
 =File Menu=
 

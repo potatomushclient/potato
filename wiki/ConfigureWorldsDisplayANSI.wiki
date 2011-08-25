@@ -1,4 +1,4 @@
-﻿#summary Configure World → Display → ANSI, Colours and Fonts
+#summary Configure World → Display → ANSI, Colours and Fonts
 
 =Configure World → Display → ANSI, Colours and Fonts=
 

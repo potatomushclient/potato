@@ -1,4 +1,4 @@
-﻿#summary MIT License
+#summary MIT License
 =License=
 
 _Potato is released under the MIT License._

@@ -1,4 +1,4 @@
-﻿#summary Configure World → Connection → Telnet
+#summary Configure World → Connection → Telnet
 
 =Configure World → Connection → Telnet=
 

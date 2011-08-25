@@ -1,4 +1,4 @@
-﻿#summary Configuring Potato
+#summary Configuring Potato
 
 =Configuring Potato=
 

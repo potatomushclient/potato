@@ -1,4 +1,4 @@
-﻿#summary Help Menu
+#summary Help Menu
 
 =Help Menu=
 

@@ -1,4 +1,4 @@
-﻿#summary Configure World → Display → Miscellaneous
+#summary Configure World → Display → Miscellaneous
 
 =Configure World → Display → Miscellaneous=
 

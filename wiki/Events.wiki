@@ -1,4 +1,4 @@
-﻿#summary Events
+#summary Events
 
 =Events=
 

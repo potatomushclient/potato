@@ -1,4 +1,4 @@
-﻿#summary Quick Connect
+#summary Quick Connect
 
 =Quick Connect=
 

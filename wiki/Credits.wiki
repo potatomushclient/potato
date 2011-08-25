@@ -1,4 +1,4 @@
-﻿#summary Credits and Contributions
+#summary Credits and Contributions
 =Credits and Contributions=
 
 Potato MU`*` Client was written by Mike Griffiths (talvo@talvo.com). Based loosely on earlier code which was originally written by Keith Vetter (Brinli@ElendorMUSH).

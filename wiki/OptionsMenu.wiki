@@ -1,4 +1,4 @@
-﻿#summary Options Menu
+#summary Options Menu
 
 =Options Menu=
 

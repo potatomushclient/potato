@@ -1,4 +1,4 @@
-﻿#summary Configure World → Connection
+#summary Configure World → Connection
 
 =Configure World → Connection=
 

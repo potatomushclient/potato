@@ -1,4 +1,4 @@
-﻿#summary Configure World → Auto-Sends
+#summary Configure World → Auto-Sends
 
 =Configure World → Auto-Sends=
 

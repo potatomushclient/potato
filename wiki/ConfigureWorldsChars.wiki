@@ -1,4 +1,4 @@
-﻿#summary Configure World → Characters
+#summary Configure World → Characters
 
 =Configure World → Characters=
 

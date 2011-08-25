@@ -1,4 +1,4 @@
-﻿#summary Configure World → F-Commands
+#summary Configure World → F-Commands
 
 =Configure World → F-Commands=
 

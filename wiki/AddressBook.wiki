@@ -1,4 +1,4 @@
-﻿#summary Address Book
+#summary Address Book
 
 =Address Book=
 

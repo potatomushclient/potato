@@ -1,4 +1,4 @@
-﻿#summary Configure World → Activity
+#summary Configure World → Activity
 
 =Configure World → Activity=
 

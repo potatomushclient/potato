@@ -1,4 +1,4 @@
-﻿#summary Configure World → Timers
+#summary Configure World → Timers
 
 =Configure World → Timers=
 
