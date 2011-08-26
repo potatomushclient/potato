@@ -1,6 +1,6 @@
 #summary Contents Page
   * [WelcomeToPotato Welcome to Potato]
-    * [WhatAreMUs What are MUSHes/MUDs/MU`*`s?]
+    * [WhatAreMUs What are MUSHes/MUDs/MU*s?]
     * [Features Potato's Features]
     * [ContactMe Contact Me]
     * [Credits Credits and Contributions]
@@ -31,7 +31,7 @@
         * [ConfigureWorldsAutoSends Auto-Sends]
         * [ConfigureWorldsNotes Notes]
     * [AddressBook Address Book]
-    * [Connecting Connecting to a MU`*`]
+    * [Connecting Connecting to a MU*]
     * [ConfigurePotato Configuring Potato]
     * [Events]
     * [Macros]
