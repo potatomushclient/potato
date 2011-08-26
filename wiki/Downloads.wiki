@@ -1,6 +1,6 @@
 #summary Download links for Potato
 
-=Introduction=
+=Downloading Potato=
 
 You can currently download binaries of Potato for Windows and Linux.
 

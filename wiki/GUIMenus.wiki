@@ -1,0 +1,11 @@
+#summary Potato's Menu
+
+=Potato's Menus=
+
+  *[FileMenu File...] menu
+  *[EditMenu Edit...] menu
+  *[ViewMenu View...] menu
+  *[LoggingMenu Logging...] menu
+  *[OptionsMenu Options...] menu
+  *[ToolsMenu Tools...] menu
+  *[HelpMenu Help...] menu

@@ -13,7 +13,7 @@ You can set Potato's options by selecting *Options...*, *Configure Program Setti
 
   * *Browser Command*: The path to your web browser, for clickable web links. If the path contains any spaces, you may need to put it in quotes. The string `%1` is replaced with the URL. If this option is left empty, Potato will attempt to use the default system browser. Example: `"C:\Program Files\Mozilla Firefox\firefox.exe" %1`
   * *ASpell Executable*: The full path to ASpell, if you have it installed, for spell-checking. This should not be in quotes. Example: `C:\Program Files\Aspell\bin\aspell.exe`
-  * *Clock Format*: The [ClockFormats format] to display the date/time in, on the system tray and in log files.
+  * *Clock Format*: The [ClockFormatCodes format] to display the date/time in, on the system tray and in log files.
   * *Show SysTray Icon?*: Show an icon for Potato in the System Tray? Only available on Windows.
   * *Start Maximized?*: Start Potato maximized? If this option is not checked, Potato will attempt to start at the same size/position it was in when last run.
   * *Minimize to SysTray?*: When minimized, should Potato remove itself from the taskbar? Only works if Show Systray Icon is on.

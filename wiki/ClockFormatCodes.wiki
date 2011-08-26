@@ -1,0 +1,32 @@
+#summary Clock Format Codes
+
+=Clock Format Codes=
+
+The following format codes are available for the [ConfigurePotato Clock Format], and for [Logging log file names]:
+
+  * `%%` - A literal `%`
+  * `%a` - Abbreviated weekday (Mon, Tue, etc)
+  * `%A` - Full weekday (Monday, Tuesday, etc)
+  * `%b` - Abbreviated month name (Jan, Feb, etc)
+  * `%B` - Full month name (January, February, etc)
+  * `%d` - Day of the month, with leading 0 (01, 02, .., 31)
+  * `%D` - Short for `%m/%d/%Y`
+  * `%e` - Day of the month, with leading space (' 1', ' 2', .., '31')
+  * `%H` - Hours, in 2-digit 24-hour form (00-23)
+  * `%I` - Hours, in 2-digit 12-hour form (12-11)
+  * `%j` - Day of year, 3 digits (001-366)
+  * `%k` - Hours, in 1-digit 24-hour form (0-23)
+  * `%l` - Hours, in 1-digit 12-hour form (12-11)
+  * `%m` - Month number, 2 digits (01-12)
+  * `%M` - Minutes, 2 digits (00-59)
+  * `%N` - Month number, 1 digit (1-12)
+  * `%p` - AM or PM
+  * `%P` - am or pm
+  * `%S` - Seconds, 2 digits (00-59)
+  * `%T` - Short for `%H:%M:%S`
+  * `%y` - Year, two digits
+  * `%Y` - Year, four digits
+  * `%Z` - Time zone name
+  * `%+` - Short for `%a %b %e %H:%M:%S %Z %Y`
+  
+(There are some other format codes available, but these are the most common ones. For the full list, see [http://www.tcl.tk/man/tcl8.5/TclCmd/clock.htm#M26]

@@ -7,6 +7,14 @@
     * [License]
   * [GettingStarted Getting Started]
     * [GUI Potato's Interface]
+      * [GUIMenus Potato's Menus]
+        * [FileMenu File Menu]
+        * [EditMenu Edit Menu]
+        * [ViewMenu View Menu]
+        * [LoggingMenu Logging Menu]
+        * [OptionsMenu Options Menu]
+        * [ToolsMenu Tools Menu]
+        * [HelpMenu Help Menu]
     * [AddWorlds Creating a New World]
       * [ConfigureWorlds Configuring a World]
         * [ConfigureWorldsBasics Basics]
@@ -27,14 +35,6 @@
     * [ConfigurePotato Configuring Potato]
     * [Events]
     * [Macros]
-  * Potato's Menus
-    * [FileMenu File Menu]
-    * [EditMenu Edit Menu]
-    * [ViewMenu View Menu]
-    * [LoggingMenu Logging Menu]
-    * [OptionsMenu Options Menu]
-    * [ToolsMenu Tools Menu]
-    * [HelpMenu Help Menu]
   * [PastVersions Version Change History]
     * [200b9 Current Version]
     * [200b8 Version 2.0.0b8]
@@ -46,13 +46,12 @@
     * [200b2 Version 2.0.0b2]
     * [200b1 Version 2.0.0b1]
 ----
-  * Downloads
-
-More stuff to add:
-  * [SlashCommands /commands]
-  * Keyboard Shortcuts
-  * Logging
-  * Uploading Files
-  * Making Potato the default Telnet Client
+  * More stuff to add:
+    * [Downloads]
+    * [SlashCommands /commands]
+    * Keyboard Shortcuts
+    * Logging
+    * Uploading Files
+    * Making Potato the default Telnet Client
 
 [http://code.google.com/p/potatomushclient/w/list All Wiki Pages]

@@ -1,0 +1,9 @@
+#summary Connecting to a World
+
+=Connecting to a World=
+
+There are several ways you can connect to a world in Potato.
+
+If the world has already been added to the [AddressBook Address Book], it will be listed in the [FileMenu File] → *Connect To...* menu, and also the *Connect To...* button on the [GUIToolbar Toolbar]. You can also use  the `/connect` [SlashCommands /command] to connect.
+
+To connect to a new world, you can perform a [QuickConnect Quick Connect], or [AddWorlds add the world manually].
