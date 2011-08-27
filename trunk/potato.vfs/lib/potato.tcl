@@ -7805,10 +7805,10 @@ proc ::potato::main {} {
   setUpWinico
   setUpFlash
 
-  if { $::tcl_platform(platform) eq "windows" && $potato(wrapped) } {
+  if { $::tcl_platform(platform) eq "windows" } {
        if { ![catch {package require dde 1.3} err] } {
-            # Start the DDE server in case we're the default telnet app. Only do this on Windows when
-            # DDE is available, and we're running as a wrapped app, not a script.
+            # Start the DDE server in case we're the default telnet app. 
+            # Only do this on Windows when DDE is available
             ::potato::ddeStart
           } else {
             errorLog "Unable to load DDE extension: $err" warning
@@ -12508,11 +12508,18 @@ proc ::potato::handleOutsideRequest {src addr {isWorld 0}} {
        return;
      }
 
+  if { [string length $addr] < 3 } {
+       # Too short to be useful. Probably a "-" from DDE when a telnet://
+       # link is clicked and Potato wasn't open. Ignore silently.
+       return;
+     }
+  
   # OK, let's do it the hard way...
 
   # Let's see if what we have is a valid host and port
   set hostAndPort [parseTelnetAddress $addr]
   if { [llength $hostAndPort] == 0 } {
+       errorLog "Invalid address '$addr' from '$src'"
        bell -displayof .
        return;
      }

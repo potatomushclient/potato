@@ -430,6 +430,7 @@ proc ::wikihelp::parse {input} {
 #: return [list <type> <linkto> <name> [list <tags>]] where <type> is "text" or "image", and where <tags> are the appropriate text widget tags (badlink, or link + weblink/wikilink, possibly + linkTo:<linkto>)
 proc ::wikihelp::parseLink {str} {
   variable index;
+  variable info;
 
   if { [set space [string first " " $str]] > -1 } {
        set linkto [string range $str 0 $space-1]
@@ -444,7 +445,7 @@ proc ::wikihelp::parseLink {str} {
   if { [string index $linkto 0] eq "#" } {
        # An anchor on the current page - abort!
        if { $name eq "" } {
-            set name $linkto
+            set name [string range $linkto 1 end]
           }
        return [list "plain" $name];
      }       
