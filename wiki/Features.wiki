@@ -12,8 +12,8 @@ Below is a list of the main features supported by Potato.
     * Underline and Flash
     * 256 XTerm Colours
     * [http://www.fansi.org FANSI support]
-  * Logging support
-  * Upload files directly to the game. Useful for code
+  * [Logging Logging] support
+  * [UploadFile Upload files] directly to the game. Useful for code
   * Full Unicode support, and the ability to negotiate encoding
   * [Events Customizable Events], triggered when output matches a specified pattern:
     * Regexp, glob (wildcard) or exact-string matching
@@ -23,12 +23,12 @@ Below is a list of the main features supported by Potato.
     * Spawn to an additional output window. Useful for separating channel chat and pages from RP.
     * Send a response back to the MUSH
     * Place a string into the input window
-  * Timers, to send commands repeatedly at regular intervals
+  * [ConfigureWorldsTimers Timers], to send commands repeatedly at regular intervals
   * Automatic reconnect when booted, or when a connection fails
   * Unlimited, searchable output buffer
-  * Unlimited, searchable command input history
+  * Unlimited, searchable [InputHistory command input history]
   * Easy to install and uninstall (download to install, delete to uninstall)
-  * Customizable keyboard bindings
-  * Graphical Mail window for sending in-game mail, which works with most common @mail/+mail formats
+  * [KeyboardShortcuts Customizable keyboard bindings]
+  * [MailWindow Graphical Mail window] for sending in-game mail, which works with most common @mail/+mail formats
 
 There are many more features than those listed above, with more planned and added regularly.

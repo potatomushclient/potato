@@ -33,8 +33,13 @@
     * [AddressBook Address Book]
     * [Connecting Connecting to a MU*]
     * [ConfigurePotato Configuring Potato]
+	  * [KeyboardShortcuts Customize Keyboard Shortcuts]
+	    * [SlashCommands /commands]
+		* [Macros]
     * [Events]
+	  * [Spawns Spawn Windows]
     * [Macros]
+  * [DefaultTelnetClient Make Potato the Default Telnet Client]
   * [PastVersions Version Change History]
     * [200b9 Current Version]
     * [200b8 Version 2.0.0b8]
@@ -45,13 +50,5 @@
     * [200b3 Version 2.0.0b3]
     * [200b2 Version 2.0.0b2]
     * [200b1 Version 2.0.0b1]
-----
-  * More stuff to add:
-    * [Downloads]
-    * [SlashCommands /commands]
-    * Keyboard Shortcuts
-    * Logging
-    * Uploading Files
-    * Making Potato the default Telnet Client
 
 [http://code.google.com/p/potatomushclient/w/list All Wiki Pages]

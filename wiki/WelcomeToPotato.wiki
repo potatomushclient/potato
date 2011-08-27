@@ -1,25 +1,25 @@
 #summary Introduction Page
 =Welcome to Potato!=
 
-*Potato* is a Graphical MU`*` Client for Windows and Linux written in Tcl/Tk 8.5. The latest version of Potato is 2.0.0b7.
+*Potato* is a Graphical MU`*` Client for Windows and Linux written in Tcl/Tk 8.5.
 
 It has all the standard [Features features] you'd expect in a MU`*` client and much more, including
-  * An unlimited number of customized worlds
+  * An unlimited number of [AddressBook customized worlds]
   * Runs the same on Windows and Linux
   * Configurable colors, including
     * 16 standard ANSI colors (8 normal and 8 highlight)
     * Flash and Underline
     * 256 XTerm Colours
     * [http://www.fansi.org FANSI support]
-  * Logging
-  * Upload a file to the MU`*`, useful for code
+  * [Logging]
+  * [UploadFile Upload a file] to the MU`*`, useful for code
   * [Events] which allow you to highlight certain lines, omit them from logs, display them in [Spawns Spawn Windows], and more
   * Full Unicode support
   * Telnet support
   * Automatic Reconnect on boot or connection failure
-  * Customizable Keyboard Bindings
-  * Graphical Mail Window, for writing and sending in-game mail in any format
-  * Optional second input window, useful for chatting while you're RPing or coding in the first input window
+  * [KeyboardShortcuts] Customizable Keyboard Bindings
+  * Graphical [MailWindow Mail Window], for writing and sending in-game mail in any format
+  * Optional [TwoInputWindows second input window], useful for chatting while you're RPing or coding in the first input window
 
 These help-files are still being written and revised, so there's quite a bit missing. If you need help with anything, feel free to [ContactMe contact me]. Bug reports, fixes, suggestions, etc, are also welcome, preferably via a [http://code.google.com/p/potatomushclient/issues/list ticket on the Google Code site].
 

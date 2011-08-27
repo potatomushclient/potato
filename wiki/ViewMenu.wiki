@@ -4,7 +4,7 @@
 
 The following commands are available from the View menu:
 
-  * Show Two Input Windows?
+  * [TwoInputWindows Show Two Input Windows?]
 
 The rest of the View menu differs depending on which skin you're using. The default skin has the following options:
 
@@ -13,4 +13,4 @@ The rest of the View menu differs depending on which skin you're using. The defa
   * Show Status Bar?
   * Spawns...
   * Show Toolbar Labels?
-  * Debug Packets
+  * [PacketDebugger Debug Packets]

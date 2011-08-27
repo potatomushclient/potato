@@ -4,8 +4,8 @@
 
 The following commands are available from the Edit menu:
 
-  * Check Spelling
-  * Configure Prefixes/Auto-Say
+  * [SpellChecking Check Spelling]
+  * [Prefixes Configure Prefixes/Auto-Say]
   * Input1 Multi-Line Mode
   * Input2 Multi-Line Mode
   * Convert...

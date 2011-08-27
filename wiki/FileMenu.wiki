@@ -5,12 +5,12 @@
 The following commands are available from the File menu:
 
   * [AddressBook Address Book]
-  * Connect To...
-  * Manage Auto-Reconnects
+  * [Connecting Connect To...]
+  * [AutoConnects Manage Auto-Connects]
   * Reconnect
   * Disconnect
   * Close Connection
   * Reconnect All
   * Show Connection Stats
-  * Show MSSP Info
+  * [MSSP Show MSSP Info]
   * Exit

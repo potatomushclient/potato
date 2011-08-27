@@ -4,8 +4,8 @@
 
 The following commands are available from the Help menu:
 
-  * Show Helpfiles
+  * *Show Helpfiles*
   * Tcl Code Console
-  * Error Log Window
-  * About Potato
-  * Visit Website
+  * [ErrorLog Error Log Window]
+  * *About Potato*
+  * [http://www.potatomushclient.com Visit Website]

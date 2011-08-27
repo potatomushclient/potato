@@ -3,6 +3,7 @@
 
 Below is a list of past releases of Potato. Select a version to see changes.
 
+  * [200b9 Current Version]
   * [200b8 Version 2.0.0b8]
   * [200b7 Version 2.0.0b7]
   * [200b6 Version 2.0.0b6]

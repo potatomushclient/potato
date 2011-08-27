@@ -4,6 +4,6 @@
 
 The following commands are available from the Tools menu:
 
-  * Show Input History Window
-  * Open Mail Window
-  * Text Editor
+  * [InputHistory Show Input History Window]
+  * [MailWindow Open Mail Window]
+  * [TextEditor Text Editor]
