@@ -1,0 +1,30 @@
+#summary Make Potato the default Telnet Client
+
+=Make Potato the default Telnet Client=
+
+If you wish to make Potato the default telnet client (so that telnet://... links will open in Potato), you can do so in the following way:
+
+==Microsoft XP==
+Open My Computer, and select *Tools* → *Folder Options*. Go to the *File Types* tab, and scroll down to *URL:Telnet Protocol* (the extension is (NONE)). Click the Advanced button.
+
+In the window that opens, click the *Open* action, and click the Edit button.
+
+A new window will open. For the "Application to perform this action", enter:
+
+  `"C:\Path to\Your\Potato\potato.exe" %1`
+  
+Tick the "Use DDE" box, and then set:
+
+  * DDE Message: `%1`
+  * Application: `TclEval`
+  * DDE Application Not Running: `-`
+  * Topic: `potatoMUClient`
+  
+Click OK, OK and then Close to close all the windows. Potato should now launch whenever a telnet:// link is open and, if the program is already open, the address will open in the running copy.
+
+[http://potatomushclient.googlecode.com/svn/wiki/DefaultTelnetClientWinXP.gif]
+
+
+
+==Other Operating Systems==
+I don't know the procedure for doing this on other operating systems; if you know how to do it on other versions of Windows, or on any varieties of Linux, please [ContactMe let me know] how (preferably with any relevant screenshots). Thanks!
