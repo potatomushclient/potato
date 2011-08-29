@@ -69,7 +69,7 @@ proc ::wikihelp::help {{topic ""}} {
   $tree tag configure badlink -foreground red
   $tree tag configure wikilink;# used for internal links
   $tree tag configure weblink;# used for external links
-  $tree tag bind wikilink <1> [list ::wikihelp::clickTopic %W %x %y]
+  $tree tag bind wikilink <ButtonRelease-1> [list ::wikihelp::clickTopic %W %x %y]
   set treeSB [::ttk::scrollbar $left.sb -orient vertical -command [list $tree yview]]
   grid $tree $treeSB -sticky nsew
   grid rowconfigure $left $tree -weight 1
