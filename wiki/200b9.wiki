@@ -6,7 +6,7 @@
   * The Packet Debugger is now much niftier, and shows hex codes for each byte sent/received. Patch by Ryan Dowell.
   * Potato now saves world settings immediately after Events are changed.
   * The 'F3' command didn't work. Reported by James.
-  * URL links can now contain '!' characters. Requested by Andrew Perron and Cheetah@M*U*S*H.
+  * URL links can now contain '!' characters. Requested by Andrew Perron and Cheetah@M`*`U`*`S`*`H.
   * Bug in the Configure World window reported by Ryunosuke Yamaguchi.
   * Logfiles now show the world name, character and time at the beginning. Suggested by ihavenomouth.
   * ANSI flash/underline didn't work on Xterm colors. Reported by Paige.
@@ -15,4 +15,5 @@
   * Added 'Reconnect All' feature, to reconnect all disconnected worlds. Suggested by Fally.
   * New option lets you disable Echo of commands in timers. Suggested by Lo.
   * Stupid bug in /limit fixed. Reported by Padraic.
-  * More helpfiles, with improved content and some images! Helpfile parsing code improved to handle images, and to recognise (and ignore) anchors in wiki links.
+  * More helpfiles, with improved content and some images! Helpfile parsing code improved to handle images, and to recognise (and ignore) anchors in wiki links. Sorry it took so long!
+  * Worlds are now saved immediately after a new world is added. Suggested by Reaver.
