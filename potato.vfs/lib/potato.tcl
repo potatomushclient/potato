@@ -4848,6 +4848,7 @@ proc ::potato::addNewWorld {name host port temp} {
   set world($w,stats,time) 0
   set world($w,stats,added) [clock seconds]
 
+  saveWorlds
   connZero
 
   return $w;
