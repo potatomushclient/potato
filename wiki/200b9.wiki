@@ -17,3 +17,4 @@
   * Stupid bug in /limit fixed. Reported by Padraic.
   * More helpfiles, with improved content and some images! Helpfile parsing code improved to handle images, and to recognise (and ignore) anchors in wiki links. Sorry it took so long!
   * Worlds are now saved immediately after a new world is added. Suggested by Reaver.
+  * Wildcard [Events] didn't capture submatches properly.
