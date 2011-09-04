@@ -1332,7 +1332,7 @@ proc ::potato::uploadBegin {c} {
        # Need to check things differently. Damn.
        if { [string trim $line " \t"] eq "" || [string range $line 0 1] eq "@@" } {
             # blank/whitespace/comment line
-          } elseif { [string range $line 0 0] eq ">" } {
+          } elseif { [string index $line 0] eq ">" } {
             # Formatted line
             if { $conn($c,upload,mpp,gt) } {
                  set conn($c,upload,mpp,gt) 0
@@ -1340,7 +1340,7 @@ proc ::potato::uploadBegin {c} {
                  append conn($c,upload,mpp,buffer) "%r"
                }
             append conn($c,upload,mpp,buffer) [string map [list " " %b "\t" %t % \\% {;} {\;} \[ \\\[ \] \\\] ( \\( ) \\) , \\, ^ \\^ $ \\$ \{ \\\{ \} \\\} \\ \\\\] [string range $line 1 end]]
-          } elseif { [string range $line 0 0] eq " " || [string range $line 0 0] eq "\t" } {
+          } elseif { [string index $line 0] eq " " || [string index $line 0] eq "\t" } {
             # Unformatted continuation
             append conn($c,upload,mpp,buffer) [string trimleft $line " \t"]
           } else {
@@ -2243,7 +2243,7 @@ proc ::potato::launchWebPage {url} {
        #set command [string map [list %1 $url] $misc(browserCmd)]
        # Try and parse out the command; this is up to the first space, if there's no leading quote, or
        # the quoted string if there is.
-       if { [string range $misc(browserCmd) 0 0] eq {"} } {
+       if { [string index $misc(browserCmd) 0] eq {"} } {
             # A quoted string.
             set secondQuote [string first {"} $misc(browserCmd) 1]
             if { $secondQuote != -1 } {
@@ -5585,7 +5585,7 @@ proc ::potato::eventSave {w} {
              } elseif { [lindex $lower 0] eq "ansi" } {
                set world($w,events,$this,$x) "$x"
              } else {
-               set world($w,events,$this,$x) [string range [lindex $lower 0] 0 0]
+               set world($w,events,$this,$x) [string index [lindex $lower 0] 0]
              }
           if { [llength $lower] == 2 && [lindex $lower 0] ne "normal" } {
                append world($w,events,$this,$x) "h"
@@ -7955,7 +7955,7 @@ proc ::potato::loadTranslationFile {file} {
   set i 0
   set multi ""
   while { 1 } {
-    if { [string trim $line] ne "" && [string range $line 0 0] ne "#" } {
+    if { [string trim $line] ne "" && [string index $line 0] ne "#" } {
             if { $i } {
               set i 0;
               if { $line ne "-" } {
@@ -13248,7 +13248,7 @@ proc ::potato::spellcheck {} {
 proc ::potato::glob2Regexp {pattern} {
 
   regsub -all {([^a-zA-Z0-9?*])} $pattern {\\\1} temp
-  set temp [string map [list "?" "." "*" ".*?"] $temp]
+  set temp [string map [list "?" "(.)" "*" "(.*?)"] $temp]
 
   return "^$temp\$";
 
