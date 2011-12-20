@@ -2658,7 +2658,17 @@ proc ::potato::connectVerifyComplete {c} {
      default {set translation "\r\n"}
   }
   if { [hasProtocol $c ssl] } {
-       tls::import $id
+       # We use -request 0 to not bother checking the certificate. Without this, self-signed certificates
+       # (which the majority of MUSHes use) fail by default. If we ever allow for more specific filtering
+       # of certificates, we'll need to -request 1 -require 1, and modify the verifySSL procedure to do
+       # more in-depth checks of the certificate, passing self-signed by default
+       # (And fix the error message below to only give the 'make sure port is enabled' message if we
+       # have an error, instead of a validation failure)
+       if { [catch {tls::import $id -command ::potato::connectVerifySSL -request 0} sslError] || [catch {tls::handshake $id} sslError] } {
+            outputSystem $c [T "Unable to negotiation SSL: %s. Please make sure the port is ssl-enabled." $sslError]
+            disconnect $c 0
+            return;
+          }
      }
   set conn($c,id,lineending) $translation
   set conn($c,id,lineending,length) [string length $conn($c,id,lineending)]
@@ -2698,6 +2708,49 @@ proc ::potato::connectVerifyComplete {c} {
   return;
 
 };# ::potato::connectVerifyComplete
+
+#: proc ::potato::connectVerifySSL
+#: arg option one of "error", "verify" or "info"
+#: arg args list of further options
+#: desc Callback function for tls::import, hacked from tls::callback
+#: return varies
+proc ::potato::connectVerifySSL {option args} {
+
+  switch -- $option {
+    "error" {
+      lassign $args chan msg
+      return $msg; # We don't use [error] or [return -code error] because
+                   # this is callback function, and we can't [catch] it
+    }
+    "verify" {
+      lassign $args chan dept cert rc err
+      return;
+      return $rc;
+      array set c $cert
+      if { $rc != 1 } {
+           puts "TLS/$chan: verify/$depth: Bad Cert: $err (rc = $rc)"
+         } else {
+           puts "TLS/$chan: verify/$depth: $c(subject)"
+         }
+      return $rc;
+    }
+    "info" {
+      lassign $args chan major minor state msg
+
+      if { $msg ne "" } {
+           append state ": $msg"
+         }
+      # For tracing
+      upvar #0 tls::$chan cb
+      set cb($major) $minor
+      #puts "TLS/$chan: $major/$minor: $state"
+    }
+    default {
+      return -code error "bad option \"$option\": must be one of error, info, or verify"
+    }
+  }
+
+};# ::potato::connectVerifySSL
 
 #: proc ::potato::sendLoginInfo
 #: arg c connection id
