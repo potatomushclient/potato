@@ -1,0 +1,5 @@
+#summary Version 2.0.0b10
+=Version 2.0.0b10=
+==Not Yet Released==
+
+  * Potato now handles it better when you attempt an SSL connection to a game/port which doesn't support SSL. Reported by Paige and Huz.
