@@ -2664,7 +2664,7 @@ proc ::potato::connectVerifyComplete {c} {
        # more in-depth checks of the certificate, passing self-signed by default
        # (And fix the error message below to only give the 'make sure port is enabled' message if we
        # have an error, instead of a validation failure)
-       if { [catch {tls::import $id -command ::potato::connectVerifySSL -request 0} sslError] || [catch {tls::handshake $id} sslError] } {
+       if { [catch {::tls::import $id -command ::potato::connectVerifySSL -request 0} sslError] || [catch {::tls::handshake $id} sslError] } {
             outputSystem $c [T "Unable to negotiation SSL: %s. Please make sure the port is ssl-enabled." $sslError]
             disconnect $c 0
             return;
@@ -7728,7 +7728,6 @@ proc ::potato::main {} {
   set potato(version) [source [file join [file dirname [info script]] "potato-version.tcl"]]
   set potato(contact) "talvo@talvo.com"
   set potato(webpage) "http://www.potatomushclient.com/"
-  set potato(windowingsystem) [tk windowingsystem]
 
   if { [info exists ::starkit::mode] && $::starkit::mode eq "starpack" } {
        set potato(homedir) [file dirname [info nameofexecutable]]
@@ -7783,9 +7782,9 @@ proc ::potato::main {} {
   
   basic_reqs
 
-  if { [catch {package require http} err] } {
-       errorLog "Unable to load http package: $err" warning
-     }
+  # This MUST be after basic_reqs, as the [tk] command isn't available on
+  # linux until that's called.
+  set potato(windowingsystem) [tk windowingsystem]
 
   treeviewHack;# hackily fix the fact that Treeviews can still be played with when disabled
 
@@ -7793,6 +7792,10 @@ proc ::potato::main {} {
   option add *TEntry.Cursor xterm
 
   errorLogWindow;# create a window for displaying error log messages
+
+  if { [catch {package require http} err] } {
+       errorLog "Unable to load http package: $err" warning
+     }
 
   if { ![file exists $dev] } {
        errorLog "Dev file \"[file nativename [file normalize $dev]]\" does not exist." message
