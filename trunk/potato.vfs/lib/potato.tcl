@@ -3039,14 +3039,16 @@ proc ::potato::debug_packet {c dir text} {
        toplevel $win(toplevel)
        wm title $win(toplevel) [T "Packet Debugger for \[%d. %s\]" $c [connInfo $c name]]
        pack [::ttk::frame $win(txt,frame)] -side top -expand 1 -fill both
-       pack [text $win(txt,btxt) -wrap word -yscrollcommand [list $win(txt,sb) set]] -side left -expand 0 -fill y
+       pack [text $win(txt,btxt) -wrap word] -side left -expand 0 -fill y
        configureTextWidget $c $win(txt,btxt)
        # Widths need to be set after running configureTextWidget.
        $win(txt,btxt) configure -width 37
-       pack [text $win(txt,bhex) -wrap word -yscrollcommand [list $win(txt,sb) set]] -side left -expand 0 -fill y
+       pack [text $win(txt,bhex) -wrap word] -side left -expand 0 -fill y
        configureTextWidget $c $win(txt,bhex)
        $win(txt,bhex) configure -width 102
-       pack [scrollbar $win(txt,sb) -orient vertical -command [list ::potato::multiscroll [list $win(txt,btxt) $win(txt,bhex)] yview]] -side left -fill y
+       pack [::ttk::scrollbar $win(txt,sb) -orient vertical -command [list ::potato::multiscroll [list $win(txt,btxt) $win(txt,bhex)] yview]] -side left -fill y
+       $win(txt,btxt) configure -yscrollcommand [list ::potato::multiscrollSet $win(txt,btxt) [list $win(txt,bhex)] $win(txt,sb)]
+       $win(txt,bhex) configure -yscrollcommand [list ::potato::multiscrollSet $win(txt,bhex) [list $win(txt,btxt)] $win(txt,sb)]
        bind $win(toplevel) <Destroy> [list set ::potato::conn($c,debugPackets) 0]
        update idletasks
        wm maxsize $win(toplevel) [winfo reqwidth $win(toplevel)] 0
@@ -8393,6 +8395,23 @@ proc ::potato::showStats {} {
   return;
 
 };# ::potato::showStats
+
+#: proc ::potato::multiscrollSet
+#: arg src source widget, to get scroll position from
+#: arg dst destination widgets, to set scroll position of
+#: arg sb scrollbar
+#: arg args args for scrollbar widget
+#: desc Scroll additional widgets, and the scrollbar, when one widget is scrolled.
+#: return nothing
+proc ::potato::multiscrollSet {src dst sb args} {
+
+  foreach x $dst {
+    $x yview moveto [lindex $args 0]
+  }
+  $sb set {*}$args
+
+  return;
+}
 
 #: proc ::potato::multiscroll
 #: arg widgets list of widgets
