@@ -10222,10 +10222,19 @@ proc ::potato::autoConnect {} {
 #: return nothing
 proc ::potato::mouseWheel {widget delta} {
 
-  if { $delta >= 0 } {
-       set cmd [list yview scroll [expr {-$delta/3}] pixels]
+  if { ![string is double -strict $delta] || ![winfo exists $widget] } {
+       return; # For some reason, $delta isn't always set right on MacOS, so be extra safe.
+     }
+
+  if { $::tcl_platform(os) eq "Darwin" } {
+       # Better MacOS values
+       set cmd [list yview scroll [expr {-15 * ($delta)}] pixels]
      } else {
-       set cmd [list yview scroll [expr {(2-$delta)/3}] pixels]
+       if { $delta >= 0 } {
+            set cmd [list yview scroll [expr {-$delta/3}] pixels]
+          } else {
+            set cmd [list yview scroll [expr {(2-$delta)/3}] pixels]
+          }
      }
   set over [winfo containing -displayof $widget {*}[winfo pointerxy $widget]]
   if { $over eq "" || [catch {$over {*}$cmd}] } {
