@@ -9319,6 +9319,8 @@ proc ::potato::setUpBindings {} {
   for {set i 1} {$i < 10} {incr i} {
      bind PotatoInput <Control-Key-$i> [list ::potato::showConn $i]
   }
+  
+  bind PotatoInput <Control-Key-0> [list ::potato::showConn 10]
 
   bind PotatoInput <Button-3> [list ::potato::inputWindowRightClickMenu %W %X %Y]
 
@@ -9461,14 +9463,14 @@ proc ::potato::setUpBindings {} {
 };# ::potato::setUpBindings
 
 #: proc ::potato::textCopy
-#: arg w widget path
-#: desc Perform a 'Copy' on the text widget $w, skipping elided characters. Based on Tk's built-in tk_textCopy
+#: arg win widget path
+#: desc Perform a 'Copy' on the text widget $win, skipping elided characters. Based on Tk's built-in tk_textCopy
 #: return nothing
-proc ::potato::textCopy {w} {
+proc ::potato::textCopy {win} {
 
-  if { ![catch {$w get -displaychars -- sel.first sel.last} data]} {
-       clipboard clear -displayof $w
-       clipboard append -displayof $w $data
+  if { ![catch {$win get -displaychars -- sel.first sel.last} data]} {
+       clipboard clear -displayof $win
+       clipboard append -displayof $win $data
      }
 
   return;
