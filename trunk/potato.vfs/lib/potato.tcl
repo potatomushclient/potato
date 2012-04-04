@@ -10347,6 +10347,11 @@ proc ::potato::send_to {c string sep history {prefix ""} {echo 1}} {
        set c [up]
      }
 
+  if { $sep eq "\n" && $::tcl_platform(platform) eq "macintosh" } {
+       # Standardise line endings on MacOS
+       set string [string map [list "\r\n" "\n" "\r" "\n"] $string]
+     }
+
   if { $sep eq "" } {
        send_to_sub $c $string $prefix $echo
      } else {
