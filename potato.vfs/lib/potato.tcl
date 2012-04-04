@@ -3191,11 +3191,12 @@ proc ::potato::get_mushageProcess {c line} {
        if { $start == -1 } {
             continue;
           } else {
-            lappend urlIndices [set tempa "end-[expr {$len-$start+1}]char"]
+            # The "10" in these calculations is to pass the timestamp suffix, [clock seconds]
+            lappend urlIndices [set tempa "end-[expr {$len-$start+1-10}]char"]
             if { $end == -1 } {
-                 lappend urlIndices [set tempb "end"]
+                 lappend urlIndices [set tempb "end-10"]
                } else {
-                 lappend urlIndices [set tempb "end-[expr {$len-$end}]char"]
+                 lappend urlIndices [set tempb "end-[expr {$len-$end-10}]char"]
                }
           }
     }
@@ -3327,12 +3328,13 @@ proc ::potato::get_mushageProcess {c line} {
        if { $world($w,act,clearOldNewActNotices) && [llength [$t tag nextrange newact 1.0]] } {
             $t delete {*}[$t tag ranges newact]
           }
-       $t insert end "\n" [list system center newact] [clock seconds] [list system center newact timestamp] $newActStr [list system center newact] 
+       $t insert end "\n" [list system center newact] $newActStr [list system center newact] [clock seconds] [list system center newact timestamp]
        set insertedAnything 1
      }
  
   if { !$empty && !$omit } {
-       $t insert end "\n" [lindex [list "" limited] $limit]  [clock seconds] [list timestamp] {*}$inserts
+       $t insert end "\n" [lindex [list "" limited] $limit] {*}$inserts
+       $t insert end  [clock seconds] [list timestamp]
        set insertedAnything 1
        if { [llength $urlIndices] } {
             $t tag add link {*}$urlIndices
@@ -3890,7 +3892,7 @@ proc ::potato::outputSystem {c msg {tags ""}} {
        return;
      }
   set aE [atEnd $conn($c,textWidget)]
-  $conn($c,textWidget) insert end "\n" $tags [clock seconds] [concat $tags timestamp] $msg $tags
+  $conn($c,textWidget) insert end "\n" $tags $msg $tags [clock seconds] [concat $tags timestamp]
   if { $aE } {
        $conn($c,textWidget) see end
      }
@@ -3903,7 +3905,7 @@ proc ::potato::outputSystem {c msg {tags ""}} {
              } else {
                set newline ""
              }
-          $conn($x) insert end $newline $tags [clock seconds] [concat $tags timestamp] $msg $tags
+          $conn($x) insert end $newline $tags $msg $tags [clock seconds] [concat $tags timestamp]
           if { $aE } {
                $conn($x) see end
              }
@@ -8139,7 +8141,7 @@ proc ::potato::showMessageTimestamp {widget x y} {
        return;
      }
 
-  set stamp [$widget tag prevrange timestamp $index]
+  set stamp [$widget tag nextrange timestamp $index]
   if { $stamp eq "" } {
        # No timestamp for line
        tooltipLeave $widget
