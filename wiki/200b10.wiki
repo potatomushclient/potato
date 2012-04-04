@@ -4,3 +4,5 @@
 
   * Potato now handles it better when you attempt an SSL connection to a game/port which doesn't support SSL. Reported by Paige and Huz.
   * The new Packet Debugger's two text windows scrolled correctly when you used the scrollbar, but not when you used the mousewheel or cursor keys. This has now been fixed.
+  * MacOS lineendings (LF) are now handled correctly when sending text to a MU on MacOS X. Reported by Minion.
+  * A long-standing bug involving scrolling with exceptionally long lines in the backscroll has finally been tracked down and fixed. Huzzah! Reported by Paige.
