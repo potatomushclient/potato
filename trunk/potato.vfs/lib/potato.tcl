@@ -1523,6 +1523,7 @@ proc ::potato::logWindow {{c ""}} {
   set conn($c,logDialog,append) 1
   set conn($c,logDialog,future) 1
   #set conn($c,logDialog,wrap) 0
+  set conn($c,logDialog,timestamps) 0
   set conn($c,logDialog,file) ""
 
   set bindings [list]
@@ -1542,6 +1543,10 @@ proc ::potato::logWindow {{c ""}} {
   pack [::ttk::checkbutton $frame.top.options.append -variable potato::conn($c,logDialog,append) \
              -onvalue 1 -offvalue 0 -text [T "Append to File?"] -underline 0] -side top -anchor w
   lappend bindings a $frame.top.options.append
+  pack [::ttk::checkbutton $frame.top.options.timestamps -variable potato::conn($c,logDialog,timestamps) \
+             -onvalue 1 -offvalue 0 -text [T "Show Timestamps?"] -underline 5] -side top -anchor w
+  lappend bindings t $frame.top.options.timestamps
+
   #pack [::ttk::checkbutton $frame.top.options.wrap -variable potato::conn($c,logDialog,wrap) \
   #           -onvalue 1 -offvalue 0 -text [T "Wrap Lines?"] -underline 0] -side top -anchor w
   #lappend bindings w $frame.top.options.wrap
@@ -1593,7 +1598,7 @@ proc ::potato::logWindowInvoke {c win} {
        return; # no file selected, or told not to log anything
      }
 
-  doLog $c $conn($c,logDialog,file) $conn($c,logDialog,append) $conn($c,logDialog,buffer) $conn($c,logDialog,future)
+  doLog $c $conn($c,logDialog,file) $conn($c,logDialog,append) $conn($c,logDialog,buffer) $conn($c,logDialog,future) $conn($c,logDialog,timestamps)
   unregisterWindow $c $win
   destroy $win
   array unset conn $c,logDialog,*
@@ -1607,10 +1612,11 @@ proc ::potato::logWindowInvoke {c win} {
 #: arg append to file if it exists, instead of overwriting?
 #: arg buffer "No Buffer" or "_none" to not include buffered output, "Main Window" or "_main" for $c's main window, or the name of a spawn window
 #: arg leave leave the logfile open for future output?
+#: arg timestamps Include timestamps for each logged line?
 #: desc Create a log file for connection $c, writing to file $file (and appending, if $append is true and the file exists). If $buffer != "_none"/"No Buffer",
 #: desc include output from one of the windows. If $leave, don't close the file, leave it open to log incoming text to, possibly causing us to close an already-open log file.
 #: return nothing
-proc ::potato::doLog {c file append buffer leave} {
+proc ::potato::doLog {c file append buffer leave timestamps} {
   variable conn;
   variable world;
   variable misc;
@@ -1648,13 +1654,22 @@ proc ::potato::doLog {c file append buffer leave} {
        set t ""
      }
 
+  if { $timestamps && [catch {clock format [clock seconds] -format $misc(clockFormat)}] } {
+       set timestamps 0
+     }
+
   if { [winfo exists $t] && [winfo class $t] eq {Text} } {
        set max [$t count -lines 1.0 end]
        for {set i 1} {$i < $max} {incr i} {
          if { "nobacklog" in [$t tag names $i.0] } {
               continue;
+            };
+         if { $timestamps } {
+              set curr "\[[clock format [$t get {*}[$t tag nextrange timestamp $i.0]] -format $misc(clockFormat)]\] "
+            } else {
+              set curr ""
             }
-         puts $fid [$t get -displaychars -- "$i.0" "$i.0 lineend"]
+         puts $fid "$curr[$t get -displaychars -- "$i.0" "$i.0 lineend"]"
        }
        flush $fid
      }
@@ -1662,6 +1677,7 @@ proc ::potato::doLog {c file append buffer leave} {
   if { $leave } {
        outputSystem $c [T "Now logging to \"%s\"." $file]
        set conn($c,log,$fid) [file nativename [file normalize $file]]
+       set conn($c,log,$fid,timestamps) $timestamps
      } else {
        outputSystem $c [T "Logged to \"%s\"." $file]
        close $fid
@@ -1681,7 +1697,7 @@ proc ::potato::stopLog {{c ""} {file ""}} {
   if { $c eq "" } {
        set c [up]
      }
-  if { [set count [llength [set list [array names conn $c,log,*]]]] == 0 } {
+  if { [set count [llength [set list [arraySubelem array $c,log]]]] == 0 } {
        return 0;# No open logs
      }
   set footer "\nLogging stopped at [clock format [clock seconds] -format $misc(clockFormat)]"
@@ -1695,6 +1711,7 @@ proc ::potato::stopLog {{c ""} {file ""}} {
           catch {puts $x $footer}
           close $x
           unset conn($c,log,$x)
+          array unset conn $c,log,$x,*
         }
      } else {
        if { ![info exists conn($c,log,$file)] } {
@@ -1723,6 +1740,7 @@ proc ::potato::stopLog {{c ""} {file ""}} {
        catch {puts $match $footer}
        close $match
        unset conn($c,log,$match)
+       array unset conn $c,log,$match,*
      }
 
   outputSystem $c $msg
@@ -1737,15 +1755,23 @@ proc ::potato::stopLog {{c ""} {file ""}} {
 #: return nothing
 proc ::potato::log {c str} {
   variable conn;
+  variable misc;
 
   if { $c eq "" } {
        set c [up]
      }
 
-  set logs [array names conn $c,log,*]
+  set logs [arraySubelem array $c,log]
   if { [llength $logs] } {
        foreach x [removePrefix $logs $c,log] {
-         puts $x $str
+         if { $conn($c,log,$x,timestamps) } {
+              if { ![info exists timestamp] } {
+                   set timestamp "\[[clock format [clock seconds] -format $misc(clockFormat)]]\]"
+                 }
+              puts $x "$timestamp $str"
+            } else {
+              puts $x $str
+            }
          flush $x
        }
      }
@@ -12206,7 +12232,7 @@ interp alias {} ::potato::slash_cmd_sw {} ::potato::slash_cmd_speedwalk
      }
 
   # Try and parse out options...
-  array set options [list -buffer 0 -append 1 -leave 1]
+  array set options [list -buffer 0 -append 1 -leave 1 -timestamps 0]
   set error ""
   set finished 0
   set file [list]
@@ -12242,7 +12268,7 @@ interp alias {} ::potato::slash_cmd_sw {} ::potato::slash_cmd_speedwalk
                   }
               } else {
                 # Looking for a value to the option $match
-                if { $match eq "-append" || $match eq "-leave" } {
+                if { $match in [list "-append" "-leave" "-timestamps"] } {
                      if { [string is boolean -strict $x] } {
                           set options($match) [string is true -strict $x]
                         } else {
@@ -12279,7 +12305,7 @@ interp alias {} ::potato::slash_cmd_sw {} ::potato::slash_cmd_speedwalk
        return;
      }
 
-  doLog $c $file $options(-append) $options(-buffer) $options(-leave)
+  doLog $c $file $options(-append) $options(-buffer) $options(-leave) $options(-timestamps)
   return;     
 
 };# /log
