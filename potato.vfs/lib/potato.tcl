@@ -416,6 +416,14 @@ proc ::potato::manageWorldVersion {w version} {
        set world($w,charList) $newCharList
      }
 
+  if { ! ($version & $wf(event_noactivity)) } {
+       foreach x [array names world $w,events,*,pattern] {
+         set x [string range $x 0 end-8]
+         if { ![info exists world($x,noActivity)] } {
+              set world($x,noActivity) 0
+            }
+       }
+     }
 
   # Example:
   # if { ! ($version & $wf(some_new_feature)) } {
@@ -565,6 +573,7 @@ proc ::potato::worldFlags {{total 0}} {
   set f(new_encoding)        4    ;# Has the new $w,encoding,* options in place of $w,unicode
   set f(obfusticated_pw)     8    ;# Passwords are obfusticated
   set f(many_chars)         16    ;# World has multiple characters in $world($w,charList) as [list [list name pw] [list name pw]], not $world($w,charName) and $world($w,charPass)
+  set f(event_noactivity)   32    ;# Events have a noActivity option
 
   if { !$total } {
        return [array get f];
@@ -3242,12 +3251,16 @@ proc ::potato::get_mushageProcess {c line} {
 
   set tagList [list margins]
   set omit 0
+  set noActivity 0
   if { $eventInfo(matched) } {
        if { $eventInfo(omit) } {
             set omit 1
           }
        if { $eventInfo(log) } {
             lappend tagList nobacklog
+          }
+       if { $eventInfo(noActivity) } {
+            set noActivity 1
           }
        set eventfg $eventInfo(fg)
        set eventbg $eventInfo(bg)
@@ -3343,7 +3356,7 @@ proc ::potato::get_mushageProcess {c line} {
      } else {
        set showNewAct 0
      }
-  if { !$empty && $up != $c && $world($w,act,actInWorldNotice) } {
+  if { !$empty && !$noActivity && $up != $c && $world($w,act,actInWorldNotice) } {
        deleteSystemMessage $up actIn$c
        outputSystem $up [T "----- Activity in %d. %s -----" $c $world($w,name)] [list center actIn$c]
      }
@@ -3420,7 +3433,7 @@ proc ::potato::get_mushageProcess {c line} {
           } elseif { $showNewAct } {
             set conn($c,idle) 1
           }
-       if { [focus -displayof .] eq "" } {
+       if { !$noActivity && [focus -displayof .] eq "" } {
             flash $w
           }
      }
@@ -3755,7 +3768,7 @@ proc ::potato::events {c str} {
 
   set break 0
   array set retVals [list matched 0 result "" pattern "" matchtype "" omit 0 log 0 fg "" bg "" \
-               spawn 0 spawnTo "" input,window 0 input,string "" send "" start -1 end -1]
+               spawn 0 spawnTo "" input,window 0 input,string "" send "" start -1 end -1 noActivity 0]
 
   set strL [string tolower $str]
   set focus [focus -displayof .]
@@ -3826,6 +3839,9 @@ proc ::potato::events {c str} {
            }
         if { !$retVals(omit) } {
              set retVals(omit) $world($w,events,$x,omit)
+           }
+        if { !$retVals(noActivity) && [info exists world($w,events,$x,noActivity)] } {
+             set retVals(noActivity) $world($w,events,$x,noActivity)
            }
         if { !$retVals(log) } {
              set retVals(log) $world($w,events,$x,log)
@@ -4909,6 +4925,7 @@ proc ::potato::addNewWorld {name host port temp} {
   set world($w,events,0,log) 0
   set world($w,events,0,matchtype) "wildcard"
   set world($w,events,0,omit) 1
+  set world($w,events,0,noActivity) 0
   set world($w,events,0,pattern) "FugueEdit > *"
   set world($w,events,0,pattern,int) "^FugueEdit > (.*)$"
   set world($w,events,0,send) ""
@@ -5428,6 +5445,10 @@ proc ::potato::eventConfig {{w ""}} {
   pack [::ttk::checkbutton $frame.right.row07.logCB -variable potato::eventConfig($w,log) \
                -onvalue 1 -offvalue 0] -side left -anchor nw
   lappend rightList $frame.right.row07.logCB
+  pack [::ttk::label $frame.right.row07.actL -text [T "Activity?"]] -side left -anchor nw -padx 2
+  pack [::ttk::checkbutton $frame.right.row07.actCB -variable potato::eventConfig($w,noActivity) \
+               -onvalue 1 -offvalue 0] -side left -anchor nw
+  lappend rightList $frame.right.row07.actCB
 
   pack [::ttk::frame $frame.right.row08] -side top -anchor nw -fill x -padx 5 -pady 2
   pack [::ttk::label $frame.right.row08.l -text [T "Spawn?"] -width 10 -justify left -anchor w] -side left -anchor nw -padx 2
@@ -5575,6 +5596,7 @@ proc ::potato::eventAdd {w} {
   set world($w,events,$x,matchtype) "wildcard"
   set world($w,events,$x,inactive) "always"
   set world($w,events,$x,omit) 0
+  set world($w,events,$x,noActivity) 0
   set world($w,events,$x,log) 0
   set world($w,events,$x,fg) ""
   set world($w,events,$x,bg) ""
@@ -5644,7 +5666,7 @@ proc ::potato::eventSave {w} {
   variable world;
 
   set this $eventConfig($w,conf,currentlyEdited)
-  foreach x [list pattern matchtype case enabled continue omit log spawn spawnTo] {
+  foreach x [list pattern matchtype case enabled continue omit log noActivity spawn spawnTo] {
      set world($w,events,$this,$x) $eventConfig($w,$x)
   }
 
@@ -5722,7 +5744,7 @@ proc ::potato::eventConfigSelect {w states} {
 
   if { $this eq "" } {
        # Clear all info
-       foreach x [list pattern matchtype case enabled continue omit log spawn spawnTo] {
+       foreach x [list pattern matchtype case enabled continue omit log noActivity spawn spawnTo] {
           set eventConfig($w,$x) ""
        }
        set eventConfig($w,inactive) "Always"
@@ -5754,7 +5776,7 @@ proc ::potato::eventConfigSelect {w states} {
   # the comboboxes, because it's too stupid to let you give a list of values to display /and/
   # a corresponding list of values to store in the variables. We also have a couple of text
   # widgets to insert stuff into.
-  foreach x [list pattern matchtype case enabled continue omit log spawn spawnTo] {
+  foreach x [list pattern matchtype case enabled continue omit log noActivity spawn spawnTo] {
      set eventConfig($w,$x) $world($w,events,$this,$x)
   }
 
