@@ -3227,11 +3227,11 @@ proc ::potato::get_mushageProcess {c line} {
             continue;
           } else {
             # The "10" in these calculations is to pass the timestamp suffix, [clock seconds]
-            lappend urlIndices [set tempa "end-[expr {$len-$start+1-10}]char"]
+            lappend urlIndices [set tempa "end-[expr {$len-$start+1+10}]char"]
             if { $end == -1 } {
-                 lappend urlIndices [set tempb "end-10"]
+                 lappend urlIndices [set tempb "end-10char"]
                } else {
-                 lappend urlIndices [set tempb "end-[expr {$len-$end-10}]char"]
+                 lappend urlIndices [set tempb "end-[expr {$len-$end+10}]char"]
                }
           }
     }
