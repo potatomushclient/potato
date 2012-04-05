@@ -24,6 +24,7 @@ The fields are:
   * *Omit From*: Do not print this text to
     * Display: The main output window
     * Log: Any log files
+	* Activity: Suppresses taskbar and system tray flashing, and 'Activity in World' messages, for this event
   * *Spawn?*: Should we spawn this text? Must be ticked to enable spawning.
     * To: A space-separated list of spawn windows to spawn the text to
   * *Send*: Text to send to the MU`*`. Multiple lines can be entered, and will be sent separately. Can include [SlashCommands /commands].
