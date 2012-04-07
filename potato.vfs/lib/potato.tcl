@@ -1706,7 +1706,7 @@ proc ::potato::stopLog {{c ""} {file ""}} {
   if { $c eq "" } {
        set c [up]
      }
-  if { [set count [llength [set list [arraySubelem array $c,log]]]] == 0 } {
+  if { [set count [llength [set list [arraySubelem conn $c,log]]]] == 0 } {
        return 0;# No open logs
      }
   set footer "\nLogging stopped at [clock format [clock seconds] -format $misc(clockFormat)]"
@@ -1770,7 +1770,7 @@ proc ::potato::log {c str} {
        set c [up]
      }
 
-  set logs [arraySubelem array $c,log]
+  set logs [arraySubelem conn $c,log]
   if { [llength $logs] } {
        foreach x [removePrefix $logs $c,log] {
          if { $conn($c,log,$x,timestamps) } {
