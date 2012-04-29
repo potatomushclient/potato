@@ -8256,7 +8256,7 @@ proc ::potato::tooltipLeave {widget} {
 proc ::potato::tooltipShow {widget {text ""} {x ""} {y ""}} {
   variable tooltip;
 
-  if { [winfo containing {*}[winfo pointerxy $widget]] != $widget } {
+  if { ![winfo exists $widget] || [winfo containing {*}[winfo pointerxy $widget]] ne $widget } {
        return;
      }
   if { $text eq "" } {
