@@ -9423,6 +9423,7 @@ proc ::potato::setUpBindings {} {
 
   bind PotatoInput <MouseWheel> {}
   bind PotatoOutput <MouseWheel> {}
+  bind Text <MouseWheel> {}
   bind all <MouseWheel> [list potato::mouseWheel %W %D]
 
   # Make Control-BackSpace delete the previous word
