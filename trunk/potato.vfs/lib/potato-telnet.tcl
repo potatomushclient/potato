@@ -340,7 +340,11 @@ proc ::potato::telnet::process_sub_3_1 {c str} {
                  set encodings [lsort [encoding names]]
                  foreach charset [split $charsets $sep] {
                     set charsetLower [string tolower $charset]
-                    if { [set charpos [lsearch $encodings $charsetLower]] >= 0 } {
+                    if { [string range $charsetLower 0 3] eq "iso-" } {
+                         # Pesky Tcl, not using the first -
+                         set charsetISO "iso[string range $charsetLower 4 end]"
+                       }
+                    if { [set charpos [lsearch $encodings $charsetLower]] >= 0 || ([info exists charsetISO] && [set charpos [lsearch $encodings $charsetISO]] >= 0) } {
                          # Got one!
                          set cs(serverName) [escape $charset]
                          set cs(clientName) [lindex $encodings $charpos]
