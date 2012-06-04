@@ -11543,7 +11543,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
 
 };# ::potato::slash_cmd_tinyurl
 
-#: /setprefix [[<window>]=<prefix>]
+#: /setprefix [[<window>=]<prefix>]
 #: Set the prefix for <window>, or the current output window (if not given) to <prefix>.
 ::potato::define_slash_cmd setprefix {
   variable potato;
@@ -11570,7 +11570,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
   if { $window eq "" } {
        set window [textWidgetName [activeTextWidget] $c]
      } elseif { ![regexp $potato(spawnRegexp) $window] } {
-       beep -displayof .
+       bell -displayof .
        return;
      }
 
