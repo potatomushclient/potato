@@ -1132,7 +1132,7 @@ proc ::skin::potato::show {c} {
   $widgets(statusbar,modes,sub,multi) configure -textvariable ::potato::conn($c,input[::potato::connInfo $c inputFocus],mode)
 
   update idletasks
-  pack $widgets(conn,$c,txtframe) -in $widgets(pane,top) -side left -expand 1 -fill both -anchor nw -pady 0
+  pack $widgets(conn,$c,txtframe) -in $widgets(pane,top) -side left -expand 1 -fill both -anchor nw -pady 0 -padx [list 3 0]
   fixWindowOrder $c
 
   if { $c == 0 } {
