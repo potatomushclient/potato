@@ -8,3 +8,5 @@
   * A long-standing bug involving scrolling with exceptionally long lines in the backscroll has finally been tracked down and fixed. Huzzah! Reported by Paige.
   * Logs can now optionally include timestamps. Suggested by anony858.
   * It's now possible to suppress some Activity notifications for specific [Events]. Suggestion and patch by Huz.
+  * The mousewheel could occasionally scroll two text widgets at once. Reported by Paige.
+  * A new per-world option tells Potato to send a Telnet NOP (which does nothing) at regular intervals, to act as a keepalive. Suggested by Reaver.
