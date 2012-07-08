@@ -425,4 +425,14 @@ proc ::potato::telnet::do_NAWS {c} {
 
 };# ::potato::telnet::do_NAWS
 
+proc ::potato::telnet::send_keepalive {c} {
+  upvar ::potato::conn conn;
+  variable tCmd;
+
+  set keepalive "$tCmd(IAC)$tCmd(NOP)"
+
+  ::potato::sendRaw $c $keepalive 1
+
+  return;
+};# ::potato::telnet::send_keepalive
 ::potato::telnet::init
