@@ -962,6 +962,7 @@ proc ::potato::mailWindow {{c ""}} {
   set menu [menu $win.m -tearoff 0]
   $win configure -menu $menu
   $menu add cascade -menu [set fileMenu [menu $menu.file -tearoff 0]] {*}[menu_label [T "&File"]]
+  $menu add cascade -menu [set editMenu [menu $menu.edit -tearoff 0]] {*}[menu_label [T "&Edit"]]
 
   pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both
 
@@ -1030,6 +1031,11 @@ proc ::potato::mailWindow {{c ""}} {
 
   bind $win <Escape> [list $btns.cancel invoke]
   bind $win <Destroy> [list ::potato::mailWindowCleanup $c]
+
+  $editMenu add command {*}[menu_label [T "&Copy"]] -command [list event generate $textWidget <<Copy>>] -accelerator Ctrl+C
+  $editMenu add command {*}[menu_label [T "C&ut"]] -command [list event generate $textWidget <<Cut>>] -accelerator Ctrl+X
+  $editMenu add command {*}[menu_label [T "&Paste"]] -command [list event generate $textWidget <<Paste>>] -accelerator Ctrl+V
+  $editMenu configure -postcommand [list ::potato::editMenuCXV $editMenu 0 1 2 $textWidget]
 
   mailWindowFormatChange $c
 
@@ -1127,6 +1133,44 @@ proc ::potato::mailWindowCleanup {c} {
   return;
 
 };# potato::mailWindowCleanup
+
+#: proc ::potato::editMenuCXV
+#: arg menu Path of menu
+#: arg copyIndex Index of 'Copy' command in the menu, or -1 for none
+#: arg cutIndex Index of 'Cut' command in the menu, or -1 for none
+#: arg pasteIndex Index of 'Paste' command in the menu, or -1 for none
+#: arg text Path of text widget
+#: desc When an Edit menu is being posted, set the states for the Copy, Cut and Paste options, based on
+#: desc selected text in a text widget and current clipboard contents.
+#: return nothing
+proc ::potato::editMenuCXV {menu copyIndex cutIndex pasteIndex text} {
+
+  if { ![winfo exists $text] || [$text cget -state] eq "disabled" } {
+       $menu entryconfigure $copyIndex -state disabled
+       $menu entryconfigure $cutIndex -state disabled
+       $menu entryconfigure $pasteIndex -state disabled
+       return;
+     }
+
+  set sel [llength [$text tag nextrange sel 1.0]]
+  if { $sel } {
+       $menu entryconfigure $copyIndex -state normal
+       $menu entryconfigure $cutIndex -state normal
+     } else {
+       $menu entryconfigure $copyIndex -state disabled
+       $menu entryconfigure $cutIndex -state disabled
+     }
+
+    if { ![catch {::tk::GetSelection $text CLIPBOARD} clipboard] && [string length $clipboard] } {
+       set state normal
+     } else {
+       set state disabled
+     }
+  $menu entryconfigure $pasteIndex -state $state
+
+  return;
+
+};# ::potato::editMenuCXV
 
 #: proc ::potato::reshowWindow
 #: arg win the window to re-show
@@ -9359,15 +9403,15 @@ proc ::potato::inputWindowRightClickMenu {input x y} {
      } else {
        set state disabled
      }
-  $m add command {*}[menu_label [T "&Copy"]] -accelerator Ctrl+C -command [list tk_textCopy $input] -state $state
-  $m add command {*}[menu_label [T "C&ut"]] -accelerator Ctrl+X -command [list tk_textCut $input] -state $state
+  $m add command {*}[menu_label [T "&Copy"]] -accelerator Ctrl+C -command [list event generate $input <<Copy>>] -state $state
+  $m add command {*}[menu_label [T "C&ut"]] -accelerator Ctrl+X -command [list event generate $input <<Cut>>] -state $state
 
   if { ![catch {::tk::GetSelection $input CLIPBOARD} txt] && [string length $txt] } {
        set state normal
      } else {
        set state disabled
      }
-  $m add command {*}[menu_label [T "&Paste"]] -accelerator Ctrl+V -command [list tk_textPaste $input] -state $state
+  $m add command {*}[menu_label [T "&Paste"]] -accelerator Ctrl+V -command [list event generate $input <<Paste>>] -state $state
 
   tk_popup $m $x $y
 
@@ -12835,36 +12879,43 @@ proc ::potato::textEditor {{c ""}} {
   grid_with_scrollbars $text $sbX $sbY
 
   set menu [menu $win.menu -tearoff 0]
-  $win configure -menu $win.menu
-  set menuAction [menu $menu.action -tearoff 0]
-  set menuConvert [menu $menu.convert -tearoff 0]
+  $win configure -menu $menu
+  set actionMenu [menu $menu.action -tearoff 0]
+  set editMenu [menu $menu.edit -tearoff 0]
   # set menuColour [menu $menu.colour -tearoff 0]
   # set menuColourBG [menu $menu.colourBG -tearoff 1]
   # set menuColourFG [menu $menu.colourFG -tearoff 1]
-  $menu add cascade {*}[menu_label [T "&Action"]] -menu $menuAction
+  $menu add cascade {*}[menu_label [T "&Action"]] -menu $actionMenu 
+  $menu add cascade {*}[menu_label [T "&Edit"]] -menu $editMenu
 
   set allTxt [format {[%s get 1.0 end-1char]} $text]
-  $menuAction add command {*}[menu_label [T "Send to &World"]] \
+  $actionMenu add command {*}[menu_label [T "Send to &World"]] \
           -command [format {::potato::send_to %s %s \n 1} $c $allTxt]
-  $menuAction add command {*}[menu_label [T "Place in &Top Input Window"]] \
+  $actionMenu add command {*}[menu_label [T "Place in &Top Input Window"]] \
           -command [format {::potato::showInput %s 1 %s 1} $c $allTxt]
-  $menuAction add command {*}[menu_label [T "Place in &Bottom Input Window"]] \
+  $actionMenu add command {*}[menu_label [T "Place in &Bottom Input Window"]] \
           -command [format {::potato::showInput %s 2 %s 1} $c $allTxt]
-  $menuAction add separator
-  $menuAction add cascade {*}[menu_label [T "&Convert..."]] -menu $menuConvert
-  # $menuAction add cascade {*}[menu_label [T "&ANSI Colour..."] -menu $menuColour]
-  $menuAction add separator
-  $menuAction add command {*}[menu_label [T "&Open..."]] -command [list ::potato::textEditorOpen $text]
-  $menuAction add command {*}[menu_label [T "&Save As..."]] -command [list ::potato::textEditorSave $text]
+  $actionMenu add separator
+  set actionMenuConvert [menu $actionMenu.convert -tearoff 0]
+  $actionMenu add cascade {*}[menu_label [T "&Convert..."]] -menu $actionMenuConvert 
+  # $actionMenu add cascade {*}[menu_label [T "&ANSI Colour..."] -menu $menuColour]
+  $actionMenu add separator
+  $actionMenu add command {*}[menu_label [T "&Open..."]] -command [list ::potato::textEditorOpen $text]
+  $actionMenu add command {*}[menu_label [T "&Save As..."]] -command [list ::potato::textEditorSave $text]
 
-  $menuConvert add command {*}[menu_label [T "&Returns to %r"]] -command [list ::potato::escapeChars $text 0 1 0] -accelerator Ctrl+R
-  $menuConvert add command {*}[menu_label [T "&Spaces to %b"]] -command [list ::potato::escapeChars $text 0 0 1] -accelerator Ctrl+S
-  $menuConvert add command {*}[menu_label [T "&Escape Special Characters"]] -command [list ::potato::escapeChars $text] -accelerator Ctrl+E
+  $actionMenuConvert add command {*}[menu_label [T "&Returns to %r"]] -command [list ::potato::escapeChars $text 0 1 0] -accelerator Ctrl+R
+  $actionMenuConvert add command {*}[menu_label [T "&Spaces to %b"]] -command [list ::potato::escapeChars $text 0 0 1] -accelerator Ctrl+S
+  $actionMenuConvert add command {*}[menu_label [T "&Escape Special Characters"]] -command [list ::potato::escapeChars $text] -accelerator Ctrl+E
 
-  # $menuConvert add comand {*}[menu_label [T "&ANSI Colours to Tags"]] -command [list ::potato::textEditorConvertANSI $text]
+  # $actionMenuConvert add comand {*}[menu_label [T "&ANSI Colours to Tags"]] -command [list ::potato::textEditorConvertANSI $text]
   
   # Allow for saving to a file, including hard-wrapping and auto-indenting! #abc
   # Do ANSI Colour conversion stuff! #abc
+
+  $editMenu add command {*}[menu_label [T "&Copy"]] -command [list event generate $text <<Copy>>] -accelerator Ctrl+C
+  $editMenu add command {*}[menu_label [T "C&ut"]] -command [list event generate $text <<Cut>>] -accelerator Ctrl+X
+  $editMenu add command {*}[menu_label [T "&Paste"]] -command [list event generate $text <<Paste>>] -accelerator Ctrl+V
+  $editMenu configure -postcommand [list ::potato::editMenuCXV $editMenu 0 1 2 $text]
 
   bind $text <Control-r> [list ::potato::escapeChars $text 0 1 0]
   bind $text <Control-s> [list ::potato::escapeChars $text 0 0 1]
