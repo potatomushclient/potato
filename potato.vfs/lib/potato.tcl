@@ -67,6 +67,7 @@ proc ::potato::setPrefs {readfile} {
   set world(-1,telnet,naws) 1
   set world(-1,telnet,term) 1
   set world(-1,telnet,term,as) ""
+  set world(-1,telnet,keepalive) 0
   set world(-1,encoding,start) iso8859-1
   set world(-1,encoding,negotiate) 1
   set world(-1,groups) [list]
@@ -6162,6 +6163,10 @@ $sub.cb state disabled
   pack [::ttk::label $sub.label -text [T "Negotiate NAWS?"] -width 35 -justify left -anchor w] -side left -padx 3
   pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,telnet,naws) -onvalue 1 -offvalue 0] -side left
 
+  pack [set sub [::ttk::frame $frame.keepalive]] -side top -pady 5 -anchor nw
+  pack [::ttk::label $sub.label -text [T "Use NOP Keepalive?"] -width 35 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,telnet,keepalive) -onvalue 1 -offvalue 0] -side left
+
   pack [set sub [::ttk::frame $frame.doTerm]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "Send Client Info?"] -width 35 -justify left -anchor w] -side left -padx 3
   pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,telnet,term) -onvalue 1 -offvalue 0] -side left
@@ -7041,7 +7046,7 @@ proc ::potato::configureTimerAddEdit {w add win} {
 #: arg text path to text widget containing command string
 #: desc For world $w, use the info saved in worldconfig($w,timer,ae,*) and the text in the $text widget 
 #: desc (which holds the cmds to run for the timer), save the timer info. worldconfig($w,timer,ae) is the id of the timer to edit, 
-#: descor the empty string to add a timer. We must also update the info displayed
+#: desc or the empty string to add a timer. We must also update the info displayed
 #: return nothing
 proc ::potato::configureTimerSave {w text} {
   variable worldconfig;
@@ -7950,9 +7955,31 @@ proc ::potato::main {} {
 
   after idle [list ::potato::autoConnect]
 
+  after idle [list ::potato::keepalive]
+
   return;
 
 };# ::potato::main
+
+#: proc ::potato::keepalive
+#: desc Send a Telnet NOP to each connection, as a keepalive, and repeat
+#: desc every 45 seconds.
+#: return nothing
+proc ::potato::keepalive {} {
+  variable world;
+  variable conn;
+
+  foreach c [connIDs] {
+    if { $conn($c,connected) == 1 && $world($conn($c,world),telnet,keepalive) } {
+         ::potato::telnet::send_keepalive $c
+       }
+  }
+
+  after 45000 [list ::potato::keepalive]
+
+  return;
+
+};# ::potato::keepalive
 
 #: proc ::potato::i18nPotato
 #: desc Set up the translation stuff.
