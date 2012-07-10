@@ -24,7 +24,27 @@ A "/command" is a special command you can type into the input box (or anywhere e
   * `/quick <address>` - Perform a [QuickConnect quick connect] to `<address>`, which is either a `host:port` or `host port` string.
   * `/reconnect` - Reconnect the current connection.
   * `/rename [<name>]` - Set a temporary name for the current connection, or clear the existing temporary name. Useful if you connect to one world multiple times, to make them easier to distinguish.
-  * `/runmacro blablabla`
+  * `/runmacro <macro>` - Run the given `<macro>`.
+  * `/send <string>` - Send `<string>` to the current connection, with no /command or variable parsing.
+  * `/set <varname>=<value>` - Set a [SlashCommandVariables variable] for the current connection.
+  * `/setglobal <varname>=<value>` - Set a [SlashCommandVariables variable] for all connections.
+  * `/setprefix [<window>=]<prefix>` - Set a prefix for the output window `<window>` or for the current output window if no `<window>` is given.
+  * `/show <number>` - Show connection number `<number>`.
+  * `/show [<number>.]<window>` - Show output window `<window>` for connection number `<number>`, or the current connection if `<number>` is omitted.
+  * `/silent <command>` - Run the given /command without producing its normal output.
+  * `/slash/` - Show a list of the available /commands.
+  * `/speedwalk <dir> [<dir> ... <dir>]` - Send a number of movement commands to the current connection, as specified by the list of `<dir>`s. Each direction should be one of *N*, *S*, *E*, *W*, *NW*, *NE*, *SE*, *SW*, *U*, *D* or *O* (for cardinal directions, 'Up', 'Down' and 'Out'), possibly prefixed by a number, to repeat it that many times. For instance, `/speedwalk 3n o 2sw` would send `north`, `north`, `north`, `out`, `southwest`, `southwest`.
+  * `/tcl` - On Windows, this command will open a Tcl Command console where Tcl code can be entered.
+  * `/tinyurl <url>` - Generate a shorter version of `<url>` and display it, using the configured TinyURL provider.
+  * `/tinyurl <string>` - Replace each URL in `<string>` with a shortended version, using the configured TinyURL provider, and send the resulting string to the current connection.
+  * `/toggle [<direction>]` - Toggle to the next connection. If `<direction>` is "down" or "-1", toggle backwards to the previous connection instead.
+  * `/unlimit` - Stop filtering output. See [SlashCommandsLimit /limit] for more details.
+  * `/unset <varname>` - Unset a connection-specific variable created by `/set`.
+  * `/unsetglobal <varname>` - Unset a global variable created by `/setglobal`.
+  * `/vars` - Show all variables available to this connection set with `/set` and `/setglobal`.
+  * `/web <url>` - Launch a web browser to the given URL. 
+  * `/world` - Alias for `/show`.
+  * `/w` - Alias for `/show`.
 
 
 

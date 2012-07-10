@@ -12,3 +12,5 @@
   * A new [ConfigureWorldsConnectionTelnet per-world option] tells Potato to send a Telnet NOP (which does nothing) at regular intervals, to act as a keepalive. Suggested by Reaver.
   * Added a small margin to the left of the output text, to make selecting easier on some platforms. Requested by Minion.
   * New menu entries in the Text Editor and Mail Window for Cut/Copy/Paste. Suggested by Fally.
+  * `/show` is now aliased to `/world` and `/w` for SimpleMU compatability. Suggested by AnneLions.
+  * Help for more [SlashCommands /commands] added after prodding by AnneLions.
