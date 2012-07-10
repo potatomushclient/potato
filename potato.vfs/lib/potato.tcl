@@ -11484,6 +11484,33 @@ proc ::potato::define_slash_cmd {cmd code} {
 
 };# ::potato::define_slash_cmd
 
+#: proc ::potato::alias_slash_cmd
+#: arg orig Original /command name
+#: arg new New /command name for alias
+#: desc Alias a /command. See define_slash_cmd
+#: return 1 on success, 0 on failure
+proc ::potato::alias_slash_cmd {orig new} {
+
+  set slashcmds [info commands ::potato::slash_cmd_*]
+  if { "::potato::slash_cmd_$orig" ni $slashcmds || "::potato::slash_cmd_$new" in $slashcmds } {
+       return 0; # orig doesn't exist, or new already does
+     }
+
+  set cmdstring [list proc ::potato::slash_cmd_$new]
+  set args [list]
+  foreach x [info args ::potato::slash_cmd_$orig] {
+    if { [info default ::potato::slash_cmd_$orig $x default] } {
+         lappend args [list $x $default]
+       } else {
+         lappend args [list $x]
+       }
+  }
+  proc ::potato::slash_cmd_$new $args [info body ::potato::slash_cmd_$orig]
+
+  return 1;
+
+};# ::potato::alias_slash_cmd
+
 #: proc ::potato::customSlashCommand
 #: arg c connection id
 #: arg w world id
@@ -12047,6 +12074,9 @@ proc ::potato::cleanup_afters {c} {
      }
 
 };# /show
+
+::potato::alias_slash_cmd show world
+::potato::alias_slash_cmd show w
 
 #: /slash
 #: Print a list of all /commands
