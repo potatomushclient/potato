@@ -2744,7 +2744,8 @@ proc ::potato::connectVerifyComplete {c} {
        # more in-depth checks of the certificate, passing self-signed by default
        # (And fix the error message below to only give the 'make sure port is enabled' message if we
        # have an error, instead of a validation failure)
-       if { [catch {::tls::import $id -command ::potato::connectVerifySSL -request 0} sslError] || [catch {::tls::handshake $id} sslError] } {
+       if { [catch {::tls::import $id -command ::potato::connectVerifySSL -request 0 -cipher "ALL"} sslError] || [catch {::tls::handshake $id} sslError] } {
+            # -cipher can probably be ALL:!LOW:!EXP:+SSLv2:@STRENGTH but I'd rather be less secure than risk some games not working
             outputSystem $c [T "Unable to negotiation SSL: %s. Please make sure the port is ssl-enabled." $sslError]
             disconnect $c 0
             return;
