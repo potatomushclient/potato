@@ -9681,7 +9681,7 @@ proc ::potato::keyboardShortcutWin {} {
   pack [::ttk::label $win.l -text [T "Select a command, then click a button to edit it's binding"]] \
           -side top -padx 4 -pady 8
 
-  pack [::ttk::frame $win.tree] -side top -anchor nw -fill both
+  pack [::ttk::frame $win.tree] -side top -anchor nw -expand 1 -fill both
   set sbX $win.tree.x
   set sbY $win.tree.y
   set tree [::ttk::treeview $win.tree.tree -columns [list Command Shortcut] \
