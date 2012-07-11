@@ -34,7 +34,6 @@ svn checkout http://potatomushclient.googlecode.com/svn/wiki/ help
 Download the [GettingTcl TclKit] into the potato.vfs directory, and then drag-and-drop the file "main.tcl" onto the TclKit.exe to run.
 
 ==Linux and MacOS X==
-===Install Tcl and TK===
 ===Source===
 Extract the Potato.zip file into the directory of your choice drive - it contains a folder called potato.vfs. [GettingTcl Install Tcl and Tk], then run
 {{{
