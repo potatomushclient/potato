@@ -13663,6 +13663,7 @@ proc ::potato::basic_reqs {} {
         append msg "the website ($potato(webpage)), and contact the author if you have\n"
         append msg "any further problems."
         tk_messageBox -icon error -title "Potato" -type ok -message $msg
+        tk_messageBox -icon error -title "Potato" -type ok -message "Error: $err"
         exit;
      }
 
