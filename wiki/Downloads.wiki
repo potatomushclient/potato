@@ -12,9 +12,11 @@ You can download the *[http://code.google.com/p/potatomushclient/downloads/list?
 
 ==Linux==
 
-The latest Linux binaries are *[http://code.google.com/p/potatomushclient/downloads/list?can=3&q=OpSys%3ALinux+Type%3AExecutable&colspec=Filename+Summary+Uploaded+Size+DownloadCount+Opsys+Type available here]*. You can also download [http://code.google.com/p/potatomushclient/downloads/list?can=1&q=OpSys%3ALinux+Type%3AExecutable&colspec=Filename+Summary+Uploaded+Size+DownloadCount+Opsys+Type older versions].
+The easiest way to run Potato on Linux is currently [RunFromSource running from source].
 
-_Note: Currently (as of 2.0.0b5), you must have libstdc++5 installed to run Potato on Linux, though this should change soon. On Fedora this is provided by the 'compat-libstdc++' package._
+32 bit Linux binaries can be found at *[http://code.google.com/p/potatomushclient/downloads/list?can=3&q=OpSys%3ALinux+Type%3AExecutable&colspec=Filename+Summary+Uploaded+Size+DownloadCount+Opsys+Type available here]*. You can also download [http://code.google.com/p/potatomushclient/downloads/list?can=1&q=OpSys%3ALinux+Type%3AExecutable&colspec=Filename+Summary+Uploaded+Size+DownloadCount+Opsys+Type older versions].
+
+_Note: To run these on a 64 bit system you may need compatibility libraries. On Fedora this is provided by the 'compat-libstdc++' package. Functionality on other distros is tentative. 64 bit binaries should be available with next release._
 
 ==MacOS X==
 
