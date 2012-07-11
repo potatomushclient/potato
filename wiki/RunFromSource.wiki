@@ -69,6 +69,7 @@ svn checkout http://potatomushclient.googlecode.com/svn/wiki/ help
 
 If you're using your system install of Tcl, may need to make potato.vfs/main.tcl executable before running it:
 {{{
+cd potato.vfs
 chmod +x main.tcl
 }}}
 Then, to launch Potato, use
