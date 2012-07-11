@@ -1,4 +1,6 @@
 
+  set dir [file join [pwd] $dir]; # this really shouldn't be necessary, but apparantly sometimes is.
+  
   package ifneeded app-potato 2.0.0 [list source [file join $dir .. potato.tcl]]
   package ifneeded potato-telnet 1.1 [list source [file join $dir .. potato-telnet.tcl]]
   package ifneeded potato-help 2.0.0 [list source [file join $dir .. potato-help.tcl]]
