@@ -15,3 +15,5 @@
   * `/show` is now aliased to `/world` and `/w` for SimpleMU compatability. Suggested by AnneLions.
   * Help for more [SlashCommands /commands] added after prodding by AnneLions.
   * Much help getting Potato running from source on Linux provided by Cheetah. (Thankyouthankyou!)
+  * The mouse wheel didn't always work on Linux. Reported by iconoclasmandheresy and Cheetah.
+  * Potato was overly picky about the cipher to use for SSL connections, preventing connections to some games. Reported by Paige, fixed by Cheetah.
