@@ -3,46 +3,83 @@
 
 The simplest way to run Potato is using a [Downloads binary], which contains the Potato source and a Tcl interpreter in a single file. However, if you don't wish to do this (either because a binay is not available for your platform, because you already have Tcl installed on your system, or because you wish to make changes to the source), you can run Potato from source. There are three ways to do this:
 
-  * Download a [Downloads#Source Starkit]
+  * Download the [Downloads#Source Starkit], a single-file archive of the Potato source code. Not suitable if you want to modify the Potato code!
   * Download the [Downloads#Source source code]
   * Checkout from SVN
 
-A Starkit is a single-file archive of Tcl source code. (All of these methods require that you have [GettingTcl Tcl installed].)
+All of these methods require that you have [GettingTcl Tcl installed].
 
 ----
 
 =Instructions=
 
-To run from source, you should first create a directory for Potato (for example, *C:\Potato*). Place the [GettingTcl TclKit] for your platform in this directory.
+==Windows==
+===Source===
+Extract the Potato.zip file into your C:\ drive - it contains a folder called potato.vfs. Download the [GettingTcl TclKit] into the potato.vfs directory, and then drag-and-drop the file "main.tcl" onto the TclKit.exe to run.
 
-==Starkit==
-If you're using a Starkit, the [Downloads#Source Potato Starkit] in *C:\Potato*. To run Potato, run
+===Starkit===
+If you're using a Starkit, make a folder (for instance, *C:\Potato*) and place the [Downloads#Source Potato Starkit] in it. Download the [GettingTcl TclKit] into the same directory, and drag-and-drop the Potato.kit file onto the TclKit.exe to run.
 
-{{{
-C:\Potato\tclkit potato.kit
-}}}
-
-(using the correct filenames for your versions of Tcl and Potato). On Windows, you can drag-and-drop the Potato.kit onto the Tclkit.exe to run it.
-
-----
-
-==From Source==
-If you're [Downloads#Source downloading the source], extract the *potato.vfs* folder from the archive into *C:\Potato*
-
-==SVN==
-From *C:\*, checkout a copy of Potato, with the command
-
+===SVN===
+Check out the potato.vfs folder from SVN. If you're using a command-line SVN client, the command is 
 {{{
 svn checkout http://potatomushclient.googlecode.com/svn/trunk/ potato
 }}}
 
-This creates the directory *C:\potato\*, which contains the *potato.vfs* directory with the source code.
-
-===Running Potato===
-When you have the source in place, download the [http://potatomushclient.com/scripts/potato-launch-from-vfs.tcl potato-launch-from-vfs.tcl] script, and place it in *C:\potato*. Then, to run Potato, do
-
+You'll need to perform a second SVN checkout to get the helpfiles. After checking out the code, move into the potato.vfs/lib directory and
 {{{
-C:\Potato\tclkit potato-launch-from-vfs.tcl
+svn checkout http://potatomushclient.googlecode.com/svn/wiki/ help
 }}}
 
-or, on Windows, drag-and-drop the .tcl file onto the Tclkit.exe. This should run Potato from the source code.
+Download the [GettingTcl TclKit] into the potato.vfs directory, and then drag-and-drop the file "main.tcl" onto the TclKit.exe to run.
+
+==Linux and MacOS X==
+===Install Tcl and TK===
+===Source===
+Extract the Potato.zip file into the directory of your choice drive - it contains a folder called potato.vfs. [GettingTcl Install Tcl and Tk], then run
+{{{
+chmod +x main.tcl
+}}}
+to make it executable. After that, you can launch Potato with
+{{{
+./main.tcl
+}}}
+
+===Starkit===
+Download the starkit into a folder of your choice. If you're using a [GettingTcl TclKit], place it in the same directory, then run
+{{{
+./potato.kit
+}}}
+(using the correct name for your version).
+
+If you're using your system Tcl install, it's recommended you use the Potato source .zip instead of the Starkit, as there may be other dependencies. To launch the Potato starkit, use
+{{{
+tclsh potato.kit
+}}}
+
+===SVN===
+Check out the potato.vfs folder from SVN:
+{{{
+svn checkout http://potatomushclient.googlecode.com/svn/trunk/ potato
+}}}
+
+You'll need to perform a second SVN checkout to get the helpfiles. After checking out the code, move into the potato.vfs/lib directory and
+{{{
+svn checkout http://potatomushclient.googlecode.com/svn/wiki/ help
+}}}
+
+If you're using your system install of Tcl, may need to make potato.vfs/main.tcl executable before running it:
+{{{
+chmod +x main.tcl
+}}}
+Then, to launch Potato, use
+{{{
+./main.tcl
+}}}
+
+If using a [GettingTcl TclKit], place it in the potato.vfs directory and run with
+{{{
+./tclkit main.tcl
+}}}
+
+
