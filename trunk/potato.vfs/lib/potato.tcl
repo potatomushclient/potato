@@ -9423,7 +9423,8 @@ proc ::potato::inputWindowRightClickMenu {input x y} {
 #: desc set up bindings used throughout Potato, including those for input and output text widgets, and bindings on "." which aren't done elsewhere
 #: return nothing
 proc ::potato::setUpBindings {} {
-
+  variable potato;
+  
   catch {tcl_endOfWord}
   set ::tcl_wordchars {[a-zA-Z0-9' ]}
   set ::tcl_nonwordchars {[^a-zA-Z0-9']}
@@ -9492,10 +9493,17 @@ proc ::potato::setUpBindings {} {
      bind PotatoOutput <${x}Tab> [bind PotatoInput <${x}Tab>]
   }
 
-  bind PotatoInput <MouseWheel> {}
-  bind PotatoOutput <MouseWheel> {}
-  bind Text <MouseWheel> {}
-  bind all <MouseWheel> [list potato::mouseWheel %W %D]
+  foreach x [list PotatoInput PotatoOutput Text] {
+    foreach y [list MouseWheel 4 5] {
+      bind $x <$y> {}
+    }
+  }
+  bind all <MouseWheel> [list ::potato::mouseWheel %W %D]
+  if { $potato(windowingsystem) eq "x11" } {
+       # Some Linuxes use button 4/5 instead of <MouseWheel>. Some don't.
+       bind all <4> [list ::potato::mouseWheel %W 120]
+       bind all <5> [list ::potato::mouseWheel %W -120]
+     }
 
   # Make Control-BackSpace delete the previous word
   bind Text <Control-BackSpace> {set val [%W index insert]
