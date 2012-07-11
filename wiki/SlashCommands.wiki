@@ -25,7 +25,7 @@ A "/command" is a special command you can type into the input box (or anywhere e
   * `/reconnect` - Reconnect the current connection.
   * `/rename [<name>]` - Set a temporary name for the current connection, or clear the existing temporary name. Useful if you connect to one world multiple times, to make them easier to distinguish.
   * `/runmacro <macro>` - Run the given `<macro>`.
-  * `/send <string>` - Send `<string>` to the current connection, with no /command or variable parsing.
+  * `/send <string>` - Send `<string>` to the current connection. Allows for [SlashCommandVariables variable parsing] to be carried out on the string before it's sent.
   * `/set <varname>=<value>` - Set a [SlashCommandVariables variable] for the current connection.
   * `/setglobal <varname>=<value>` - Set a [SlashCommandVariables variable] for all connections.
   * `/setprefix [<window>=]<prefix>` - Set a prefix for the output window `<window>` or for the current output window if no `<window>` is given.
