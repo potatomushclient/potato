@@ -3,9 +3,9 @@
 
 The simplest way to run Potato is using a [Downloads binary], which contains the Potato source and a Tcl interpreter in a single file. However, if you don't wish to do this (either because a binay is not available for your platform, because you already have Tcl installed on your system, or because you wish to make changes to the source), you can run Potato from source. There are three ways to do this:
 
-  * Download the [Downloads#Source Starkit], a single-file archive of the Potato source code. Not suitable if you want to modify the Potato code!
   * Download the [Downloads#Source source code]
   * Checkout from SVN
+  * Download the [Downloads#Source Starkit], a single-file archive of the Potato source code. Not suitable if you want to modify the Potato code!
 
 All of these methods require that you have [GettingTcl Tcl installed].
 
@@ -35,7 +35,7 @@ Download the [GettingTcl TclKit] into the potato.vfs directory, and then drag-an
 
 ==Linux and MacOS X==
 ===Source===
-Extract the Potato.zip file into the directory of your choice drive - it contains a folder called potato.vfs. [GettingTcl Install Tcl and Tk], then run
+Extract the potato.zip file into the directory of your choice drive - it contains a folder called potato.vfs. [GettingTcl Install Tcl and Tk] if you haven't yet, cd into the potato.vfs directory, then run
 {{{
 chmod +x main.tcl
 }}}
@@ -62,16 +62,17 @@ Check out the potato.vfs folder from SVN:
 svn checkout http://potatomushclient.googlecode.com/svn/trunk/ potato
 }}}
 
-You'll need to perform a second SVN checkout to get the helpfiles. After checking out the code, move into the potato.vfs/lib directory and
+You'll need to perform a second SVN checkout to get the helpfiles. After checking out the code, move into the potato.vfs/lib directory and check out the help files:
 {{{
+cd potato/potato.vfs/lib
 svn checkout http://potatomushclient.googlecode.com/svn/wiki/ help
 }}}
 
-If you're using your system install of Tcl, may need to make potato.vfs/main.tcl executable before running it:
+Switch back to the potato.vfs directory if needed.
 {{{
-cd potato.vfs
-chmod +x main.tcl
+cd ..
 }}}
+
 Then, to launch Potato, use
 {{{
 ./main.tcl
@@ -81,5 +82,3 @@ If using a [GettingTcl TclKit], place it in the potato.vfs directory and run wit
 {{{
 ./tclkit main.tcl
 }}}
-
-
