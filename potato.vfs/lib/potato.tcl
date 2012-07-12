@@ -191,7 +191,8 @@ proc ::potato::setPrefs {readfile} {
   # Default skin
   set misc(skin) "potato";# Hah. Not that there will ever be another skin this century.
 
-  set misc(aspell) "";# path to aspell executable. None by default.
+  # Path to ASpell. Try to guess a default. Probably won't work on Windows.
+  set misc(aspell) [auto_execok aspell]
 
   if { $potato(windowingsystem) eq "aqua" } {
        set misc(tileTheme) aqua
