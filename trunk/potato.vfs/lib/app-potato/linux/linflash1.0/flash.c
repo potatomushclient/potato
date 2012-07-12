@@ -116,7 +116,7 @@ int flash_window (Tcl_Interp *interp, Tcl_Obj *CONST objv1, int flash) {
   window = Tk_WindowId(tkwin);
 
   // Error check
-  if ( window == NULL ) {
+  if ( window == (Window)NULL ) {
     Tcl_AppendResult (interp, "error while processing WindowId : Window probably not viewable", (char *) NULL);
     return TCL_ERROR;
   }
