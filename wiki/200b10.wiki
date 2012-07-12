@@ -1,6 +1,6 @@
 #summary Version 2.0.0b10
 =Version 2.0.0b10=
-==Not Yet Released==
+==Released July 12th 2012==
 
   * Potato now handles it better when you attempt an SSL connection to a game/port which doesn't support SSL. Reported by Paige and Huz.
   * The new Packet Debugger's two text windows scrolled correctly when you used the scrollbar, but not when you used the mousewheel or cursor keys. This has now been fixed.
@@ -21,5 +21,5 @@
   * New keyboard shortcut, Control+O, switches the focus between the two input windows. (Tab/Shift-Tab moves between all UI elements.) Suggested by Cheetah.
   * SSL support now works on Windows out of the box, without having to download or install any extra libraries.
   * The Linflash package, which allows for better taskbar-flashing on Linux, is now bundled. However, you may still need to compile it yourself to work correctly on your system.
-  * Added a new 'Check for Updates' feature in the Help menu, which looks to see if the latest release of Potato is newer than the copy you're using.
+  * Added a new 'Check for Updates' feature in the Help menu, which looks to see if the latest release of Potato is newer than the copy you're using. Potato will also check for updates automatically on startup by default.
   * New optional Select To Copy feature added, where selecting text from the output window automatically copies it to the clipboard. Suggested by Padraic.
