@@ -18,3 +18,8 @@
   * The mouse wheel didn't always work on Linux. Reported by iconoclasmandheresy and Cheetah.
   * Potato was overly picky about the cipher to use for SSL connections, preventing connections to some games. Reported by Paige, fixed by Cheetah.
   * The Customize Keyboard Shortcut window didn't resize vertically properly. Reported by Cheetah.
+  * New keyboard shortcut, Control+O, switches the focus between the two input windows. (Tab/Shift-Tab moves between all UI elements.) Suggested by Cheetah.
+  * SSL support now works on Windows out of the box, without having to download or install any extra libraries.
+  * The Linflash package, which allows for better taskbar-flashing on Linux, is now bundled. However, you may still need to compile it yourself to work correctly on your system.
+  * Added a new 'Check for Updates' feature in the Help menu, which looks to see if the latest release of Potato is newer than the copy you're using.
+  * New optional Select To Copy feature added, where selecting text from the output window automatically copies it to the clipboard. Suggested by Padraic.
