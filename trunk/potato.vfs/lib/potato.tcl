@@ -9671,7 +9671,9 @@ proc ::potato::keyboardShortcutWin {} {
 
   foreach x [array names keyShorts] {
     set keyShortsTmp($x) $keyShorts($x)
-    bind $bindingsWin <$keyShortsTmp($x)> $x
+    if { $keyShorts($x) ne "" } {
+      bind $bindingsWin <$keyShortsTmp($x)> $x
+    }
   }
   set keyShortsTmp(key,shift) 0
   set keyShortsTmp(key,control) 0
@@ -9701,7 +9703,7 @@ proc ::potato::keyboardShortcutWin {} {
   set allTasks [lsort -dictionary -index 0 $allTasks]
   foreach x $allTasks {
     foreach {label task} $x {break}
-    if { [info exists keyShortsTmp($task)] } {
+    if { [info exists keyShortsTmp($task)] && $keyShortsTmp($task) ne "" } {
          set binding [keysymToHuman $keyShortsTmp($task)]
        } else {
          set binding ""
@@ -9746,11 +9748,7 @@ proc ::potato::keyboardShortcutWinSave {win} {
      bind PotatoUserBindings $x ""
   }
   array unset keyShorts
-  foreach task [array names keyShortsTmp] {
-     if { $keyShortsTmp($task) ne "" } {
-          set keyShorts($task) $keyShortsTmp($task)
-        }
-  }
+  array set keyShorts [array get keyShortsTmp]
   setUpUserBindings
 
   return;
@@ -9980,13 +9978,25 @@ proc ::potato::humanToKeysym {keysym {short 0} {joinchar +}} {
 proc ::potato::setUpUserBindings {} {
   variable keyShorts;
 
-  if { ![info exists keyShorts] || [array size keyShorts] == 0 } {
-       loadDefaultUserBindings
-     }
-
+  # Clear off invalid keysyms before loading defaults
   foreach task [array names keyShorts] {
      if { [string match "*,*" $task] } {
           continue;
+        }
+     if { ![taskExists $task] } {
+          unset keyShorts($task)
+          continue;
+        }
+  }
+  
+  loadDefaultUserBindings
+  
+  foreach task [array names keyShorts] {
+     if { [string match "*,*" $task] } {
+          continue;
+        }
+     if { $keyShorts($task) eq "" } {
+          continue;# no binding
         }
      bind PotatoUserBindings <$keyShorts($task)> "[list ::potato::taskRun $task] ; break"
      set list [split $keyShorts($task) -]
@@ -10003,47 +10013,66 @@ proc ::potato::setUpUserBindings {} {
 };# ::potato::setUpUserBindings
 
 #: proc ::potato::loadDefaultUserBindings
+#: arg clear Clear existing bindings?
 #: desc Load the default user-configurable bindings, when none are set or when the user requests the defaults.
 #: return nothing
-proc ::potato::loadDefaultUserBindings {} {
+proc ::potato::loadDefaultUserBindings {{clear 0}} {
   variable keyShorts;
 
-  # Clear off current ones, if any
-  array unset keyShorts;
-  foreach x [bind PotatoUserBindings] {
-     bind PotatoUserBindings $x ""
-  }
+  if { $clear } {
+       # Clear off current ones, if any
+       array unset keyShorts;
+       foreach x [bind PotatoUserBindings] {
+          bind PotatoUserBindings $x ""
+       }
+     }
 
-  set keyShorts(close) "Control-KeyPress-F4"
-  set keyShorts(config) "Control-KeyPress-W"
-  set keyShorts(disconnect) "Control-Alt-KeyPress-D"
-  set keyShorts(events) "Control-KeyPress-E"
-  set keyShorts(exit) "Alt-KeyPress-F4"
-  set keyShorts(find) "Control-KeyPress-F"
-  set keyShorts(inputHistory) "Control-KeyPress-H"
-  set keyShorts(log) "Control-KeyPress-L"
-  set keyShorts(nextConn) "Control-KeyPress-N"
-  set keyShorts(prevConn) "Control-KeyPress-P"
-  set keyShorts(reconnect) "Control-KeyPress-R"
-  set keyShorts(twoInputWins) "Control-KeyPress-I"
-  set keyShorts(upload) "Control-KeyPress-U"
-  set keyShorts(mailWindow) "Control-KeyPress-M"
-  set keyShorts(prevHistCmd) "Control-KeyPress-Up"
-  set keyShorts(nextHistCmd) "Control-KeyPress-Down"
-  set keyShorts(spellcheck) "Control-KeyPress-S"
-  set keyShorts(help) "F1"
-  set keyShorts(fcmd2) "F2"
-  set keyShorts(fcmd3) "F3"
-  set keyShorts(fcmd4) "F4"
-  set keyShorts(fcmd5) "F5"
-  set keyShorts(fcmd6) "F6"
-  set keyShorts(fcmd7) "F7"
-  set keyShorts(fcmd8) "F8"
-  set keyShorts(fcmd9) "F9"
-  set keyShorts(fcmd10) "F10"
-  set keyShorts(fcmd11) "F11"
-  set keyShorts(fcmd12) "F12"
-  set keyShorts(save2history) "Shift-Escape"
+  set defaults [list \
+    "close" "Control-KeyPress-F4" \
+    "config" "Control-KeyPress-W" \
+    "disconnect" "Control-Alt-KeyPress-D" \
+    "events" "Control-KeyPress-E" \
+    "exit" "Alt-KeyPress-F4" \
+    "find" "Control-KeyPress-F" \
+    "inputHistory" "Control-KeyPress-H" \
+    "log" "Control-KeyPress-L" \
+    "nextConn" "Control-KeyPress-N" \
+    "prevConn" "Control-KeyPress-P" \
+    "reconnect" "Control-KeyPress-R" \
+    "twoInputWins" "Control-KeyPress-I" \
+    "upload" "Control-KeyPress-U" \
+    "mailWindow" "Control-KeyPress-M" \
+    "prevHistCmd" "Control-KeyPress-Up" \
+    "nextHistCmd" "Control-KeyPress-Down" \
+    "spellcheck" "Control-KeyPress-S" \
+    "help" "F1" \
+    "fcmd2" "F2" \
+    "fcmd3" "F3" \
+    "fcmd4" "F4" \
+    "fcmd5" "F5" \
+    "fcmd6" "F6" \
+    "fcmd7" "F7" \
+    "fcmd8" "F8" \
+    "fcmd9" "F9" \
+    "fcmd10" "F10" \
+    "fcmd11" "F11" \
+    "fcmd12" "F12" \
+    "save2history" "Shift-Escape" \
+    "toggleInputFocus" "Control-KeyPress-O" \
+    ]
+  foreach {task binding} $defaults {
+    if { ![taskExists $task] } {
+         continue;
+       }
+    if { [info exists keyShorts($task)] } {
+         continue; # already have a binding for this
+       }
+     if { [bind PotatoUserBindings <$binding>] ne "" } {
+          continue;# already bound to this combo
+        }
+     # Good to go
+     set keyShorts($task) $binding
+   }
 
   return;
 
@@ -13376,12 +13405,30 @@ proc ::potato::tasksInit {} {
        save2history,name   [T "Save to Input History"] \
        save2history,cmd    [list ::potato::send_mushage "" 1] \
        save2history,state  notZero \
+       toggleInputFocus,name   [T "Toggle &Input Windows"] \
+       toggleInputFocus,cmd    [list ::potato::toggleInputFocus] \
+       toggleInputFocus,state  always \
 
   ]
 
   return;
 
 };# ::potato::tasksInit
+
+#: proc ::potato::taskExists
+#: arg task Task name
+#: desc Does the given task exist?
+#: return 1 or 0
+proc ::potato::taskExists {task} {
+  variable tasks;
+  
+  if { [info exists tasks($task,state)] && [info exists tasks($task,name)] && [info exists tasks($task,state)] } {
+       return 1;
+     } else {
+       return 0;
+     }
+     
+};# ::potato::taskExists
 
 #: proc ::potato::taskAccelerator
 #: arg task Task name
@@ -13426,7 +13473,7 @@ proc ::potato::taskState {task {c ""}} {
        set c [up]
      }
 
-  if { ![info exists tasks($task,state)] } {
+  if { ![taskExists $task] } {
        return 0; # unknown task
      }
 
@@ -13448,7 +13495,7 @@ proc ::potato::taskState {task {c ""}} {
 proc ::potato::taskRun {task {c ""} args} {
   variable tasks;
 
-  if { ![info exists tasks($task,cmd)] } {
+  if { ![taskExists $task] } {
        return;# invalid task
      }
 
@@ -13469,7 +13516,7 @@ proc ::potato::taskRun {task {c ""} args} {
 proc ::potato::taskLabel {task {menu 0}} {
   variable tasks;
 
-  if { ![info exists tasks($task,name)] } {
+  if { ![taskExists $task] } {
        return;
      }
 
@@ -13480,6 +13527,28 @@ proc ::potato::taskLabel {task {menu 0}} {
      }
 
 };# ::potato::taskLabel
+
+#: proc ::potato::toggleInputFocus
+#: arg c connection id, defaults to ""
+#: desc Toggle between the two input windows for connection $c, or the current connection if "". If neither currently has focus, move to input 1.
+#: return nothing
+proc ::potato::toggleInputFocus {{c ""}} {
+  variable conn;
+
+  if { $c eq "" } {
+       set c [up]
+     }
+
+  if { [focus -displayof $conn($c,input1)] eq $conn($c,input1) } {
+       set new $conn($c,input2)
+     } else {
+       set new $conn($c,input1)
+     }
+   focus $new;
+   
+   return;
+
+};# ::potato::toggleInputFocus
 
 #: proc ::potato::spellcheck
 #: desc Launch the spellchecker for the current input window. Note: the actual spellchecking code is in 
