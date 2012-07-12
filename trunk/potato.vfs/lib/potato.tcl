@@ -9352,6 +9352,7 @@ proc ::potato::build_menu_help {m} {
   $m add command {*}[menu_label [T "&Error Log Window"]] -command [list ::potato::errorLogWindow]
   $m add separator
   createMenuTask $m about
+  $m add command {*}[menu_label [T "Check for &Updates"]] -command [list ::potato::checkForUpdates]
   $m add command {*}[menu_label [T "Visit Potato &Website"]] -command [list ::potato::launchWebPage $::potato::potato(webpage)]
 
   return;
@@ -9399,6 +9400,117 @@ proc ::potato::setUpMenu {} {
   return;
 
 };# ::potato::setUpMenu
+
+#: proc ::potato::checkForUpdates
+#: desc Show the window to check to see if an updated version of Potato has been released.
+#: return nothing
+proc ::potato::checkForUpdates {} {
+  variable potato;
+  variable update;
+  
+  set win .checkForUpdates
+  if { [winfo exists $win] } {
+       reshowWindow $win
+       return;
+     }
+  toplevel $win
+  wm withdraw $win
+  pack [set frame [::ttk::frame $win.f]] -side top -expand 1 -fill both
+  wm title $win [T "Check for Updates - %s" "Potato"]
+  pack [set top [::ttk::frame $frame.top]] -padx 10 -pady 10
+  set labelfont [font actual [::ttk::style lookup TLabel -font]]
+  dict set labelfont -size [expr {round([dict get $labelfont -size] * 1.5)}]
+  pack [::ttk::label $top.l1 -text "You are currently running version:" -font $labelfont -justify center] -side top
+  pack [::ttk::label $top.l2 -textvariable potato::potato(version) -font [concat $labelfont -weight bold] -justify center] -side top
+  pack [::ttk::label $top.l3 -text "Checking for updates..." -font $labelfont -justify center]
+  
+  pack [set progress [::ttk::frame $frame.progress]] -side top -padx 10 -pady 10
+  pack [::ttk::progressbar $progress.bar -orient horizontal -mode indeterminate -length 160]
+  $progress.bar start 1 
+  
+  pack [set btns [::ttk::frame $frame.buttons]] -side top -padx 10 -pady 10
+  pack [::ttk::button $btns.cancel -text "Cancel" -command [list destroy $win]]
+
+  set update(win) $win
+  set update(main) $progress
+  set update(btns) $btns
+  set update(labelfont) $labelfont
+  set update(waiting) 1
+
+  set url {http://potatomushclient.googlecode.com/svn/trunk/potato.vfs/lib/potato-version.tcl}
+  set token [::http::geturl $url -command [list ::potato::checkForUpdatesSub]]
+
+  bind $frame <Destroy> [list ::potato::cancelCheckForUpdates]
+#update
+
+  update
+  center $win
+  wm deiconify $win
+
+  return;
+
+};# ::potato::checkForUpdates
+
+proc ::potato::checkForUpdatesSub {token} {
+  variable update;
+  variable potato;
+
+  if { ![info exists update(win)] || ![winfo exists $update(win)] || \
+       ![info exists update(waiting)] || !$update(waiting) } {
+       # The update was cancelled
+       catch {::http::cleanup $token}
+       return;
+     }
+
+  # Destroy the progressbar to free up the UI for the result
+  destroy {*}[winfo children $update(main)]
+  destroy {*}[winfo children $update(btns)]
+   
+  set font $update(labelfont)
+  pack [::ttk::button $update(btns).ok -text [T "OK"] -command [list destroy $update(win)]] -side left -padx 8
+   
+  set errorText [T "Sorry, we were unable to check for a new version at this time. Please try again later.\n\nIf the problem persists, please let us know."]
+  if { [::http::status $token] ne "ok" } {
+       # Something went wrong
+       pack [::ttk::label $update(main).error -text $errorText -font $font]
+       ::http::cleanup $token;
+       return;
+     }
+      
+  # Try and parse the result
+  set body [::http::data $token]
+  ::http::cleanup $token
+  if { ![regexp {"(.+)"} $body {} vers] || [catch {package vcompare $vers $potato(version)} difference] } {
+       # Damn
+       pack [::ttk::label $update(main).error -text $errorText -font $font]
+       return;
+     }
+       
+  if { $difference == 1 } {
+       # New version available!
+       pack [::ttk::label $update(main).new -font $font \
+              -text [T "There is a newer version of Potato (%s) available.\nYou can download it from Potato's Google Code site.\nWould you like to do so now?" $vers]]
+       $update(btns).ok configure -text "No"
+       pack [::ttk::button $update(btns).yes -text [T "Yes"] \
+               -command "[list ::potato::launchWebPage http://code.google.com/p/potatomushclient/wiki/Downloads?tm=2] ; [list destroy $update(win)]"] -side left -before $update(btns).ok -padx 8
+     } else {
+       pack [::ttk::label $update(main).uptodate -text [T "You are already using the latest version of Potato."] -font $font]
+     }
+        
+  return;
+
+};# ::potato::checkForUpdatesSub
+
+proc ::potato::cancelCheckForUpdates {} {
+  variable update;
+  
+  catch {destroy $update(win)}
+  array unset update
+  set update(waiting) 0
+  
+  return;
+  
+};# ::potato::cancelCheckForUpdates
 
 #: ::potato::inputWindowRightClickMenu
 #: arg input The input window being clicked
