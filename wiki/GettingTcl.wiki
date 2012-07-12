@@ -5,18 +5,20 @@ Potato is written in [http://www.tcl.tk Tcl/Tk], an interpreted language availab
 
 If you're running Windows and don't already have Tcl 8.5 installed on your system, we recommend you download a Tclkit. TclKits are single-file Tcl interpreters. They can be downloaded from the [http://code.google.com/p/tclkit/ TclKit Google Code page], and from [http://www.equi4.com/tclkit/download.html Equi4.com] (TclKits for different platforms are available from each site). Make sure you download version 8.5.X, and that you get Tclkit (which includes Tk, the GUI library for Tcl), not TclkitSH (which is command-line only).
 
-When running on Linux, it's generally easier install Tcl and Tk through the OS's package management system. On debian based systems they are probably simply called tcl and tk. If you want ssl support, also install tcl-tls.
+When running on Linux, it's generally easier install Tcl and Tk through the OS's package management system. On debian based systems they are probably simply called tcl and tk. If you want ssl support, also install tcl-tls. To support window flashing, you'll also want tcl-dev and tk-dev.
 
 {{{
 apt-get install tcl tk
-# Optionally:
+# Optionally for ssl support:
 apt-get install tcl-tls
+# Optionally for window flashing:
+apt-get install tcl-dev tk-dev
 }}}
 
 On Gentoo they are called tcl and tk. For ssl support the package is dev-tcltk/tls.
 
 {{{
 emerge tcl tk
-# Optionally:
+# Optionally for ssl support:
 emerge dev-tcltk/tls
 }}}
