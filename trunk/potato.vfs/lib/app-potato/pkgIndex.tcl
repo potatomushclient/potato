@@ -19,6 +19,12 @@
   # Windows-specific
   package ifneeded potato-winflash 1.0 "[list load [file join $dir windows flash85.dll]] ; [list source [file join $dir windows potato-winflash.tcl]]"
   package ifneeded Winico 0.6 [list load [file join $dir windows Winico06.dll]]
+  if { $::tcl_platform(platform) eq "windows" } {
+  puts "foo";
+       package ifneeded tls 1.6 "source \[file join [list $dir] windows tls.tcl\] ; tls::initlib [list [file join $dir windows]] tls16.dll"
+     } else {
+     puts "bar"
+     }
 
   # Linux-specific
   # linflash package no longer inside the executable. Instead, if available, it's in $path(lib)/linflash.
