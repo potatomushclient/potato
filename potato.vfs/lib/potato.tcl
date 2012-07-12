@@ -8988,6 +8988,8 @@ proc ::potato::createImages {} {
 #: return nothing
 proc ::potato::setUpFlash {} {
   variable winico;
+  variable potato;
+  variable path;
 
   if { $::tcl_platform(platform) eq "windows" } {
        if { ![catch {package require potato-winflash} err] } {
@@ -9001,13 +9003,19 @@ proc ::potato::setUpFlash {} {
           } else {
             set sysTrayCmd {# nothing}
           }
-     } elseif { ![catch {package require potato-linflash} err] } {
-       set taskbarCmd {linflash .}
-       set sysTrayCmd {# nothing}
      } else {
-       errorLog "Unable to load potato-linflash package: $err"
-       set taskbarCmd {wm deiconify .}
-       set sysTrayCmd {# nothing}
+       if { [catch {package require potato-linflash}] } {
+            # Attempt to copy linflash out for the first time
+            catch {file copy [file join $potato(vfsdir) lib app-potato linux linflash1.0] $path(lib)}            
+          }
+       if { ![catch {package require potato-linflash} err] } {
+            set taskbarCmd {linflash .}
+            set sysTrayCmd {# nothing}
+          } else {
+            errorLog "Unable to load potato-linflash package: $err"
+            set taskbarCmd {wm deiconify .}
+            set sysTrayCmd {# nothing}
+          }
      }
   proc ::potato::flash {w} [format {
    variable world;
