@@ -185,6 +185,8 @@ proc ::potato::setPrefs {readfile} {
   set misc(tinyurlProvider) "TinyURL"
 
   set misc(autoConnect) 1 ;# should we run autoconnects?
+  
+  set misc(checkForUpdates) 1
 
   # Default locale
   set misc(locale) "en_gb";# Colour, not Color :)
@@ -6533,7 +6535,7 @@ $sub.cb state disabled
        set confProgMisc [lindex $frame 0]
        set frame [lindex $frame 1]
 
-       set lW 24
+       set lW 29
 
        pack [set sub [::ttk::frame $frame.browser]] -side top -pady 5 -anchor nw
        pack [::ttk::label $sub.l -text [T "Browser Command:"] -width $lW -anchor w -justify left] -side left
@@ -6622,6 +6624,11 @@ $sub.cb state disabled
                           -onvalue 1 -offvalue 0] -side left
        set potato::worldconfig(MISC,autoConnect) $misc(autoConnect)
 
+       pack [set sub [::ttk::frame $frame.checkForUpdates]] -side top -pady 5 -anchor nw
+       pack [::ttk::label $sub.l -text [T "Check for Updates on Startup?"] -width $lW -anchor w -justify left] -side left
+       pack [::ttk::checkbutton $sub.c -variable ::potato::worldconfig(MISC,checkForUpdates) \
+                          -onvalue 1 -offvalue 0] -side left
+       set potato::worldconfig(MISC,checkForUpdates) $misc(checkForUpdates)
 
      }
 
@@ -8012,6 +8019,10 @@ proc ::potato::main {} {
   after idle [list ::potato::autoConnect]
 
   after idle [list ::potato::keepalive]
+  
+  if { $misc(checkForUpdates) } {
+       after 3500 [list ::potato::checkForUpdates 1]
+     }
 
   return;
 
@@ -9408,9 +9419,10 @@ proc ::potato::setUpMenu {} {
 };# ::potato::setUpMenu
 
 #: proc ::potato::checkForUpdates
+#: arg background Should this window stay in the background?
 #: desc Show the window to check to see if an updated version of Potato has been released.
 #: return nothing
-proc ::potato::checkForUpdates {} {
+proc ::potato::checkForUpdates {{background 0}} {
   variable potato;
   variable update;
   
@@ -9448,9 +9460,11 @@ proc ::potato::checkForUpdates {} {
 
   bind $frame <Destroy> [list ::potato::cancelCheckForUpdates]
 
-  update
-  center $win
-  wm deiconify $win
+  if { !$background } {
+       update
+       center $win
+       wm deiconify $win
+     }
 
   return;
 
@@ -9472,6 +9486,8 @@ proc ::potato::checkForUpdatesSub {token} {
        return;
      }
 
+  set background [expr {[wm state $update(win)] eq "withdrawn"}]
+
   # Destroy the progressbar to free up the UI for the result
   destroy {*}[winfo children $update(main)]
   destroy {*}[winfo children $update(btns)]
@@ -9482,8 +9498,13 @@ proc ::potato::checkForUpdatesSub {token} {
   set errorText [T "Sorry, we were unable to check for a new version at this time. Please try again later.\n\nIf the problem persists, please let us know."]
   if { [::http::status $token] ne "ok" } {
        # Something went wrong
-       pack [::ttk::label $update(main).error -text $errorText -font $font]
+       if { $background } {
+            destroy $update(win)
+          } else {
+            pack [::ttk::label $update(main).error -text $errorText -font $font]
+          }
        ::http::cleanup $token;
+
        return;
      }
       
@@ -9492,7 +9513,11 @@ proc ::potato::checkForUpdatesSub {token} {
   ::http::cleanup $token
   if { ![regexp {"(.+)"} $body {} vers] || [catch {package vcompare $vers $potato(version)} difference] } {
        # Damn
-       pack [::ttk::label $update(main).error -text $errorText -font $font]
+       if { $background } {
+            destroy $update(win)
+          } else {
+            pack [::ttk::label $update(main).error -text $errorText -font $font]
+          }
        return;
      }
        
@@ -9503,8 +9528,18 @@ proc ::potato::checkForUpdatesSub {token} {
        $update(btns).ok configure -text "No"
        pack [::ttk::button $update(btns).yes -text [T "Yes"] \
                -command "[list ::potato::launchWebPage http://code.google.com/p/potatomushclient/wiki/Downloads?tm=2] ; [list destroy $update(win)]"] -side left -before $update(btns).ok -padx 8
+       if { $background } {
+            update;
+            center $update(win);
+            wm deiconify $update(win)
+            bell -displayof $update(win)
+          }
      } else {
-       pack [::ttk::label $update(main).uptodate -text [T "You are already using the latest version of Potato."] -font $font]
+       if { $background } {
+            destroy $update(win)
+          } else {
+            pack [::ttk::label $update(main).uptodate -text [T "You are already using the latest version of Potato."] -font $font]
+          }
      }
         
   return;
