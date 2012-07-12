@@ -253,6 +253,10 @@ proc ::potato::setPrefs {readfile} {
   if { ![info exists world(-1,bottom,font,created)] } {
        set world(-1,bottom,font,created) [font create {*}[font actual $world(-1,bottom,font)]]
      }
+     
+  if { $misc(aspell) eq "" } {
+       set misc(aspell) [auto_execok aspell]
+     }
 
   return;
 
@@ -9007,7 +9011,8 @@ proc ::potato::setUpFlash {} {
      } else {
        if { [catch {package require potato-linflash}] } {
             # Attempt to copy linflash out for the first time
-            catch {file copy [file join $potato(vfsdir) lib app-potato linux linflash1.0] $path(lib)}            
+            catch {file copy -force [file join $potato(vfsdir) lib app-potato linux linflash1.0] $path(lib)}
+            catch {exec [file join $path(lib) linflash1.0 compile]}            
           }
        if { ![catch {package require potato-linflash} err] } {
             set taskbarCmd {linflash .}
