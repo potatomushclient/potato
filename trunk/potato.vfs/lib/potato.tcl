@@ -3251,16 +3251,9 @@ proc ::potato::get_mushageProcess {c line} {
        set line [string map [list [format %c 160] " "] $line]
      }
 
-  # ANSI escape char is \x1B, char code 27
-  regsub -all {\x1B.*?m} $line "" lineNoansi
-
-  # set matchLinks {\m((https?://)|www\.)(([a-zA-Z_\.0-9%+/@~=&,;-]*))?([a-zA-Z_\.0-9%+/@~=&,;-]*)(\?([a-zA-Z_\.0-9%+/@~=&,;:-]*))?(#[a-zA-Z_\.0-9%+/@~=&,;:-]*)?}
-  set matchLinks {\m(?:(?:(?:f|ht)tps?://)|www\.)(?:(?:[a-zA-Z_\.0-9%+/@~=&,;-]*))?(?::[0-9]+/)?(?:[a-zA-Z_\.0-9%+/@~=&,;!-]*)(?:\?(?:[a-zA-Z_\.0-9%+/@~=&,;:!-]*))?(?:#[a-zA-Z_\.0-9%+/@~=&,;:!-]*)?}
-  set tmp [regexp -all -inline -indices -- $matchLinks $lineNoansi]
+  # Handle beep chars
   # '\a' is the beep char defined in PennMUSH in ansi.h. If a game has changed this, or another codebase uses something
   # else, you can change it by.. hrm, nope, you're just screwed.
-
-  # First, we need to count the beeps
   set beepCount [llength [lsearch -all [split $line ""] \a]]
   if { $beepCount } {
        # We have beeps. Figure out how many times to beep, and whether to display beeps.
@@ -3273,32 +3266,58 @@ proc ::potato::get_mushageProcess {c line} {
         }
      }
 
-  set len [string length $lineNoansi]
-  set urlIndices [list]
-  foreach x $tmp {
-    foreach {start end} $x {
-       if { $start == -1 } {
-            continue;
-          } else {
-            # The "10" in these calculations is to pass the timestamp suffix, [clock seconds]
-            lappend urlIndices [set tempa "end-[expr {$len-$start+1+10}]char"]
-            if { $end == -1 } {
-                 lappend urlIndices [set tempb "end-10char"]
-               } else {
-                 lappend urlIndices [set tempb "end-[expr {$len-$end+10}]char"]
-               }
-          }
-    }
-  }
-  unset -nocomplain tmp x start end len
+  # The format for $tagged is:
+  # [list "string" [list "fgTag" "bgTag" [list "other" "tags"]]]
+  set tagged [list]
+  # ANSI escape char is \x1B, char code 27
+  if { [regsub -all {\x1B.*?m} $line "" lineNoansi] } {
+       # We have ANSI
+       set toparse $line
+       while { [string length $toparse] } {
+               set tags [get_mushageColours $c]
+               set nextAnsi [string first \x1B $toparse]
+               if { $nextAnsi == -1 } {
+                    # No more ANSI
+                    foreach x [split $toparse ""] {
+                      lappend tagged [list $x $tags]
+                    }
+                    set toparse ""
+                    break;
+                  } else {
+                    set curr [string range $toparse 0 $nextAnsi-1]
+                    foreach x [split $curr ""] {
+                      lappend tagged [list $x $tags]
+                    }
+                    set nextM [string first "m" $toparse $nextAnsi]
+                    if { $nextM == -1 } {
+                         # No 'm' to close ANSI - borked ANSI code received.
+                         # Process an ANSI Normal and abort the rest of the line.
+                         handleAnsiCodes $c 0;
+                         set toparse ""
+                         break;
+                       }
+                    set codes [string range $toparse $nextAnsi+2 $nextM-1]
+                    handleAnsiCodes $c [split $codes ";"]
+                    set toparse [string range $toparse $nextM+1 end]
+                  }
+             }
+     } else {
+       # No ANSI
+       set tags [get_mushageColours $c]
+       foreach x [split $line ""] {
+         lappend tagged [list $x $tags]
+       }
+     }
+
   set insertedAnything 0 ;# we only flash the window if we have
+
+  eventsMatch $c tagged lineNoansi eventInfo
 
   set empty 0
   if { $lineNoansi eq "" && $world($w,ignoreEmpty) } {
        set empty 1
      }
 
-  array set eventInfo [events $c $lineNoansi]
   if { !$eventInfo(matched) || !$eventInfo(log) } {
        log $c $lineNoansi
      }
@@ -3316,17 +3335,8 @@ proc ::potato::get_mushageProcess {c line} {
        if { $eventInfo(noActivity) } {
             set noActivity 1
           }
-       set eventfg $eventInfo(fg)
-       set eventbg $eventInfo(bg)
-       set eventStart $eventInfo(start)
-       set eventEnd $eventInfo(end)
-     } else {
-       set eventfg ""
-       set eventbg ""
-       set eventStart -1
-       set eventEnd -1
-       set omit 0
      }
+     
   # Check to see if the line is to be omitted due to a "/limit"
   if { [llength $conn($c,limited)] } {
        set limit [lindex $conn($c,limited) 3]
@@ -3345,60 +3355,36 @@ proc ::potato::get_mushageProcess {c line} {
      } else {
        set limit 0
      }
-  # Ansi must be parsed, no matter what we're doing with the line (gagging, recolouring, etc).
-  # If nothing else, any ansi tags it leaves open should still affect the next line of text to come.
-
+     
+  
+  # Flatten
+  set prevTags [list]
   set inserts [list]
-  set inEvent 0
-  while { [string length $line] } {
-          set nextAnsi [string first \x1B $line]
-          set eventSeq [expr {$inEvent ? $eventEnd : $eventStart}]
-          if { $nextAnsi == -1 && $eventSeq < 0 } {
-               # Just plain text
-               lappend inserts $line [get_mushageColours $c "" "" $tagList]
-               break;
-             } elseif { $nextAnsi > -1 && ($eventSeq < 0 || $nextAnsi <= $eventSeq) } {
-               # Process up to ANSI
-               set prev [string range $line 0 $nextAnsi-1]
-               if { $inEvent } {
-                    lappend inserts $prev [get_mushageColours $c $eventfg $eventbg $tagList]
-                  } else {
-                    lappend inserts $prev [get_mushageColours $c "" "" $tagList]
-                  }
-               set prevLen [string length $prev]
-               incr eventStart -$prevLen
-               incr eventEnd -$prevLen
-               # Now process the colours
-               set nextM [string first m $line $nextAnsi]
-               if { $nextM == -1 } {
-                    # There's no 'm' to close the ANSI, but we have a complete line, so something
-                    # is wrong. Reset colours to normal and abort the rest of the line.
-                    handleAnsiCodes $c 0 ;# ANSI normal
-                    set line ""
-                    break;
-                  }
-               set codes [string range $line $nextAnsi+2 $nextM-1]
-               handleAnsiCodes $c [split $codes ";"]
-               set line [string range $line $nextM+1 end]
-             } else {
-               # We have an event sequence (start/end of event)
-               if { $inEvent } {
-                    set prev [string range $line 0 $eventEnd]
-                    set line [string range $line $eventEnd+1 end]
-                    lappend inserts $prev [get_mushageColours $c $eventfg $eventbg $tagList]
-                    set inEvent 0
-                  } else {
-                    set prev [string range $line 0 $eventStart-1]
-                    set line [string range $line $eventStart end]
-                    lappend inserts $prev [get_mushageColours $c "" "" $tagList]
-                    set inEvent 1
-                  }
-               set prevLen [string length $prev]
-               incr eventStart -$prevLen
-               incr eventEnd -$prevLen
-              }
-        }
+  set curr ""
+  set count 0
+  foreach x $tagged {
+    incr count
+    if { [catch {    set char [lindex $x 0]} err] } {
+         puts "Bad list emement $count is:"
+         puts $x
+       }
 
+    set char [lindex $x 0]
+    set tags [concat [lindex $x 1 0] [lindex $x 1 1] [lindex $x 1 2]]
+    if { $tags == $prevTags } {
+         append curr $char
+       } else {
+         if { $curr ne "" || [llength $prevTags] } {
+              lappend inserts $curr [concat $prevTags $tagList]
+            }
+         set curr $char
+         set prevTags $tags
+       }
+   }
+   if { $curr ne "" || [llength $prevTags] } {
+        lappend inserts $curr [concat $prevTags $tagList]
+      }
+   
   if { !$empty && $world($w,ansi,force-normal) } {
        # Force explicit ANSI-normal at the end of the line
        handleAnsiCodes $c 0
@@ -3429,10 +3415,6 @@ proc ::potato::get_mushageProcess {c line} {
        $t insert end "\n" [lindex [list "" limited] $limit] {*}$inserts
        $t insert end  [clock seconds] [list timestamp]
        set insertedAnything 1
-       if { [llength $urlIndices] } {
-            $t tag add link {*}$urlIndices
-            $t tag add weblink {*}$urlIndices
-          }
        if { $aE } {
             $t see end
           }
@@ -3451,10 +3433,6 @@ proc ::potato::get_mushageProcess {c line} {
               $x insert end "\n" ""
             }
          $x insert end "" "" {*}$inserts
-         if { [llength $urlIndices] } {
-              $x tag add link {*}$urlIndices
-              $x tag add weblink {*}$urlIndices
-            }
          if { $aE } {
               $x see end
             }
@@ -3465,20 +3443,25 @@ proc ::potato::get_mushageProcess {c line} {
        }
      }
 
-  if { $eventInfo(matched) && $eventInfo(send) ne "" } {
-       send_to $c $eventInfo(send) \n 1
+  if { $eventInfo(matched) && [info exists eventInfo(send)] } {
+       foreach x $eventInfo(send) {
+         send_to $c $x \n 1
+       }
      }
 
-  if { $eventInfo(input,window) != 0 && $eventInfo(input,string) ne "" } {
-       if { $eventInfo(input,window) == 3 } {
-            set eventInfo(input,window) [connInfo $c inputFocus]
-          }
-       showInput $c $eventInfo(input,window) $eventInfo(input,string) 1
-       if { $eventInfo(input,window) == 2 } {
-            # Make sure the second input window is visible, because we've just put stuff in it
-            set conn($c,twoInputWindows) 1
-            toggleInputWindows $c 0
-          }
+  if { $eventInfo(matched) && [info exists eventInfo(input)] } {
+       foreach x $eventInfo(input) {
+         foreach {window text} $x {break}
+         if { $window == 3 } {
+              set window [connInfo $c inputFocus]
+            }
+         showInput $c $window $text 1
+         if { $window == 2 } {
+              # Make sure the second input window is visible, because we've just put stuff in it
+              set conn($c,twoInputWindows) 1
+              toggleInputWindows $c 0
+            }
+        }
      }
 
   if { $insertedAnything } {
@@ -3721,49 +3704,43 @@ proc ::potato::handleAnsiCodes {c codes} {
 
 #: proc ::potato::get_mushageColours
 #: arg c connection id
-#: arg eventfg the event fg colour, or empty string if none
-#: arg eventbg the event bg colour, or empty string if none
-#: arg extraTags a list of extra tags to apply
-#: desc return a list of all the tags needed to apply the correct ANSI colour for text in connection $c,
-#: desc based on the gag colours given and the current state of connection $c as obtained through $conn($c,ansi,*), plus the $extraTags
+#: desc Using the current ANSI settings for connection $c, return a list in the form [list fg_tag bg_tag [list other tags]]
+#: desc Where fg_tag and bg_tag are an empty string, or the correct text widget tag for applying the current ANSI colour in use,
+#: and other tags are the tags for applying ANSI underline, flash, etc.
 #: return [list] of text widget tags
-proc ::potato::get_mushageColours {c eventfg eventbg extraTags} {
+proc ::potato::get_mushageColours {c} {
   variable conn;
-
+  
   set fg $conn($c,ansi,fg)
   set bg $conn($c,ansi,bg)
+  set other [list]
   if { $conn($c,ansi,inverse) } {
        # Invert colors
        foreach [list fg bg] [list $bg $fg] {break;}
      }
-  if { $eventfg ne "" } {
-       set fg $eventfg
-     }
-  if { $eventbg ne "" } {
-       set bg $eventbg
-     }
 
-  if { $fg eq "bg" || $fg eq "bgh" } {
-       lappend extraTags ANSI_fg_bg
-     } elseif { $fg eq "fg" } {
-       # Do nothing. Normal FG colour is the default.
+  if { $fg in [list "bg" "bgh"] } {
+       set fg ANSI_fg_bg
+     } elseif { $fg in [list "" "fg"] } {
+       set fg ""
      } else {
-       lappend extraTags ANSI_fg_$fg
+       set fg ANSI_fg_$fg
      }
-  if { $bg eq "bg" || $bg eq "bgh" } {
+  if { $bg in [list "bg" "bgh" ""] } {
        # Nothing. Normal BG is the default.
+       set bg ""
      } else {
-       lappend extraTags ANSI_bg_$bg
+       set bg ANSI_bg_$bg
      }
 
   if { $conn($c,ansi,flash) } {
-       lappend extraTags ANSI_flash
+       lappend other ANSI_flash
      }
   if { $conn($c,ansi,underline) } {
-       lappend extraTags ANSI_underline
+       lappend other ANSI_underline
      }
 
-  return $extraTags;
+  return [list $fg $bg $other];
 
 };# ::potato::get_mushageColours
 
@@ -3801,138 +3778,166 @@ proc ::potato::removePrefix {list prefix} {
 
 };# removePrefix
 
-#: proc ::potato::events
-#: arg c connection id
-#: arg str string to match
-#: desc return a list, suitable for [array set], of the events (gag/trigger/highlight/spawn) info that matches $str on 
-#: desc connection $c, including "matched", set to 1 if a g/t/h matched and 0 if not, and "result",
-#: desc set to what the match-checking command returned.
-#: return [array get] list
-proc ::potato::events {c str} {
+#: proc ::potato::eventsMatch
+#: args c connection id
+#: args _tagged name of variable to upvar, holding tagged characters to match
+#: args _lineNoansi name of variable to upvar, holding the line to match with no ANSI
+#: args _eventInfo name of variable to upvar, holding array of event match data
+#: desc Match all events for connection $c against the given text, altering the values of _tagged, _lineNoansi and _eventInfo to reflect changes made by the events.
+#: return nothing
+proc ::potato::eventsMatch {c _tagged _lineNoansi _eventInfo} {
   variable conn;
   variable world;
-  variable events;
-
+  upvar 1 $_tagged tagged;
+  upvar 1 $_lineNoansi str;
+  upvar 1 $_eventInfo eventInfo;
+  
   set w $conn($c,world)
-  if { $w == -1 } {
-       set worldsToCheck [list $w]
-     } else {
-       set worldsToCheck [list $w -1]
-     }
-
-  set break 0
-  array set retVals [list matched 0 result "" pattern "" matchtype "" omit 0 log 0 fg "" bg "" \
-               spawn 0 spawnTo "" input,window 0 input,string "" send "" start -1 end -1 noActivity 0]
-
-  set strL [string tolower $str]
-  set focus [focus -displayof .]
   set up [up]
-  foreach w $worldsToCheck {
-     if { $break } {
-          break; # We broke in the inner foreach, so don't check the gth for other worlds.
-        }
-     foreach x $world($w,events) {
-        if { !$world($w,events,$x,enabled) } {
-             continue;
-           }
-        if { ($up == $c) && ($world($w,events,$x,inactive) eq "world") } {
-             continue;
-           }
-        if { ($focus ne "") && ($world($w,events,$x,inactive) eq "program") } {
-             continue;
-           }
-        if { ($focus ne "") && ($up == $c) && ($world($w,events,$x,inactive) eq "inactive") } {
-             continue;
-           }
-        unset -nocomplain arg
-        switch $world($w,events,$x,matchtype) {
-            "regexp" -
-            "wildcard" {
-                      set failStr 0
-                      set matchCmd [list regexp -indices]
-                      if { !$world($w,events,$x,case) } {
-                           lappend matchCmd "-nocase"
-                         }
-                      lappend matchCmd "--"
-                      if { $world($w,events,$x,matchtype) eq "wildcard" } {
-                           lappend matchCmd $world($w,events,$x,pattern,int)
-                         } else {
-                           lappend matchCmd $world($w,events,$x,pattern)
-                         }
-                      lappend matchCmd $str -> arg(0) arg(1) arg(2) arg(3) \
-                              arg(4) arg(5) arg(6) arg(7) arg(8) arg(9)
-                     }
-            "contains" {
-                      set failStr -1
-                      set matchCmd [list string first]
-                      if { $world($w,events,$x,case) } {
-                           lappend matchCmd $world($w,events,$x,pattern) $str
-                         } else {
-                           lappend matchCmd [string tolower $world($w,events,$x,pattern)] $strL
-                         }
-                     }
-        };# switch
-        if { [catch {{*}$matchCmd} result] || $result == $failStr } {
-             continue;
-           }
-        set mapList [list "%%" "%"]
-        for {set i 0} {$i < 10} {incr i} {
-             lappend mapList %$i
-             if { [info exists arg($i)] } {
-                  lappend mapList [string range $str {*}$arg($i)]
-                } else {
-                  lappend mapList ""
-                }
-           }
-        if { !$retVals(matched) } {
-             array set retVals [list matched 1 result $result pattern $world($w,events,$x,pattern) \
-                     matchtype $world($w,events,$x,matchtype)]
-           }
-        if { !$retVals(spawn) && $world($w,events,$x,spawn) } {
-             set retVals(spawnTo) [parseUserVars $c [string map $mapList $world($w,events,$x,spawnTo)]]
-           }
-        if { !$retVals(omit) } {
-             set retVals(omit) $world($w,events,$x,omit)
-           }
-        if { !$retVals(noActivity) && [info exists world($w,events,$x,noActivity)] } {
-             set retVals(noActivity) $world($w,events,$x,noActivity)
-           }
-        if { !$retVals(log) } {
-             set retVals(log) $world($w,events,$x,log)
-           }
-        if { $retVals(fg) eq "" } {
-             set retVals(fg) $world($w,events,$x,fg)
-           }
-        if { $retVals(bg) eq "" } {
-             set retVals(bg) $world($w,events,$x,bg)
-           }
-        if { $retVals(start) == -1 && ($retVals(fg) ne "" || $retVals(bg) ne "") } {
-             if { $world($w,events,$x,matchtype) eq "contains" } {
-                  # $result is result of [string first]
-                  set retVals(start) $result
-                  set retVals(end) [expr {$result + [string length $world($w,events,$x,pattern)] - 1}]
-                } else {
-                  # [regexp -indices]
-                  foreach {retVals(start) retVals(end)} [set ->] {break}
-                }
-            }
-        if { $retVals(input,window) eq 0 && $world($w,events,$x,input,window) != 0 } {
-             set retVals(input,window) $world($w,events,$x,input,window)
-             set retVals(input,string) [string map $mapList $world($w,events,$x,input,string)]
-           }
-        if { $retVals(send) eq "" } {
-             set retVals(send) [string map $mapList $world($w,events,$x,send)]
-           }
-        if { !$world($w,events,$x,continue) } {
-             set break 1
-             break;
-           }
+  set focus [focus -displayof .]
+  set strL [string tolower $str]
+
+  if { $w == -1 } {
+       set worlds [list -1]
+     } else {
+       set worlds [list $w -1]
      }
+
+  set eventInfo(matched) 0     
+  
+  set done 0
+  foreach w $worlds {
+    if { $done } {
+         break;
+       }
+    foreach x $world($w,events) {
+      if { !$world($w,events,$x,enabled) } {
+           continue;
+         }
+      if { ($up == $c) && ($world($w,events,$x,inactive) eq "world") } {
+           continue;
+         }
+      if { ($focus ne "") && ($world($w,events,$x,inactive) eq "program") } {
+           continue;
+         }
+      if { ($focus ne "") && ($up == $c) && ($world($w,events,$x,inactive) eq "inactive") } {
+           continue;
+         }
+      unset -nocomplain arg
+      switch $world($w,events,$x,matchtype) {
+          "regexp" -
+          "wildcard" {
+                    set failStr 0
+                    set matchCmd [list regexp -indices]
+                    if { !$world($w,events,$x,case) } {
+                         lappend matchCmd "-nocase"
+                       }
+                    lappend matchCmd "--"
+                    if { $world($w,events,$x,matchtype) eq "wildcard" } {
+                         lappend matchCmd $world($w,events,$x,pattern,int)
+                       } else {
+                         lappend matchCmd $world($w,events,$x,pattern)
+                       }
+                    lappend matchCmd $str startAndEnd arg(0) arg(1) arg(2) arg(3) \
+                            arg(4) arg(5) arg(6) arg(7) arg(8) arg(9)
+                   }
+          "contains" {
+                    set failStr -1
+                    set matchCmd [list string first]
+                    if { $world($w,events,$x,case) } {
+                         lappend matchCmd $world($w,events,$x,pattern) $str
+                       } else {
+                         lappend matchCmd [string tolower $world($w,events,$x,pattern)] $strL
+                       }
+                   }
+      };# switch
+      if { [catch {{*}$matchCmd} result] || $result == $failStr } {
+           continue;
+         }
+      if { $world($w,events,$x,matchtype) eq "contains" } {
+           set start $result
+           set end [expr {$result + [string length $world($w,events,$x,pattern)] - 1}]
+         } else {
+           foreach {start end} $startAndEnd {break}
+         }
+      set mapList [list "%%" "%"]
+      for {set i 0} {$i < 10} {incr i} {
+           lappend mapList %$i
+           if { [info exists arg($i)] } {
+                lappend mapList [string range $str {*}$arg($i)]
+              } else {
+                lappend mapList ""
+              }
+         };# for
+
+
+      incr eventInfo(matched)
+      
+      if { $world($w,events,$x,spawn) && $world($w,events,$x,spawnTo) ne "" } {
+           !set eventInfo(spawnTo) [parseUserVars $c [string map$mapList $world($w,events,$x,spawnTo)]]
+         }
+         
+      !set eventInfo(omit) $world($w,events,$x,omit)
+      
+      if { [info exists world($w,events,$x,noActivity)] } {
+           !set eventInfo(noActivity) $world($w,events,$x,noActivity)
+         }
+         
+      !set eventInfo(log) $world($w,events,$x,log)
+
+      if { $world($w,events,$x,fg) ne "" } {
+           for {set i $start} {$i <= $end} {incr i} {
+             lset tagged [list $i 1 0] ANSI_fg_$world($w,events,$x,fg)
+           }             
+         }
+         
+      if { $world($w,events,$x,bg) ne "" } {
+           for {set i $start} {$i <= $end} {incr i} {
+             lset tagged [list $i 1 1] ANSI_bg_$world($w,events,$x,bg)
+           }
+         }
+
+      if { $world($w,events,$x,input,window) != 0 && \
+           [set input [string map $mapList $world($w,events,$x,input,string)]] ne "" } {
+           lappend eventInfo(input) [list $world($w,events,$x,input,window) $input]
+         }
+
+      if { [set send [string map $mapList $world($w,events,$x,send)]] ne "" } {
+           lappend eventInfo(send) $send
+         }
+
+      # This will be necessary when it's possible to replace the displayed text via events
+      #set raw ""
+      #foreach x $tagged {
+      #  append raw [lindex $tagged 0]
+      #}
+      #set str $raw
+      #set strL [string tolower $str]
+
+      if { !$world($w,events,$x,continue) } {
+           set done 1
+           break;
+         }
+
+    };# foreach x events
+  };# foreach w worlds
+  
+  set matchLinks {\m(?:(?:(?:f|ht)tps?://)|www\.)(?:(?:[a-zA-Z_\.0-9%+/@~=&,;-]*))?(?::[0-9]+/)?(?:[a-zA-Z_\.0-9%+/@~=&,;!-]*)(?:\?(?:[a-zA-Z_\.0-9%+/@~=&,;:!-]*))?(?:#[a-zA-Z_\.0-9%+/@~=&,;:!-]*)?}
+  set tmp [regexp -all -inline -indices -- $matchLinks $str]
+  
+  foreach x $tmp {
+    foreach {start end} $x {break}
+    for {set i $start} {$i <= $end} {incr i} {
+      lset tagged [list $i 1 2] [concat [lindex $tagged [list $i 1 2]] link weblink]
+    }
   }
-
-  return [array get retVals];
-
-};# ::potato::events
+  
+  set eventDefaults [list matched 0 omit 0 log 0 spawn 0 spawnTo "" noActivity 0]
+  array set eventInfo [dict merge $eventDefaults [array get eventInfo]]
+  
+  return;
+  
+};# ::potato::eventsMatch
 
 #: proc ::potato::boot_reconnect
 #: arg c connection id
@@ -13919,7 +13924,7 @@ proc ::potato::basic_reqs {} {
           }
         exit;
      }
-	 
+
   if { [catch {package require Tcl 8.5}] } {
        puts "WARNING! You need to be using at least Tcl 8.5 to run Potato (you only have [package version Tcl])."
        puts "Please download a newer version of Tcl, or download a binary of Potato from"
