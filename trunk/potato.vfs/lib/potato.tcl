@@ -9611,7 +9611,7 @@ proc ::potato::setUpBindings {} {
   set ::tcl_wordchars {[a-zA-Z0-9' ]}
   set ::tcl_nonwordchars {[^a-zA-Z0-9']}
 
-  bind . <FocusIn> [list ::potato::focusIn %W]
+  bind . <FocusIn> [list after idle [list ::potato::focusIn %W]]
   bind . <Unmap> [list ::potato::minimizeToTray %W]
 
   # bindtags:
