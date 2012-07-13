@@ -35,12 +35,10 @@ Download the [GettingTcl TclKit] into the potato.vfs directory, and then drag-an
 
 ==Linux and MacOS X==
 ===Source===
-Extract the potato.zip file into the directory of your choice drive - it contains a folder called potato.vfs. [GettingTcl Install Tcl and Tk] if you haven't yet, cd into the potato.vfs directory, then run
+[GettingTcl Install Tcl and Tk] if you haven't yet, extract the potato.tar.gz file into the directory of your choice drive - it contains a folder called potato.vfs. cd into the potato.vfs directory, then run main.tcl to start.
 {{{
-chmod +x main.tcl
-}}}
-to make it executable. After that, you can launch Potato with
-{{{
+tar zxf potato*.tar.gz
+cd potato.vfs
 ./main.tcl
 }}}
 
