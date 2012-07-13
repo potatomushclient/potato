@@ -1,0 +1,6 @@
+#summary Version 2.0.0b11
+=Version 2.0.0b11=
+==Not Yet Released==
+
+  * When switching to another window and then back to Potato, the focus automatically goes to an input window (if it wasn't there already). Suggested by jdnightwalker.
+  
