@@ -7727,8 +7727,14 @@ proc ::potato::focusIn {win} {
        return;
      }
 
-  if { [focus -displayof .] ne "" } {
-       set conn([up],idle) 0
+  set focus [focus -displayof .]
+  set c [up]
+  
+  if { $focus ne "" } {
+       set conn($c,idle) 0
+       if { $focus ni [list $conn($c,input1) $conn($c,input2)] } {
+            focus $conn($c,input1)
+          }
      }
 
   if { $winico(loaded) && $winico(flashing) } {
