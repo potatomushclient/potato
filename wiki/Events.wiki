@@ -14,6 +14,7 @@ The fields are:
   * *Case?*: Match the pattern case-sensitively?
   * *Enabled?*: Is this Event enabled? Must be ticked to use this Event.
   * *Continue?*: If this Event matches, should we continue matching further events?
+  * *Match All?*: Should all instances of the pattern in each line be matched, rather than just the first?
   * *Run When*: When this event can be matched. One of:
     * Always:
     * Not Up:
