@@ -5,4 +5,4 @@
   * When switching to another window and then back to Potato, the focus automatically goes to an input window (if it wasn't there already). Suggested by jdnightwalker.
   * Rewritten some of the ANSI parsing code, and the way in which Events are matched, so it works better. Among other things, two separate Events can now alter different parts of a line, and one Event can match several times in the same line. Suggested by Noc Mosher.
   * When running on Linux, you can now launch Potato via main.tcl without being in the potato.vfs directory. By Cheetah.
-  
+  * New feature in Events that allows replacing the matched portion of text with something else. Suggested by Null and Paige.
