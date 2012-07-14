@@ -433,16 +433,6 @@ proc ::potato::manageWorldVersion {w version} {
             }
        }
      }
-     
-  if { ! ($version & $wf(event_matchall)) } {
-       foreach x [array names world $w,events,*,pattern] {
-         set x [string range $x 0 end-8]
-         if { ![info exists world($x,matchAll)] } {
-              set world($x,matchAll) 1
-            }
-       }
-     }
-
 
   # Example:
   # if { ! ($version & $wf(some_new_feature)) } {
@@ -593,7 +583,6 @@ proc ::potato::worldFlags {{total 0}} {
   set f(obfusticated_pw)     8    ;# Passwords are obfusticated
   set f(many_chars)         16    ;# World has multiple characters in $world($w,charList) as [list [list name pw] [list name pw]], not $world($w,charName) and $world($w,charPass)
   set f(event_noactivity)   32    ;# Events have a noActivity option
-  set f(event_matchall)     64    ;# Events have a matchAll option
 
   if { !$total } {
        return [array get f];
@@ -3842,9 +3831,6 @@ proc ::potato::eventsMatch {c _tagged _lineNoansi _eventInfo} {
                     set matchCmd [list regexp -indices]
                     if { !$world($w,events,$x,case) } {
                          lappend matchCmd "-nocase"
-                       }
-                    if { $world($w,events,$x,matchAll) } {
-                         lappend matchCmd "-all"
                        }
                     lappend matchCmd "--"
                     if { $world($w,events,$x,matchtype) eq "wildcard" } {
