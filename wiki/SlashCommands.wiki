@@ -1,11 +1,19 @@
 #summary /commands
 =/commands=
 
-A "/command" is a special command you can type into the input box (or anywhere else that sends text to the MU`*`, like [Events]). Rather than being sent to the MU`*`, the command will be executed by Potato. (If you want to send something to the game beginning with a /, use two, like "//foo".) Arguments to /commands are parsed for [SlashCommandVariables variables]. The following is a list of available commands, with terse descriptions:
+A "/command" is a special command you can type into the input box (or anywhere else that sends text to the MU`*`, like [Events]). Rather than being sent to the MU`*`, the command will be executed by Potato. (If you want to send something to the game beginning with a /, use two, like "//foo".) 
+
+Some /commands return a value, and /commands can be nested in each other, using the syntax
+{{{
+/command Text with the result of [/another-command] in it.
+}}}
+More examples are at the end.
+
+The following is a list of available commands, with terse descriptions:
 
   * `/addspawn <spawn1> [<spawn2> [<spawnN>]]` - Start spawning all output for this connection (regardless of events) to each of the given spawn windows.
   * `/all <string>` - Send `<string>` to all open connections.
-  * `/at <time>=<command>` - At `<time>`, send the command `<command>` to the MU`*`. See detailed help for [SlashCommandsAt /at] for more information.
+  * `/at <time>=<command>` - At `<time>`, send the command `<command>` to the MU`*`. See detailed help for [SlashCommandsAt /at] for more information. Returns a unique ID that can be used with `/cancelat` to cancel it later.
   * `/cancelat <id>` - Cancel the specified [SlashCommandsAt /at].
   * `/close` - Close the current connection.
   * `/cls [<conn>[.<window>]]` - Clear the screen for the specified connection, or the current connection if one isn't given. If a `<window>` is given, it clears that spawn window instead.
@@ -14,29 +22,31 @@ A "/command" is a special command you can type into the input box (or anywhere e
   * `/delspawn <spawn1> [<spawn2> [<spawnN>]]` - Stop spawning all output (started via `/addspawn`) to the specified spawn windows.
   * `/disconnect` - Disconnect the current connection.
   * `/edit` - Edit the settings for the current world (or the program settings, if no connections are open).
-  * `/eval <tcl code>` - Evaluates a string as Tcl code, and prints the result in the output window, in the form `Return (<len>): <string>`, or `Error (<len>): <string>`, depending on whether the code threw an error.
+  * `/eval <tcl code>` - Evaluates the given <tcl code>, and returns the result.
   * `/exit` - Exit Potato.
+  * `/get [-all|-global|-local] <varname>` - Return the value of a variable set with `/set` or `/setglobal`. As well as a variable name, `<varname>` can also be one of `_u`, `_c`, `_w`, `_name`, `_char`, `_host` or `_port`, to return the number of the currently-displayed connection, the number of the connection the /get is running for, the world number of the connection /get is running for, the name of the world, the char connected, the host or the port, respectively.
   * `/history [<number>]` - With no arg, open the Input History window. With an arg, place the `<number>`th entry from the history into the input window. `<number>` can be negative, to count from the end instead of the start.
   * `/input <num> <string>` - Print `<string>` into the `<num>`th input window. `<num>` can be 1 for the top input, 2 for the bottom, or 3 for the one which currently has focus.
   * `/limit` - Filters output. See the help for [SlashCommandsLimit /limit] for more details.
   * `/log` - Start or stop logging. See the help for [Logging#/log /log] for more details.
+  * `/null [<args>]` - Does nothing and returns nothing. Useful for eating the output of other /commands.
   * `/print <message>` - Print `<message>` as a system message.
   * `/quick <address>` - Perform a [QuickConnect quick connect] to `<address>`, which is either a `host:port` or `host port` string.
   * `/reconnect` - Reconnect the current connection.
   * `/rename [<name>]` - Set a temporary name for the current connection, or clear the existing temporary name. Useful if you connect to one world multiple times, to make them easier to distinguish.
   * `/runmacro <macro>` - Run the given `<macro>`.
-  * `/send <string>` - Send `<string>` to the current connection. Allows for [SlashCommandVariables variable parsing] to be carried out on the string before it's sent.
-  * `/set <varname>=<value>` - Set a [SlashCommandVariables variable] for the current connection.
-  * `/setglobal <varname>=<value>` - Set a [SlashCommandVariables variable] for all connections.
+  * `/send <string>` - Send `<string>` to the current connection. Allows for nesting other /commands in `<string>`.
+  * `/set <varname>=<value>` - Set a variable for the current connection.
+  * `/setglobal <varname>=<value>` - Set a variable for all connections.
   * `/setprefix [<window>=]<prefix>` - Set a prefix for the output window `<window>` or for the current output window if no `<window>` is given.
   * `/show <number>` - Show connection number `<number>`.
   * `/show [<number>.]<window>` - Show output window `<window>` for connection number `<number>`, or the current connection if `<number>` is omitted.
-  * `/silent <command>` - Run the given /command without producing its normal output.
-  * `/slash/` - Show a list of the available /commands.
+  * `/silent [<args>]` - Historical alias for `/null`.
+  * `/slash` - Show a list of the available /commands.
   * `/speedwalk <dir> [<dir> ... <dir>]` - Send a number of movement commands to the current connection, as specified by the list of `<dir>`s. Each direction should be one of *N*, *S*, *E*, *W*, *NW*, *NE*, *SE*, *SW*, *U*, *D* or *O* (for cardinal directions, 'Up', 'Down' and 'Out'), possibly prefixed by a number, to repeat it that many times. For instance, `/speedwalk 3n o 2sw` would send `north`, `north`, `north`, `out`, `southwest`, `southwest`.
   * `/tcl` - On Windows, this command will open a Tcl Command console where Tcl code can be entered.
-  * `/tinyurl <url>` - Generate a shorter version of `<url>` and display it, using the configured TinyURL provider.
-  * `/tinyurl <string>` - Replace each URL in `<string>` with a shortended version, using the configured TinyURL provider, and send the resulting string to the current connection.
+  * `/tinyurl <url>` - Returns a shorter version of `<url>` and display it, using the configured TinyURL provider.
+  * `/tinyurl <string>` - Replace each URL in `<string>` with a shortended version, using the configured TinyURL provider, and send the resulting string to the current connection (returns nothing).
   * `/toggle [<direction>]` - Toggle to the next connection. If `<direction>` is "down" or "-1", toggle backwards to the previous connection instead.
   * `/unlimit` - Stop filtering output. See [SlashCommandsLimit /limit] for more details.
   * `/unset <varname>` - Unset a connection-specific variable created by `/set`.
@@ -46,7 +56,13 @@ A "/command" is a special command you can type into the input box (or anywhere e
   * `/world` - Alias for `/show`.
   * `/w` - Alias for `/show`.
 
+Examples:
+Set a macro to run in 25 minutes, saving the timer ID in a variable so it can be cancelled later.
+{{{
+/set my_timer=[/at 25 minutes=/runmacro mymacro]
+}}}
 
-
-
-Available slash commands: addspawn, all, at, cancelat, close, cls, connect, debug, delspawn, disconnect, edit, eval, exit, history, input, limit, log, print, quick, reconnect, rename, runmacro, send, set, setglobal, setprefix, show, silent, slash, speedwalk, tcl, tinyurl, toggle, unlimit, unset, unsetglobal, vars, and web
+Send text to the MU`*`, including the value of some variables:
+{{{
+/send say I am connected to [/get _name] as [/get _char]
+}}}
