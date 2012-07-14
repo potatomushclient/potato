@@ -15,6 +15,8 @@
   package ifneeded potato-proxy 1.1 [list source [file join $dir .. potato-proxy.tcl]]
 
   package ifneeded potato-encoding 1.0 [list source [file join $dir .. potato-encoding.tcl]]
+  
+  package ifneeded potato-subfiles 1.0 [list ::potato::loadSubFiles [file join $dir ..]]
 
   # Windows-specific
   package ifneeded potato-winflash 1.0 "[list load [file join $dir windows flash85.dll]] ; [list source [file join $dir windows potato-winflash.tcl]]"
