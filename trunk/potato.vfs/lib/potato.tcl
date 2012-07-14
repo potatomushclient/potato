@@ -443,6 +443,16 @@ proc ::potato::manageWorldVersion {w version} {
        }
      }
 
+  if { ! ($version & $wf(event_replace)) } {
+       foreach x [array names world $w,events,*,pattern] {
+         set x [string range $x 0 end-8]
+         if { ![info exists world($x,replace)] } {
+              set world($x,replace) 0
+              set world($x,replace,with) ""
+            }
+       }
+     }
+
 
   # Example:
   # if { ! ($version & $wf(some_new_feature)) } {
@@ -594,6 +604,7 @@ proc ::potato::worldFlags {{total 0}} {
   set f(many_chars)         16    ;# World has multiple characters in $world($w,charList) as [list [list name pw] [list name pw]], not $world($w,charName) and $world($w,charPass)
   set f(event_noactivity)   32    ;# Events have a noActivity option
   set f(event_matchall)     64    ;# Events have a matchAll option
+  set f(event_replace)     128    ;# Events have replace / replace,with
 
   if { !$total } {
        return [array get f];
@@ -3822,6 +3833,7 @@ proc ::potato::eventsMatch {c _tagged _lineNoansi _eventInfo} {
          break;
        }
     foreach event $world($w,events) {
+      set replaceOffset 0
       if { !$world($w,events,$event,enabled) } {
            continue;
          }
@@ -3893,8 +3905,8 @@ proc ::potato::eventsMatch {c _tagged _lineNoansi _eventInfo} {
            for {set i 0} {$i < $result} {incr i} {
                 set curr [lrange $allPositions 0 $each-1]
                 set allPositions [lrange $allPositions $each end]
-                set start [lindex $curr 0 0]
-                set end [lindex $curr 0 1]
+                set start [expr {[lindex $curr 0 0] - $replaceOffset}]
+                set end [expr {[lindex $curr 0 1] - $replaceOffset}]
                 set args [lrange $curr 1 end]
                 set maxarg [expr {min($each-1, 10)}]
                 unset -nocomplain arg
@@ -3934,7 +3946,7 @@ proc ::potato::eventsMatch {c _tagged _lineNoansi _eventInfo} {
         incr eventInfo(matched)
       
         if { $world($w,events,$event,spawn) && $world($w,events,$event,spawnTo) ne "" } {
-             !set eventInfo(spawnTo) [parseUserVars $c [string map$mapList $world($w,events,$event,spawnTo)]]
+             !set eventInfo(spawnTo) [parseUserVars $c [string map $mapList $world($w,events,$event,spawnTo)]]
            }
          
         !set eventInfo(omit) $world($w,events,$event,omit)
@@ -3965,6 +3977,19 @@ proc ::potato::eventsMatch {c _tagged _lineNoansi _eventInfo} {
         if { [set send [string map $mapList $world($w,events,$event,send)]] ne "" } {
              lappend eventInfo(send) $send
            }
+           
+        if { $world($w,events,$event,replace) } {
+             set replaceText [parseUserVars $c [string map $mapList $world($w,events,$event,replace,with)]]
+             set replaceList [list]
+             set tags [lindex $tagged $start 1]
+             foreach x [split $replaceText ""] {
+               lappend replaceList [list $x $tags]
+             }
+             set tagged [lreplace $tagged $start $end {*}$replaceList]
+             incr replaceOffset [expr {[string length $replaceText] - ($end - $start)}]
+             set str [string replace $str $start $end $replaceText]
+           }
+             
 
         # This will be necessary when it's possible to replace the displayed text via events
         #set raw ""
@@ -5585,6 +5610,16 @@ proc ::potato::eventConfig {{w ""}} {
   pack [::ttk::entry $frame.right.row08.e -textvariable potato::eventConfig($w,spawnTo)] -side left -anchor nw \
                      -padx 2 -expand 1 -fill x
   lappend rightList $frame.right.row08.cb $frame.right.row08.e
+  
+  pack [::ttk::frame $frame.right.row08b] -side top -anchor nw -fill x -padx 5 -pady 2
+  pack [::ttk::label $frame.right.row08b.l -text [T "Replace?"] -width 10 -justify left -anchor w] -side left -anchor nw -padx 2
+  pack [::ttk::checkbutton $frame.right.row08b.cb -variable potato::eventConfig($w,replace) \
+                -onvalue 1 -offvalue 0] -side left -anchor nw
+  pack [::ttk::label $frame.right.row08b.l2 -text [T "With:"] -justify left -anchor w] -side left -anchor nw -padx 2
+  pack [::ttk::entry $frame.right.row08b.e -textvariable potato::eventConfig($w,replace,with)] -side left -anchor nw \
+                     -padx 2 -expand 1 -fill x
+  lappend rightList $frame.right.row08b.cb $frame.right.row08b.e
+
 
   pack [::ttk::frame $frame.right.row09] -side top -anchor nw -expand 1 -fill x -padx 5 -pady 2
   pack [::ttk::label $frame.right.row09.l -text [T "Send:"] -width 10 -justify left -anchor w] -side left -anchor nw -padx 2
@@ -5733,6 +5768,8 @@ proc ::potato::eventAdd {w} {
   set world($w,events,$x,input,window) 0
   set world($w,events,$x,input,string) ""
   set world($w,events,$x,matchAll) 0
+  set world($w,events,$x,replace) 0
+  set world($w,events,$x,replace,with) ""
 
   lappend world($w,events) $x
   lappend eventConfig($w,conf,internalList) $x
@@ -5793,7 +5830,7 @@ proc ::potato::eventSave {w} {
   variable world;
 
   set this $eventConfig($w,conf,currentlyEdited)
-  foreach x [list pattern matchtype case enabled continue omit log noActivity spawn spawnTo matchAll] {
+  foreach x [list pattern matchtype case enabled continue omit log noActivity spawn spawnTo matchAll replace replace,with] {
      set world($w,events,$this,$x) $eventConfig($w,$x)
   }
 
@@ -5871,7 +5908,7 @@ proc ::potato::eventConfigSelect {w states} {
 
   if { $this eq "" } {
        # Clear all info
-       foreach x [list pattern matchtype case enabled continue omit log noActivity spawn spawnTo matchAll] {
+       foreach x [list pattern matchtype case enabled continue omit log noActivity spawn spawnTo matchAll replace replace,with] {
           set eventConfig($w,$x) ""
        }
        set eventConfig($w,inactive) "Always"
@@ -5903,7 +5940,7 @@ proc ::potato::eventConfigSelect {w states} {
   # the comboboxes, because it's too stupid to let you give a list of values to display /and/
   # a corresponding list of values to store in the variables. We also have a couple of text
   # widgets to insert stuff into.
-  foreach x [list pattern matchtype case enabled continue omit log noActivity spawn spawnTo matchAll] {
+  foreach x [list pattern matchtype case enabled continue omit log noActivity spawn spawnTo matchAll replace replace,with] {
      set eventConfig($w,$x) $world($w,events,$this,$x)
   }
 
@@ -5966,8 +6003,9 @@ proc ::potato::eventConfigClear {w} {
   array unset eventConfig $w,*
   set eventConfig($w,pattern) ""
   set eventConfig($w,spawnTo) ""
+  set eventConfig($w,replace,with) ""
   # Set checkboxes to 0
-  foreach x [list case enabled continue log omit spawn matchAll] {
+  foreach x [list case enabled continue log omit spawn matchAll replace] {
     set eventConfig($w,$x) 0
   }
   array set eventConfig [array get temp]
