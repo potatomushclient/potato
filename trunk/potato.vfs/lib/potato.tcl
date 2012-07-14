@@ -97,7 +97,7 @@ proc ::potato::manageWorldVersion {w version} {
             }
        }
      }
-     
+
   if { ! ($version & $wf(event_matchall)) } {
        foreach x [array names world $w,events,*,pattern] {
          set x [string range $x 0 end-8]
@@ -123,7 +123,7 @@ proc ::potato::manageWorldVersion {w version} {
   #      set world($w,new_features_var) foobar
   #    }
 
-  return;       
+  return;
 
 };# potato::manageWorldVersion
 
@@ -226,7 +226,7 @@ proc ::potato::saveWorlds {} {
                set pw [lindex $x 1]
                lappend value [list $char [obfusticate $pw 1]]
              }
-           }             
+           }
         puts $fid [list set newWorld($opt) $value]
      }
      # This should NOT be translated
@@ -492,7 +492,7 @@ proc ::potato::prefixWindowSave {w} {
   # Validate window name
   if { ![regexp $potato(spawnRegexp) $window] && $window ne "_main" && $window ne "_all" } {
         tk_messageBox -icon error -parent $toplevel -title [T "Prefixes"] \
-                      -message [T "Invalid window name."] 
+                      -message [T "Invalid window name."]
         return;
      }
 
@@ -630,7 +630,7 @@ proc ::potato::prefixWindowPostMenu {w} {
 #: desc Show a "send mail" window for connection $c, or the currently displayed connection if $c is ""
 #: return nothing
 proc ::potato::mailWindow {{c ""}} {
-  variable conn; 
+  variable conn;
   variable world;
   variable gameMail;
 
@@ -888,7 +888,7 @@ proc ::potato::reshowWindow {win {bell 1}} {
 
 #: proc ::potato::uploadWindow
 #: arg c connection id, defaults to ""
-#: desc For connection $c (or the currently displayed connection, if $c is ""), show the dialog to 
+#: desc For connection $c (or the currently displayed connection, if $c is ""), show the dialog to
 #: desc allow the user to select a file to upload (if they aren't already doing so), or the dialog for them to cancel, if they are.
 #: return nothing
 proc ::potato::uploadWindow {{c ""}} {
@@ -1120,7 +1120,7 @@ proc ::potato::uploadBegin {c} {
 
   set conn($c,upload,after) [after $delay [list potato::uploadBegin $c]]
 
-  return;  
+  return;
 
 };# ::potato::uploadBegin
 
@@ -1997,7 +1997,7 @@ proc ::potato::linkRecolour {t dir} {
 proc ::potato::doWebLink {t tagname} {
 
   launchWebPage [$t get {*}[$t tag prevrange $tagname "current + 1 char"]]
-  
+
   return;
 
 };# ::potato::doWebLink
@@ -2591,7 +2591,7 @@ proc ::potato::timersStart {c} {
       timersStartOne $c $w $timerId
     }
   }
-      
+
   return;
 
 };# ::potato::timersStart
@@ -2753,9 +2753,9 @@ proc ::potato::disconnect {{c ""} {prompt 1}} {
           }
      }
 
-  
+
   catch {fileevent $conn($c,id) writable {}}
-  catch {fileevent $conn($c,id) readable {}}  
+  catch {fileevent $conn($c,id) readable {}}
   uploadEnd $c 1;# cancel any in-progress file upload
   catch {::potato::ioClose $conn($c,id)}
   set conn($c,id) ""
@@ -2855,7 +2855,7 @@ proc ::potato::debug_packet {c dir text} {
     }
     $win(txt,btxt) insert end $dchar $tag
     incr linelen
-    if { $char eq $conn($c,id,lineending) || "$prev$char" eq $conn($c,id,lineending) || 
+    if { $char eq $conn($c,id,lineending) || "$prev$char" eq $conn($c,id,lineending) ||
          ($linelen > 0 && ($linelen % 32) == 0) } {
          $win(txt,btxt) insert end "\n"
          $win(txt,bhex) insert end "\n"
@@ -3022,7 +3022,7 @@ proc ::potato::get_mushageProcess {c line} {
             set noActivity 1
           }
      }
-     
+
   # Check to see if the line is to be omitted due to a "/limit"
   if { [llength $conn($c,limited)] } {
        set limit [lindex $conn($c,limited) 3]
@@ -3041,8 +3041,8 @@ proc ::potato::get_mushageProcess {c line} {
      } else {
        set limit 0
      }
-     
-  
+
+
   # Flatten
   set prevTags [list]
   set inserts [list]
@@ -3070,7 +3070,7 @@ proc ::potato::get_mushageProcess {c line} {
    if { $curr ne "" || [llength $prevTags] } {
         lappend inserts $curr [concat $prevTags $tagList]
       }
-   
+
   if { !$empty && $world($w,ansi,force-normal) } {
        # Force explicit ANSI-normal at the end of the line
        handleAnsiCodes $c 0
@@ -3096,7 +3096,7 @@ proc ::potato::get_mushageProcess {c line} {
        $t insert end "\n" [list system center newact] $newActStr [list system center newact] [clock seconds] [list system center newact timestamp]
        set insertedAnything 1
      }
- 
+
   if { !$empty && !$omit } {
        $t insert end "\n" [lindex [list "" limited] $limit] {*}$inserts
        $t insert end  [clock seconds] [list timestamp]
@@ -3396,7 +3396,7 @@ proc ::potato::handleAnsiCodes {c codes} {
 #: return [list] of text widget tags
 proc ::potato::get_mushageColours {c} {
   variable conn;
-  
+
   set fg $conn($c,ansi,fg)
   set bg $conn($c,ansi,bg)
   set other [list]
@@ -3624,7 +3624,7 @@ proc ::potato::toggleConn {dir} {
 #: proc ::potato::showConn
 #: arg c the connection to show
 #: arg main if misc(toggleShowMainWindow) is true, should we show _main instead of a spawn?
-#: desc show the window holding connection $c. This may require updating the list of worlds 
+#: desc show the window holding connection $c. This may require updating the list of worlds
 #: desc with new activity (and setting the idle var for the connection), and so on (meaning: maybe more?).
 #: return nothing
 proc ::potato::showConn {c {main 1}} {
@@ -4112,7 +4112,7 @@ proc ::potato::manageWorldsNewGroup {} {
   wm withdraw $win
   wm title $win [T "Add New Group"]
   set manageWorlds(newGroupWin) $win
-  
+
   pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both
   pack [::ttk::label $frame.l -text [T "Enter the name for the new Group, and click Add."]] -side top -padx 3 -pady 5
   set name [T "New Group"]
@@ -4220,7 +4220,7 @@ proc ::potato::manageWorldsSelectGroup {} {
        $manageWorlds(delGroupBtn) state disabled
      } else {
        $manageWorlds(delGroupBtn) state !disabled
-     }       
+     }
 
   manageWorldsUpdateWorlds 0
   return;
@@ -4370,7 +4370,7 @@ proc ::potato::manageWorldsUpdateWorlds {{keepSel 1}} {
 };# ::potato::manageWorldsUpdateWorlds
 
 #: proc ::potato::newWorld
-#: arg quick is this a quick connection? 
+#: arg quick is this a quick connection?
 #: arg hostAddr initial host address to use, defaults to ""
 #: arg portNum initial port to use, defaults to ""
 #: desc Show the dialog for adding a new world.
@@ -4419,7 +4419,7 @@ proc ::potato::newWorld {quick {hostAddr ""} {portNum ""}} {
   set port [::ttk::frame $frame.port]
   pack $port -side top -fill x -anchor nw -padx 5 -pady 1
   pack [::ttk::label $port.l -text [T "Port:"] -width 7 -justify left -anchor w] -side left -anchor nw
-  pack [::ttk::entry $port.e -textvariable ::potato::newWorld(port) -width 35] -side left -anchor nw -fill x  
+  pack [::ttk::entry $port.e -textvariable ::potato::newWorld(port) -width 35] -side left -anchor nw -fill x
   set potato::newWorld(port) $portNum
 
   set btns [::ttk::frame $frame.btns]
@@ -4567,7 +4567,7 @@ proc ::potato::copyWorld {w} {
   # Copy of OriginalName[ (X)]
   # OriginalName (Copy[ X]) <-- current favourite
   set copyWord [T "Copy"]
-  set copyWordRe [regsub -all {([^a-zA-Z0-9?*])} $copyWord {\\\1}] 
+  set copyWordRe [regsub -all {([^a-zA-Z0-9?*])} $copyWord {\\\1}]
   set hasCopy 0
   set copyCount [list]
   set namePtn "^[regsub -all {([^a-zA-Z0-9?*])} $world($new,name) {\\\1}] \\($copyWordRe (\[0-9\]+)\\)$"
@@ -4804,7 +4804,7 @@ proc ::potato::macroWindowPopulate {w {sel ""}} {
        $tree focus $sel
        macroWindowState $w 1
      }
-  
+
   return;
 
 };# ::potato::macroWindowPopulate
@@ -4925,7 +4925,7 @@ proc ::potato::connStatus {c} {
        return "disconnected";
      } elseif { $conn($c,connected) == -1 } {
        return "connecting";
-     } else { 
+     } else {
        return "connected";
      }
 
@@ -5017,7 +5017,7 @@ proc ::potato::focusIn {win} {
 
   set focus [focus -displayof .]
   set c [up]
-  
+
   if { $focus ne "" } {
        set conn($c,idle) 0
        if { $focus ni [list $conn($c,input1) $conn($c,input2)] } {
@@ -5036,7 +5036,7 @@ proc ::potato::focusIn {win} {
 };# ::potato::focusIn
 
 #: proc ::potato::setClock
-#: desc set potato(clock) to the current time, formatted according to misc(clockFormat), 
+#: desc set potato(clock) to the current time, formatted according to misc(clockFormat),
 #: desc and queue an update in 1 second. Also set the formatted connection stats.
 #: return nothing
 proc ::potato::setClock {} {
@@ -5073,7 +5073,7 @@ proc ::potato::statsFormat {secs} {
 };# ::potato::statsFormat
 
 #: proc ::potato::errorLogWindow
-#: desc Create a window for displaying an Error Log of bugs/errors that occur while Potato 
+#: desc Create a window for displaying an Error Log of bugs/errors that occur while Potato
 #: desc is running (failure to load package, execute external commands, etc). If the window already exists, deiconify it.
 #: return nothing
 proc ::potato::errorLogWindow {} {
@@ -5193,7 +5193,7 @@ proc ::potato::main {} {
      }
   set path(help) [file join $potato(vfsdir) lib help]
   set dev [file join $potato(homedir) potato.dev]
-  
+
   basic_reqs
 
   # This MUST be after basic_reqs, as the [tk] command isn't available on
@@ -5278,7 +5278,7 @@ proc ::potato::main {} {
 
   if { $::tcl_platform(platform) eq "windows" } {
        if { ![catch {package require dde 1.3} err] } {
-            # Start the DDE server in case we're the default telnet app. 
+            # Start the DDE server in case we're the default telnet app.
             # Only do this on Windows when DDE is available
             ::potato::ddeStart
           } else {
@@ -5313,7 +5313,7 @@ proc ::potato::main {} {
   after idle [list ::potato::autoConnect]
 
   after idle [list ::potato::keepalive]
-  
+
   if { $misc(checkForUpdates) } {
        after 3500 [list ::potato::checkForUpdates 1]
      }
@@ -5399,8 +5399,8 @@ proc ::potato::loadTranslationFile {file} {
   # <translatedMsg>
   # <originalMsg>
   # <translatedMsg>
-  # etc. 
-  # The ENCODING: line is optional. Where present, Potato attempts to change file encoding to <encoding> when 
+  # etc.
+  # The ENCODING: line is optional. Where present, Potato attempts to change file encoding to <encoding> when
   # reading the file in.
   #
   # Any empty lines, lines containing only white space, and lines starting with '#' will
@@ -5770,7 +5770,7 @@ proc ::potato::showMSSP {} {
 
   return;
 
-};# ::potato::showMSSP 
+};# ::potato::showMSSP
 
 #: proc ::potato::showStats
 #: desc Show a window of connection stats for each world.
@@ -5919,7 +5919,7 @@ proc ::potato::setUpWinico {} {
   if { ![file exists $dir] || ![file isdirectory $dir] || ![file exists $mainico] || ![file isfile $mainico] } {
        return;
      }
- 
+
   if { [catch {set winico(main) [winico createfrom $mainico]}] } {
        return;
      }
@@ -6181,7 +6181,7 @@ proc ::potato::history {{c ""}} {
   foreach x [list 1 2 3 4] {
     bind $win <KeyPress-$x> [list ::potato::historySub $c $win $tree $x]
     bind $filter <KeyPress-$x> {break}
-  }  
+  }
 
 
   update idletasks
@@ -6298,8 +6298,8 @@ proc ::potato::createImages {} {
 };# ::potato::createImages
 
 #: proc ::potato::setUpFlash
-#: desc Set up the ::potato::flash proc, which flashes the taskbar icon and systray icon for the app. 
-#: desc If we're on Windows, we try to load the potato-winflash package and use that. On Linux, we try potato-linflash. 
+#: desc Set up the ::potato::flash proc, which flashes the taskbar icon and systray icon for the app.
+#: desc If we're on Windows, we try to load the potato-winflash package and use that. On Linux, we try potato-linflash.
 #: desc Else, we just "wm deiconify .". For Win we also try and flash the Winico systray icon if requested.
 #: return nothing
 proc ::potato::setUpFlash {} {
@@ -6323,7 +6323,7 @@ proc ::potato::setUpFlash {} {
        if { [catch {package require potato-linflash}] } {
             # Attempt to copy linflash out for the first time
             catch {file copy -force [file join $potato(vfsdir) lib app-potato linux linflash1.0] $path(lib)}
-            catch {exec [file join $path(lib) linflash1.0 compile]}            
+            catch {exec [file join $path(lib) linflash1.0 compile]}
           }
        if { ![catch {package require potato-linflash} err] } {
             set taskbarCmd {linflash .}
@@ -6351,7 +6351,7 @@ proc ::potato::setUpFlash {} {
 };# ::potato::setUpFlash
 
 #: proc ::potato::chk_exit
-#: arg prompt If 0, do not prompt. If 1, prompt. If -1, prompt only if there are open (meaning "not closed", as 
+#: arg prompt If 0, do not prompt. If 1, prompt. If -1, prompt only if there are open (meaning "not closed", as
 #: desc opposed to "connected") connections. NOTE: We always prompt if there are still active connections
 #: desc if they want to quit, do so correctly
 #: return nothing
@@ -6379,7 +6379,7 @@ proc ::potato::chk_exit {{prompt 0}} {
         }
   }
 
-       
+
   if { $ask } {
        if { $connected } {
             set msg [T "Are you sure you want to quit? There are still open connections!"]
@@ -6420,7 +6420,7 @@ proc ::potato::chk_exit {{prompt 0}} {
 
 #: proc ::potato::menu_label
 #: arg str String to parse
-#: desc Parse $str and return a -label and -underline option. The -label is $str with the first "&" 
+#: desc Parse $str and return a -label and -underline option. The -label is $str with the first "&"
 #: desc removed, and the -underline is the position of that first & (or -1 if there is none).
 #: return Tcl list of -label $label -underline $position
 proc ::potato::menu_label {str} {
@@ -6719,7 +6719,7 @@ proc ::potato::setUpMenu {} {
 proc ::potato::checkForUpdates {{background 0}} {
   variable potato;
   variable update;
-  
+
   set win .checkForUpdates
   if { [winfo exists $win] } {
        reshowWindow $win
@@ -6735,11 +6735,11 @@ proc ::potato::checkForUpdates {{background 0}} {
   pack [::ttk::label $top.l1 -text "You are currently running version:" -font $labelfont -justify center] -side top
   pack [::ttk::label $top.l2 -textvariable potato::potato(version) -font [concat $labelfont -weight bold] -justify center] -side top
   pack [::ttk::label $top.l3 -text "Checking for updates..." -font $labelfont -justify center]
-  
+
   pack [set progress [::ttk::frame $frame.progress]] -side top -padx 10 -pady 10
   pack [::ttk::progressbar $progress.bar -orient horizontal -mode indeterminate -length 160]
-  $progress.bar start 1 
-  
+  $progress.bar start 1
+
   pack [set btns [::ttk::frame $frame.buttons]] -side top -padx 10 -pady 10
   pack [::ttk::button $btns.cancel -text "Cancel" -command [list destroy $win]]
 
@@ -6785,10 +6785,10 @@ proc ::potato::checkForUpdatesSub {token} {
   # Destroy the progressbar to free up the UI for the result
   destroy {*}[winfo children $update(main)]
   destroy {*}[winfo children $update(btns)]
-   
+
   set font $update(labelfont)
   pack [::ttk::button $update(btns).ok -text [T "OK"] -command [list destroy $update(win)]] -side left -padx 8
-   
+
   set errorText [T "Sorry, we were unable to check for a new version at this time. Please try again later.\n\nIf the problem persists, please let us know."]
   if { [::http::status $token] ne "ok" } {
        # Something went wrong
@@ -6801,7 +6801,7 @@ proc ::potato::checkForUpdatesSub {token} {
 
        return;
      }
-      
+
   # Try and parse the result
   set body [::http::data $token]
   ::http::cleanup $token
@@ -6814,7 +6814,7 @@ proc ::potato::checkForUpdatesSub {token} {
           }
        return;
      }
-       
+
   if { $difference == 1 } {
        # New version available!
        pack [::ttk::label $update(main).new -font $font \
@@ -6835,7 +6835,7 @@ proc ::potato::checkForUpdatesSub {token} {
             pack [::ttk::label $update(main).uptodate -text [T "You are already using the latest version of Potato."] -font $font]
           }
      }
-        
+
   return;
 
 };# ::potato::checkForUpdatesSub
@@ -6846,13 +6846,13 @@ proc ::potato::checkForUpdatesSub {token} {
 #: return nothing
 proc ::potato::cancelCheckForUpdates {} {
   variable update;
-  
+
   catch {destroy $update(win)}
   array unset update
   set update(waiting) 0
-  
+
   return;
-  
+
 };# ::potato::cancelCheckForUpdates
 
 #: ::potato::inputWindowRightClickMenu
@@ -6894,7 +6894,7 @@ proc ::potato::inputWindowRightClickMenu {input x y} {
 #: return nothing
 proc ::potato::setUpBindings {} {
   variable potato;
-  
+
   catch {tcl_endOfWord}
   set ::tcl_wordchars {[a-zA-Z0-9' ]}
   set ::tcl_nonwordchars {[^a-zA-Z0-9']}
@@ -6911,7 +6911,7 @@ proc ::potato::setUpBindings {} {
   for {set i 1} {$i < 10} {incr i} {
      bind PotatoInput <Control-Key-$i> [list ::potato::showConn $i]
   }
-  
+
   bind PotatoInput <Control-Key-0> [list ::potato::showConn 10]
 
   bind PotatoInput <Button-3> [list ::potato::inputWindowRightClickMenu %W %X %Y]
@@ -7070,16 +7070,16 @@ proc ::potato::setUpBindings {} {
 proc ::potato::selectToCopy {win} {
   variable world;
   variable conn;
-  
+
   set c [up]
   set w $conn($c,world)
-  
+
   if { !$world($w,selectToCopy) } {
        return;
      }
-  
+
   textCopy $win
-  
+
   return;
 
 };# ::potato::selectToCopy
@@ -7097,7 +7097,7 @@ proc ::potato::textCopy {win} {
 
   return;
 
-};# ::potato::textCopy  
+};# ::potato::textCopy
 
 #: proc ::potato::activeTextWidget
 #: desc Return the text widget currently displayed in the main window. We need to ask the skin, as they may be displaying a spawn window instead.
@@ -7270,7 +7270,7 @@ proc ::potato::keyboardShortcutClear {tree bindingsWin} {
   bind $bindingsWin <$keyShortsTmp($task)> ""
   set keyShortsTmp($task) ""
   $tree item $task -values [list [taskLabel $task] ""]
-  
+
   return;
 
 };# ::potato::keyboardShortcutClear
@@ -7300,12 +7300,12 @@ proc ::potato::keyboardShortcutInput {win parent tree bindingsWin} {
   bind $win <KeyPress-Shift_L> [list set ::potato::keyShortsTmp(key,shift) 1]
   bind $win <KeyPress-Shift_R> [list set ::potato::keyShortsTmp(key,shift) 1]
   bind $win <KeyRelease-Shift_L> [list set ::potato::keyShortsTmp(key,shift) 0]
-  bind $win <KeyRelease-Shift_R> [list set ::potato::keyShortsTmp(key,shift) 0]  
+  bind $win <KeyRelease-Shift_R> [list set ::potato::keyShortsTmp(key,shift) 0]
 
   bind $win <KeyPress-Control_L> [list set ::potato::keyShortsTmp(key,control) 1]
   bind $win <KeyPress-Control_R> [list set ::potato::keyShortsTmp(key,control) 1]
   bind $win <KeyRelease-Control_L> [list set ::potato::keyShortsTmp(key,control) 0]
-  bind $win <KeyRelease-Control_R> [list set ::potato::keyShortsTmp(key,control) 0] 
+  bind $win <KeyRelease-Control_R> [list set ::potato::keyShortsTmp(key,control) 0]
 
   bind $win <KeyPress-Alt_L> [list set ::potato::keyShortsTmp(key,alt) 1]
   bind $win <KeyPress-Alt_R> [list set ::potato::keyShortsTmp(key,alt) 1]
@@ -7451,7 +7451,7 @@ proc ::potato::keysymToHuman {keysym {short 0} {joinchar +}} {
 proc ::potato::humanToKeysym {keysym {short 0} {joinchar +}} {
 
   set list [split $keysym $joinchar]
-  
+
   set last [lindex $list end]
   array set map [list "Page Up" Prior "Page Down" Next Plus plus Minus minus Asterisk asterisk "Forward Slash" slash]
   if { [info exists map($last)] } {
@@ -7479,9 +7479,9 @@ proc ::potato::setUpUserBindings {} {
           continue;
         }
   }
-  
+
   loadDefaultUserBindings
-  
+
   foreach task [array names keyShorts] {
      if { [string match "*,*" $task] } {
           continue;
@@ -8038,7 +8038,7 @@ proc ::potato::send_to_sub {c string {prefix ""} {echo 1}} {
      } elseif { [string index $string 1] eq "/" } {
        send_to_real $c "$prefix[string range $string 1 end]" $echo
      } else {
-       process_slash_command $c $string
+       process_slash_cmd $c $string
      }
 
   return;
@@ -8080,7 +8080,7 @@ proc ::potato::send_to_real {c string {echo 1}} {
 #: arg c connection id
 #: arg cmd command to add
 #: arg sep the character separating multiple commands in the string, or "" if none
-#: desc add the given command to the input history for connection $c. If $sep != "", 
+#: desc add the given command to the input history for connection $c. If $sep != "",
 #: desc the command is a list of commands with each individual command separated by the character $sep
 #: return nothing
 proc ::potato::addToInputHistory {c cmd sep} {
@@ -8321,7 +8321,7 @@ proc ::potato::setUserVar {c global str} {
 #: arg c connection id var is set from
 #: arg global Is the var we're unsetting global?
 #: arg varName the name of the variable to unset
-#: desc Unset the (possibly global) user-defined variable $varName, if it exists and isn't a pre-defined one. 
+#: desc Unset the (possibly global) user-defined variable $varName, if it exists and isn't a pre-defined one.
 #: desc Attempting to set a variable that doesn't exist (including ones with invalid names) is not an error.
 #: desc Attempting to unset a pre-defined var (ie, one starting with an underscore) is, but we fail silently.
 #: return nothing
@@ -8629,7 +8629,7 @@ proc ::potato::slashConfigSave {w} {
 
 #: proc ::potato::slashConfigDiscard
 #: arg w world id
-#: desc A custom slash command was being edited (or added), but we're done with the changes made (either we've already saved them, or 
+#: desc A custom slash command was being edited (or added), but we're done with the changes made (either we've already saved them, or
 #: desc we don't want to because "Discard" was clicked), so clear them out and set up for tree selection again.
 #: return nothing
 proc ::potato::slashConfigDiscard {w} {
@@ -8713,7 +8713,7 @@ proc ::potato::slashConfigDelete {w} {
 #: proc ::potato::slashConfigEdit
 #: arg w world id
 #: desc The "Edit /command" button has been clicked. De/re-activate the appropriate widgets.
-#: desc We don't need to check for a selection (as the button is disabled when there isn't one), 
+#: desc We don't need to check for a selection (as the button is disabled when there isn't one),
 #: desc or set the vars to the /command's current values (that's already done on selection), but we
 #: desc do need to record that we're now editing, and which.
 #: return nothing
@@ -8888,115 +8888,186 @@ proc ::potato::slashConfigSelect {w} {
 
 };# ::potato::slashConfigSelect
 
-#: proc ::potato::process_slash_command
+#: proc ::potato::process_slash_cmd
 #: arg c connection id
-#: arg str the string entered ("/command arg arg arg")
-#: arg silent Suppress confirmation/error system messages from /command?
-#: desc process $str as a slash command and perform the necessary action
-#: return nothing
-proc ::potato::process_slash_command {c str {silent 0}} {
+#: arg _str the string entered ("/command arg arg arg"), or a var to upvar which contains it, if recursing
+#: arg recursing 1 if we're recursing, 0 if not.
+#: arg upstr
+#: desc process $str as a slash command and perform the necessary action. If we're recursing, return the result, otherwise output it on screen.
+#: return nothing for outermost /commands, the result of the /command if recursing
+proc ::potato::process_slash_cmd {c _str {recursing 0}} {
   variable conn;
   variable world;
+
+  if { $recursing } {
+       upvar 1 $_str str;
+     } else {
+       upvar 0 _str str;
+     }
 
   if { ![info exists conn($c,id)] } {
        return; # Running a /command for a closed connection - maybe on a timer that didn't cancel?
      }
-  set cmd [string range $str 1 end]
-  if { $cmd eq "" } {
-       if { $c != 0 && !$silent } {
-            outputSystem $c [T "Which /command?"]
-          } else {
-            bell -displayof .
-          }
-       return;
-     }
-  set space [string first " " $cmd]
-  if { $space == -1 } {
-       set cmdArgs ""
-     } else {
-       set cmdArgs [string range $cmd [expr {$space+1}] end]
-       # Parse variables in arg
-       set cmdArgs [parseUserVars $c $cmdArgs]
-       set cmd [string range $cmd 0 [expr {$space-1}]]
-     }
 
-  # Add 20 chars to the length for the "::potato::slash_cmd_" command prefix
-  set len [expr {[string length $cmd]+20}]
-  set partial [list]
-  set w $conn($c,world)
-  foreach x [info procs ::potato::slash_cmd_*] {
-     if { [string equal -nocase ::potato::slash_cmd_$cmd $x] } {
-          set exact $x
-          break;
-        } elseif { [info exists world($w,slashcmd)] && [lsearch -exact -nocase $world($w,slashcmd) $cmd] > -1 } {
-          set exact $cmd
-          set custom $w
-        } elseif { $w != -1 && [info exists world(-1,slashcmd)] && \
-                   [lsearch -exact -nocase $world(-1,slashcmd) $cmd] > -1 } {
-          set exact $cmd
-          set custom -1
-        } elseif { [string equal -nocase -length $len ::potato::slash_cmd_$cmd $x] } {
-          lappend partial $x
-        }
-  }
-  if { [info exists exact] } {
-       if { [info exists custom] } {
-            # Custom /command
-            customSlashCommand $c $custom $exact $cmdArgs
-          } else {
-            # Built-in /command
-            $exact $c 1 $cmdArgs $silent
-          }
-       return;
-     } elseif { [llength $partial] == 1 } {
-       [lindex $partial 0] $c 0 $cmdArgs $silent
-       return;
-     } elseif { [llength $partial] == 0 } {
-       # Check for unique abbreviations of custom /commands.
-       if { [info exists world($w,slashcmd)] } {
-            foreach x $world($w,slashcmd) {
-               if { [string equal -nocase -length [string length $cmd] $cmd $x] } {
-                    lappend partial $x
-                    set custom $w
-                  }
-            }
+  # This while loop is a crude go-to to avoid the need for repeating
+  # the checks for $recursing
+  while { ![info exists running] } {
+    set running 1
+
+    set parsed [parse_slash_cmd $c str $recursing]
+    set cmd [lindex $parsed 0]
+    set cmdArgs [lindex $parsed 1]
+    if { [string index $cmd 0] ne "/" } {
+         # Not a /command, just text to send
+         send_to_real $c $cmd
+         return [list 1]
        }
-       if { [info exists world(-1,slashcmd)] } {
-            foreach x $world(-1,slashcmd) {
-               if { [string equal -nocase -length [string length $cmd] $cmd $x] } {
-                    lappend partial $x
-                    set custom -1
-                  }
+    set cmd [string range $cmd 1 end]
+    # Add 20 chars to the length for the "::potato::slash_cmd_" command prefix
+    set len [expr {[string length $cmd]+20}]
+    set partial [list]
+    set w $conn($c,world)
+    foreach x [info procs ::potato::slash_cmd_*] {
+       if { [string equal -nocase ::potato::slash_cmd_$cmd $x] } {
+            set exact $x
+            break;
+          } elseif { [info exists world($w,slashcmd)] && [lsearch -exact -nocase $world($w,slashcmd) $cmd] > -1 } {
+            set exact $cmd
+            set custom $w
+          } elseif { $w != -1 && [info exists world(-1,slashcmd)] && \
+                     [lsearch -exact -nocase $world(-1,slashcmd) $cmd] > -1 } {
+            set exact $cmd
+            set custom -1
+          } elseif { [string equal -nocase -length $len ::potato::slash_cmd_$cmd $x] } {
+            lappend partial $x
+          }
+    }
+    if { [info exists exact] } {
+         if { [info exists custom] } {
+              # Custom /command
+              set ret [customSlashCommand $c $custom $exact $recursing $cmdArgs]
+            } else {
+              # Built-in /command
+              set ret [$exact $c 1 $recursing $cmdArgs]
             }
-          }
-       if { [llength $partial] == 0 } {
-            if { $c != 0 && !$silent } {
-                 outputSystem $c [T "Unknown /command \"%s\". Use /slash for a list. Use //command to send directly to MU*." $cmd]
-               } else {
-                 bell -displayof .
-               }
-            return;
-          } elseif { [llength $partial] > 1 } {
-            if { $silent } {
-                 bell -displayof .
-               } else {
-                 outputSystem $c [T "Ambiguous /command \"%s\"." $cmd]
-               }
-            return;
-          }
-       customSlashCommand $c $custom [lindex $partial 0] $cmdArgs
-     } else {
-       if { $c != 0 } {
-            if { $silent } {
-                 bell -displayof .
-               } else {
-                 outputSystem $c [T "Ambiguous /command \"%s\"." $cmd]
-               }
-          }
-       return;
+         break;
+       } elseif { [llength $partial] == 1 } {
+         set ret [[lindex $partial 0] $c 0 $recursing $cmdArgs]
+         break;
+       } elseif { [llength $partial] == 0 } {
+         # Check for unique abbreviations of custom /commands.
+         if { [info exists world($w,slashcmd)] } {
+              foreach x $world($w,slashcmd) {
+                 if { [string equal -nocase -length [string length $cmd] $cmd $x] } {
+                      lappend partial $x
+                      set custom $w
+                    }
+              }
+            }
+         if { $w != -1 && [info exists world(-1,slashcmd)] } {
+              foreach x $world(-1,slashcmd) {
+                 if { [string equal -nocase -length [string length $cmd] $cmd $x] } {
+                      lappend partial $x
+                      set custom -1
+                    }
+              }
+            }
+         if { [llength $partial] == 0 } {
+              set ret [list 0 [T "Unknown /command \"%s\". Use /slash for a list. Use //command to send directly to MU*." $cmd]]
+              break;
+            } elseif { [llength $partial] > 1 } {
+              set ret [list 0 [T "Ambiguous /command \"%s\"." $cmd]]
+              break;
+            }
+         set ret [customSlashCommand $c $custom [lindex $partial 0] $recursing $cmdArgs]
+       } else {
+         set ret [list 0 [T "Ambiguous /command \"%s\"." $cmd]]
+         break;
+       }
+    break;
+  }
+
+  if { ![info exists ret] } {
+       # Shouldn't happen
+       set ret [list 1 ""]
      }
 
-};# ::potato::process_slash_command
+  if { $recursing } {
+       return $ret;
+     } elseif { $ret eq "" || [catch {lindex $ret 0} retFirst] || $retFirst ni [list 0 1] } {
+       # Malformed return value
+       return [list 1 ""];
+     } elseif { ![lindex $ret 0]} {
+       bell -displayof .
+       if { $c != 0 } {
+            if { [llength $ret] > 1 && [string length [lindex $ret 1]] } {
+                 outputSystem $c [T "Error: %s" [lindex $ret 1]]
+               } else {
+                 outputSystem $c [T "Error."]
+               }
+          }
+     } elseif { $c != 0 && [llength $ret] > 1 && [string length [lindex $ret 1]]} {
+       outputSystem $c [lindex $ret 1]
+     }
+
+  return;
+
+};# ::potato::process_slash_cmd
+
+#: proc ::potato::parse_slash_cmd
+#: arg c connection id
+#: arg _str name of variable containing string, to upvar
+#: arg recursing if 1, we're recursed to parse nested /commands, and should return on an unescaped "]"
+#: desc Parse a string as the args of a slash command; do variable expansion, parse nested /commands, etc
+#: return result of parsing the string.
+proc ::potato::parse_slash_cmd {c _str recursing} {
+  upvar 1 $_str str;
+
+  if { $str eq "" } {
+       return;
+     }
+  set cmd ""
+  set cmdArgs ""
+  set appendTo cmd
+  set esc 0
+  set cmd_found 0
+  if { [string index $str 0] eq "/" } {
+       set cmd_present 1
+       set cmd "/"
+       set str [string range $str 1 end]
+     } else {
+       set cmd_present 0
+     }
+
+  while { [string length $str] } {
+    set x [string index $str 0]
+    set str [string range $str 1 end]
+    if { $cmd_present && !$cmd_found && $x eq " " } {
+         set cmd_found 1
+         set appendTo cmdArgs
+         continue;
+       }
+
+    if { $esc } {
+         set esc 0
+         append $appendTo $x
+         continue;
+       } elseif { $x eq "\\" } {
+         set esc 1
+         continue;
+       } elseif { $x eq "\[" } {
+         append $appendTo [lindex [process_slash_cmd $c str 1] 1]
+       } elseif { $x eq "\]" && $recursing } {
+         # We're done.
+         break;
+       } else {
+         # Normal char
+         append $appendTo $x
+       }
+  }
+  return [list $cmd $cmdArgs];
+
+};# ::potato::parse_slash_cmd
 
 #: proc ::potato::define_slash_cmd
 #: arg cmd Name of /command
@@ -9005,9 +9076,11 @@ proc ::potato::process_slash_command {c str {silent 0}} {
 #: return nothing.
 proc ::potato::define_slash_cmd {cmd code} {
 
-  # c = connection id, full = was the command name typed in full?, str = the arg given to the /command,
-  # silent = suppress messages?
-  proc ::potato::slash_cmd_$cmd {c full str {silent 0}} $code;
+  # c = connection id
+  # full = was the command name typed in full?
+  # recursing = is this a nested /command?
+  # str = the arg given to the /command
+  proc ::potato::slash_cmd_$cmd {c full recursing str} $code;
 
   return;
 
@@ -9066,16 +9139,16 @@ proc ::potato::customSlashCommand {c w cmd str} {
   if { [catch {regexp {*}$regexpArgs} retval] || !$retval } {
        # Cmd input is invalid, doesn't match pattern
        bell -displayof .
-       return;
+       return [list 0];
      }
 
   set send $world($w,slashcmd,$cmd,send)
   set send [string map [list %% % %0 $a(0) %1 $a(1) %2 $a(2) %3 $a(3) %4 $a(4) \
                              %5 $a(5) %6 $a(6) %7 $a(7) %8 $a(8) %9 $a(9)] $send]
-  
+
   send_to $c $send "" 0
 
-  return;
+  return [list 1];
 
 };# ::potato::customSlashCommand
 
@@ -9086,7 +9159,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
 
   if { $c == 0 } {
        bell -displayof .
-       return;
+       return [list 0];
      }
 
   set name [string trim $str]
@@ -9098,20 +9171,19 @@ proc ::potato::customSlashCommand {c w cmd str} {
   updateConnName $c
   skinStatus $c
 
+  return [list 1];
+
 };# /rename
 
-#: /silent <slashcmd>
-#: Run the /command <slashcmd> without producing errors/confirmations
-::potato::define_slash_cmd silent {
+#: /null <input>
+#: Return nothing; for eating the return values of other /commands.
+::potato::define_slash_cmd null {
 
-  if { [string index $str 0] ne "/" || [string index $str 1] eq "/" } {
-       bell -displayof .
-       return;
-     } else {
-       process_slash_command $c $str 1
-     }
+  return [list 1];
 
-};# /silent
+};# /null
+
+::potato::alias_slash_cmd null silent ;# /silent
 
 #: /input [1|2] <stuff> - print <stuff> to input window [1|2]
 ::potato::define_slash_cmd input {
@@ -9121,15 +9193,12 @@ proc ::potato::customSlashCommand {c w cmd str} {
   # We use string comparison, not numerical, otherwise "/input 3.0 foo" will pass, but will fail
   # as we don't have conn($c,input3.0) vars.
   if { [lindex $list 0] ne 1 && [lindex $list 0] ne 2 && [lindex $list 0] ne 3 } {
-       if { !$silent } {
-            outputSystem $c [T "Invalid input window \"%s\": must be 1, 2 or 3" [lindex $list 0]]
-          }
-       return;
+       return [list 0 [T "Invalid input window \"%s\": must be 1, 2 or 3" [lindex $list 0]]];
      }
-  
+
   showInput $c [lindex $list 0] [join [lrange $list 1 end] " "] 1
 
-  return;
+  return [list 1];
 
 };# /input
 
@@ -9139,14 +9208,14 @@ proc ::potato::customSlashCommand {c w cmd str} {
 
   if { [up] == 0 } {
        bell -displayof .
-       return;
+       return [list 0];
      }
 
   set re {\m(?:(?:(?:f|ht)tps?://)|www\.)(?:(?:[a-zA-Z_\.0-9%+/@~=&,;-]*))?(?::[0-9]+/)?(?:[a-zA-Z_\.0-9%+/@~=&,;-]*)(?:\?(?:[a-zA-Z_\.0-9%+/@~=&,;:-]*))?(?:#[a-zA-Z_\.0-9%+/@~=&,;:-]*)?}
   set where [regexp -inline -indices -all $re $str]
   if { [llength $where] == 0 } {
        send_to_real [up] $str
-       return;
+       return [list 0];
      }
   set all_url [regexp "^$re$" $str]
   for {set i 0} {$i < [llength $where]} {incr i} {
@@ -9160,13 +9229,19 @@ proc ::potato::customSlashCommand {c w cmd str} {
          set str [string replace $str $start $end $result]
        } else {
          errorLog "Unable to launch TinyURL at \"$url\": $result" warning
+         if { !$all_url } {
+              send_to_real $c $str
+            }
+         return [list 0 [T "Unable to launch TinyURL at \"%s\": %s" $url $result]];
        }
   }
   if { $all_url} {
-       potato::slash_cmd_print $c 1 $str 0
+       return [list 1 $url]
      } else {
        send_to_real [up] $str
      }
+
+  return [list 1];
 
 };# ::potato::slash_cmd_tinyurl
 
@@ -9183,7 +9258,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
   # setting prefixes when it is.
   if { [winfo exists .prefixWin$w] } {
        bell -displayof .
-       return;
+       return [list 0];
      }
 
   # Parse str
@@ -9198,7 +9273,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
        set window [textWidgetName [activeTextWidget] $c]
      } elseif { ![regexp $potato(spawnRegexp) $window] } {
        bell -displayof .
-       return;
+       return [list 0];
      }
 
   if { $str eq "" } {
@@ -9210,7 +9285,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
        set world($w,prefixes,$window) [list $str 1]
      }
 
-  return;
+  return [list 1];
 
 };# /setprefix
 
@@ -9219,7 +9294,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
 ::potato::define_slash_cmd print {
 
   outputSystem $c $str
-  return;
+  return [list 1];
 
 };# /print
 
@@ -9230,33 +9305,24 @@ proc ::potato::customSlashCommand {c w cmd str} {
 
   set equals [string first "=" $str]
   if { $equals == -1 } {
-       outputSystem $c [T "Format: /at <time>=<string>"]
-       return;
+       return [list 0 [T "Format: /at <time>=<string>"]];
      }
   set time [string range $str 0 $equals-1]
   set action [string range $str $equals+1 end]
   if { [catch {clock scan $time} inttime] } {
-       outputSystem $c "/at: $inttime"
-       return;
+       return [list 0 "/at: $inttime"];
      }
 
   set now [clock seconds]
   if { $now >= $inttime } {
-       if { $silent } {
-            bell -display of .
-          } else {
-            outputSystem $c [T "/at: Time must be in the future."]
-          }
-       return;
+       return [list 0 [T "/at: Time must be in the future."]];
      }
   set when [expr {($inttime - [clock scan "now"]) * 1000}]
   lappend conn($c,userAfterIDs) [set afterid [after $when [list ::potato::send_to $c $action "\n" 0 ""]]]
-  if { !$silent } {
-       outputSystem $c [T "Command will run at %s, id %s" [clock format $inttime -format "%D %T"] $afterid]
-     }
-  after [expr {$when + 1200}] [list ::potato::cleanup_afters $c]
 
-  return;
+  after [expr {$when + 1200}] [list ::potato::cleanup_afters $c]
+  return [list 1 [T "Command will run at %s, id %s" [clock format $inttime -format "%D %T"] $afterid]]
+
 };# /at
 
 #: /debug [--on | --off | --toggle]
@@ -9266,7 +9332,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
 
   if { $c == 0 } {
        bell -displayof .
-       return;
+       return [list 0];
      }
 
   if { $str eq "--on" } {
@@ -9277,7 +9343,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
        set conn($c,debugPackets) [lindex [list 1 0] $conn($c,debugPackets)]
      }
 
-  return;
+  return [list 1];
 
 };# /debug
 
@@ -9308,17 +9374,13 @@ proc ::potato::customSlashCommand {c w cmd str} {
      } elseif { [info exists world(-1,macro,$macro)] } {
        set do -1,macro,$macro
      } else {
-       if { $silent } {
-            bell -displayof .
-          } else {
-            outputSystem $c [T "No such macro \"%s\"." $str]
-          }
-       return;
+       return [list 0 [T "No such macro \"%s\"." $str]];
      }
 
   send_to $c $world($do) "\n" 0 ""
 
-  return;
+  return [list 1];
+
 };# /runmacro
 
 #: /cancelat <id>
@@ -9327,46 +9389,14 @@ proc ::potato::customSlashCommand {c w cmd str} {
   variable conn;
 
   if { $str ni $conn($c,userAfterIDs) } {
-       if { $silent } {
-            bell -displayof .
-          } else {
-            outputSystem $c [T "Invalid /at ID."]
-          }
-       return;
+       return [list 0 [T "Invalid /at ID."]];
      }
 
   after cancel $str
-  if { !$silent } {
-       outputSystem $c [T "/at cancelled."]
-     }
   cleanup_afters $c
+  return [list 1 [T "/at cancelled."]];
 
-  return;
 };# /cancelat
-
-#: proc ::potato::cleanup_afters
-#: arg c connection id
-#: desc Cleanup the after IDs for conn $c's userAfterIDs var
-#: return nothing
-proc ::potato::cleanup_afters {c} {
-  variable conn;
-
-  if { ![info exists conn($c,userAfterIDs)] } {
-       return;
-     }
-
-  set new [list]
-  set all [after info]
-  foreach x $conn($c,userAfterIDs) {
-    if { $x in $all } {
-         lappend new $x
-       }
-  }
-  set conn($c,userAfterIDs) $new
-
-  return;
-
-};# ::potato::cleanup_afters
 
 #: /addspawn <spawn>[ <spawnN>]
 #: Add each of the space-separated list of spawns to the spawn-all list for the connection
@@ -9382,7 +9412,7 @@ proc ::potato::cleanup_afters {c} {
     lappend spawns $x
   }
   set conn($c,spawnAll) [join $spawns " "]
-  return;
+  return [list 1];
 
 };# /addspawn
 
@@ -9401,7 +9431,7 @@ proc ::potato::cleanup_afters {c} {
     set spawns [lreplace $spawns $pos $pos]
   }
   set conn($c,spawnAll) [join $spawns " "]
-  return;
+  return [list 1];
 
 };# /delspawn
 
@@ -9442,19 +9472,19 @@ proc ::potato::cleanup_afters {c} {
        -regexp {set matchType regexp}
        -nocase {set case 0}
        -- {set done 1}
-       default {outputSystem $c [T "Invalid option \"%s\" to /limit" $x] ; return;}
+       default {return [list 0 [T "Invalid option \"%s\" to /limit" $x]];}
     }
     set list [lrange $list 1 end]
   }
 
   set str [join $list " "]
   if { $str eq "" } {
-       return;
+       return [list 1];
      }
 
   set case [lindex [list -nocase] $case]
 
-  # OK, do limiting.   
+  # OK, do limiting.
   for { set i [$t count -lines 1.0 end]} {$i > 0} {incr i -1} {
     if { "system" in [$t tag names $i.0] } {
          continue;
@@ -9466,12 +9496,7 @@ proc ::potato::cleanup_afters {c} {
       glob {set caught [catch {string match {*}$case $str $line} match]}
     }
     if { $caught } {
-         if { $silent } {
-              bell -displayof .
-            } else {
-              outputSystem $c [T "Invalid %s pattern \"%s\": %s" $matchType $str $match]
-            }
-         return;
+         return [T "Invalid %s pattern \"%s\": %s" $matchType $str $match];
        }
     if { ($invert ? $match : !$match) } {
          $t tag add limited $i.0 "$i.0 lineend+1char"
@@ -9480,7 +9505,7 @@ proc ::potato::cleanup_afters {c} {
 
   set conn($c,limited) [list $matchType $invert $case $str]
 
-  return;
+  return [list 1];
 
 };# /limit
 
@@ -9495,7 +9520,7 @@ proc ::potato::cleanup_afters {c} {
 
   set conn($c,limited) [list]
 
-  return;
+  return [list 1];
 
 };# /unlimit
 
@@ -9506,7 +9531,7 @@ proc ::potato::cleanup_afters {c} {
 
   if { !$full } {
        bell -displayof .
-       return;# too risky to allow an abbreviation
+       return [list 0 [T "/cls cannot be abbreviated."]];# too risky to allow an abbreviation
      }
 
   if { $str eq "" } {
@@ -9522,12 +9547,12 @@ proc ::potato::cleanup_afters {c} {
           }
      } else {
        bell -displayof .
-       return;# invalid window name
+       return [list 0 [T "/cls: Invalid window name."]];# invalid window name
      }
 
   if { ![info exists conn($c,textWidget)] } {
        bell -displayof .
-       return;# bad connection
+       return [list 0 [T "/cls: Invalid connection."]];# bad connection
      }
 
   if { $window eq "_main" || $window eq "" } {
@@ -9542,14 +9567,14 @@ proc ::potato::cleanup_afters {c} {
             set status [T "Disconnected."]
           }
        outputSystem $c $status
-       $conn($c,textWidget) delete 1.0 2.0;# remove leading newline 
+       $conn($c,textWidget) delete 1.0 2.0;# remove leading newline
      } elseif { [info exists conn($c,spawns,$window)] } {
        $conn($c,spawns,$window) delete 1.0 end
      } else {
-       bell -displayof . ;# no such spawn window
+       return [list 0 [T "/cls: No such window."]]
      }
 
-  return;
+  return [list 1];
 
 };# /cls
 
@@ -9558,7 +9583,7 @@ proc ::potato::cleanup_afters {c} {
 ::potato::define_slash_cmd send {
 
   send_to_real $c $str
-  return;
+  return [list 1];
 
 };# /send
 
@@ -9569,7 +9594,7 @@ proc ::potato::cleanup_afters {c} {
   foreach x [connList] {
     send_to_real [lindex $x 0] $str
   }
-  return;
+  return [list 1];
 
 };# /all
 
@@ -9580,8 +9605,7 @@ proc ::potato::cleanup_afters {c} {
 
 
   if { [string trim $str] eq "" } {
-       bell -displayof .
-       return;
+       return [list 0];
      }
 
   if { [string is integer -strict $str] } {
@@ -9595,17 +9619,18 @@ proc ::potato::cleanup_afters {c} {
        # $window may signify the main text widget, but by using showSpawn not showConn we
        # request the skin show the main text widget, if it's not already doing so.
        showSpawn $c2 $window
-       return;
+       return [list 1];
      } else {
        # Invalid arg
-       bell -displayof .
-       return;
+       return [list 0];
      }
+
+  return [list 1];
 
 };# /show
 
-::potato::alias_slash_cmd show world
-::potato::alias_slash_cmd show w
+::potato::alias_slash_cmd show world ;# /world
+::potato::alias_slash_cmd show w ;# /w
 
 #: /slash
 #: Print a list of all /commands
@@ -9616,18 +9641,475 @@ proc ::potato::cleanup_afters {c} {
   foreach x [info procs ::potato::slash_cmd_*] {
      lappend list [string range $x 20 end]
   }
-  outputSystem $c [T "Available slash commands: %s" [itemize [lsort -dictionary $list]]]
+  set return [T "Available slash commands: %s" [itemize [lsort -dictionary $list]]]
   set w [connInfo $c world]
   if { $w != -1 && [llength $world($w,slashcmd)] } {
-       outputSystem $c [T "User-defined commands for this world: %s" [itemize [lsort -dictionary $world($w,slashcmd)]]]
+       append return "\n" [T "User-defined commands for this world: %s" [itemize [lsort -dictionary $world($w,slashcmd)]]]
      }
   if { [llength $world(-1,slashcmd)] } {
-       outputSystem $c [T "Global User-defined commands: %s" [itemize [lsort -dictionary $world(-1,slashcmd)]]]
+       append return "\n" [T "Global User-defined commands: %s" [itemize [lsort -dictionary $world(-1,slashcmd)]]]
      }
+
+  return [list 1 $return];
+
+};# /slash
+
+#: /set <varname>=<value>
+#: Set a connection-local variable <varname> (accessed in /commands as $<varname>$ to <value>
+::potato::define_slash_cmd set {
+
+  setUserVar $c 0 $str
+  return [list 1];
+
+};# /set
+
+#: /unset <varname>
+#: Unset the connection-local variable <varname>
+::potato::define_slash_cmd unset {
+
+  unsetUserVar $c 0 $str
+  return [list 1];
+
+};# /unset
+
+#: /vars [-all|-global|-local]
+#: Print a list of all, global or local vars
+::potato::define_slash_cmd vars {
+  variable conn;
+
+  set local 0
+  set global 0
+
+  foreach x [split $str " "] {
+    if { $x eq "-all" } {
+         set local 1
+         set global 1
+       } elseif { $x eq "-local" } {
+         set local 1
+       } elseif { $x eq "-global" } {
+         set global 1
+       } else {
+         return [list 0 "/vars: Invalid arg \"$x\": Must be one of -all, -global or -local"];
+       }
+  }
+
+  set return ""
+
+  if { !($global || $local) } {
+       set local 1
+       set global 1
+     }
+
+  if { $local && $c != 0 } {
+       append return "World vars:"
+       foreach x [lsort -dictionary [removePrefix [array names conn $c,uservar,*] $c,uservar]] {
+         append return "\n\t$x\t$conn($c,uservar,$x)"
+       }
+       if { $global } {
+            append return "\n"
+          }
+     }
+
+  if { $global || ($local && $c == 0) } {
+       append return "Global vars:"
+       foreach x [lsort -dictionary [removePrefix [array names conn 0,uservar,*] 0,uservar]] {
+         append return "\n\t$x\t$conn(0,uservar,$x)"
+       }
+     }
+
+  return [list 1 $return];
+
+};# /vars
+
+#: /setglobal <varname>=<value>
+#: Set a global (all connections) variable <varname> to <value>
+::potato::define_slash_cmd setglobal {
+
+  setUserVar $c 1 $str
+  return [list 1];
+
+};# /setglobal
+
+#: /unsetglobal <varname>
+#: Unset global var <varname>
+::potato::define_slash_cmd unsetglobal {
+
+  unsetUserVar $c 1 $str
+  return [list 1];
+
+};# /unsetglobal
+
+#: /edit
+#: Show the Edit Settings window
+::potato::define_slash_cmd edit {
+  variable conn;
+
+  if { $c == 0 } {
+       taskRun programConfig
+     } else {
+       taskRun config $conn($c,world) $conn($c,world)
+     }
+  return [list 1];
+
+};# /edit
+
+#: /tcl
+#: Show the Tcl code console if available
+::potato::define_slash_cmd tcl {
+
+  if { [catch {console show}] } {
+       return  [list 0];
+     }
+
+  return [list 1];
+
+};# /tcl
+
+#: /eval <code>
+#: Evaluate the Tcl code <code> and print the result to the output window
+::potato::define_slash_cmd eval {
+
+  set err [catch {uplevel #0 $str} msg]
+  if { $err } {
+       bell -displayof .
+       if { !$recursing } {
+            set msg [T "Error (%d): %s" [string length $msg] $msg]
+          }
+       return [list 0 $msg];
+     }
+
+  if { !$recursing } {
+       set msg [T "Return (%d): %s" [string length $msg] $msg]
+     }
+  return [list 1 $msg];
+
+};# /eval
+
+#: /speedwalk <dirs>
+#: Speedwalk in the given directions. <dirs> is a string in the format [<number>][ ]<direction>[[ ][<numberN>][ ]<directionN>]
+::potato::define_slash_cmd speedwalk {
+
+  if { ![regexp {^ *([0-9]+ *([ns][ew]|[nsweudo]) *)+ *$} $str] } {
+       return [list 0 [T "Invalid speedwalk command"]];
+     }
+
+  set sendStr ""
+  set dirs [list n north s south w west e east nw northwest ne northeast sw southwest se southeast \
+                 u up d down o out]
+  foreach {all num dir} [regexp -all -inline -- { *([0-9]+)? *((?:[ns][ew]|[nsewudo])) *} $str] {
+     set which [expr {[lsearch -exact $dirs $dir] + 1}]
+     append sendStr [string repeat "[lindex $dirs $which]\n" $num]
+  }
+
+  send_to $c [string range $sendStr 0 end-1] \n 1
+
+  return [list 1];
+
+};# /speedwalk
+
+# Create a /sw alias for /speedwalk
+::potato::alias_slash_cmd speedwalk sw
+
+#: /log  |  /log -close [<path>] |  /log [-options] <path>
+#: Either show the logging window, close open log(s) or start logging to a new file
+::potato::define_slash_cmd log {
+  variable conn;
+
+  if { $c == 0 } {
+       return [list 0];
+     }
+
+  # Check for no options given
+  if { [string trim $str] eq "" } {
+       taskRun log $c $c
+       return [list 1];
+     }
+
+  # Check for "/log -close"
+  set argv [split $str " "]
+  set argc [llength $argv]
+  if { [lsearch -exact -nocase [list -close -stop -off] [lindex $argv 0]] != -1 } {
+       # Close an open log file, or all open log files
+       set res [taskRun logStop $c $c [join [lrange $argv 1 end] " "]]
+       if { $res == 0 } {
+            return [list 0];
+          } elseif { $res == -1 } {
+            return [list 0 [T "Log file \"%s\" not found." [join [lrange $argv 1 end] " "]]];
+          } elseif { $res == -2 } {
+            return [list 0 [T "Log file \"%s\" is ambiguous." [join [lrange $argv 1 end] " "]]];
+          }
+     }
+
+  # Try and parse out options...
+  array set options [list -buffer 0 -append 1 -leave 1 -timestamps 0]
+  set error ""
+  set finished 0
+  set file [list]
+  set needOpt 1
+  set i 0
+  foreach x $argv {
+     incr i
+     if { [string length $error] } {
+          break;
+        }
+     if { $finished } {
+          lappend file $x
+        } else {
+          if { $needOpt } {
+               # Looking for an -option, not a value
+               if { $x eq "--" } {
+                    set finished 1
+                    continue;
+                  } elseif { $x eq "" } {
+                    continue;
+                  } else {
+                    set match [array names options "$x*"]
+                    if { [llength $match] == 0 } {
+                         if { $i == $argc || ![string match "-*" $x] } {
+                              set finished 1
+                              lappend file $x
+                            } else {
+                              set error [T "Unknown option \"%s\"" $x]
+                              break;
+                            }
+                       } elseif { [llength $match] > 1 } {
+                         set error [T "Ambiguous option \"%s\"" $x]
+                       } else {
+                         set needOpt 0
+                       }
+                  }
+              } else {
+                # Looking for a value to the option $match
+                if { $match in [list "-append" "-leave" "-timestamps"] } {
+                     if { [string is boolean -strict $x] } {
+                          set options($match) [string is true -strict $x]
+                        } else {
+                          set error [T "Invalid setting \"%s\" for \"%s\"" $x $match]
+                          break;
+                        }
+                   } elseif { $match eq "-buffer" } {
+                     if { [string equal $x "_none"] } {
+                          set options(-buffer) "No Buffer"
+                        } elseif { [string equal $x "_main"] } {
+                          set options(-buffer) "Main Window"
+                        } else {
+                          set options(-buffer) $x;# name of a spawn window
+                        }
+                   }
+                set needOpt 1
+              }
+        }
+     }
+
+  if { $error ne "" } {
+       return [list 0 "/log: $error";]
+     }
+
+  set file [join $file " "]
+  if { $file eq "" } {
+       # Gahhhh. Why did I write all that parsing code if you DIDN'T GIVE A FILE?!
+       taskRun log $c $c
+       return [list 1];
+     }
+
+  doLog $c $file $options(-append) $options(-buffer) $options(-leave) $options(-timestamps)
+  return [list 1];
+
+};# /log
+
+#: /close
+#: Close the current connection
+::potato::define_slash_cmd close {
+
+  taskRun close $c $c
+
+  return [list 1];
+
+};# /close
+
+#: /connect <worldname>
+#: Connect to the saved world <worldname>
+::potato::define_slash_cmd connect {
+  variable world;
+  variable misc;
+
+  set str [string trim $str]
+  set len [string length $str]
+  if { $len == 0 } {
+       slash_cmd_reconnect $c $full $str
+       return [list 1];
+     }
+  set partial [list]
+  foreach w [worldIDs] {
+     if { [string equal -nocase $world($w,name) $str] } {
+          set exact $w
+          break;
+        } elseif { [string equal -nocase -length $len $world($w,name) $str] } {
+          lappend partial $w
+        }
+  }
+
+  set partial [lsort -dictionary $partial]
+  if { [info exists exact] } {
+       newConnectionDefault $exact
+       return [list 1];
+     } elseif { [llength $partial] == 0 } {
+       return [list 0 [T "No such world \"%s\". Use \"/quick host port\" to connect to a world that isn't in the address book." $str]];
+     } elseif { [llength $partial] == 1 || $misc(partialWorldMatch) } {
+       newConnectionDefault [lindex $partial 0]
+       return [list 1];
+     } else {
+       return [list 0 [T "Ambiguous world name \"%s\"." $str]];
+     }
+
+};# ::potato::slash_cmd_connect
+
+#: /quick [<host>:<port>]
+#: Connect to the given address, or show the Quick Connect window
+::potato::define_slash_cmd quick {
+
+  set hostAndPort [parseTelnetAddress $str]
+  if { [llength $hostAndPort] == 2 } {
+       # Make the new world, and connect to it.
+       set host [lindex $hostAndPort 0]
+       set port [lindex $hostAndPort 1]
+       newConnection [addNewWorld "$host:$port" $host $port 1]
+     } else {
+       # Pop up the "quick connect" dialog.
+       potato::newWorld 1
+     }
+
+  return [list 1];
+
+};# /quick
+
+#: /exit
+::potato::define_slash_cmd exit {
+
+  if { $full } {
+       set prompt 0
+     } else {
+       set prompt -1
+     }
+  taskRun exit $c $prompt
+  return [list 1];
+
+};# /exit
+
+#: /reconnect [<character>]  |  /reconnect <connection>
+#: Reconnect the current, possibly as <character>, or reconnect in connection <connection>
+::potato::define_slash_cmd reconnect {
+  variable conn;
+  variable world;
+
+  set w $conn($c,world)
+  if { $str eq "" } {
+       taskRun reconnect
+     } elseif { [string is integer -strict $str] && [info exists conn($str,id)] && $str > 0 } {
+       taskRun reconnect $c $str
+     } elseif { $str eq "none" } {
+       set conn($c,char) ""
+       taskRun reconnect
+     } elseif { [set chars [lsearch -exact -index 0 $world($w,charList) $str]] != -1 ||
+                [set chars [lsearch -exact -nocase -index 0 $world($w,charList) $str]] != -1 } {
+       if { [llength $chars] != 1 } {
+            return [list 0 [T "Ambiguous character name \"%s\"" $str]];
+          } else {
+            set conn($c,char) [lindex $world($w,charList) [list $chars 0]]
+            taskRun reconnect
+          }
+     } else {
+       return [list 0 [T "Invalid connection id/character name"]];
+     }
+
+  return [list 1];
+
+};# /reconnect
+
+#: /disconnect
+#: Disconnect the current connection
+::potato::define_slash_cmd disconnect {
+
+  taskRun disconnect
+  return [list 1];
+
+};# /disconnect
+
+#: /toggle [<direction>]
+#: Toggle the shown connection forward/backwards one connection
+::potato::define_slash_cmd toggle {
+
+  if { $str eq "down" || $str == -1 } {
+       taskRun prevConn
+     } else {
+       taskRun nextConn
+     }
+  return [list 1];
+
+};# /toggle
+
+#: /web <address>
+#: Launch a web browser to show <address>
+::potato::define_slash_cmd web {
+
+  launchWebPage $str
+  return [list 1];
+
+};# /web
+
+#: /history [<number>]
+#: Show the history window, or place the <number>th history item into the input window
+::potato::define_slash_cmd history {
+  variable conn;
+
+  if { [string trim $str] eq "" } {
+       after idle [list ::potato::taskRun inputHistory $c $c]
+     } elseif { [string is integer -strict [set num [string trim $str]]] } {
+       if { $num < 1 } {
+            if { [llength $conn($c,inputHistory)] > [expr {abs($num)}] } {
+                 # use "end-abs($num)" rather than end$num in case $num is 0
+                 set pos "end-[expr {abs($num)}]"
+               } else {
+                 return [list 0 [T "/history: Invalid position"]];
+               }
+          } elseif { [set pos [lsearch -index 0 $conn($c,inputHistory) $num]] == -1 } {
+            return [list 0 [T "/history: Invalid position"]];
+          }
+       if { [focus -displayof $conn($c,input2)] eq $conn($c,input2) } {
+            set input 2
+          } else {
+            set input 1
+          }
+       showInput $c $input [string map [list \b \n] [lindex $conn($c,inputHistory) $pos 1]] 1
+     }
+
+  return [list 1];
+
+};# /history
+
+#: proc ::potato::cleanup_afters
+#: arg c connection id
+#: desc Cleanup the after IDs for conn $c's userAfterIDs var
+#: return nothing
+proc ::potato::cleanup_afters {c} {
+  variable conn;
+
+  if { ![info exists conn($c,userAfterIDs)] } {
+       return;
+     }
+
+  set new [list]
+  set all [after info]
+  foreach x $conn($c,userAfterIDs) {
+    if { $x in $all } {
+         lappend new $x
+       }
+  }
+  set conn($c,userAfterIDs) $new
 
   return;
 
-};# /slash
+};# ::potato::cleanup_afters
 
 # proc ::potato::TinyURL
 #: arg url The URL to shorten
@@ -9688,470 +10170,6 @@ proc ::potato::itemize {list {join "and"}} {
      }
 
 };# ::potato::itemize
-
-#: /set <varname>=<value>
-#: Set a connection-local variable <varname> (accessed in /commands as $<varname>$ to <value>
-::potato::define_slash_cmd set {
-
-  setUserVar $c 0 $str
-  return;
-
-};# /set
-
-#: /unset <varname>
-#: Unset the connection-local variable <varname>
-::potato::define_slash_cmd unset {
-
-  unsetUserVar $c 0 $str
-  return;
-
-};# /unset
-
-#: /vars [-all|-global|-local]
-#: Print a list of all, global or local vars
-::potato::define_slash_cmd vars {
-  variable conn;
-
-  set local 0
-  set global 0
-
-  foreach x [split $str " "] {
-    if { $x eq "-all" } {
-         set local 1
-         set global 1
-       } elseif { $x eq "-local" } {
-         set local 1
-       } elseif { $x eq "-global" } {
-         set global 1
-       } else {
-         if { $silent } {
-              bell -displayof .
-            } else {
-              outputSystem $c "/vars: Invalid arg \"$x\": Must be one of -all, -global or -local"
-            }
-         return;
-       }
-  }
-
-  if { !($global || $local) } {
-       set local 1
-       set global 1
-     }
-       
-  if { $local && $c != 0 } {
-       outputSystem $c "World vars:"
-       foreach x [lsort -dictionary [removePrefix [array names conn $c,uservar,*] $c,uservar]] {
-         outputSystem $c "\t$x\t$conn($c,uservar,$x)"
-       }
-       if { $global } {
-            outputSystem $c ""
-          }
-     }
-
-  if { $global || ($local && $c == 0) } {
-       outputSystem $c "Global vars:"
-       foreach x [lsort -dictionary [removePrefix [array names conn 0,uservar,*] 0,uservar]] {
-         outputSystem $c "\t$x\t$conn(0,uservar,$x)"
-       }
-     }
-
-};# /vars
-
-#: /setglobal <varname>=<value>
-#: Set a global (all connections) variable <varname> to <value>
-::potato::define_slash_cmd setglobal {
-
-  setUserVar $c 1 $str
-  return;
-
-};# /setglobal
-
-#: /unsetglobal <varname>
-#: Unset global var <varname>
-::potato::define_slash_cmd unsetglobal {
-
-  unsetUserVar $c 1 $str
-  return;
-
-};# /unsetglobal
-
-#: /edit
-#: Show the Edit Settings window
-::potato::define_slash_cmd edit {
-  variable conn;
-
-  if { $c == 0 } {
-       taskRun programConfig
-     } else {
-       taskRun config $conn($c,world) $conn($c,world)
-     }
-  return;
-
-};# /edit
-
-#: /tcl
-#: Show the Tcl code console if available
-::potato::define_slash_cmd tcl {
-
-  if { [catch {console show}] } {
-       bell -displayof .
-       return;
-     }
-
-};# /tcl
-
-#: /eval <code>
-#: Evaluate the Tcl code <code> and print the result to the output window
-::potato::define_slash_cmd eval {
-
-  set err [catch {uplevel #0 $str} msg]
-  if { $silent } {
-       if { $err } {
-            bell -displayof .
-          }
-       return;
-     }
-
-  if { $err } {
-       outputSystem $c [T "Error (%d): %s" [string length $msg] $msg]
-     } else {
-       outputSystem $c [T "Return (%d): %s" [string length $msg] $msg]
-     }
-
-};# /eval
-
-#: /speedwalk <dirs>
-#: Speedwalk in the given directions. <dirs> is a string in the format [<number>][ ]<direction>[[ ][<numberN>][ ]<directionN>]
-::potato::define_slash_cmd speedwalk {
-
-  if { ![regexp {^ *([0-9]+ *([ns][ew]|[nsweudo]) *)+ *$} $str] } {
-       if { $silent } {
-            bell -displayof .
-          } else {
-            outputSystem $c [T "Invalid speedwalk command"]
-          }
-       return;
-     }
-
-  set sendStr ""
-  set dirs [list n north s south w west e east nw northwest ne northeast sw southwest se southeast \
-                 u up d down o out]
-  foreach {all num dir} [regexp -all -inline -- { *([0-9]+)? *((?:[ns][ew]|[nsewudo])) *} $str] {
-     set which [expr {[lsearch -exact $dirs $dir] + 1}]
-     append sendStr [string repeat "[lindex $dirs $which]\n" $num]
-  }
-  return;
-  send_to $c [string range $sendStr 0 end-1] \n 1
-
-  return;
-
-};# /speedwalk
-
-# Create a /sw alias for /speedwalk
-interp alias {} ::potato::slash_cmd_sw {} ::potato::slash_cmd_speedwalk
-
-#: /log  |  /log -close [<path>] |  /log [-options] <path>
-#: Either show the logging window, close open log(s) or start logging to a new file
-::potato::define_slash_cmd log {
-  variable conn;
-
-  if { $c == 0 } {
-       bell -displayof .
-       return;
-     }
-
-  # Check for no options given
-  if { [string trim $str] eq "" } {
-       taskRun log $c $c
-       return;
-     }
-
-  # Check for "/log -close"
-  set argv [split $str " "]
-  set argc [llength $argv]
-  if { [lsearch -exact -nocase [list -close -stop -off] [lindex $argv 0]] != -1 } {
-       # Close an open log file, or all open log files
-       set res [taskRun logStop $c $c [join [lrange $argv 1 end] " "]]
-       if { $res < 1 && $silent } {
-            bell -displayof .
-          } elseif { $res == 0 } {
-            bell -displayof .
-          } elseif { $res == -1 } {
-            outputSystem $c [T "Log file \"%s\" not found." [join [lrange $argv 1 end] " "]]
-          } elseif { $res == -2 } {
-            outputSystem $c [T "Log file \"%s\" is ambiguous." [join [lrange $argv 1 end] " "]]
-          }
-       return;
-     }
-
-  # Try and parse out options...
-  array set options [list -buffer 0 -append 1 -leave 1 -timestamps 0]
-  set error ""
-  set finished 0
-  set file [list]
-  set needOpt 1
-  set i 0
-  foreach x $argv {
-     incr i
-     if { $finished } {
-          lappend file $x
-        } else {
-          if { $needOpt } {
-               # Looking for an -option, not a value
-               if { $x eq "--" } {
-                    set finished 1
-                    continue;
-                  } elseif { $x eq "" } {
-                    continue;
-                  } else {
-                    set match [array names options "$x*"]
-                    if { [llength $match] == 0 } {
-                         if { $i == $argc || ![string match "-*" $x] } {
-                              set finished 1
-                              lappend file $x
-                            } else {
-                              set error [T "Unknown option \"%s\"" $x]
-                              break;
-                            }
-                       } elseif { [llength $match] > 1 } {
-                         set error [T "Ambiguous option \"%s\"" $x]
-                       } else {
-                         set needOpt 0
-                       }
-                  }
-              } else {
-                # Looking for a value to the option $match
-                if { $match in [list "-append" "-leave" "-timestamps"] } {
-                     if { [string is boolean -strict $x] } {
-                          set options($match) [string is true -strict $x]
-                        } else {
-                          set error [T "Invalid setting \"%s\" for \"%s\"" $x $match]
-                          break;
-                        }
-                   } elseif { $match eq "-buffer" } {
-                     if { [string equal $x "_none"] } {
-                          set options(-buffer) "No Buffer"
-                        } elseif { [string equal $x "_main"] } {
-                          set options(-buffer) "Main Window"
-                        } else {
-                          set options(-buffer) $x;# name of a spawn window
-                        }
-                   }
-                set needOpt 1
-              }
-        }
-     }
-
-  if { $error ne "" } {
-       if { $silent } {
-            bell -displayof .
-          } else {
-            outputSystem $c "/log: $error"
-          }
-       return;
-     }
-
-  set file [join $file " "]
-  if { $file eq "" } {
-       # Gahhhh. Why did I write all that parsing code if you DIDN'T GIVE A FILE?!
-       taskRun log $c $c
-       return;
-     }
-
-  doLog $c $file $options(-append) $options(-buffer) $options(-leave) $options(-timestamps)
-  return;     
-
-};# /log
-
-#: /close
-#: Close the current connection
-::potato::define_slash_cmd close {
-
-  taskRun close $c $c
-
-  return;
-
-};# /close
-
-#: /connect <worldname>
-#: Connect to the saved world <worldname>
-::potato::define_slash_cmd connect {
-  variable world;
-  variable misc;
-
-  set str [string trim $str]
-  set len [string length $str]
-  if { $len == 0 } {
-       slash_cmd_reconnect $c $full $str
-       return;
-     }
-  set partial [list]
-  foreach w [worldIDs] {
-     if { [string equal -nocase $world($w,name) $str] } {
-          set exact $w
-          break;
-        } elseif { [string equal -nocase -length $len $world($w,name) $str] } {
-          lappend partial $w
-        }
-  }
-
-  set partial [lsort -dictionary $partial]
-  if { [info exists exact] } {
-       newConnectionDefault $exact
-       return;
-     } elseif { [llength $partial] == 0 } {
-       if { $c != 0 && !$silent } {
-            outputSystem $c [T "No such world \"%s\". Use \"/quick host port\" to connect to a world that isn't in the address book." $str]
-          } else {
-            bell -displayof .
-          }
-       return;
-     } elseif { [llength $partial] == 1 || $misc(partialWorldMatch) } {
-       newConnectionDefault [lindex $partial 0]
-       return;
-     } else {
-       if { $c != 0 && !$silent } {
-            outputSystem $c [T "Ambiguous world name \"%s\"." $str]
-          } else {
-            bell -displayof .
-          }
-       return;
-     }
-
-};# ::potato::slash_cmd_connect
-
-#: /quick [<host>:<port>]
-#: Connect to the given address, or show the Quick Connect window
-::potato::define_slash_cmd quick {
-
-  set hostAndPort [parseTelnetAddress $str]
-  if { [llength $hostAndPort] == 2 } {
-       # Make the new world, and connect to it.
-       set host [lindex $hostAndPort 0]
-       set port [lindex $hostAndPort 1]
-       newConnection [addNewWorld "$host:$port" $host $port 1]
-     } else {
-       # Pop up the "quick connect" dialog.
-       potato::newWorld 1
-     }
-
-  return;
-
-};# /quick
-
-#: /exit
-::potato::define_slash_cmd exit {
-
-  if { $full } {
-       set prompt 0
-     } else {
-       set prompt -1
-     }
-  taskRun exit $c $prompt
-  return;
-
-};# /exit
-
-#: /reconnect [<character>]  |  /reconnect <connection>
-#: Reconnect the current, possibly as <character>, or reconnect in connection <connection>
-::potato::define_slash_cmd reconnect {
-  variable conn;
-  variable world;
-
-  set w $conn($c,world)
-  if { $str eq "" } {
-       taskRun reconnect
-     } elseif { [string is integer -strict $str] && [info exists conn($str,id)] && $str > 0 } {
-       taskRun reconnect $c $str
-     } elseif { $str eq "none" } {
-       set conn($c,char) ""
-       taskRun reconnect
-     } elseif { [set chars [lsearch -exact -index 0 $world($w,charList) $str]] != -1 ||
-                [set chars [lsearch -exact -nocase -index 0 $world($w,charList) $str]] != -1 } {
-       if { [llength $chars] != 1 } {
-            if { $silent } {
-                 bell -displayof .
-               } else {
-                 outputSystem $c [T "Ambiguous character name \"%s\"" $str]
-               }
-          } else {
-            set conn($c,char) [lindex $world($w,charList) [list $chars 0]]
-            taskRun reconnect
-          }
-     } else {
-       if { $silent } {
-            bell -displayof .
-          } else {
-            outputSystem $c [T "Invalid connection id/character name"]
-          }
-     }
-
-  return;
-
-};# /reconnect
-
-#: /disconnect
-#: Disconnect the current connection
-::potato::define_slash_cmd disconnect {
-
-  taskRun disconnect
-  return;
-
-};# /disconnect
-
-#: /toggle [<direction>]
-#: Toggle the shown connection forward/backwards one connection
-::potato::define_slash_cmd toggle {
-
-  if { $str eq "down" || $str == -1 } {
-       taskRun prevConn
-     } else {
-       taskRun nextConn
-     }
-  return;
-
-};# /toggle
-
-#: /web <address>
-#: Launch a web browser to show <address>
-::potato::define_slash_cmd web {
-
-  launchWebPage $str
-  return;
-
-};# /web
-
-#: /history [<number>]
-#: Show the history window, or place the <number>th history item into the input window
-::potato::define_slash_cmd history {
-  variable conn;
-
-  if { [string trim $str] eq "" } {
-       after idle [list ::potato::taskRun inputHistory $c $c]
-     } elseif { [string is integer -strict [set num [string trim $str]]] } {
-       if { $num < 1 } {
-            if { [llength $conn($c,inputHistory)] > [expr {abs($num)}] } {
-                 # use "end-abs($num)" rather than end$num in case $num is 0
-                 set pos "end-[expr {abs($num)}]"
-               } else {
-                 bell -displayof .
-                 return;
-               }
-          } elseif { [set pos [lsearch -index 0 $conn($c,inputHistory) $num]] == -1 } {
-            bell -displayof .
-            return;
-          }
-       if { [focus -displayof $conn($c,input2)] eq $conn($c,input2) } {
-            set input 2
-          } else {
-            set input 1
-          }
-       showInput $c $input [string map [list \b \n] [lindex $conn($c,inputHistory) $pos 1]] 1
-     }
-      
-  return;
-
-};# /history
 
 #: proc ::potato::timeFmt
 #: arg seconds a number of seconds
@@ -10220,7 +10238,7 @@ proc ::potato::about {} {
   pack [::ttk::label $frame.top.img -image ::potato::img::logoSmall] -side left -padx 15
   pack [::ttk::label $frame.top.txt -text $str] -side left -padx 5
   $frame.top.txt configure -font [list {*}[font actual "TkDefaultFont"] -size 12]
-  
+
 
   pack [::ttk::button $frame.btm.close -text [T "Close"] -width 8 \
              -command [list destroy $win] -default active] -side top
@@ -10266,7 +10284,7 @@ proc ::potato::parseTelnetAddress {addr} {
 #: arg src where the request came from. One of "cl" (from potato.exe <address>), "clP" (from potato.exe -arg <foo>) or "dde" (from a Windows DDE server)
 #: arg addr the address we've been asked to connect to
 #: arg isWorld if 1, $addr is the name of a world to connect to, else it's a host and port. Defaults to 0
-#: desc $addr is an address we've been asked to connect to, either via DDE on Windows or on the command line. 
+#: desc $addr is an address we've been asked to connect to, either via DDE on Windows or on the command line.
 #: desc Attempt to do so, respecting the potato::misc(outsideRequestMethod) var
 #: return nothing
 proc ::potato::handleOutsideRequest {src addr {isWorld 0}} {
@@ -10286,7 +10304,7 @@ proc ::potato::handleOutsideRequest {src addr {isWorld 0}} {
        # link is clicked and Potato wasn't open. Ignore silently.
        return;
      }
-  
+
   # OK, let's do it the hard way...
 
   # Let's see if what we have is a valid host and port
@@ -10444,7 +10462,7 @@ proc ::potato::textEditor {{c ""}} {
   # set menuColour [menu $menu.colour -tearoff 0]
   # set menuColourBG [menu $menu.colourBG -tearoff 1]
   # set menuColourFG [menu $menu.colourFG -tearoff 1]
-  $menu add cascade {*}[menu_label [T "&Action"]] -menu $actionMenu 
+  $menu add cascade {*}[menu_label [T "&Action"]] -menu $actionMenu
   $menu add cascade {*}[menu_label [T "&Edit"]] -menu $editMenu
 
   set allTxt [format {[%s get 1.0 end-1char]} $text]
@@ -10456,7 +10474,7 @@ proc ::potato::textEditor {{c ""}} {
           -command [format {::potato::showInput %s 2 %s 1} $c $allTxt]
   $actionMenu add separator
   set actionMenuConvert [menu $actionMenu.convert -tearoff 0]
-  $actionMenu add cascade {*}[menu_label [T "&Convert..."]] -menu $actionMenuConvert 
+  $actionMenu add cascade {*}[menu_label [T "&Convert..."]] -menu $actionMenuConvert
   # $actionMenu add cascade {*}[menu_label [T "&ANSI Colour..."] -menu $menuColour]
   $actionMenu add separator
   $actionMenu add command {*}[menu_label [T "&Open..."]] -command [list ::potato::textEditorOpen $text]
@@ -10467,7 +10485,7 @@ proc ::potato::textEditor {{c ""}} {
   $actionMenuConvert add command {*}[menu_label [T "&Escape Special Characters"]] -command [list ::potato::escapeChars $text] -accelerator Ctrl+E
 
   # $actionMenuConvert add comand {*}[menu_label [T "&ANSI Colours to Tags"]] -command [list ::potato::textEditorConvertANSI $text]
-  
+
   # Allow for saving to a file, including hard-wrapping and auto-indenting! #abc
   # Do ANSI Colour conversion stuff! #abc
 
@@ -10539,7 +10557,7 @@ proc ::potato::textEditorSave {text} {
 
 #: proc ::potato::escapeChars
 #: arg win path to text widget
-#: arg specials 
+#: arg specials
 #: arg newlines Convert newlines to "%r"? Defaults to 0
 #: desc Replace all MUSH-special chars in text widget $win with escaped equivilents. Wrapper around textFindAndReplace.
 #: return nothing
@@ -10624,7 +10642,7 @@ proc ::potato::connectMenuPost {{x 0} {y 0}} {
 
 };# ::potato::connectMenuPost
 
-#: proc ::potato::rebuildConnectMenu 
+#: proc ::potato::rebuildConnectMenu
 #: arg m menu width path
 #: desc Rebuild menu $m with commands for connecting to each world. Called when menu is posted.
 #: return nothing
@@ -10719,7 +10737,7 @@ proc ::potato::fcmd {num {c ""}} {
 
   set w $conn($c,world)
   if { [set cmd $world($w,fcmd,$num)] ne "" } {
-       # continue, this world has an 
+       # continue, this world has an
      } elseif { $w != -1 && [string trim [set cmd $world(-1,fcmd,$num)]] ne "" } {
        # continue, use -1's command
      } else {
@@ -10912,13 +10930,13 @@ proc ::potato::tasksInit {} {
 #: return 1 or 0
 proc ::potato::taskExists {task} {
   variable tasks;
-  
+
   if { [info exists tasks($task,state)] && [info exists tasks($task,name)] && [info exists tasks($task,state)] } {
        return 1;
      } else {
        return 0;
      }
-     
+
 };# ::potato::taskExists
 
 #: proc ::potato::taskAccelerator
@@ -11036,13 +11054,13 @@ proc ::potato::toggleInputFocus {{c ""}} {
        set new $conn($c,input1)
      }
    focus $new;
-   
+
    return;
 
 };# ::potato::toggleInputFocus
 
 #: proc ::potato::spellcheck
-#: desc Launch the spellchecker for the current input window. Note: the actual spellchecking code is in 
+#: desc Launch the spellchecker for the current input window. Note: the actual spellchecking code is in
 #: desc potato-spell.tcl, this simply launches it with the correct text and processes the result.
 #: return nothing
 proc ::potato::spellcheck {} {
@@ -11076,7 +11094,7 @@ proc ::potato::glob2Regexp {pattern} {
 #: proc ::potato::inputHistoryScroll
 #: arg dir Direction to scroll, either -1 (older commands), or 1 (newer commands)
 #: arg Win Window to do stuff in. Defaults to ""
-#: desc Scroll the text in the input window $win (or the window with focus if $win is "") to show the 
+#: desc Scroll the text in the input window $win (or the window with focus if $win is "") to show the
 #: desc prev/next input history command. If window with focus isn't an input window, do nothing
 #: return nothing
 proc ::potato::inputHistoryScroll {dir {win ""}} {
@@ -11122,7 +11140,7 @@ proc ::potato::inputHistoryScroll {dir {win ""}} {
        foreach {index cmd} [lindex $conn($c,inputHistory) $pos] {break}
        set cmd [string map [list \b \n] $cmd]
      }
-       
+
   if { $inputSwap($win,count) == -1 } {
        set inputSwap($win,backup) [$win get 1.0 end-1char]
      } elseif { $index == -1 } {
@@ -11138,7 +11156,7 @@ proc ::potato::inputHistoryScroll {dir {win ""}} {
 
 #: proc ::potato::inputHistoryReset
 #: arg Win Window to do stuff in. Defaults to ""
-#: desc If input window $win (or the window with focus if $win is "") is showing an input history 
+#: desc If input window $win (or the window with focus if $win is "") is showing an input history
 #: desc cmd, reset it to the stored cmd. If window with focus isn't an input window, do nothing
 #: return nothing
 proc ::potato::inputHistoryReset {{win ""}} {
@@ -11202,7 +11220,7 @@ proc ::potato::loadSubFiles {dir} {
          exit;
        }
   }
-  
+
   package provide potato-subfiles 1.0
 
 };# ::potato::loadSubFiles
