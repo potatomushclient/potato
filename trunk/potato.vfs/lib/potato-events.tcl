@@ -13,7 +13,7 @@ proc ::potato::eventsMatch {c _tagged _lineNoansi _eventInfo} {
   upvar 1 $_tagged tagged;
   upvar 1 $_lineNoansi str;
   upvar 1 $_eventInfo eventInfo;
-  
+
   set w $conn($c,world)
   set up [up]
   set focus [focus -displayof .]
@@ -25,8 +25,8 @@ proc ::potato::eventsMatch {c _tagged _lineNoansi _eventInfo} {
        set worlds [list $w -1]
      }
 
-  set eventInfo(matched) 0     
-  
+  set eventInfo(matched) 0
+
   set done 0
   foreach w $worlds {
     if { $done } {
@@ -144,25 +144,26 @@ proc ::potato::eventsMatch {c _tagged _lineNoansi _eventInfo} {
 
 
         incr eventInfo(matched)
-      
+
         if { $world($w,events,$event,spawn) && $world($w,events,$event,spawnTo) ne "" } {
-             !set eventInfo(spawnTo) [parseUserVars $c [string map $mapList $world($w,events,$event,spawnTo)]]
+             #!set eventInfo(spawnTo) [parseUserVars $c [string map $mapList $world($w,events,$event,spawnTo)]]
+             !set eventInfo(spawnTo) [string map $mapList $world($w,events,$event,spawnTo)]
            }
-         
+
         !set eventInfo(omit) $world($w,events,$event,omit)
-      
+
         if { [info exists world($w,events,$event,noActivity)] } {
              !set eventInfo(noActivity) $world($w,events,$event,noActivity)
            }
-         
+
         !set eventInfo(log) $world($w,events,$event,log)
 
         if { $world($w,events,$event,fg) ne "" } {
              for {set i $start} {$i <= $end} {incr i} {
                lset tagged [list $i 1 0] ANSI_fg_$world($w,events,$event,fg)
-             }             
+             }
            }
-         
+
         if { $world($w,events,$event,bg) ne "" } {
              for {set i $start} {$i <= $end} {incr i} {
                lset tagged [list $i 1 1] ANSI_bg_$world($w,events,$event,bg)
@@ -177,9 +178,10 @@ proc ::potato::eventsMatch {c _tagged _lineNoansi _eventInfo} {
         if { [set send [string map $mapList $world($w,events,$event,send)]] ne "" } {
              lappend eventInfo(send) $send
            }
-           
+
         if { $world($w,events,$event,replace) } {
-             set replaceText [parseUserVars $c [string map $mapList $world($w,events,$event,replace,with)]]
+             #set replaceText [parseUserVars $c [string map $mapList $world($w,events,$event,replace,with)]]
+             set replaceText [string map $mapList $world($w,events,$event,replace,with)]
              set replaceList [list]
              set tags [lindex $tagged $start 1]
              foreach x [split $replaceText ""] {
@@ -189,7 +191,7 @@ proc ::potato::eventsMatch {c _tagged _lineNoansi _eventInfo} {
              incr replaceOffset [expr {[string length $replaceText] - ($end - $start)}]
              set str [string replace $str $start $end $replaceText]
            }
-             
+
 
         # This will be necessary when it's possible to replace the displayed text via events
         #set raw ""
@@ -207,22 +209,22 @@ proc ::potato::eventsMatch {c _tagged _lineNoansi _eventInfo} {
          }
     };# foreach event events
   };# foreach w worlds
-  
+
   set matchLinks {\m(?:(?:(?:f|ht)tps?://)|www\.)(?:(?:[a-zA-Z_\.0-9%+/@~=&,;-]*))?(?::[0-9]+/)?(?:[a-zA-Z_\.0-9%+/@~=&,;!-]*)(?:\?(?:[a-zA-Z_\.0-9%+/@~=&,;:!-]*))?(?:#[a-zA-Z_\.0-9%+/@~=&,;:!-]*)?}
   set tmp [regexp -all -inline -indices -- $matchLinks $str]
-  
+
   foreach x $tmp {
     foreach {start end} $x {break}
     for {set i $start} {$i <= $end} {incr i} {
       lset tagged [list $i 1 2] [concat [lindex $tagged [list $i 1 2]] link weblink]
     }
   }
-  
+
   set eventDefaults [list matched 0 omit 0 log 0 spawn 0 spawnTo "" noActivity 0]
   array set eventInfo [dict merge $eventDefaults [array get eventInfo]]
-  
+
   return;
-  
+
 };# ::potato::eventsMatch
 
 #: proc ::potato::eventConfig
@@ -321,7 +323,7 @@ proc ::potato::eventConfig {{w ""}} {
   pack [::ttk::entry $frame.right.row01.e -textvariable potato::eventConfig($w,pattern)] -side left -anchor nw \
                      -padx 2 -expand 1 -fill x
   lappend rightList $frame.right.row01.e
-  
+
   pack [::ttk::frame $frame.right.row02] -side top -anchor nw -fill x -padx 5 -pady 2
   pack [::ttk::frame $frame.right.row02.type] -side left -anchor nw
   pack [::ttk::label $frame.right.row02.type.l -text [T "Type:"] -width 10 -justify left -anchor w] -side left -anchor nw -padx 2
@@ -408,7 +410,7 @@ proc ::potato::eventConfig {{w ""}} {
   pack [::ttk::entry $frame.right.row08.e -textvariable potato::eventConfig($w,spawnTo)] -side left -anchor nw \
                      -padx 2 -expand 1 -fill x
   lappend rightList $frame.right.row08.cb $frame.right.row08.e
-  
+
   pack [::ttk::frame $frame.right.row08b] -side top -anchor nw -fill x -padx 5 -pady 2
   pack [::ttk::label $frame.right.row08b.l -text [T "Replace?"] -width 10 -justify left -anchor w] -side left -anchor nw -padx 2
   pack [::ttk::checkbutton $frame.right.row08b.cb -variable potato::eventConfig($w,replace) \
@@ -618,7 +620,7 @@ proc ::potato::eventListboxSelect {w} {
 
   return;
 
-};# ::potato::eventListboxSelect 
+};# ::potato::eventListboxSelect
 
 #: proc ::potato::eventSave
 #: arg w world id
@@ -661,7 +663,7 @@ proc ::potato::eventSave {w} {
   }
 
   set world($w,events,$this,input,window) [lsearch -exact [list None One Two Focus] $eventConfig($w,input,window)]
-  
+
   set world($w,events,$this,input,string) [$eventConfig($w,conf,input) get 1.0 end-1c]
   set world($w,events,$this,send) [$eventConfig($w,conf,send) get 1.0 end-1c]
 
@@ -750,7 +752,7 @@ proc ::potato::eventConfigSelect {w states} {
   }
 
   set colours [list fg "Normal FG" bg "Normal BG" r "Red" g Green b Blue c Cyan m Magenta y Yellow x Black w White h " Highlight"]
-  
+
   foreach x [list fg bg] {
      if { $world($w,events,$this,$x) eq "" } {
           set eventConfig($w,$x) "Don't Change"
