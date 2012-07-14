@@ -8340,86 +8340,6 @@ proc ::potato::unsetUserVar {c global varName} {
 
 };# ::potato::unsetUserVar
 
-#: proc ::potato::parseUserVars
-#: arg c connection id
-#: arg str string to parse
-#: desc Parse the string $str, expanding any user-defined variables in it.
-#: return Modified string
-proc ::potato::parseUserVars {c str} {
-  variable conn;
-  variable world;
-
-  set return ""
-  set inVar 0
-  set varMarkerChar {$}
-  if { [info exists conn($c,world)] } {
-       set w $conn($c,world)
-       # $_chr$ was a typo, but is left as an alias for $_char$ for backwards compatability
-       array set masterVars [list _u [up] \
-                                  _c $c \
-                                  _w $w \
-                                  _name $world($w,name) \
-                                  _host $world($w,host) \
-                                  _port $world($w,port) \
-                                  _char $conn($c,char) \
-                                  _chr $conn($c,char) \
-                            ] ;# array set masterVars
-     } else {
-       set w -1;
-       array set masterVars [list _u [up] \
-                                  _c 0 \
-                                  _w -1 \
-                                  _name "Potato" \
-                                  _host "unknown" \
-                                  _port 0 \
-                                  _char "" \
-                                  _chr "" \
-                            ] ;# array set masterVars
-     }
-
-  while { [set varMarker [string first $varMarkerChar $str]] > -1 } {
-          if { !$inVar } {
-               # Copy everything up to the varMarkerChar to $return and trim it from $str
-               append return [string range $str 0 [expr {$varMarker - 1}]]
-               set str [string range $str [expr {$varMarker + 1}] end]
-               set inVar 1
-             } else {
-               # Everything up to the next varMarkerChar is the varname
-               set varName [string range $str 0 [expr {$varMarker-1}]]
-               set str [string range $str [expr {$varMarker+1}] end]
-               if { [string length $varName] == 0 } {
-                    # Literal varMarkerChar
-                    append return $varMarkerChar
-                  } elseif { [info exists masterVars($varName)] } {
-                    append return $masterVars($varName)
-                  } elseif { [info exists conn($c,uservar,$varName)] } {
-                    # Local var
-                    append return $conn($c,uservar,$varName)
-                  } elseif { [info exists conn(0,uservar,$varName)] } {
-                    # Global var
-                    append return $conn(0,uservar,$varName)
-                  }
-                set inVar 0
-              }
-         }
-
-  if { $inVar } {
-       # Someone didn't close a varname (did "somestring$varname"). Options:
-       # 1. append '$varname' as literal text
-       # 2. append 'varname' as literal text
-       # 3. attempt to append the value of the variable 'varname'
-       # 4. do nothing
-       # Current choice: 4
-
-     } else {
-       # Copy rest of string
-       append return $str
-     }
-
-  return $return;
-
-};# ::potato::parseUserVars
-
 #: proc ::potato::slashConfig
 #: arg w world id. Defaults to "" for current connection's world
 #: desc Show the window for configure Custom /commands for world $w
@@ -9002,8 +8922,6 @@ proc ::potato::process_slash_cmd {c _str {recursing 0}} {
        if { $c != 0 } {
             if { [llength $ret] > 1 && [string length [lindex $ret 1]] } {
                  outputSystem $c [T "Error: %s" [lindex $ret 1]]
-               } else {
-                 outputSystem $c [T "Error."]
                }
           }
      } elseif { $c != 0 && [llength $ret] > 1 && [string length [lindex $ret 1]]} {
@@ -9321,6 +9239,9 @@ proc ::potato::customSlashCommand {c w cmd str} {
   lappend conn($c,userAfterIDs) [set afterid [after $when [list ::potato::send_to $c $action "\n" 0 ""]]]
 
   after [expr {$when + 1200}] [list ::potato::cleanup_afters $c]
+  if { $recursing } {
+       return [list 1 $afterid]
+     }
   return [list 1 [T "Command will run at %s, id %s" [clock format $inttime -format "%D %T"] $afterid]]
 
 };# /at
@@ -9671,6 +9592,60 @@ proc ::potato::customSlashCommand {c w cmd str} {
   return [list 1];
 
 };# /unset
+
+#: /get [-all|-global|-local] <varname>
+#: Return the value of the given variable
+::potato::define_slash_cmd get {
+  variable world;
+  variable conn;
+
+  set local 1
+  set global 1
+
+  if { [info exists conn($c,world)] } {
+       set w $conn($c,world)
+       array set masterVars [list _u [up] \
+                                  _c $c \
+                                  _w $w \
+                                  _name $world($w,name) \
+                                  _host $world($w,host) \
+                                  _port $world($w,port) \
+                                  _char $conn($c,char) \
+                            ] ;# array set masterVars
+     } else {
+       array set masterVars [list _u [up] \
+                                  _c 0 \
+                                  _w -1 \
+                                  _name "Potato" \
+                                  _host "unknown" \
+                                  _port 0 \
+                                  _char "" \
+                            ] ;# array set masterVars
+     }
+
+  if { [set space [string first " " $str]] != -1 } {
+       set switch [string range $str 0 $space-1]
+       set str [string range $str $space+1 end]
+       if { $x eq "-local" } {
+            set global 0
+          } elseif { $x eq "-global" } {
+            set local 0
+          } elseif { $x ne "-all" } {
+            return [list 0 "/get: Invalid switch \"$switch\": Must be one of -all, -global or -local"];
+          }
+     }
+
+  if { [info exists masterVars($str)] } {
+       return [list 1 $masterVars($str)];
+     } elseif { $local && [info exists conn($c,uservar,$str)] } {
+       return [list 1 $conn($c,uservar,$str];
+     } elseif { $global && [info exists conn(0,uservar,$str)] } {
+       return [list 1 $conn(0,uservar,$str];
+     } else {
+       return [list 0];
+     }
+
+};# /get
 
 #: /vars [-all|-global|-local]
 #: Print a list of all, global or local vars
