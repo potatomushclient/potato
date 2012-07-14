@@ -433,6 +433,16 @@ proc ::potato::manageWorldVersion {w version} {
             }
        }
      }
+     
+  if { ! ($version & $wf(event_matchall)) } {
+       foreach x [array names world $w,events,*,pattern] {
+         set x [string range $x 0 end-8]
+         if { ![info exists world($x,matchAll)] } {
+              set world($x,matchAll) 0
+            }
+       }
+     }
+
 
   # Example:
   # if { ! ($version & $wf(some_new_feature)) } {
@@ -583,6 +593,7 @@ proc ::potato::worldFlags {{total 0}} {
   set f(obfusticated_pw)     8    ;# Passwords are obfusticated
   set f(many_chars)         16    ;# World has multiple characters in $world($w,charList) as [list [list name pw] [list name pw]], not $world($w,charName) and $world($w,charPass)
   set f(event_noactivity)   32    ;# Events have a noActivity option
+  set f(event_matchall)     64    ;# Events have a matchAll option
 
   if { !$total } {
        return [array get f];
@@ -3810,116 +3821,166 @@ proc ::potato::eventsMatch {c _tagged _lineNoansi _eventInfo} {
     if { $done } {
          break;
        }
-    foreach x $world($w,events) {
-      if { !$world($w,events,$x,enabled) } {
+    foreach event $world($w,events) {
+      if { !$world($w,events,$event,enabled) } {
            continue;
          }
-      if { ($up == $c) && ($world($w,events,$x,inactive) eq "world") } {
+      if { ($up == $c) && ($world($w,events,$event,inactive) eq "world") } {
            continue;
          }
-      if { ($focus ne "") && ($world($w,events,$x,inactive) eq "program") } {
+      if { ($focus ne "") && ($world($w,events,$event,inactive) eq "program") } {
            continue;
          }
-      if { ($focus ne "") && ($up == $c) && ($world($w,events,$x,inactive) eq "inactive") } {
+      if { ($focus ne "") && ($up == $c) && ($world($w,events,$event,inactive) eq "inactive") } {
            continue;
          }
       unset -nocomplain arg
-      switch $world($w,events,$x,matchtype) {
+      set all 0
+      switch $world($w,events,$event,matchtype) {
           "regexp" -
           "wildcard" {
                     set failStr 0
-                    set matchCmd [list regexp -indices]
-                    if { !$world($w,events,$x,case) } {
+                    set matchCmd [list regexp -all -indices]
+                    if { !$world($w,events,$event,case) } {
                          lappend matchCmd "-nocase"
                        }
-                    lappend matchCmd "--"
-                    if { $world($w,events,$x,matchtype) eq "wildcard" } {
-                         lappend matchCmd $world($w,events,$x,pattern,int)
-                       } else {
-                         lappend matchCmd $world($w,events,$x,pattern)
+                    if { $world($w,events,$event,matchAll) } {
+                         set all 1
                        }
-                    lappend matchCmd $str startAndEnd arg(0) arg(1) arg(2) arg(3) \
-                            arg(4) arg(5) arg(6) arg(7) arg(8) arg(9)
+                    lappend matchCmd "--"
+                    if { $world($w,events,$event,matchtype) eq "wildcard" } {
+                         lappend matchCmd $world($w,events,$event,pattern,int)
+                       } else {
+                         lappend matchCmd $world($w,events,$event,pattern)
+                       }
+                    lappend matchCmd $str
+                    set matchCmdArgs [list startAndEnd arg(0) arg(1) arg(2) arg(3) \
+                             arg(4) arg(5) arg(6) arg(7) arg(8) arg(9)]
                    }
           "contains" {
                     set failStr -1
                     set matchCmd [list string first]
-                    if { $world($w,events,$x,case) } {
-                         lappend matchCmd $world($w,events,$x,pattern) $str
+                    if { $world($w,events,$event,case) } {
+                         lappend matchCmd $world($w,events,$event,pattern) $str
                        } else {
-                         lappend matchCmd [string tolower $world($w,events,$x,pattern)] $strL
+                         lappend matchCmd [string tolower $world($w,events,$event,pattern)] $strL
                        }
                    }
       };# switch
       if { [catch {{*}$matchCmd} result] || $result == $failStr } {
            continue;
          }
-      if { $world($w,events,$x,matchtype) eq "contains" } {
+      if { $world($w,events,$event,matchtype) eq "contains" } {
            set start $result
-           set end [expr {$result + [string length $world($w,events,$x,pattern)] - 1}]
-         } else {
-           foreach {start end} $startAndEnd {break}
-         }
-      set mapList [list "%%" "%"]
-      for {set i 0} {$i < 10} {incr i} {
-           lappend mapList %$i
-           if { [info exists arg($i)] } {
-                lappend mapList [string range $str {*}$arg($i)]
-              } else {
-                lappend mapList ""
+           set end [expr {$result + [string length $world($w,events,$event,pattern)] - 1}]
+           set arg(0) [string range $str $start $end]
+           set allMatches [list [list $start $end [array get arg]]]
+         } elseif { $all && $result > 1} {
+           set matchCmd [list regexp -all -inline -indices]
+           if { !$world($w,events,$event,case) } {
+                lappend matchCmd "-nocase"
               }
-         };# for
+           if { $world($w,events,$event,matchtype) eq "wildcard" } {
+                lappend matchCmd $world($w,events,$event,pattern,int)
+              } else {
+                lappend matchCmd $world($w,events,$event,pattern)
+              }
+           lappend matchCmd $str
+           set allPositions [{*}$matchCmd]
+           set len [llength $allPositions]
+           set each [expr {$len / $result}]
+           set allMatches [list]
+           for {set i 0} {$i < $result} {incr i} {
+                set curr [lrange $allPositions 0 $each-1]
+                set allPositions [lrange $allPositions $each end]
+                set start [lindex $curr 0 0]
+                set end [lindex $curr 0 1]
+                set args [lrange $curr 1 end]
+                set maxarg [expr {min($each-1, 10)}]
+                unset -nocomplain arg
+                for {set j 0} {$j < $maxarg} {incr j} {
+                  if { [lindex $curr $j+1] ni [list "" [list -1 -1]] } {
+                       set arg($j) [lindex $curr $j+1]
+                     }
+                }
+                if { [info exists arg] } {
+                     lappend allMatches [list $start $end [array get arg]]
+                   } else {
+                     lappend allMatches [list $start $end [list]]
+                   }
+               }
+         } else {
+           # We need to re-run to capture the single set of args, without -all
+           set matchCmd [lreplace $matchCmd 1 1]
+           {*}$matchCmd {*}$matchCmdArgs
+           foreach {start end} $startAndEnd {break}
+           set allMatches [list [list $start $end [array get arg]]]
+         }
+      foreach oneMatch $allMatches {
+        foreach {start end arglist} $oneMatch {break}
+        unset -nocomplain arg
+        array set arg $arglist;
+        set mapList [list "%%" "%"]
+        for {set i 0} {$i < 10} {incr i} {
+             lappend mapList %$i
+             if { [info exists arg($i)] && $arg($i) ne [list -1 -1] } {
+                  lappend mapList [string range $str {*}$arg($i)]
+                } else {
+                  lappend mapList ""
+                }
+            };# for
 
 
-      incr eventInfo(matched)
+        incr eventInfo(matched)
       
-      if { $world($w,events,$x,spawn) && $world($w,events,$x,spawnTo) ne "" } {
-           !set eventInfo(spawnTo) [parseUserVars $c [string map$mapList $world($w,events,$x,spawnTo)]]
-         }
-         
-      !set eventInfo(omit) $world($w,events,$x,omit)
-      
-      if { [info exists world($w,events,$x,noActivity)] } {
-           !set eventInfo(noActivity) $world($w,events,$x,noActivity)
-         }
-         
-      !set eventInfo(log) $world($w,events,$x,log)
-
-      if { $world($w,events,$x,fg) ne "" } {
-           for {set i $start} {$i <= $end} {incr i} {
-             lset tagged [list $i 1 0] ANSI_fg_$world($w,events,$x,fg)
-           }             
-         }
-         
-      if { $world($w,events,$x,bg) ne "" } {
-           for {set i $start} {$i <= $end} {incr i} {
-             lset tagged [list $i 1 1] ANSI_bg_$world($w,events,$x,bg)
+        if { $world($w,events,$event,spawn) && $world($w,events,$event,spawnTo) ne "" } {
+             !set eventInfo(spawnTo) [parseUserVars $c [string map$mapList $world($w,events,$event,spawnTo)]]
            }
-         }
+         
+        !set eventInfo(omit) $world($w,events,$event,omit)
+      
+        if { [info exists world($w,events,$event,noActivity)] } {
+             !set eventInfo(noActivity) $world($w,events,$event,noActivity)
+           }
+         
+        !set eventInfo(log) $world($w,events,$event,log)
 
-      if { $world($w,events,$x,input,window) != 0 && \
-           [set input [string map $mapList $world($w,events,$x,input,string)]] ne "" } {
-           lappend eventInfo(input) [list $world($w,events,$x,input,window) $input]
-         }
+        if { $world($w,events,$event,fg) ne "" } {
+             for {set i $start} {$i <= $end} {incr i} {
+               lset tagged [list $i 1 0] ANSI_fg_$world($w,events,$event,fg)
+             }             
+           }
+         
+        if { $world($w,events,$event,bg) ne "" } {
+             for {set i $start} {$i <= $end} {incr i} {
+               lset tagged [list $i 1 1] ANSI_bg_$world($w,events,$event,bg)
+             }
+           }
 
-      if { [set send [string map $mapList $world($w,events,$x,send)]] ne "" } {
-           lappend eventInfo(send) $send
-         }
+        if { $world($w,events,$event,input,window) != 0 && \
+             [set input [string map $mapList $world($w,events,$event,input,string)]] ne "" } {
+             lappend eventInfo(input) [list $world($w,events,$event,input,window) $input]
+           }
 
-      # This will be necessary when it's possible to replace the displayed text via events
-      #set raw ""
-      #foreach x $tagged {
-      #  append raw [lindex $tagged 0]
-      #}
-      #set str $raw
-      #set strL [string tolower $str]
+        if { [set send [string map $mapList $world($w,events,$event,send)]] ne "" } {
+             lappend eventInfo(send) $send
+           }
 
-      if { !$world($w,events,$x,continue) } {
+        # This will be necessary when it's possible to replace the displayed text via events
+        #set raw ""
+        #foreach x $tagged {
+        #  append raw [lindex $tagged 0]
+        #}
+        #set str $raw
+        #set strL [string tolower $str]
+
+      };# foreach oneMatch allMatches
+
+      if { !$world($w,events,$event,continue) } {
            set done 1
            break;
          }
-
-    };# foreach x events
+    };# foreach event events
   };# foreach w worlds
   
   set matchLinks {\m(?:(?:(?:f|ht)tps?://)|www\.)(?:(?:[a-zA-Z_\.0-9%+/@~=&,;-]*))?(?::[0-9]+/)?(?:[a-zA-Z_\.0-9%+/@~=&,;!-]*)(?:\?(?:[a-zA-Z_\.0-9%+/@~=&,;:!-]*))?(?:#[a-zA-Z_\.0-9%+/@~=&,;:!-]*)?}
@@ -5463,6 +5524,13 @@ proc ::potato::eventConfig {{w ""}} {
   pack [::ttk::checkbutton $frame.right.row03.continue.cb -variable potato::eventConfig($w,continue) \
               -onvalue 1 -offvalue 0] -side left -anchor nw -padx 2
   lappend rightList $frame.right.row03.continue.cb
+  pack [::ttk::frame $frame.right.row03.matchAll] -side left -anchor nw -padx 4
+  pack [::ttk::label $frame.right.row03.matchAll.l -text [T "Match All?"] -justify left -anchor w] \
+              -side left -anchor nw -padx 2
+  pack [::ttk::checkbutton $frame.right.row03.matchAll.cb -variable potato::eventConfig($w,matchAll) \
+              -onvalue 1 -offvalue 0] -side left -anchor nw -padx 2
+  lappend rightList $frame.right.row03.matchAll.cb
+
 
   pack [::ttk::frame $frame.right.row04] -side top -anchor nw -fill x -padx 5 -pady 2
   pack [::ttk::frame $frame.right.row04.inactive] -side left -anchor nw
@@ -5664,7 +5732,7 @@ proc ::potato::eventAdd {w} {
   set world($w,events,$x,spawnTo) ""
   set world($w,events,$x,input,window) 0
   set world($w,events,$x,input,string) ""
-
+  set world($w,events,$x,matchAll) 0
 
   lappend world($w,events) $x
   lappend eventConfig($w,conf,internalList) $x
@@ -5725,7 +5793,7 @@ proc ::potato::eventSave {w} {
   variable world;
 
   set this $eventConfig($w,conf,currentlyEdited)
-  foreach x [list pattern matchtype case enabled continue omit log noActivity spawn spawnTo] {
+  foreach x [list pattern matchtype case enabled continue omit log noActivity spawn spawnTo matchAll] {
      set world($w,events,$this,$x) $eventConfig($w,$x)
   }
 
@@ -5803,7 +5871,7 @@ proc ::potato::eventConfigSelect {w states} {
 
   if { $this eq "" } {
        # Clear all info
-       foreach x [list pattern matchtype case enabled continue omit log noActivity spawn spawnTo] {
+       foreach x [list pattern matchtype case enabled continue omit log noActivity spawn spawnTo matchAll] {
           set eventConfig($w,$x) ""
        }
        set eventConfig($w,inactive) "Always"
@@ -5835,7 +5903,7 @@ proc ::potato::eventConfigSelect {w states} {
   # the comboboxes, because it's too stupid to let you give a list of values to display /and/
   # a corresponding list of values to store in the variables. We also have a couple of text
   # widgets to insert stuff into.
-  foreach x [list pattern matchtype case enabled continue omit log noActivity spawn spawnTo] {
+  foreach x [list pattern matchtype case enabled continue omit log noActivity spawn spawnTo matchAll] {
      set eventConfig($w,$x) $world($w,events,$this,$x)
   }
 
@@ -5899,7 +5967,7 @@ proc ::potato::eventConfigClear {w} {
   set eventConfig($w,pattern) ""
   set eventConfig($w,spawnTo) ""
   # Set checkboxes to 0
-  foreach x [list case enabled continue log omit spawn] {
+  foreach x [list case enabled continue log omit spawn matchAll] {
     set eventConfig($w,$x) 0
   }
   array set eventConfig [array get temp]
