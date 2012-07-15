@@ -64,6 +64,7 @@ proc ::potato::setPrefs {readfile} {
   set world(-1,telnet,term) 1
   set world(-1,telnet,term,as) ""
   set world(-1,telnet,keepalive) 0
+  set world(-1,telnet,prompts) 1
   set world(-1,encoding,start) iso8859-1
   set world(-1,encoding,negotiate) 1
   set world(-1,groups) [list]
@@ -181,7 +182,7 @@ proc ::potato::setPrefs {readfile} {
   set misc(tinyurlProvider) "TinyURL"
 
   set misc(autoConnect) 1 ;# should we run autoconnects?
-  
+
   set misc(checkForUpdates) 1
 
   # Default locale
@@ -252,7 +253,7 @@ proc ::potato::setPrefs {readfile} {
   if { ![info exists world(-1,bottom,font,created)] } {
        set world(-1,bottom,font,created) [font create {*}[font actual $world(-1,bottom,font)]]
      }
-     
+
   if { $misc(aspell) eq "" } {
        set misc(aspell) [auto_execok aspell]
      }
@@ -332,7 +333,7 @@ proc ::potato::managePrefVersion {version} {
   #      unset misc(foo_var)
   #    }
 
-  return;       
+  return;
 
 };# potato::managePrefVersion
 
@@ -340,8 +341,8 @@ proc ::potato::managePrefVersion {version} {
 #: arg w world id, defaults to ""
 #: arg autosave Automatically invoke the 'Save' button after creating the window? defaults to 0
 #: desc show the configuration dialog for world $w, or the world of the connection currently displayed if $w is "".
-#: desc If any part of this needs to create a popup, it should be named ${worldConfigToplevel}_subToplevel_<description> - 
-#: desc this will cause it to be automatically destroyed when the $worldConfigToplevel is destroyed. 
+#: desc If any part of this needs to create a popup, it should be named ${worldConfigToplevel}_subToplevel_<description> -
+#: desc this will cause it to be automatically destroyed when the $worldConfigToplevel is destroyed.
 #: desc If $autosave is true, as soon as the window is correctly set up, invoke the save button to destroy it and initiate an
 #: desc update of the settings. Used if settings are changed programatically (via Import Settings, etc) to trigger a full update.
 #: return nothing
@@ -416,7 +417,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
 
   pack [set sub [::ttk::frame $frame.host]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "1st Address:"] -width 17 -justify left -anchor w] -side left -padx 3
-  pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,host) -width 50] -side left -padx 3  
+  pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,host) -width 50] -side left -padx 3
 
   pack [set sub [::ttk::frame $frame.port]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "1st Port:"] -width 17 -justify left -anchor w] -side left -padx 3
@@ -428,7 +429,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
 
   pack [set sub [::ttk::frame $frame.host2]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "2nd Address:"] -width 17 -justify left -anchor w] -side left -padx 3
-  pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,host2) -width 50] -side left -padx 3  
+  pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,host2) -width 50] -side left -padx 3
 
   pack [set sub [::ttk::frame $frame.port2]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "2nd Port:"] -width 17 -justify left -anchor w] -side left -padx 3
@@ -469,7 +470,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
 
   pack [set sub [::ttk::frame $frame.phost]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "Proxy Host:"] -width 17 -justify left -anchor w] -side left -padx 3
-  pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,proxy,host) -width 50] -side left -padx 3  
+  pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,proxy,host) -width 50] -side left -padx 3
 
   pack [set sub [::ttk::frame $frame.pport]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "Proxy Port:"] -width 17 -justify left -anchor w] -side left -padx 3
@@ -612,6 +613,10 @@ $sub.cb state disabled
   pack [::ttk::label $sub.label -text [T "Use NOP Keepalive?"] -width 35 -justify left -anchor w] -side left -padx 3
   pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,telnet,keepalive) -onvalue 1 -offvalue 0] -side left
 
+  pack [set sub [::ttk::frame $frame.prompts]] -side top -pady 5 -anchor nw
+  pack [::ttk::label $sub.label -text [T "Handle GA Prompts?"] -width 35 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,telnet,prompts) -onvalue 1 -offvalue 0] -side left
+
   pack [set sub [::ttk::frame $frame.doTerm]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "Send Client Info?"] -width 35 -justify left -anchor w] -side left -padx 3
   pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,telnet,term) -onvalue 1 -offvalue 0] -side left
@@ -671,10 +676,10 @@ $sub.cb state disabled
 
   pack [set sub [::ttk::frame $frame.fonts]] -side top -pady 5 -expand 1 -fill x
   pack [::ttk::frame $sub.output] -side left -expand 1 -fill x
-  pack [::ttk::label $sub.output.l -text [T "Change Output Font"] -width 23 -justify left -anchor w] -side left -anchor center 
+  pack [::ttk::label $sub.output.l -text [T "Change Output Font"] -width 23 -justify left -anchor w] -side left -anchor center
   pack [::ttk::button $sub.output.b -image ::potato::img::dotdotdot -command [list potato::configureFont $w $win $outText top]] -side left -anchor center
   pack [::ttk::frame $sub.input] -side left -expand 1 -fill x
-  pack [::ttk::label $sub.input.l -text [T "Change Input Font"] -width 23 -justify left -anchor w] -side left -anchor center 
+  pack [::ttk::label $sub.input.l -text [T "Change Input Font"] -width 23 -justify left -anchor w] -side left -anchor center
   pack [::ttk::button $sub.input.b -image ::potato::img::dotdotdot -command [list potato::configureFont $w $win $inText bottom]] -side left -anchor center
 
   pack [set sub [::ttk::frame $frame.boxes1]] -side top -pady 5 -expand 1 -fill x
@@ -807,7 +812,7 @@ $sub.cb state disabled
   pack [::ttk::label $sub.label -text [T "Play Beeps?"] -width 20 -justify left -anchor w] -side left
   pack [::ttk::combobox $sub.cb -textvariable ::potato::worldconfig($w,beep,sound) \
              -values [list All Once None] -width 20 -state readonly] -side left -padx 3
-             
+
   pack [set sub [::ttk::frame $frame.selectToCopy]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "Sekect to Copy?"] -width 20 -justify left -anchor w] -side left
   pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,selectToCopy) -onvalue 1 -offvalue 0] -side left
@@ -851,7 +856,7 @@ $sub.cb state disabled
   foreach x [array names world -regexp "^$w,timer,\[0-9\]+,cmds\$"] {
     if { [scan $x $w,timer,%d,cmds timerId] < 1 } {
          continue;
-       } 
+       }
     set worldconfig($w,timer,$timerId,delay) $world($w,timer,$timerId,delay)
     set worldconfig($w,timer,$timerId,every) $world($w,timer,$timerId,every)
     set worldconfig($w,timer,$timerId,cmds) [string map [list "\n" " \b "] $world($w,timer,$timerId,cmds)]
@@ -1273,7 +1278,7 @@ proc ::potato::configureWorldCharsPropagate {w {sel ""}} {
 
 };# ::potato::configureWorldCharsPropagate
 
-#: proc ::potato::configureWorldCharsState 
+#: proc ::potato::configureWorldCharsState
 #: arg w world id
 #: arg state state (0 = empty tree, 1 = tree with values, 2 = adding/editing, "" = check for empty tree and do 0/1 accordingly
 #: desc Set the buttons in the Char config for world $w to the appropriate states
@@ -1307,13 +1312,13 @@ proc ::potato::configureWorldCharsState {w {state ""}} {
 
   return;
 
-};# ::potato::configureWorldCharsState 
+};# ::potato::configureWorldCharsState
 
 #: proc ::potato::configureWorldCancel
 #: arg w world id
 #: arg win main configure window
 #: desc Called when the Configure window for a world is destroyed. Close all sub-windows, and unset the vars used by the config window.
-#: desc This is called both when the Configure World is cancelled, but also when the window is destroyed after the settings are saved 
+#: desc This is called both when the Configure World is cancelled, but also when the window is destroyed after the settings are saved
 #: desc (via a <Destroy> binding), so everything from the vars must be saved before the window is destroyed! ($win is already going when this is called)
 #: return nothing
 proc ::potato::configureWorldCancel {w win} {
@@ -1332,8 +1337,8 @@ proc ::potato::configureWorldCancel {w win} {
 #: arg _var Variable to store result in
 #: arg w World whose font we should use for measurement
 #: arg max Maximum number of chars
-#: desc Measure how many chars, for world $w, it would take to fill the main window at current size (capping at $max). Set result in $var. 
-#: desc NOTE: This is really quite skin dependant, and needs recoding better to interface with the skin, instead of cheating and assuming the 
+#: desc Measure how many chars, for world $w, it would take to fill the main window at current size (capping at $max). Set result in $var.
+#: desc NOTE: This is really quite skin dependant, and needs recoding better to interface with the skin, instead of cheating and assuming the
 #: desc default skin. Not that I'm ever likely to get around to writing another one. #abc
 #: return nothing
 proc ::potato::currentWindowSize {_var w max} {
@@ -1482,7 +1487,7 @@ proc ::potato::configureTimerAddEdit {w add win} {
                                    -command [list potato::configureTimerSave $w $text]] -side right -padx 8 -anchor e
   pack [::ttk::frame $frame.buttons.cancel] -side left -expand 1 -fill x
   pack [::ttk::button $frame.buttons.cancel.btn -text [T "Cancel"] -width 8 -command [list destroy $win]] -side left -padx 8 -anchor w
-  
+
   bind $win <Escape> [list $frame.buttons.cancel.btn invoke]
   bind $win <Destroy> [list array unset potato::worldconfig $w,timer,ae,*]
 
@@ -1497,8 +1502,8 @@ proc ::potato::configureTimerAddEdit {w add win} {
 #: proc ::potato::configureTimerSave
 #: arg w world id
 #: arg text path to text widget containing command string
-#: desc For world $w, use the info saved in worldconfig($w,timer,ae,*) and the text in the $text widget 
-#: desc (which holds the cmds to run for the timer), save the timer info. worldconfig($w,timer,ae) is the id of the timer to edit, 
+#: desc For world $w, use the info saved in worldconfig($w,timer,ae,*) and the text in the $text widget
+#: desc (which holds the cmds to run for the timer), save the timer info. worldconfig($w,timer,ae) is the id of the timer to edit,
 #: desc or the empty string to add a timer. We must also update the info displayed
 #: return nothing
 proc ::potato::configureTimerSave {w text} {
@@ -1617,8 +1622,8 @@ proc ::potato::configureTimerShowRow {w timer} {
        $worldconfig($w,timer,parents-freq).t$timer configure -text [T "%d Times" $worldconfig($w,timer,$timer,count)]
      }
   $worldconfig($w,timer,parents-every).t$timer configure -text [timeFmt $worldconfig($w,timer,$timer,every) 0]
-  $worldconfig($w,timer,parents-every).t$timer configure -text [timeFmt $worldconfig($w,timer,$timer,every) 0] 
-  $worldconfig($w,timer,parents-cmds).t$timer configure -text $worldconfig($w,timer,$timer,cmds) 
+  $worldconfig($w,timer,parents-every).t$timer configure -text [timeFmt $worldconfig($w,timer,$timer,every) 0]
+  $worldconfig($w,timer,parents-cmds).t$timer configure -text $worldconfig($w,timer,$timer,cmds)
 
   return;
 
@@ -1658,7 +1663,7 @@ proc ::potato::configureHelp {canvas helplist helplist2} {
 #: arg parent the parent window that the font dialog should be a transient of
 #: arg text the text widget to reconfigure for display purposes
 #: arg where one of "top" or "bottom"
-#: desc pop up a font selection dialog so the $where font for world $w can be changed. If a new one 
+#: desc pop up a font selection dialog so the $where font for world $w can be changed. If a new one
 #: desc is selected, update the worldconfig var and configure the font for $text to show it. Make the dialog a transient of $parent.
 #: return nothing
 proc ::potato::configureFont {w parent text where} {
@@ -1698,7 +1703,7 @@ proc ::potato::configureFont {w parent text where} {
 #: arg event the event triggering the proc
 #: arg text the text widget the event is happening in
 #: arg colour the colour name to be configured, if any. Defaults to "" (none)
-#: desc for Enter or Leave events, reconfigure $text's cursor. For Click events, pop up a colourchoose dialog to change $color, 
+#: desc for Enter or Leave events, reconfigure $text's cursor. For Click events, pop up a colourchoose dialog to change $color,
 #: desc and if a new one is selected, update the worldconfig var for the world.
 #: return nothing
 proc ::potato::configureText {w event text {colour ""}} {
@@ -1762,7 +1767,7 @@ proc ::potato::configureText {w event text {colour ""}} {
 #: proc ::potato::configureWorldCommit
 #: arg w world id
 #: arg win config window
-#: desc save all the settings for world $w, destroy the config window used for changing them, change the tags, etc, 
+#: desc save all the settings for world $w, destroy the config window used for changing them, change the tags, etc,
 #: desc for any connections using this world, and if the currently-shown connection uses it, tell the skin to re-show.
 #: return nothing
 proc ::potato::configureWorldCommit {w win} {
@@ -1950,7 +1955,7 @@ proc ::potato::configureWorldCommit {w win} {
 #: proc ::potato::configureFrame
 #: arg canvas path to canvas widget
 #: arg title string to display as title
-#: desc creates a frame to display inside the scrolled canvas $canvas to contain config options. Then creates a subframe, packed 
+#: desc creates a frame to display inside the scrolled canvas $canvas to contain config options. Then creates a subframe, packed
 #: desc inside with some padding, and a label to display $title as a heading for the "page".
 #: return [list] of the outer frame (for embedding in the canvas) and inner frame (for packing widgets in)
 proc ::potato::configureFrame {canvas title} {
