@@ -7,4 +7,4 @@
   * When running on Linux, you can now launch Potato via main.tcl without being in the potato.vfs directory. By Cheetah.
   * New feature in Events that allows replacing the matched portion of text with something else. Suggested by Null and Paige.
   * [SlashCommands /commands] now have return values and can be nested. Some small tweaks to existing /commands have been made to accommodate this, including the replacement of the $var$ syntax with a new /command, `[/get var]`.
-  * Potato can now understand and display Prompts, using the Telnet GOAHEAD (as per PennMUSH's @prompt command). Currently, the prompt is displayed in the statusbar, with ANSI stripped, though this will be improved soon.
+  * Potato can now understand and display Prompts, using the Telnet GOAHEAD (as per PennMUSH's @prompt command). Prompts are displayed on the status bar, and also at the end of the output window.
