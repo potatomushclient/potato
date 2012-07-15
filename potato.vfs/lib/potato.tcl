@@ -3095,7 +3095,7 @@ proc ::potato::get_mushageProcess {c line} {
 
 
   # Flatten
-  set inserts [flattenParsedANSI $tagged]
+  set inserts [flattenParsedANSI $tagged $tagList]
 
   if { !$empty && $world($w,ansi,force-normal) } {
        # Force explicit ANSI-normal at the end of the line
