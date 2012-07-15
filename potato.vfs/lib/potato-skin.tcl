@@ -64,7 +64,7 @@ proc ::skin::potato::init {} {
      ExQOFQAAAAACBwgJCgoLFhcYGRobAAAAAwgEHAQBHR4fICEiIwAAAAMJCgoL
      JCUmJygpKissAAADCgoLCy2ALi8wMTIzNDUAAAMMNjc4OTouOyo8PT4/gACC
      gwBAQUJDREVGR0iEg0lKS0xNSk5PUISDUVI5U1ROVVZXhIRYWVpbXF2EhISE
-     g4EAOw== 
+     g4EAOw==
   }
 
   image create photo ::skin::potato::img::mail -data {
@@ -95,7 +95,7 @@ proc ::skin::potato::init {} {
      JygGBw8eHikIKissLS4vMDEGEiAIMg8gMzQ1NjY1Nzg5OhI6ICA7PDQ9Pj9A
      P0FCQ4BERUZHOkhJNUo/QEtATE1OT1BRRVBSU1RKSj5LVVY1VwBYWVpKWltU
      SkpcVV1eX2AAAGFiY0VkZUpKZmdeNmhpAAAAAGprbEJUbW5vcHFyc4AAgoN0
-     dXYuQV9od3iDg4J5ent8fX5/goEAOw== 
+     dXYuQV9od3iDg4J5ent8fX5/goEAOw==
   }
 
   image create photo ::skin::potato::img::log -data {
@@ -112,7 +112,7 @@ proc ::skin::potato::init {} {
      gAaCgwoLDA2AAIKCAgYGBg4GBg8MEBGDggOABoKDEhMTFIAAgoIVgAaCgxIW
      FxgYGQAAABqDgg4WGxgcHRgAAAAeg4ISHyADIRgiAAAAHoMGEh8jJCUmIicA
      AAAegwYoKSQqKywtAAAAAC4GDgYvMCQqKywxgACCgi4SBi8wJCorLDIzg4Iu
-     BjQ1NjcrLDgTEYOCEzk6NQY7LDw9EREAPoODP0BBQoODAIEAOw== 
+     BjQ1NjcrLDgTEYOCEzk6NQY7LDw9EREAPoODP0BBQoODAIEAOw==
   }
 
   image create photo ::skin::potato::img::reconnect -data {
@@ -140,7 +140,7 @@ proc ::skin::potato::init {} {
      Xbx8ARNGzBgyAACUMXMGTRo1a9i0cfMGThw5AADMoVPHzh08efTs4dPHzx9A
      AAAEEjSIUCFDdw7hQZRI0SJGAAA0cvQIUiRJkyhVsnQJUyZNAABs4tTJ0ydQ
      oUSNUkSqlKlTAACgSqVqFatWrl7BG4olaxatWgAA2LqFK1euXLp27eLVy9cv
-     YAACAgA7 
+     YAACAgA7
   }
 
   image create photo ::skin::potato::img::close -data {
@@ -152,7 +152,7 @@ proc ::skin::potato::init {} {
      QIBwSCwaj4FA4GgMBIYCgUBwDAACAMGAUDAcjsIA8CAcIhJAhVAIAAQOi8Vi
      QSAwGo4HJCIBABALAqEwaTgokIrlIgEAFAsCgdFwUDCVjGbDAQAUi8KE4aBg
      gJWMpuP5AAAgAoHhoGBCGUtHNCIBAKABo0HBhDKWksg0OgEAqEGDggllLCVR
-     SrViAQAtV+gFSwFjshmNNqrZAIDWDZfTnVg24E44BAKEQ2JxGAQAOw== 
+     SrViAQAtV+gFSwFjshmNNqrZAIDWDZfTnVg24E44BAKEQ2JxGAQAOw==
   }
 
   image create photo ::skin::potato::img::disconnect -data {
@@ -179,7 +179,7 @@ proc ::skin::potato::init {} {
      PwQCCSJkCJEiRo4gSaJkCZMmAp08gRJFyhQqVaxcwZJFyxaBXLp4+aICTBgx
      Y8iUMXMGjcA0atawaePmDZw4cubQqWNH4B08efTs4dPHzx9AgQQNIiSwkKFD
      iBIpWsSokaNHkCJJEjiJUiVLl7CUwZRJ0yZOnTwJ/AQqlKhRpEqZOoUqlapV
-     rAS2cvUKVixZs2jVsnULVy5dAnfxEerly5evX8CABRM2jFgxAAEBADs= 
+     rAS2cvUKVixZs2jVsnULVy5dAnfxEerly5evX8CABRM2jFgxAAEBADs=
   }
 
   image create photo ::skin::potato::img::open -data {
@@ -196,7 +196,7 @@ proc ::skin::potato::init {} {
      CAkKC4SCBgYGCwwICQoKDQ4PDxAREoMLEwkKChSAFYKDEgAAAA4TCgoWFgUF
      FxcPDxAQGBIPGQoaBYAbgoMbDQ0cHQ8ZHgUfDRUVFSAhIiMkJQAQJhoFGycV
      ICAiKCMpKisAECwFLQ0gICIuIykvMDEAABgyBRsgIiIoKS8zNCoAAAASCzU2
-     NjY3ODk5OjsxAAAAEjw9Pj9AQUJDREVGR4AAgoOEhYSBADs= 
+     NjY3ODk5OjsxAAAAEjw9Pj9AQUJDREVGR4AAgoOEhYSBADs=
   }
 
   image create photo ::skin::potato::img::right -data {
@@ -265,7 +265,7 @@ proc ::skin::potato::init {} {
      QIBwSCwaj8RAQDAgFAwHBMIoSCQUC0bD8YAYBwlFICAYEAqGAwIxJCgCgkRC
      sWA0HA/IsLCIDIAJRSAgGBAKhgMCIWFMCIqAIJFQLBgNxwNioFQKi8ggoVgw
      Go6H5QIAACSMCUGxYDQcmIxmAwAAAQZKpbBgNByPzIPTAQKEQwnD8wFZNJzQ
-     cAgwUEQj0mVTAgKEQ2LReEQmi0EAOw== 
+     cAgwUEQj0mVTAgKEQ2LReEQmi0EAOw==
   }
 
   image create photo ::skin::potato::img::find -data {
@@ -529,8 +529,8 @@ proc ::skin::potato::init {} {
   if { [info exists opts(input2height)] } {
        lappend btmInputPaneOpts -height $opts(input2height)
      }
-  $widgets(pane,btm,pane) add $widgets(pane,btm,pane,top) {*}$topInputPaneOpts 
-  $widgets(pane,btm,pane) add $widgets(pane,btm,pane,btm) {*}$btmInputPaneOpts 
+  $widgets(pane,btm,pane) add $widgets(pane,btm,pane,top) {*}$topInputPaneOpts
+  $widgets(pane,btm,pane) add $widgets(pane,btm,pane,btm) {*}$btmInputPaneOpts
   pack $widgets(pane,btm,pane,top,sb) -in $widgets(pane,btm,pane,top) -side right -fill y -anchor ne
   pack $widgets(pane,btm,pane,btm,sb) -in $widgets(pane,btm,pane,btm) -side right -fill y -anchor ne
 
@@ -616,21 +616,30 @@ proc ::skin::potato::init {} {
   foreach x [list worldname hostinfo connstatus clock modes] {
      set widgets(statusbar,$x) [::ttk::frame $widgets(statusbar).$x -relief sunken -borderwidth 2]
   }
-  foreach x [list worldname hostinfo clock] {
+  foreach x [list hostinfo clock] {
      set widgets(statusbar,$x,label) [::ttk::label $widgets(statusbar,$x).l]
      pack $widgets(statusbar,$x,label) -in $widgets(statusbar,$x) -side top -fill none -anchor center
   }
+  set widgets(statusbar,worldname,sub) [::ttk::frame $widgets(statusbar,worldname).sub]
+  pack $widgets(statusbar,worldname,sub) -in $widgets(statusbar,worldname) -anchor center
+  set widgets(statusbar,worldname,label) [::ttk::label $widgets(statusbar,worldname,sub).namel]
+  set widgets(statusbar,worldname,label,prompt) [::ttk::label $widgets(statusbar,worldname,sub).prompt]
+  pack $widgets(statusbar,worldname,label) -side left -anchor e
+  pack $widgets(statusbar,worldname,label,prompt) -side left -anchor w
+
   set widgets(statusbar,connstatus,sub) [::ttk::frame $widgets(statusbar,connstatus).sub]
   pack $widgets(statusbar,connstatus,sub) -in $widgets(statusbar,connstatus) -anchor center
   set widgets(statusbar,connstatus,sub,msg) [::ttk::label $widgets(statusbar,connstatus,sub).msg]
   set widgets(statusbar,connstatus,sub,time) [::ttk::label $widgets(statusbar,connstatus,sub).time]
   pack $widgets(statusbar,connstatus,sub,msg) -side left -anchor e
   pack $widgets(statusbar,connstatus,sub,time) -side left -anchor w
+
   set widgets(statusbar,modes,sub) [::ttk::frame $widgets(statusbar,modes).sub]
   pack $widgets(statusbar,modes,sub) -padx 4
   set widgets(statusbar,modes,sub,label) [::ttk::label $widgets(statusbar,modes,sub).label -text [T "Mode: "]]
   set widgets(statusbar,modes,sub,multi) [::ttk::label $widgets(statusbar,modes,sub).multi -text "???" -width 6]
   pack $widgets(statusbar,modes,sub,label) $widgets(statusbar,modes,sub,multi) -side left -anchor w
+
   $widgets(statusbar,clock,label) configure -textvariable ::potato::potato(clock)
 
   grid $widgets(statusbar,worldname) $widgets(statusbar,hostinfo) $widgets(statusbar,connstatus) $widgets(statusbar,clock) $widgets(statusbar,modes) -in $widgets(statusbar) -padx 1 -pady 1 -ipady 1 -sticky nswe
@@ -813,7 +822,7 @@ proc ::skin::potato::worldBarButtonNames {} {
   return;
 
 };# ::skin::potato::worldBarButtonNames
-  
+
 #: proc ::skin::potato::worldBarButtonClick
 #: arg c connection id
 #: desc Handle a click on the worldbar button for connection $c. If the connection is not up, show it. If it is up, but we're showing one of it's spawns instead, reshow the main window
@@ -1006,7 +1015,7 @@ proc ::skin::potato::status {c} {
   if { [set pos [lsearch $idle(ids) $c]] != -1 } {
        set idle(list) [lreplace $idle(list) $pos $pos "$c. [::potato::connInfo $c name]"]
      }
-  
+
 
   return;
 
@@ -1139,9 +1148,11 @@ proc ::skin::potato::show {c} {
        $widgets(statusbar,worldname,label) configure -text $::potato::potato(name)
        $widgets(statusbar,hostinfo,label) configure -text [::potato::T "Not Connected"]
        $widgets(statusbar,connstatus,sub,msg) configure -text [::potato::T "Not Connected"]
+       $widgets(statusbar,worldname,label,prompt) configure -textvariable ""
     } else {
        $widgets(statusbar,worldname,label) configure -text "$c. [potato::connInfo $c name]"
        $widgets(statusbar,hostinfo,label) configure -text "[potato::connInfo $c host]:[potato::connInfo $c port]"
+       $widgets(statusbar,worldname,label,prompt) configure -textvariable ::potato::conn($c,prompt)
     }
 
   $widgets(statusbar,connstatus,sub,time) configure -textvariable ::potato::conn($c,stats,formatted)
@@ -1238,7 +1249,7 @@ proc ::skin::potato::linkCopy {t index} {
 
 };# ::skin::potato::linkCopy
 
-#: proc ::skin::potato::rightclickOutput 
+#: proc ::skin::potato::rightclickOutput
 #: arg c connection id
 #: arg t text widget, or "" for active text widget
 #: arg evx %x event substitution
@@ -1410,7 +1421,7 @@ proc ::skin::potato::export {c} {
   catch {array unset widgets conn,$c,*}
   unset -nocomplain disp($c)
   worldBarButtonNames
-  return;  
+  return;
 
 };# ::skin::potato::export
 
@@ -1471,7 +1482,7 @@ proc ::skin::potato::connectMenu {} {
   ::potato::taskRun connectMenu "" $atX $atY
 
   return;
-  
+
 };# ::skin::potato::connectMenu
 
 #: proc ::skin::potato::addSpawn

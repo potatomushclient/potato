@@ -1668,8 +1668,10 @@ proc ::potato::newConnection {w {character ""}} {
   set conn($c,loginInfoId) ""
   set conn($c,telnet,state) 0
   set conn($c,telnet,subState) 0
-  set conn($c,telnet,buffer) ""
+  set conn($c,telnet,buffer,line) ""
+  set conn($c,telnet,buffer,codes) ""
   set conn($c,telnet,mssp) [list]
+  set conn($c,prompt) ""
   set conn($c,outputBuffer) ""
   set conn($c,ansi,fg) fg
   set conn($c,ansi,bg) bg
@@ -11161,6 +11163,28 @@ proc ::potato::inputHistoryReset {{win ""}} {
   return;
 
 };# ::potato::inputHistoryReset
+
+#: proc ::potato::setPrompt
+#: arg c connection id
+#: arg prompt Prompt to set
+#: desc Set the prompt for a connection
+#: return nothing
+proc ::potato::setPrompt {c prompt} {
+  variable conn;
+
+  # Strip ANSI from the prompt. This is temporary - when the prompt is displayed in a better way,
+  # we won't need to do this
+  regsub -all {\x1B.*?m} $prompt "" prompt
+
+  if { $prompt eq "" } {
+       set conn($c,prompt) ""
+     } else {
+       set conn($c,prompt) "  -   $prompt"
+     }
+
+  return;
+
+};# ::potato::setPrompt
 
 #: proc ::potato::T
 #: arg msgformat A message format string to pass to msgcat
