@@ -1436,9 +1436,10 @@ proc ::potato::doLog {c file append buffer leave timestamps} {
 #: proc ::potato::stopLog
 #: arg c connection id. Defaults to ""
 #: arg file File to close, or "" (default) for all
+#: arg verboseReturn If 1, returns a message on success instead of 1
 #: desc Stop logging to filename (or [file channel]) $file, or all files if $file is "", for connection $c.
-#: return 0 if no open logs, -1 if specified log not found, -2 if specified log is ambiguous, 1 if log(s) closed successfully.
-proc ::potato::stopLog {{c ""} {file ""}} {
+#: return 0 if no open logs, -1 if specified log not found, -2 if specified log is ambiguous, 1 (or a success message) if log(s) closed successfully.
+proc ::potato::stopLog {{c ""} {file ""} {verboseReturn 0}} {
   variable conn;
   variable misc;
 
@@ -1491,8 +1492,12 @@ proc ::potato::stopLog {{c ""} {file ""}} {
        array unset conn $c,log,$match,*
      }
 
-  outputSystem $c $msg
-  return 1;
+  if { $verboseReturn } {
+       return $msg;
+     } else {
+       outputSystem $c $msg
+       return 1;
+     }
 
 };# ::potato::stopLog
 
@@ -8965,7 +8970,6 @@ proc ::potato::parse_slash_cmd {c _str recursing} {
          set appendTo cmdArgs
          continue;
        }
-
     if { $esc } {
          set esc 0
          append $appendTo $x
@@ -9803,15 +9807,18 @@ proc ::potato::customSlashCommand {c w cmd str} {
   # Check for "/log -close"
   set argv [split $str " "]
   set argc [llength $argv]
+
   if { [lsearch -exact -nocase [list -close -stop -off] [lindex $argv 0]] != -1 } {
        # Close an open log file, or all open log files
-       set res [taskRun logStop $c $c [join [lrange $argv 1 end] " "]]
+       set res [taskRun logStop $c $c [join [lrange $argv 1 end] " "] 1]
        if { $res == 0 } {
             return [list 0];
           } elseif { $res == -1 } {
             return [list 0 [T "Log file \"%s\" not found." [join [lrange $argv 1 end] " "]]];
           } elseif { $res == -2 } {
             return [list 0 [T "Log file \"%s\" is ambiguous." [join [lrange $argv 1 end] " "]]];
+          } else {
+            return [list 1 $res];
           }
      }
 
