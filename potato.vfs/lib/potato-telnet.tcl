@@ -108,12 +108,21 @@ proc ::potato::telnet::bufferAdd {c str} {
 #: return Completed lines of text, if any
 proc ::potato::telnet::bufferGet {c} {
   upvar ::potato::conn conn;
+  upvar ::potato::world world;
 
-  if { [set linebreak [string last \n $conn($c,telnet,buffer,line)]] == -1 } {
+  if { [set linebreak [string last $conn($c,id,lineending) $conn($c,telnet,buffer,line)]] == -1 } {
        return; # no complete lines
      } else {
-       set retval [string range $conn($c,telnet,buffer,line) 0 $linebreak];# includes the \n
-       set conn($c,telnet,buffer,line) [string range $conn($c,telnet,buffer,line) $linebreak+1 end]
+       set retval [string range $conn($c,telnet,buffer,line) 0 "$linebreak+$conn($c,id,lineending,length-1)"];# includes the lineending
+       set conn($c,telnet,buffer,line) [string range $conn($c,telnet,buffer,line) "$linebreak+$conn($c,id,lineending,length)" end]
+       if { $retval ne "" } {
+            if { $conn($c,telnet,afterPrompt) } {
+                 set conn($c,telnet,afterPrompt) 0
+                 if { $world($conn($c,world),telnet,prompt,ignoreNewline) && [string first $conn($c,id,lineending) $retval] == 0 } {
+                      set retval [string range $retval $conn($c,id,lineending,length) end]
+                    }
+               }
+          }
        return $retval;
      }
 
@@ -213,16 +222,17 @@ proc ::potato::telnet::process_sub_1 {c str} {
        process_sub_3 $c $remainder
      } elseif { $cmdChar eq $tCmd(GA) } {
        # Display everything since the last newline as a prompt
-       set lastNewline [string last \n $conn($c,telnet,buffer,line)]
+       set lastNewline [string last $conn($c,id,lineending) $conn($c,telnet,buffer,line)]
        if { $lastNewline == -1 } {
             # The entire thing is the prompt
             set prompt $conn($c,telnet,buffer,line)
             set conn($c,telnet,buffer,line) ""
           } else {
             # Save anything up to - and including - the last \n
-            set prompt [string range $conn($c,telnet,buffer,line) $lastNewline+1 end]
-            set conn($c,telnet,buffer,line) [string range $conn($c,telnet,buffer,line) 0 $lastNewline]
+            set prompt [string range $conn($c,telnet,buffer,line) $lastNewline+$conn($c,id,lineending,length) end]
+            set conn($c,telnet,buffer,line) [string range $conn($c,telnet,buffer,line) 0 $lastNewline+$conn($c,id,lineending-1)]
           }
+       set conn($c,telnet,afterPrompt) 1
        ::potato::setPrompt $c $prompt
        set conn($c,telnet,state) 0
        set conn($c,telnet,buffer,codes) ""
