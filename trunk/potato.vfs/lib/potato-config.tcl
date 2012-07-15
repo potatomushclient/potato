@@ -65,6 +65,7 @@ proc ::potato::setPrefs {readfile} {
   set world(-1,telnet,term,as) ""
   set world(-1,telnet,keepalive) 0
   set world(-1,telnet,prompts) 1
+  set world(-1,telnet,prompt,ignoreNewline) 1
   set world(-1,encoding,start) iso8859-1
   set world(-1,encoding,negotiate) 1
   set world(-1,groups) [list]
@@ -616,6 +617,10 @@ $sub.cb state disabled
   pack [set sub [::ttk::frame $frame.prompts]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "Handle GA Prompts?"] -width 35 -justify left -anchor w] -side left -padx 3
   pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,telnet,prompts) -onvalue 1 -offvalue 0] -side left
+
+  pack [set sub [::ttk::frame $frame.promptNL]] -side top -pady 5 -anchor nw
+  pack [::ttk::label $sub.label -text [T "Ignore NL after Prompts?"] -width 35 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,telnet,prompt,ignoreNewline) -onvalue 1 -offvalue 0] -side left
 
   pack [set sub [::ttk::frame $frame.doTerm]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "Send Client Info?"] -width 35 -justify left -anchor w] -side left -padx 3

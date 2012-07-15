@@ -1670,6 +1670,7 @@ proc ::potato::newConnection {w {character ""}} {
   set conn($c,telnet,subState) 0
   set conn($c,telnet,buffer,line) ""
   set conn($c,telnet,buffer,codes) ""
+  set conn($c,telnet,afterPrompt) 0
   set conn($c,telnet,mssp) [list]
   set conn($c,prompt) ""
   set conn($c,outputBuffer) ""
@@ -1868,6 +1869,7 @@ proc ::potato::configureTextWidget {c t} {
                -font $world($w,top,font,created) -insertbackground [reverseColour $world($w,top,bg)]
   font configure $world($w,top,font,created) {*}[font actual $world($w,top,font)]
   $t configure -inactiveselectbackground [$t cget -selectbackground]
+  $t tag configure prompt
 
   if { $world($w,ansi,flash) } {
        if { $conn($c,flashId) eq "" } {
@@ -2454,6 +2456,7 @@ proc ::potato::connectVerifyComplete {c} {
      }
   set conn($c,id,lineending) $translation
   set conn($c,id,lineending,length) [string length $conn($c,id,lineending)]
+  set conn($c,id,lineending,length-1) [expr {[string length $conn($c,id,lineending)]-1}]
   if { $world($w,encoding,start) in [encoding names] } {
        set conn($c,id,encoding) $world($w,encoding,start)
      } else {
@@ -2778,6 +2781,9 @@ proc ::potato::disconnect {{c ""} {prompt 1}} {
   catch {after cancel $conn($c,loginInfoId)}
   set conn($c,loginInfoId) ""
   set conn($c,outputBuffer) ""
+  set conn($c,telnet,buffer,line) ""
+  set conn($c,telnet,buffer,codes) ""
+  set conn($c,telnet,afterPrompt) 0
 
   if { $conn($c,stats,connAt) != -1 } {
        incr conn($c,stats,prev) [expr {[clock seconds] - $conn($c,stats,connAt)}]
@@ -2927,6 +2933,71 @@ proc ::potato::get_mushage {c} {
 
 };# ::potato::get_mushage
 
+proc ::potato::parseANSI {line _arr c} {
+  upvar 1 $_arr arr;
+
+  while { [string length $line] } {
+           set tags [get_mushageColours arr $c]
+           set nextAnsi [string first \x1B $line]
+           if { $nextAnsi == -1 } {
+                # No more ANSI
+                foreach x [split $line ""] {
+                  lappend tagged [list $x $tags]
+                }
+                set line ""
+                break;
+              } else {
+                set curr [string range $line 0 $nextAnsi-1]
+                foreach x [split $curr ""] {
+                  lappend tagged [list $x $tags]
+                }
+                set nextM [string first "m" $line $nextAnsi]
+                if { $nextM == -1 } {
+                     # No 'm' to close ANSI - borked ANSI code received.
+                     # Process an ANSI Normal and abort the rest of the line.
+                     handleAnsiCodes arr $c 0;
+                     set line ""
+                     break;
+                   }
+                set codes [string range $line $nextAnsi+2 $nextM-1]
+                handleAnsiCodes arr $c [split $codes ";"]
+                set line [string range $line $nextM+1 end]
+              }
+         }
+
+  return $tagged;
+
+};# ::potato::parseANSI
+
+proc ::potato::flattenParsedANSI {tagged {extras ""}} {
+
+  set prevTags [list]
+  set flattened [list]
+  set curr ""
+  set count 0
+  foreach x $tagged {
+    incr count
+
+    set char [lindex $x 0]
+    set tags [concat [lindex $x 1 0] [lindex $x 1 1] [lindex $x 1 2]]
+    if { $tags == $prevTags } {
+         append curr $char
+       } else {
+         if { $curr ne "" || [llength $prevTags] } {
+              lappend flattened $curr [concat $prevTags $extras]
+            }
+         set curr $char
+         set prevTags $tags
+       }
+   }
+   if { $curr ne "" || [llength $prevTags] } {
+        lappend flattened $curr [concat $prevTags $extras]
+      }
+
+  return $flattened;
+
+};# ::potato::flattenParsedANSI
+
 #: proc ::potato::get_mushageProcess
 #: arg c connection id
 #: arg line line of text
@@ -2966,37 +3037,10 @@ proc ::potato::get_mushageProcess {c line} {
   if { [regsub -all {\x1B.*?m} $line "" lineNoansi] } {
        # We have ANSI
        set toparse $line
-       while { [string length $toparse] } {
-               set tags [get_mushageColours $c]
-               set nextAnsi [string first \x1B $toparse]
-               if { $nextAnsi == -1 } {
-                    # No more ANSI
-                    foreach x [split $toparse ""] {
-                      lappend tagged [list $x $tags]
-                    }
-                    set toparse ""
-                    break;
-                  } else {
-                    set curr [string range $toparse 0 $nextAnsi-1]
-                    foreach x [split $curr ""] {
-                      lappend tagged [list $x $tags]
-                    }
-                    set nextM [string first "m" $toparse $nextAnsi]
-                    if { $nextM == -1 } {
-                         # No 'm' to close ANSI - borked ANSI code received.
-                         # Process an ANSI Normal and abort the rest of the line.
-                         handleAnsiCodes $c 0;
-                         set toparse ""
-                         break;
-                       }
-                    set codes [string range $toparse $nextAnsi+2 $nextM-1]
-                    handleAnsiCodes $c [split $codes ";"]
-                    set toparse [string range $toparse $nextM+1 end]
-                  }
-             }
+       set tagged [parseANSI $line conn $c]
      } else {
        # No ANSI
-       set tags [get_mushageColours $c]
+       set tags [get_mushageColours conn $c]
        foreach x [split $line ""] {
          lappend tagged [list $x $tags]
        }
@@ -3051,36 +3095,11 @@ proc ::potato::get_mushageProcess {c line} {
 
 
   # Flatten
-  set prevTags [list]
-  set inserts [list]
-  set curr ""
-  set count 0
-  foreach x $tagged {
-    incr count
-    if { [catch {    set char [lindex $x 0]} err] } {
-         puts "Bad list emement $count is:"
-         puts $x
-       }
-
-    set char [lindex $x 0]
-    set tags [concat [lindex $x 1 0] [lindex $x 1 1] [lindex $x 1 2]]
-    if { $tags == $prevTags } {
-         append curr $char
-       } else {
-         if { $curr ne "" || [llength $prevTags] } {
-              lappend inserts $curr [concat $prevTags $tagList]
-            }
-         set curr $char
-         set prevTags $tags
-       }
-   }
-   if { $curr ne "" || [llength $prevTags] } {
-        lappend inserts $curr [concat $prevTags $tagList]
-      }
+  set inserts [flattenParsedANSI $tagged]
 
   if { !$empty && $world($w,ansi,force-normal) } {
        # Force explicit ANSI-normal at the end of the line
-       handleAnsiCodes $c 0
+       handleAnsiCodes conn $c 0
      }
 
   set up [up]
@@ -3095,18 +3114,23 @@ proc ::potato::get_mushageProcess {c line} {
      }
   set newActStr [T "--------- New Activity ---------"]
   set t $conn($c,textWidget)
+  if { [llength [$t tag ranges prompt]] } {
+       set endPos prompt.first
+     } else {
+       set endPos end
+     }
   set aE [atEnd $t]
   if { !$empty && !$omit && !$limit && $showNewAct } {
        if { $world($w,act,clearOldNewActNotices) && [llength [$t tag nextrange newact 1.0]] } {
             $t delete {*}[$t tag ranges newact]
           }
-       $t insert end "\n" [list system center newact] $newActStr [list system center newact] [clock seconds] [list system center newact timestamp]
+       $t insert $endPos "\n" [list system center newact] $newActStr [list system center newact] [clock seconds] [list system center newact timestamp]
        set insertedAnything 1
      }
 
   if { !$empty && !$omit } {
-       $t insert end "\n" [lindex [list "" limited] $limit] {*}$inserts
-       $t insert end  [clock seconds] [list timestamp]
+       $t insert $endPos "\n" [lindex [list "" limited] $limit] {*}$inserts
+       $t insert $endPos  [clock seconds] [list timestamp]
        set insertedAnything 1
        if { $aE } {
             $t see end
@@ -3297,12 +3321,13 @@ proc ::potato::atEnd {t} {
 };# ::potato::atEnd
 
 #: proc ::potato::handleAnsiCodes
+#: arg _arr Array holding ANSI meta data, as $_arr($c,ansi,*), to be upvar'd
 #: arg c connection id
 #: arg codes List of ansi codes
 #: desc adjust the conn($c,ansi,*) variables to change the colours for ansi code $code
 #: return nothing
-proc ::potato::handleAnsiCodes {c codes} {
-  variable conn;
+proc ::potato::handleAnsiCodes {_arr c codes} {
+  upvar 1 $_arr arr;
 
   set xtermStarts [list 38 48]
   set ansiColors [list x r g y b m c w]
@@ -3315,33 +3340,33 @@ proc ::potato::handleAnsiCodes {c codes} {
 
     switch -exact -- $curr {
        0 { # ANSI Normal
-          set conn($c,ansi,fg) fg
-          set conn($c,ansi,bg) bg
-          set conn($c,ansi,highlight) 0
-          set conn($c,ansi,underline) 0
-          set conn($c,ansi,flash) 0
-          set conn($c,ansi,inverse) 0
+          set arr($c,ansi,fg) fg
+          set arr($c,ansi,bg) bg
+          set arr($c,ansi,highlight) 0
+          set arr($c,ansi,underline) 0
+          set arr($c,ansi,flash) 0
+          set arr($c,ansi,inverse) 0
          }
        1 { # ANSI Highlight
-           if { !$conn($c,ansi,highlight) } {
-                set conn($c,ansi,highlight) 1
+           if { !$arr($c,ansi,highlight) } {
+                set arr($c,ansi,highlight) 1
                 # Only add "h" if we have a normal ANSI (not XTerm/FANSI) color or normal fg/bg
-                if { $conn($c,ansi,fg) in $highlightable } {
-                     append conn($c,ansi,fg) h
+                if { $arr($c,ansi,fg) in $highlightable } {
+                     append arr($c,ansi,fg) h
                    }
-                if { $conn($c,ansi,bg) in $highlightable } {
-                     append conn($c,ansi,bg) h
+                if { $arr($c,ansi,bg) in $highlightable } {
+                     append arr($c,ansi,bg) h
                    }
               }
          }
        4 { # ANSI Underline
-           set conn($c,ansi,underline) 1
+           set arr($c,ansi,underline) 1
          }
        5 { # ANSI Flash
-           set conn($c,ansi,flash) 1
+           set arr($c,ansi,flash) 1
          }
        7 { # ANSI Inverse
-           set conn($c,ansi,inverse) 1
+           set arr($c,ansi,inverse) 1
          }
       30 -
       31 -
@@ -3351,10 +3376,10 @@ proc ::potato::handleAnsiCodes {c codes} {
       35 -
       36 -
       37 {# ANSI foreground color
-          if { $conn($c,ansi,highlight) } {
-               set conn($c,ansi,fg) "[lindex $ansiColors [expr {$curr - 30}]]h"
+          if { $arr($c,ansi,highlight) } {
+               set arr($c,ansi,fg) "[lindex $ansiColors [expr {$curr - 30}]]h"
              } else {
-               set conn($c,ansi,fg) [lindex $ansiColors [expr {$curr - 30}]]
+               set arr($c,ansi,fg) [lindex $ansiColors [expr {$curr - 30}]]
              }
          }
       40 -
@@ -3365,10 +3390,10 @@ proc ::potato::handleAnsiCodes {c codes} {
       45 -
       46 -
       47 {# ANSI background color
-          if { $conn($c,ansi,highlight) } {
-               set conn($c,ansi,bg) "[lindex $ansiColors [expr {$curr - 40}]]h"
+          if { $arr($c,ansi,highlight) } {
+               set arr($c,ansi,bg) "[lindex $ansiColors [expr {$curr - 40}]]h"
              } else {
-               set conn($c,ansi,bg) [lindex $ansiColors [expr {$curr - 40}]]
+               set arr($c,ansi,bg) [lindex $ansiColors [expr {$curr - 40}]]
              }
          }
       38 -
@@ -3386,7 +3411,7 @@ proc ::potato::handleAnsiCodes {c codes} {
              } else {
                set which bg
              }
-          set conn($c,ansi,$which) "xterm$xterm"
+          set arr($c,ansi,$which) "xterm$xterm"
          }
     };# switch
   };# while
@@ -3396,18 +3421,19 @@ proc ::potato::handleAnsiCodes {c codes} {
 };# ::potato::handleAnsiCodes
 
 #: proc ::potato::get_mushageColours
+#: arg _arr Array to use for ANSI metadata, to be upvar'd
 #: arg c connection id
 #: desc Using the current ANSI settings for connection $c, return a list in the form [list fg_tag bg_tag [list other tags]]
 #: desc Where fg_tag and bg_tag are an empty string, or the correct text widget tag for applying the current ANSI colour in use,
 #: and other tags are the tags for applying ANSI underline, flash, etc.
 #: return [list] of text widget tags
-proc ::potato::get_mushageColours {c} {
-  variable conn;
+proc ::potato::get_mushageColours {_arr c} {
+  upvar 1 $_arr arr;
 
-  set fg $conn($c,ansi,fg)
-  set bg $conn($c,ansi,bg)
+  set fg $arr($c,ansi,fg)
+  set bg $arr($c,ansi,bg)
   set other [list]
-  if { $conn($c,ansi,inverse) } {
+  if { $arr($c,ansi,inverse) } {
        # Invert colors
        foreach [list fg bg] [list $bg $fg] {break;}
      }
@@ -3426,10 +3452,10 @@ proc ::potato::get_mushageColours {c} {
        set bg ANSI_bg_$bg
      }
 
-  if { $conn($c,ansi,flash) } {
+  if { $arr($c,ansi,flash) } {
        lappend other ANSI_flash
      }
-  if { $conn($c,ansi,underline) } {
+  if { $arr($c,ansi,underline) } {
        lappend other ANSI_underline
      }
 
@@ -3525,7 +3551,12 @@ proc ::potato::outputSystem {c msg {tags ""}} {
        return;
      }
   set aE [atEnd $conn($c,textWidget)]
-  $conn($c,textWidget) insert end "\n" $tags $msg $tags [clock seconds] [concat $tags timestamp]
+  if { [llength [$conn($c,textWidget) tag ranges prompt]] } {
+       set endPos "prompt.first"
+     } else {
+       set endPos "end"
+     }
+  $conn($c,textWidget) insert $endPos "\n" $tags $msg $tags [clock seconds] [concat $tags timestamp]
   if { $aE } {
        $conn($c,textWidget) see end
      }
@@ -11172,14 +11203,37 @@ proc ::potato::inputHistoryReset {{win ""}} {
 proc ::potato::setPrompt {c prompt} {
   variable conn;
 
-  # Strip ANSI from the prompt. This is temporary - when the prompt is displayed in a better way,
-  # we won't need to do this
-  regsub -all {\x1B.*?m} $prompt "" prompt
-
-  if { $prompt eq "" } {
+  # ANSI-less version
+  set hasAnsi [regsub -all {\x1B.*?m} $prompt "" noAnsi]
+  if { $noAnsi eq "" } {
        set conn($c,prompt) ""
      } else {
-       set conn($c,prompt) "  -   $prompt"
+       set conn($c,prompt) "  -   $noAnsi"
+     }
+  set existing [llength [$conn($c,textWidget) tag ranges prompt]]
+  if { $prompt eq "" } {
+       if { $existing } {
+            $conn($c,textWidget) delete prompt.first prompt.last
+          }
+     } else {
+       if { $hasAnsi } {
+            # We need to parse out the ANSI. Le sigh
+            set ansi($c,ansi,fg) fg
+						set ansi($c,ansi,bg) bg
+						set ansi($c,ansi,flash) 0
+						set ansi($c,ansi,underline) 0
+						set ansi($c,ansi,highlight) 0
+						set ansi($c,ansi,inverse) 0
+            set inserts [flattenParsedANSI [parseANSI $prompt ansi $c] [list prompt margins]]
+          } else {
+            set inserts [list "$prompt" [list prompt margins]]
+          }
+       set inserts [concat [list "\n> " [list prompt margins]] $inserts [list [clock seconds] [list prompt timestamp]]]
+       if { $existing } {
+            $conn($c,textWidget) replace prompt.first prompt.last {*}$inserts
+          } else {
+            $conn($c,textWidget) insert end {*}$inserts
+          }
      }
 
   return;
