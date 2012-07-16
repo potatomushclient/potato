@@ -84,7 +84,11 @@ proc ::potato::manageWorldVersion {w version} {
        foreach x $world($w,charList) {
          set char [lindex $x 0]
          set pw [lindex $x 1]
-         lappend newCharList [list $char [obfusticate $pw 0]]
+         if { !($version & $wf(fixed_obfusticate)) } {
+              lappend newCharList [list $char [obfusticate $pw -1]]
+            } else {
+              lappend newCharList [list $char [obfusticate $pw 0]]
+            }
        }
        set world($w,charList) $newCharList
      }
@@ -246,10 +250,15 @@ proc ::potato::saveWorlds {} {
 #: return modified $str
 proc ::potato::obfusticate {str dir} {
 
-  # I hope your password is largely letters, numbers, or the symbols I happened to pick.
-  set map1 {B 5 7 f S w I L 6 i D 2 p + V X Y Q u t N / ! e v x P b F k { } c d 1 Z z W - , 9 q g T s l y . H A m 4 $ K r 8 ? C R * E M o = 3 0 G J O h j n a U G ? # z 4 j I a V 1 n o q e Z w d H h O = b U i F k . s ! R S Q D c 6 / l $ C f B L T + W t P m , y N 2 v - 8 9 J r p x A E * X 0 5 K 3 u g Y M 7}
+  # For un-obfusticating old, broken passwords.
+  set map-1 {5 B f 7 w S L I i 6 2 D + p X V Q Y t u / N e ! x v b P k F c { } 1 d z Z - W 9 , g q s T y l H . m A $ 4 r K ? 8 R C E * o M 3 = G 0 O J j h a n G U # ? 4 z I j V a n 1 q o Z e d w h H = O U b F i . k ! s S R D Q 6 c l / C $ B f T L W + P t , m N y v 2 8 - J 9 p r A x * E 0 X K 5 u 3 Y g 7 M}
 
-  set map0 {5 B f 7 w S L I i 6 2 D + p X V Q Y t u / N e ! x v b P k F c { } 1 d z Z - W 9 , g q s T y l H . m A $ 4 r K ? 8 R C E * o M 3 = G 0 O J j h a n G U # ? 4 z I j V a n 1 q o Z e d w h H = O U b F i . k ! s S R D Q 6 c l / C $ B f T L W + P t , m N y v 2 8 - J 9 p r A x * E 0 X K 5 u 3 Y g 7 M}
+  set map1 [list _ z p 5 E c 3 q J S b F q _ z T i K B h L Q u W + t 4 E g n D w U O w + M - 6 6 n 1 2 r l b y L Q 8 Z o I R V 3 . 7 7 f R x f j C s h N A G H D - u c / = C N p F X 8 A O J e P 0 k a 2 k H o Z K Y v g W y Y V / U T 4 s m d i P d S . m 9 5 B 9 M j e r l X 0 1 = x I G v t a]
+
+  set map0 [list]
+  foreach {x y} $map1 {
+    lappend map0 $y $x
+  }
 
   return [string map [set map$dir] $str];
 
@@ -269,6 +278,7 @@ proc ::potato::worldFlags {{total 0}} {
   set f(event_noactivity)   32    ;# Events have a noActivity option
   set f(event_matchall)     64    ;# Events have a matchAll option
   set f(event_replace)     128    ;# Events have replace / replace,with
+  set f(fixed_obfusticate) 256    ;# Password obfustication was broken. Like, really broken.
 
   if { !$total } {
        return [array get f];
