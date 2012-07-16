@@ -2936,6 +2936,7 @@ proc ::potato::get_mushage {c} {
 proc ::potato::parseANSI {line _arr c} {
   upvar 1 $_arr arr;
 
+  set tagged [list]
   while { [string length $line] } {
            set tags [get_mushageColours arr $c]
            set nextAnsi [string first \x1B $line]
