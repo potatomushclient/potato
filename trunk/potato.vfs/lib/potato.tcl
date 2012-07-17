@@ -2794,6 +2794,7 @@ proc ::potato::disconnect {{c ""} {prompt 1}} {
   set conn($c,telnet,buffer,line) ""
   set conn($c,telnet,buffer,codes) ""
   set conn($c,telnet,afterPrompt) 0
+  setPrompt $c ""
 
   if { $conn($c,stats,connAt) != -1 } {
        incr conn($c,stats,prev) [expr {[clock seconds] - $conn($c,stats,connAt)}]
@@ -11222,11 +11223,13 @@ proc ::potato::setPrompt {c prompt} {
        set conn($c,prompt) "  -   $noAnsi"
      }
   set existing [llength [$conn($c,textWidget) tag ranges prompt]]
+  set t $conn($c,textWidget)
   if { $prompt eq "" } {
        if { $existing } {
-            $conn($c,textWidget) delete prompt.first prompt.last
+            $t delete prompt.first prompt.last
           }
      } else {
+       set aE [atEnd $t]
        if { $hasAnsi } {
             # We need to parse out the ANSI. Le sigh
             set ansi($c,ansi,fg) fg
@@ -11241,9 +11244,12 @@ proc ::potato::setPrompt {c prompt} {
           }
        set inserts [concat [list "\n> " [list prompt margins]] $inserts [list [clock seconds] [list prompt timestamp]]]
        if { $existing } {
-            $conn($c,textWidget) replace prompt.first prompt.last {*}$inserts
+            $t replace prompt.first prompt.last {*}$inserts
           } else {
-            $conn($c,textWidget) insert end {*}$inserts
+            $t insert end {*}$inserts
+          }
+       if { $aE } {
+            $t see end
           }
      }
 
