@@ -8,3 +8,5 @@
   * New feature in Events that allows replacing the matched portion of text with something else. Suggested by Null and Paige.
   * [SlashCommands /commands] now have return values and can be nested. Some small tweaks to existing /commands have been made to accommodate this, including the replacement of the $var$ syntax with a new /command, `[/get var]`.
   * Potato can now understand and display Prompts, using the Telnet GOAHEAD (as per PennMUSH's @prompt command). Prompts are displayed on the status bar, and also at the end of the output window.
+  * Password obfustication was broken, causing some passwords to be loaded incorrectly. Reported by James, found by Cheetah.
+  * URLs in Spawn windows weren't correctly clickable. Reported by jgugelsen.
