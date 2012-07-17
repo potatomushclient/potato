@@ -7203,7 +7203,8 @@ proc ::potato::keyboardShortcutWin {} {
   toplevel $win
   wm title $win [T "Keyboard Shortcuts"]
 
-  # The "Mac" key symbol is [format %c 8984]
+  # The "Mac" key symbol is \u2318
+  # The Mac "option" key symbol is \u2325
 
   # A frame we don't pack which we set bindings for
   set bindingsWin [frame $win.bindings]
@@ -7220,8 +7221,9 @@ proc ::potato::keyboardShortcutWin {} {
   set keyShortsTmp(key,control) 0
   set keyShortsTmp(key,alt) 0
   set keyShortsTmp(key,command) 0;# The "Mac" key
+  set keyShortsTmp(key,option) 0;# The Mac "Option" key
 
-  pack [::ttk::label $win.l -text [T "Select a command, then click a button to edit it's binding"]] \
+  pack [::ttk::label $win.l -text [T "Select a command, then click a button to edit its binding"]] \
           -side top -padx 4 -pady 8
 
   pack [::ttk::frame $win.tree] -side top -anchor nw -expand 1 -fill both
@@ -7245,26 +7247,32 @@ proc ::potato::keyboardShortcutWin {} {
   foreach x $allTasks {
     foreach {label task} $x {break}
     if { [info exists keyShortsTmp($task)] && $keyShortsTmp($task) ne "" } {
-         set binding [keysymToHuman $keyShortsTmp($task)]
+         set real $keyShortsTmp($task)
+         set disp [keysymToHuman $real]
        } else {
-         set binding ""
+         set real ""
+         set disp ""
        }
-    $tree insert {} end -id $task -values [list $label $binding] -tags [list $task]
+    $tree insert {} end -id $task -values [list $label $disp $real] -tags [list $task]
   }
 
   $tree selection set [lindex $allTasks 0 1]
 
+  set keyShortsTmp(main,win) $win
+  set keyShortsTmp(main,tree) $tree
+  set keyShortsTmp(editWin,win) .keyShortsInput
+  set keyShortsTmp(bindings,win) $bindingsWin
+
   pack [::ttk::frame $win.btns] -side top -pady 8
   pack [::ttk::button $win.btns.clear -text [T "Clear"] -width 8 \
-             -command [list ::potato::keyboardShortcutClear $tree $bindingsWin]] -side left -padx 4
-  set subWin .keyShortsInput
+             -command [list ::potato::keyboardShortcutClear]] -side left -padx 4
   pack [::ttk::button $win.btns.change -text [T "Change"] -width 8 \
-            -command [list ::potato::keyboardShortcutInput $subWin $win $tree $bindingsWin]] -side left -padx 4
-  pack [::ttk::button $win.btns.save -text [T "Save"] -width 8 -command [list ::potato::keyboardShortcutWinSave $win]] -side left -padx 4
+            -command [list ::potato::keyboardShortcutInput]] -side left -padx 4
+  pack [::ttk::button $win.btns.save -text [T "Save"] -width 8 -command [list ::potato::keyboardShortcutWinSave]] -side left -padx 4
   pack [::ttk::button $win.btns.close -text [T "Cancel"] -width 8 -command [list destroy $win]] -side left -padx 4
 
 
-  bind $win <Destroy> "destroy $subWin"
+  bind $win <Destroy> [list destroy $keyShortsTmp(editWin,win)]
 
   reshowWindow $win 0
   focus $tree;
@@ -7274,15 +7282,14 @@ proc ::potato::keyboardShortcutWin {} {
 };# ::potato::keyboardShortcutWin
 
 #: proc ::potato::keyboardShortcutWinSave
-#: arg win Toplevel window
-#: desc Save the changes to the Keyboard Shortcuts and then destroy $win
+#: desc Save the changes to the Keyboard Shortcuts and then destroy the customization window
 #: return nothing
-proc ::potato::keyboardShortcutWinSave {win} {
+proc ::potato::keyboardShortcutWinSave {} {
   variable keyShorts;
   variable keyShortsTmp;
 
-  array unset keyShortsTmp key,*
-  destroy $win
+  destroy $keyShortsTmp(main,win)
+  array unset keyShortsTmp *,*
 
   # Clear off current bindings
   foreach x [bind PotatoUserBindings] {
@@ -7297,13 +7304,13 @@ proc ::potato::keyboardShortcutWinSave {win} {
 };# ::potato::keyboardShortcutWinSave
 
 #: proc ::potato::keyboardShortcutClear
-#: arg tree Treeview widget to check selection of
-#: arg bindingsWin The window which has copies of all the [bind]ings on.
-#: desc Prompt the user for comfirmation, then clear the keyboard shortcut for the task selected in $tree
+#: desc Prompt the user for comfirmation, then clear the keyboard shortcut for the task selected in the tree
 #: return nothing
-proc ::potato::keyboardShortcutClear {tree bindingsWin} {
+proc ::potato::keyboardShortcutClear {} {
   variable tasks;
   variable keyShortsTmp;
+
+  set tree $keyShortsTmp(main,tree)
 
   set task [$tree selection]
   if { ![info exists keyShortsTmp($task)] || $keyShortsTmp($task) eq "" } {
@@ -7317,35 +7324,42 @@ proc ::potato::keyboardShortcutClear {tree bindingsWin} {
        return;
      }
 
-  bind $bindingsWin <$keyShortsTmp($task)> ""
+  bind $keyShortsTmp(bindings,win) <$keyShortsTmp($task)> ""
   set keyShortsTmp($task) ""
-  $tree item $task -values [list [taskLabel $task] ""]
+  $tree item $task -values [list [taskLabel $task] "" ""]
 
   return;
 
 };# ::potato::keyboardShortcutClear
 
 #: proc ::potato::keyboardShortcutInput
-#: arg win Toplevel window to create
-#: arg parent The parent window
-#: arg tree Treeview widget to check selection of
-#: arg bindingsWin A widget which has bindings set for the current configuration
-#: desc Show a window ($win) allowing the user to edit the keyboard binding for the task currently selected in $tree
+#: desc Show a window allowing the user to edit the keyboard binding for the task currently selected in the tree
 #: return nothing
-proc ::potato::keyboardShortcutInput {win parent tree bindingsWin} {
+proc ::potato::keyboardShortcutInput {} {
   variable keyShortsTmp;
 
   # We don't reshow, as it's probably presented for a different task,
   # and we don't want them to not realise it's still shown for that task, not the most-recently-selected
+  set win $keyShortsTmp(editWin,win)
   if { [winfo exists $win] } {
         destroy $win
      }
 
   toplevel $win
-  wm transient $win $parent
+  wm transient $win $keyShortsTmp(main,win)
+  set tree $keyShortsTmp(main,tree)
   set task [$tree selection]
-  set taskLabel [taskLabel $task]
+  set taskInfo [$tree item $task -values]
+  set taskLabel [lindex $taskInfo 0]
+  set taskBinding(display) [lindex $taskInfo 1]
+  set taskBinding(real) [lindex $taskInfo 2]
+  set keyShortsTmp(editWin,binding) $taskBinding(real)
+
   wm title $win [T "Keyboard Shortcut for \"%s\"" $taskLabel]
+  set keyShorts(editWin,binding) $taskBinding(real)
+  if { $taskBinding(display) eq "" } {
+       set taskBinding(display) "<[T "None"]>"
+     }
 
   bind $win <KeyPress-Shift_L> [list set ::potato::keyShortsTmp(key,shift) 1]
   bind $win <KeyPress-Shift_R> [list set ::potato::keyShortsTmp(key,shift) 1]
@@ -7363,19 +7377,26 @@ proc ::potato::keyboardShortcutInput {win parent tree bindingsWin} {
   bind $win <KeyRelease-Alt_R> [list set ::potato::keyShortsTmp(key,alt) 0]
 
   #abc No bindings for the Mac "Command" key yet.
+  #abc No bindings for the Mac "Option" key yet.
   set text [T "Press the desired keyboard shortcut for '%s'.\nWhen the correct shortcut is displayed below, click Accept,\nor click Cancel to keep the current shortcut." $taskLabel]
   pack [::ttk::label $win.l -text $text] -side top -padx 4 -pady 6
 
-  pack [set disp [::ttk::label $win.disp -text [T "<None>"]]] -side top -padx 4 -pady 10
+  pack [set disp [::ttk::label $win.disp -text "$taskBinding(display)"]] -side top -padx 4 -pady 10
+  set keyShortsTmp(editWin,display) $disp
+  set keyShortsTmp(editWin,task) $task
 
-  pack [::ttk::frame $win.btns] -side top
-  set cmd {if { [::potato::keyboardShortcutSave %s %s %s %s] } {destroy %s}}
+  ttk::style configure error.TLabel -foreground red
+  pack [set err [::ttk::label $win.error -style "error.TLabel"]] -side top -padx 4 -pady 7
+  set keyShortsTmp(editWin,err) $err
+
+  pack [::ttk::frame $win.btns] -side top -pady 4
+  set cmd {if { [::potato::keyboardShortcutSave] } {destroy %s}}
   pack [::ttk::button $win.btns.accept -text [T "Accept"] -width 8 \
-                 -command [format $cmd $task $disp $bindingsWin $tree $win]] \
+                 -command [format $cmd $win]] \
                  -side left -padx 7
   pack [::ttk::button $win.btns.cancel -text [T "Cancel"] -width 8 -command [list destroy $win]] -side left -padx 7
 
-  bind $win <KeyPress> [list ::potato::keyboardShortcutInputProcess $win %K $disp]
+  bind $win <KeyPress> [list ::potato::keyboardShortcutInputProcess %K %A]
 
   reshowWindow $win 0
   return;
@@ -7389,16 +7410,27 @@ proc ::potato::keyboardShortcutInput {win parent tree bindingsWin} {
 #: arg tree The tree widget containing the list of tasks/bindings
 #: desc Parse the keysym name from $disp's -text. If it's <None>, abort. If the keysym is already inuse by another task, prompt. Else, save it.
 #: return 0 if aborting, 1 if saving
-proc ::potato::keyboardShortcutSave {task disp bindingsWin tree} {
+proc ::potato::keyboardShortcutSave {} {
   variable keyShortsTmp;
 
-  set userBind [$disp cget -text]
-  if { $userBind eq "<None>" } {
-       bell -displayof $disp
+  set disp $keyShortsTmp(editWin,display)
+  set task $keyShortsTmp(editWin,task)
+  set tree $keyShortsTmp(main,tree)
+  set bindingsWin $keyShortsTmp(bindings,win)
+
+  set keysym $keyShortsTmp(editWin,binding)
+  set userBind [keysymToHuman $keysym]
+  if { $keysym eq "" } {
+       # Blank - no change
+       return 1;
+     }
+
+  if { [string first "?" $keysym] >= 0 } {
+       tk_messageBox -parent [winfo toplevel $disp] -type ok -icon error -title [T "Keyboard Shortcut"] \
+                     -message [T "You cannot bind to that key. Sorry."]
        return 0;
      }
 
-  set keysym [humanToKeysym $userBind]
   set current [bind $bindingsWin "<$keysym>"]
   if { $current ne "" && $current ne $task } {
        set message [T "The Keyboard Shortcut '%s' is already in use by the task '%s'. Do you want to override it?" $userBind [taskLabel $current]]
@@ -7408,7 +7440,7 @@ proc ::potato::keyboardShortcutSave {task disp bindingsWin tree} {
              return 0;
            }
         set keyShortsTmp($current) ""
-        $tree item $current -values [list [taskLabel $current] ""]
+        $tree item $current -values [list [taskLabel $current] "" ""]
      }
 
   if { [info exists keyShortsTmp($task)] && $keyShortsTmp($task) ne "" } {
@@ -7416,47 +7448,58 @@ proc ::potato::keyboardShortcutSave {task disp bindingsWin tree} {
      }
   bind $bindingsWin "<$keysym>" $task
   set keyShortsTmp($task) $keysym
-  $tree item $task -values [list [taskLabel $task] $userBind]
+  $tree item $task -values [list [taskLabel $task] $userBind $keysym]
 
   return 1;
 
 };# ::potato::keyboardShortcutSave
 
 #: proc ::potato::keyboardShortcutInputProcess
-#: arg win Toplevel window with the KeyPress bindings
-#: arg key The keysym for the key that was pressed (%K)
-#: arg disp The label widget to display the keysym in.
+#: arg keyname The keysym for the key that was pressed (%K)
+#: arg keydisp The display value for the keypress (%A)
 #: desc Process the keypress. This involves checking which modifiers are pressed, validating the keysym, and displaying it if valid.
 #: return nothing
-proc ::potato::keyboardShortcutInputProcess {win key disp} {
+proc ::potato::keyboardShortcutInputProcess {keyname keydisp} {
   variable keyShortsTmp;
 
-  # Can be used with no mods
-  set mod(0) [list F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12 Prior Next Escape]
-  # Must have a modifier "shift"
-  set mod(1) [list plus minus asterisk slash]
-  # Must have at least "Alt" or "Control"
-  set mod(2) [list A B C D E F G H I J K L M N O P Q R S T U V W X Y Z 1 2 3 4 5 6 7 8 9 0 Up Down Left Right]
+  set warn_any [list Up Down Left Right Home End Prior Next Delete BackSpace Return Tab]
 
-  if { [string length $key] == 1 } {
-       set key [string toupper $key]
+  set win $keyShortsTmp(editWin,win)
+  set disp $keyShortsTmp(editWin,display)
+  set realBinding ""
+
+  set modifiers [list]
+
+  if { [string length $keyname] == 1 } {
+       set keyname [string toupper $keyname]
      }
 
-  foreach x {shift control alt} {set $x $keyShortsTmp(key,$x)}
-  if { ($key in $mod(1) && ![expr {$shift+$control+$alt}]) || ($key in $mod(2) && ![expr {$control+$alt}]) \
-       || ($key ni $mod(0) && $key ni $mod(1) && $key ni $mod(2)) } {
-       bell -displayof $win
-       return;
-     }
-
-  set str [keysymToHuman $key]
-  foreach {x y} [list alt Alt shift Shift control Control] {
-     if { $keyShortsTmp(key,$x) } {
-          set str "$y+$str"
-        }
+  foreach x {control alt shift} {
+    if { $keyShortsTmp(key,$x) } {
+         lappend modifiers [string totitle $x]
+       }
   }
 
+  set realBinding [join [concat $modifiers $keyname] -]
+
+  set str [keysymToHuman $realBinding]
+
   $disp configure -text $str
+  set keyShortsTmp(editWin,binding) $realBinding
+
+  set err $keyShortsTmp(editWin,err)
+  if { [string first "?" $realBinding] >= 0 } {
+       $err configure -text [T "Sorry, that key is not allowed."]
+     } elseif { [string is print -strict $keydisp] || $keyname in $warn_any } {
+       $err configure -text [T "Warning! Using that key is not recommended!"]
+     } else {
+       set current [bind $keyShortsTmp(bindings,win) "<$realBinding>"]
+       if { $current ne "" && $current ne $keyShortsTmp(editWin,task) } {
+            $err configure -text [T "Note: Shortcut in use by '%s'." [taskLabel $current]]
+          } else {
+            $err configure -text ""
+          }
+     }
 
   return;
 
@@ -7471,47 +7514,27 @@ proc ::potato::keyboardShortcutInputProcess {win key disp} {
 proc ::potato::keysymToHuman {keysym {short 0} {joinchar +}} {
 
   foreach x [split $keysym -] {
-       if { $x ne "Key" && $x ne "KeyPress" && $x ne "KeyRelease" } {
+       if { $x in [list "Key" "KeyPress" "KeyRelease"] } {
+            continue;
+          } elseif { $short && $x eq "Control" } {
+            lappend list "Ctrl"
+          } else {
             lappend list $x
           }
      }
   set last [lindex $list end]
-  array set map [list Prior "Page Up" Next "Page Down" plus Plus minus Minus asterisk Asterisk slash "Forward Slash"]
+  array set map [list Prior "Page Up" Next "Page Down" slash "Forward Slash"]
   if { [info exists map($last)] } {
        set list [lreplace $list end end $map($last)]
-     } elseif { [string length $last] == 1 && $last ne [string toupper $last] } {
-       set list [lreplace $list end end [string toupper $last]]
+     } else {
+       set list [lreplace $list end end [string totitle $last]]
      }
 
   set human [join $list $joinchar]
-  if { $short } {
-       set human [string map [list "Control$joinchar" "Ctrl$joinchar"] $human]
-     }
 
   return $human;
 
 };# ::potato::keysymToHuman
-
-#: proc ::potato::humanToKeysym
-#: arg keysym The Human-form keysym to translate
-#: arg short Does the keysym use short names (Ctrl) instead of long names (Control)? Defaults to 0
-#: arg joinchar Character keysym is joined with. Defaults to +.
-#: desc Translate a human-readable key name into a keysym (valid for [bind])
-#: return The keysym for [bind]
-proc ::potato::humanToKeysym {keysym {short 0} {joinchar +}} {
-
-  set list [split $keysym $joinchar]
-
-  set last [lindex $list end]
-  array set map [list "Page Up" Prior "Page Down" Next Plus plus Minus minus Asterisk asterisk "Forward Slash" slash]
-  if { [info exists map($last)] } {
-       set list [lreplace $list end end $map($last)]
-     }
-  set list [linsert $list end-1 "KeyPress"]
-
-  return [join $list -];
-
-};# ::potato::humanToKeysym
 
 #: proc ::potato::setUpUserBindings
 #: desc Set up the user-defined key bindings. If there are none, load the defaults first, then set them up.
