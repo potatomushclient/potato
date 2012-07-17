@@ -7217,11 +7217,6 @@ proc ::potato::keyboardShortcutWin {} {
       bind $bindingsWin <$keyShortsTmp($x)> $x
     }
   }
-  set keyShortsTmp(key,shift) 0
-  set keyShortsTmp(key,control) 0
-  set keyShortsTmp(key,alt) 0
-  set keyShortsTmp(key,command) 0;# The "Mac" key
-  set keyShortsTmp(key,option) 0;# The Mac "Option" key
 
   pack [::ttk::label $win.l -text [T "Select a command, then click a button to edit its binding"]] \
           -side top -padx 4 -pady 8
@@ -7361,23 +7356,6 @@ proc ::potato::keyboardShortcutInput {} {
        set taskBinding(display) "<[T "None"]>"
      }
 
-  bind $win <KeyPress-Shift_L> [list set ::potato::keyShortsTmp(key,shift) 1]
-  bind $win <KeyPress-Shift_R> [list set ::potato::keyShortsTmp(key,shift) 1]
-  bind $win <KeyRelease-Shift_L> [list set ::potato::keyShortsTmp(key,shift) 0]
-  bind $win <KeyRelease-Shift_R> [list set ::potato::keyShortsTmp(key,shift) 0]
-
-  bind $win <KeyPress-Control_L> [list set ::potato::keyShortsTmp(key,control) 1]
-  bind $win <KeyPress-Control_R> [list set ::potato::keyShortsTmp(key,control) 1]
-  bind $win <KeyRelease-Control_L> [list set ::potato::keyShortsTmp(key,control) 0]
-  bind $win <KeyRelease-Control_R> [list set ::potato::keyShortsTmp(key,control) 0]
-
-  bind $win <KeyPress-Alt_L> [list set ::potato::keyShortsTmp(key,alt) 1]
-  bind $win <KeyPress-Alt_R> [list set ::potato::keyShortsTmp(key,alt) 1]
-  bind $win <KeyRelease-Alt_L> [list set ::potato::keyShortsTmp(key,alt) 0]
-  bind $win <KeyRelease-Alt_R> [list set ::potato::keyShortsTmp(key,alt) 0]
-
-  #abc No bindings for the Mac "Command" key yet.
-  #abc No bindings for the Mac "Option" key yet.
   set text [T "Press the desired keyboard shortcut for '%s'.\nWhen the correct shortcut is displayed below, click Accept,\nor click Cancel to keep the current shortcut." $taskLabel]
   pack [::ttk::label $win.l -text $text] -side top -padx 4 -pady 6
 
@@ -7396,7 +7374,23 @@ proc ::potato::keyboardShortcutInput {} {
                  -side left -padx 7
   pack [::ttk::button $win.btns.cancel -text [T "Cancel"] -width 8 -command [list destroy $win]] -side left -padx 7
 
+  #abc No bindings for the Mac "Command" key yet.
+  #abc No bindings for the Mac "Option" key yet.
+  foreach x {Control Alt Shift Control-Alt Control-Alt-Shift Alt-Shift Control-Shift} {
+    bind $win <$x-KeyPress> "[list ::potato::keyboardShortcutInputProcess "$x-%K" %A] ; break"
+  }
+  bind $win <KeyPress-Shift_L> {break}
+  bind $win <KeyPress-Shift_R> {break}
+
+  bind $win <KeyPress-Control_L> {break}
+  bind $win <KeyPress-Control_R> {break}
+
+  bind $win <KeyPress-Alt_L> {break}
+  bind $win <KeyPress-Alt_R> {break}
+
+
   bind $win <KeyPress> [list ::potato::keyboardShortcutInputProcess %K %A]
+
 
   reshowWindow $win 0
   return;
@@ -7468,19 +7462,16 @@ proc ::potato::keyboardShortcutInputProcess {keyname keydisp} {
   set disp $keyShortsTmp(editWin,display)
   set realBinding ""
 
-  set modifiers [list]
+  set fullkeys [split $keyname -]
+  set keyind [lindex $fullkeys end]
+  set modifiers [lrange $fullkeys 0 end-1]
+    set modified [expr {([llength $modifiers] && "Shift" ni $modifiers) || [llength $modifiers] > 1}]
 
-  if { [string length $keyname] == 1 } {
-       set keyname [string toupper $keyname]
+  if { [string length $keyind] == 1 } {
+       set keyname [string toupper $keyind]
      }
 
-  foreach x {control alt shift} {
-    if { $keyShortsTmp(key,$x) } {
-         lappend modifiers [string totitle $x]
-       }
-  }
-
-  set realBinding [join [concat $modifiers $keyname] -]
+  set realBinding [join [concat $modifiers $keyind] -]
 
   set str [keysymToHuman $realBinding]
 
@@ -7490,7 +7481,7 @@ proc ::potato::keyboardShortcutInputProcess {keyname keydisp} {
   set err $keyShortsTmp(editWin,err)
   if { [string first "?" $realBinding] >= 0 } {
        $err configure -text [T "Sorry, that key is not allowed."]
-     } elseif { [string is print -strict $keydisp] || $keyname in $warn_any } {
+     } elseif { (!$modified && [string is print -strict $keydisp]) || $keyname in $warn_any } {
        $err configure -text [T "Warning! Using that key is not recommended!"]
      } else {
        set current [bind $keyShortsTmp(bindings,win) "<$realBinding>"]
