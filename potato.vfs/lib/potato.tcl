@@ -9087,7 +9087,7 @@ proc ::potato::define_slash_cmd {cmd code} {
   # full = was the command name typed in full?
   # recursing = is this a nested /command?
   # str = the arg given to the /command
-  proc ::potato::slash_cmd_$cmd {c full recursing str} $code;
+  proc ::potato::slash_cmd_$cmd {c full recursing str} "$code\n;return \[list 1\]";
 
   return;
 
@@ -9158,6 +9158,18 @@ proc ::potato::customSlashCommand {c w cmd str} {
   return [list 1];
 
 };# ::potato::customSlashCommand
+
+#: /prompt
+#: Set (or clear) the prompt
+::potato::define_slash_cmd prompt {
+
+  if { $c == 0 } {
+       return [list 0];
+     }
+  setPrompt $c $str
+
+  return [list 1];
+};# /prompt
 
 #: /rename [<name>]
 #: Set (or clear) the custom name for a connection
