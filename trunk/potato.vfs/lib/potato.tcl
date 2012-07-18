@@ -171,6 +171,16 @@ proc ::potato::loadWorldDefaults {w override} {
        }
   }
 
+  if { [info exists worlds($w,events)] } {
+       foreach x $world($w,events) {
+         foreach {opt def} [list matchAll 0 replace 0 replace,with ""] {
+           if { ![info exists world($w,events,$x,$opt)] } {
+                set world($w,events,$x,$opt) $def
+              }
+         }
+       }
+     }
+
   return;
 
 };# ::potato::loadWorldDefaults
@@ -2478,7 +2488,7 @@ proc ::potato::connectVerifyComplete {c} {
   fconfigure $id -translation binary -encoding binary -eof {} -blocking 0 -buffering none
 
   set peer [fconfigure $id -peername]
-  if { [lindex $peer 0] == [lindex $peer 1] } {
+  if { [lindex $peer 0] in [list "" [lindex $peer 1]] } {
        set str [lindex $peer 0]
      } else {
        set str "[lindex $peer 0] ([lindex $peer 1])"
