@@ -3451,6 +3451,11 @@ proc ::potato::handleAnsiCodes {_arr c codes} {
 #: return [list] of text widget tags
 proc ::potato::get_mushageColours {_arr c} {
   upvar 1 $_arr arr;
+  variable conn;
+  variable world;
+
+  set w $conn($c,world)
+  set downgrade [expr {!$world($w,ansi,xterm)}]
 
   set fg $arr($c,ansi,fg)
   set bg $arr($c,ansi,bg)
@@ -3465,12 +3470,18 @@ proc ::potato::get_mushageColours {_arr c} {
      } elseif { $fg in [list "" "fg"] } {
        set fg ""
      } else {
+       if { $downgrade } {
+            set fg [downgradeXTERM $fg 0]
+          }
        set fg ANSI_fg_$fg
      }
   if { $bg in [list "bg" "bgh" ""] } {
        # Nothing. Normal BG is the default.
        set bg ""
      } else {
+       if { $downgrade } {
+            set bg [downgradeXTERM $bg 1]
+          }
        set bg ANSI_bg_$bg
      }
 
@@ -3484,6 +3495,46 @@ proc ::potato::get_mushageColours {_arr c} {
   return [list $fg $bg $other];
 
 };# ::potato::get_mushageColours
+
+#: proc ::potato::downgradeXTERM
+#: arg col color
+#: arg bg is this for a bg color?
+#: desc If $col is an XTERM color, downgrade it to the appropriate 16-color palette
+#: desc (or 8-color palette, if $bg).
+#: return downgraded color
+proc ::potato::downgradeXTERM {col bg} {
+
+  if { [string range $col 0 4] ne "xterm" } {
+       return $col;# not xterm anyway
+     }
+
+  set col [string range $col 5 end]
+
+  set downgrades [list x r g y b m c w xh rh gh yh bh mh ch wh \
+                       x b b b bh bh g c b bh bh bh gh g c bh \
+                       bh bh gh gh ch ch bh bh gh gh gh ch ch ch gh gh \
+                       gh ch ch ch r m m bh bh bh g g c bh bh bh \
+                       g g g c c bh gh g g c ch ch gh gh gh ch \
+                       ch ch gh gh gh gh ch ch r r m m mh mh g r \
+                       m m mh mh g g g c bh bh g g g c ch ch \
+                       gh gh gh gh ch ch gh gh gh gh wh wh r m m mh \
+                       mh mh rh rh rh mh mh mh y y mh mh mh mh y y \
+                       y mh mh mh yh yh yh wh wh wh yh yh yh yh wh wh \
+                       r rh mh mh mh mh rh rh rh mh mh mh y y y mh \
+                       mh mh y y yh mh mh mh y y yh wh wh wh yh yh \
+                       yh wh wh wh rh rh rh mh mh mh rh rh rh mh mh mh \
+                       rh rh mh mh mh mh yh yh wh wh wh wh yh yh yh wh \
+                       wh wh yh yh yh yh wh wh x x xh xh xh xh xh xh \
+                       xh w w w w w w w wh wh wh wh wh wh wh wh]
+
+  set col [lindex $downgrades $col]
+  if { $bg } {
+       set col [string index $col 0]
+     }
+
+  return $col;
+
+};# ::potato::downgradeXTERM
 
 #: proc ::potato::arraySubelem
 #: arg _arrName name of array
