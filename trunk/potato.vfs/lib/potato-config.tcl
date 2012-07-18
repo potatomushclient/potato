@@ -42,6 +42,7 @@ proc ::potato::setPrefs {readfile} {
   set world(-1,ansi,underline) 1
   set world(-1,ansi,colours) 1
   set world(-1,ansi,force-normal) 0
+  set world(-1,ansi,xterm) 1
 
   # Defaults about the world
   set world(-1,name) [T "New World"]
@@ -702,6 +703,11 @@ $sub.cb state disabled
   pack [::ttk::frame $sub.right] -side left -expand 1 -fill x
   pack [::ttk::label $sub.right.l -text [T "Force ANSI Normal?"] -width 23 -anchor w -justify left] -side left -anchor w
   pack [::ttk::checkbutton $sub.right.c -variable potato::worldconfig($w,ansi,force-normal) -onvalue 1 -offvalue 0] -side left -anchor w
+
+  pack [set sub [::ttk::frame $frame.boxes3]] -side top -pady 5 -expand 1 -fill x
+  pack [::ttk::frame $sub.left] -side left -expand 1 -fill x
+  pack [::ttk::label $sub.left.l -text [T "Show XTERM Colours?"] -width 23 -anchor w -justify left] -side left -anchor w
+  pack [::ttk::checkbutton $sub.left.c -variable potato::worldconfig($w,ansi,xterm) -onvalue 1 -offvalue 0] -side left -anchor w
 
 
   # Display: Misc
