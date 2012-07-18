@@ -115,12 +115,10 @@ proc ::potato::telnet::bufferGet {c} {
      } else {
        set retval [string range $conn($c,telnet,buffer,line) 0 "$linebreak+$conn($c,id,lineending,length-1)"];# includes the lineending
        set conn($c,telnet,buffer,line) [string range $conn($c,telnet,buffer,line) "$linebreak+$conn($c,id,lineending,length)" end]
-       if { $retval ne "" } {
-            if { $conn($c,telnet,afterPrompt) } {
-                 set conn($c,telnet,afterPrompt) 0
-                 if { $world($conn($c,world),telnet,prompt,ignoreNewline) && [string first $conn($c,id,lineending) $retval] == 0 } {
-                      set retval [string range $retval $conn($c,id,lineending,length) end]
-                    }
+       if { $retval ne "" && $conn($c,telnet,afterPrompt) } {
+            set conn($c,telnet,afterPrompt) 0
+            if { $world($conn($c,world),telnet,prompt,ignoreNewline) && [string first $conn($c,id,lineending) $retval] == 0 } {
+                 set retval [string range $retval $conn($c,id,lineending,length) end]
                }
           }
        return $retval;
@@ -134,7 +132,7 @@ proc ::potato::telnet::bufferGet {c} {
 #: desc $str has been received from connection $c. Parse out and reply to any telnet commands,
 #: desc and return any plain text for output. May have to buffer some of $str and wait for
 #: desc more input, if an incomplete telnet code is received.
-#: return string with telnet commands parsed out
+#: return whole lines of string with telnet commands parsed out
 proc ::potato::telnet::process {c str} {
   upvar ::potato::conn conn;
   variable tCmd;
@@ -146,8 +144,7 @@ proc ::potato::telnet::process {c str} {
 
   ::potato::addProtocol $c "telnet"
 
-  process_sub_$conn($c,telnet,state) $c $str;
-  return [bufferGet $c];
+  return "[process_sub_$conn($c,telnet,state) $c $str][bufferGet $c]";
 
 };# ::potato::telnet::process
 
@@ -155,7 +152,7 @@ proc ::potato::telnet::process {c str} {
 #: arg c connection id
 #: arg str string received
 #: desc Process $str (which contains an IAC) for connection $c, possibly buffering some to wait for a complete telnet command. We're not currently processing a telnet command.
-#: return nothing
+#: return whole lines of string with telnet commands parsed out
 proc ::potato::telnet::process_sub_0 {c str} {
   upvar ::potato::conn conn;
   variable tCmd;
@@ -167,7 +164,7 @@ proc ::potato::telnet::process_sub_0 {c str} {
 
   set conn($c,telnet,state) 1
 
-  process_sub_1 $c $telnet;
+  return [process_sub_1 $c $telnet];
 
 };# ::potato::telnet::process_sub_0
 
@@ -175,7 +172,7 @@ proc ::potato::telnet::process_sub_0 {c str} {
 #: arg c connection id
 #: arg str string received
 #: desc We've received a single IAC on connection $c. Check $str; if it's empty, return. If it starts with an IAC, return an IAC and the result of re-processing the rest of the string. If it doesn't start with an IAC, process the command it contains.
-#: return nothing
+#: return whole lines of string with telnet commands parsed out
 proc ::potato::telnet::process_sub_1 {c str} {
   upvar ::potato::conn conn;
   upvar ::potato::world world;
@@ -191,8 +188,7 @@ proc ::potato::telnet::process_sub_1 {c str} {
        # We have a literal IAC. Buffer the literal IAC, and recurse to process the rest of the string.
        set conn($c,telnet,state) 0;# reset
        bufferAdd $c $tCmd(IAC)
-       process $c $remainder
-       return;
+       return [process $c $remainder];
      }
 
   # See if we recognise the first character.
@@ -200,8 +196,7 @@ proc ::potato::telnet::process_sub_1 {c str} {
   if { ![info exists tCmd($cmdCharCode)] } {
        # This isn't a known telnet command. We'll just ignore it.
        set conn($c,telnet,state) 0
-       process $c $remainder
-       return ;
+       return [process $c $remainder];
      }
 
   # We have a known telnet command. But we only do something for DO, DONT, WILL, WONT, SB,
@@ -212,14 +207,13 @@ proc ::potato::telnet::process_sub_1 {c str} {
      }
   if { [lsearch -exact $goodCmds $cmdChar] == -1 } {
        set conn($c,telnet,state) 0
-       process $c $remainder
-       return;
+       return [process $c $remainder];
      }
 
   if { $cmdChar eq $tCmd(SB) } {
        # We have a subnegotiation
        set conn($c,telnet,state) 3
-       process_sub_3 $c $remainder
+       return [process_sub_3 $c $remainder];
      } elseif { $cmdChar eq $tCmd(GA) } {
        # Display everything since the last newline as a prompt
        set lastNewline [string last $conn($c,id,lineending) $conn($c,telnet,buffer,line)]
@@ -236,12 +230,12 @@ proc ::potato::telnet::process_sub_1 {c str} {
        ::potato::setPrompt $c $prompt
        set conn($c,telnet,state) 0
        set conn($c,telnet,buffer,codes) ""
-       process $c $remainder
+       return [process $c $remainder];
      } else {
        # We have a do/dont/will/wont
        set conn($c,telnet,state) 2
        set conn($c,telnet,buffer,codes) $cmdChar
-       process_sub_2 $c $remainder
+       return [process_sub_2 $c $remainder];
      }
   return;
 
@@ -306,8 +300,7 @@ proc ::potato::telnet::process_sub_2 {c str} {
 
   set conn($c,telnet,buffer,codes) ""
   set conn($c,telnet,state) 0
-  process $c $remainder
-  return;
+  return [process $c $remainder];
 
 };# ::potato::telnet::process_sub_2
 
@@ -319,8 +312,7 @@ proc ::potato::telnet::process_sub_2 {c str} {
 proc ::potato::telnet::process_sub_3 {c str} {
   upvar ::potato::conn conn;
 
-  process_sub_3_$conn($c,telnet,subState) $c $str
-  return;
+  return [process_sub_3_$conn($c,telnet,subState) $c $str];
 
 };# ::potato::telnet::process_sub_3
 
@@ -344,8 +336,7 @@ proc ::potato::telnet::process_sub_3_0 {c str} {
 
   # And then advance to the next step, to process anything after it
   set conn($c,telnet,subState) 1
-  process_sub_3_1 $c [string range $str [expr {$iac + 1}] end]
-  return;
+  return [process_sub_3_1 $c [string range $str [expr {$iac + 1}] end]];
 
 };# ::potato::telnet::process_sub_3_0
 
@@ -374,8 +365,7 @@ proc ::potato::telnet::process_sub_3_1 {c str} {
        # We've had IAC-IAC (literal IAC), so we need to buffer an IAC, then go back to waiting for an IAC.
        append conn($c,telnet,buffer,codes) $tCmd(IAC)
        set conn($c,telnet,subState) 0;# wait for IAC
-       process_sub_3_0 $c $remainder
-       return;
+       return [process_sub_3_0 $c $remainder];
      }
 
   if { $firstChar ne $tCmd(SE) } {
@@ -454,8 +444,7 @@ proc ::potato::telnet::process_sub_3_1 {c str} {
   set conn($c,telnet,buffer,codes) ""
   set conn($c,telnet,state) 0
   set conn($c,telnet,subState) 0
-  process $c $remainder
-  return;
+  return [process $c $remainder];
 
 };# ::potato::telnet::process_sub_3_1
 

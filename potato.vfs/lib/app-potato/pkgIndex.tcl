@@ -1,6 +1,6 @@
 
   set dir [file join [pwd] $dir]; # this really shouldn't be necessary, but apparantly sometimes is.
-  
+
   package ifneeded app-potato 2.0.0 [list source [file join $dir .. potato.tcl]]
   package ifneeded potato-telnet 1.1 [list source [file join $dir .. potato-telnet.tcl]]
   package ifneeded potato-help 2.0.0 [list source [file join $dir .. potato-help.tcl]]
@@ -15,12 +15,13 @@
   package ifneeded potato-proxy 1.1 [list source [file join $dir .. potato-proxy.tcl]]
 
   package ifneeded potato-encoding 1.0 [list source [file join $dir .. potato-encoding.tcl]]
-  
+
   package ifneeded potato-subfiles 1.0 [list ::potato::loadSubFiles [file join $dir ..]]
 
   # Windows-specific
   package ifneeded potato-winflash 1.0 "[list load [file join $dir windows flash85.dll]] ; [list source [file join $dir windows potato-winflash.tcl]]"
   package ifneeded Winico 0.6 [list load [file join $dir windows Winico06.dll]]
+
   if { $::tcl_platform(platform) eq "windows" } {
        package ifneeded tls 1.6 "source \[file join [list $dir] windows tls.tcl\] ; tls::initlib [list [file join $dir windows]] tls16.dll"
      }
