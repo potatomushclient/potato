@@ -1,4 +1,4 @@
-#summary Version 2.0.0b11
+﻿#summary Version 2.0.0b11
 =Version 2.0.0b11=
 ==Not Yet Released==
 
@@ -7,6 +7,10 @@
   * When running on Linux, you can now launch Potato via main.tcl without being in the potato.vfs directory. By Cheetah.
   * New feature in Events that allows replacing the matched portion of text with something else. Suggested by Null and Paige.
   * [SlashCommands /commands] now have return values and can be nested. Some small tweaks to existing /commands have been made to accommodate this, including the replacement of the $var$ syntax with a new /command, `[/get var]`.
-  * Potato can now understand and display Prompts, using the Telnet GOAHEAD (as per PennMUSH's @prompt command). Prompts are displayed on the status bar, and also at the end of the output window.
+  * [SlashCommands /commands] can now have multi-line arguments (via nesting). As such, the rather crappy 'single mode', that you probably didn't know existed and never used, has now been removed.
+  * [ConfigureWorldsAutoSends Auto-Sends] are now parsed for [SlashCommands /commands]/
+  * Potato can now understand and display [ConfigureWorldsConnectionTelnet Prompts], using the Telnet GOAHEAD (as per PennMUSH's @prompt command). Prompts are displayed on the status bar, and also at the end of the output window.
   * Password obfustication was broken, causing some passwords to be loaded incorrectly. Reported by James, found by Cheetah.
   * URLs in Spawn windows weren't correctly clickable. Reported by jgugelsen.
+  * It's now possible to use just about any keys you like for Customized Keyboard Bindings. However, Potato doesn't recommend using cursor keys, or key combinations that produce printable characters, and will warn if you attempt to do so. Suggested by Cheetah.
+  * New option allows disabling the 256 XTERM colours. When enabled, they are automatically converted to the standard 16 ANSI colour palette. Downgrade mappings provided by Padraic.

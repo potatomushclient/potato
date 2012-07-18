@@ -30,6 +30,7 @@ The following is a list of available commands, with terse descriptions:
   * `/limit` - Filters output. See the help for [SlashCommandsLimit /limit] for more details.
   * `/log` - Start or stop logging. See the help for [Logging#/log /log] for more details.
   * `/null [<args>]` - Does nothing and returns nothing. Useful for eating the output of other /commands.
+  * `/prompt [<prompt>]` - Set the prompt for this connection to `<prompt>`, or clear the current prompt if no `<prompt>` is given. It's not currently possible to set prompts containing ANSI with this command.
   * `/print <message>` - Print `<message>` as a system message.
   * `/quick <address>` - Perform a [QuickConnect quick connect] to `<address>`, which is either a `host:port` or `host port` string.
   * `/reconnect` - Reconnect the current connection.
