@@ -827,7 +827,11 @@ proc ::potato::mailWindowSend {c win} {
   }
   set mailcmd [string map $maps $cmd]
 
-  send_to $c $mailcmd \b 1
+  addToInputHistory $c $mailcmd
+
+  foreach x [split $mailcmd \b] {
+    send_to_real $c $x
+  }
 
   destroy $win
 
@@ -975,8 +979,6 @@ proc ::potato::uploadWindowStart {c} {
                   -underline 0 -anchor w -justify left] -side left -anchor nw -padx 3
   pack [::ttk::checkbutton $frame.options.mpp.cb -variable potato::conn($c,upload,mpp) \
                   -onvalue 1 -offvalue 0] -side left -padx 3
-  #$frame.options.mpp.l state disabled
-  #$frame.options.mpp.cb state disabled
   lappend bindings m $frame.options.mpp.cb
 
   pack [::ttk::frame $frame.options.delay] -side top -pady 3 -anchor nw
@@ -1070,7 +1072,7 @@ proc ::potato::uploadBegin {c} {
             # Send what's in the buffer, it's all we have.
             send_to_real $c $conn($c,upload,mpp,buffer)
             if { $conn($c,upload,history) } {
-                 addToInputHistory $c $conn($c,upload,mpp,buffer) ""
+                 addToInputHistory $c $conn($c,upload,mpp,buffer)
                }
             set conn($c,upload,mpp,buffer) ""
           }
@@ -1130,7 +1132,7 @@ proc ::potato::uploadBegin {c} {
        foreach string $data {
           send_to_real $c $string
           if { $conn($c,upload,history) } {
-               addToInputHistory $c $string ""
+               addToInputHistory $c $string
              }
        }
        set delay [expr {round(1000 * $conn($c,upload,delay))}]
@@ -1711,8 +1713,6 @@ proc ::potato::newConnection {w {character ""}} {
   set conn($c,spawnAll) ""
   set conn($c,limited) [list]
   set conn($c,debugPackets) 0
-  set conn($c,input1,mode) "multi"
-  set conn($c,input2,mode) "multi"
   set conn($c,userAfterIDs) [list]
 
   if { $w == -1 } {
@@ -2582,10 +2582,10 @@ proc ::potato::sendLoginInfoSub {c} {
 
   set w $conn($c,world)
   if { [string length $world($w,autosend,firstconnect)] && $conn($c,numConnects) == 1 } {
-       send_to $c $world($w,autosend,firstconnect) "\n" 0
+       send_to $c $world($w,autosend,firstconnect)
      }
   if { [string length $world($w,autosend,connect)] } {
-       send_to $c $world($w,autosend,connect) "\n" 0
+       send_to $c $world($w,autosend,connect)
      }
   # Don't check for pw being blank, as some games allow empty passwords
   if { [string length $conn($c,char)] && \
@@ -2598,7 +2598,7 @@ proc ::potato::sendLoginInfoSub {c} {
           }
      }
   if { [string length $world($w,autosend,login)] } {
-       send_to $c $world($w,autosend,login) "\n" 0
+       send_to $c $world($w,autosend,login)
      }
 
   return;
@@ -2685,15 +2685,13 @@ proc ::potato::timerRun {c w timer} {
      }
 
   # Send the command
-  send_to $c $world($w,timer,$timer,cmds) "\n" 0 "" [expr {$world($w,echo,timers)}]
+  send_to $c $world($w,timer,$timer,cmds) "" [expr {$world($w,echo,timers)}]
 
   if { $conn($c,timer,$timer-$w,count) != 0 } {
        timerQueue $c $w $timer 0
-     }
-
-  # Check re-queuing
-  if { $conn($c,timer,$timer-$w,count) > 0 } {
-       incr conn($c,timer,$timer-$w,count) -1
+       if { $conn($c,timer,$timer-$w,count) > 0 } {
+            incr conn($c,timer,$timer-$w,count) -1
+          }
      }
 
   return;
@@ -3184,7 +3182,8 @@ proc ::potato::get_mushageProcess {c line} {
 
   if { $eventInfo(matched) && [info exists eventInfo(send)] } {
        foreach x $eventInfo(send) {
-         send_to $c $x \n 1
+         send_to $c $x
+         addToInputHistory $c $x
        }
      }
 
@@ -5408,9 +5407,7 @@ proc ::potato::main {} {
      } elseif { [catch {open $path(startupCmds) r} fid] } {
        errorLog "Unable to open Startup Commands file \"[file nativename [file normalize $path(startupCmds)]]\": $fid"
      } else {
-       while { [gets $fid startupCmd] >= 0 } {
-               send_to "" $startupCmd "" 0
-             }
+       send_to "" [read $fid] "" 0
      }
 
   # Attempt to parse out connection paramaters
@@ -6357,19 +6354,21 @@ proc ::potato::historySub {c top lb key} {
        return;
      }
   set cmd [lindex [$lb item $index -values] 1]
-  if { $cmd == "" } {
+  if { $cmd eq "" } {
        return;
      }
 
+  set cmd [string map [list \b \n] $cmd]
   if { $key == 1 || $key == 2 } {
-       showInput $c $key [string map [list \b \n] $cmd] 0
+       showInput $c $key $cmd 0
        destroy $top
      } elseif { $key == 3 } {
-       send_to $c $cmd \b 1
+       addToInputHistory $c $cmd
+       send_to $c $cmd
        destroy $top
      } elseif { $key == 4 } {
        clipboard clear -displayof $top
-       clipboard append -displayof $top [string map [list \b \n] $cmd]
+       clipboard append -displayof $top $cmd $cmd]
        bell -displayof $top
      }
 
@@ -6630,10 +6629,6 @@ proc ::potato::build_menu_edit {m} {
   createMenuTask $m spellcheck
   $m add command {*}[menu_label [T "Configure &Prefixes/Auto-Say"]] \
               -command ::potato::prefixWindow
-  $m add checkbutton {*}[menu_label [T "Input1 Multi-Line Mode?"]] \
-              -variable ::potato::conn($c,input1,mode) -onvalue "multi" -offvalue "single"
-  $m add checkbutton {*}[menu_label [T "Input2 Multi-Line Mode?"]] \
-              -variable ::potato::conn($c,input2,mode) -onvalue "multi" -offvalue "single"
 
   $m add cascade -menu $menu(edit,convert,path) {*}[menu_label [T "&Convert..."]]
 
@@ -8050,14 +8045,6 @@ proc ::potato::send_mushage {window saveonly} {
 
   set w $conn($c,world)
 
-  if { $window eq $conn($c,input1) } {
-       set mode $conn($c,input1,mode)
-     } elseif { $window eq $conn($c,input2) } {
-       set mode $conn($c,input2,mode)
-     } else {
-       set mode "multi" ;# shouldn't happen
-     }
-
   # Figure out the auto-prefix, if any
   set windowName [textWidgetName [activeTextWidget] $c]
   if { $windowName eq "" } {
@@ -8084,91 +8071,55 @@ proc ::potato::send_mushage {window saveonly} {
   set txt [$window get 1.0 end-1char]
   $window edit separator
   $window replace 1.0 end ""
-  if { $mode eq "multi" } {
-       if { $saveonly } {
-            foreach x [split $txt "\n"] {
-              addToInputHistory $c $x ""
-            }
-          } else {
-            send_to "" $txt \n 1 $prefix
-          }
-     } else {
-       if { $saveonly } {
-            addToInputHistory $c $txt ""
-          } else {
-            send_to "" $txt "" 1 $prefix
-          }
-     }
+
   set inputSwap($window,count) -1
   set inputSwap($window,backup) ""
+
+  addToInputHistory $c $txt
+
+  if { $saveonly } {
+       return;
+     }
+
+  send_to $c $txt $prefix
 
   return;
 
 };# ::potato::send_mushage
 
-#: proc ::potato::send_to
-#: arg c connection id
-#: arg string string to process
-#: arg sep separator character
-#: arg history add commands to history?
-#: arg prefix Prefix (auto-say) to add, if text isn't a /command. Defaults to nothing.
-#: arg echo Should we echo (if so configured)? If 0, we won't echo no matter what. If 1, we echo if the option is on. Defaults to 1.
-#: desc for every line in $string (lines are delimited by $sep), parse (it may be a /command) and send to connection $c (or current connection, if $c is "") with prefix. If $sep is "" (empty string), treat as one line.
-#: return nothing
-proc ::potato::send_to {c string sep history {prefix ""} {echo 1}} {
-  variable conn;
-  variable world;
+proc ::potato::process_input {c txt} {
 
-  if { $c eq "" } {
-       set c [up]
-     }
+  set txt [string map [list "\r\n" "\n" "\r" "\n"] $txt]
 
-  if { $sep eq "\n" && $::tcl_platform(platform) eq "macintosh" } {
-       # Standardise line endings on MacOS
-       set string [string map [list "\r\n" "\n" "\r" "\n"] $string]
-     }
+  set res [list]
+  set counter 0
+  while { [string length $txt] && $counter < 100 } {
+    incr counter
+    lappend res [process_slash_cmd $c txt]
+  }
 
-  if { $sep eq "" } {
-       send_to_sub $c $string $prefix $echo
-     } else {
-       foreach x [split $string $sep] {
-          send_to_sub $c $x $prefix $echo
+  return $res;
+
+};# ::potato::process_input
+
+proc ::potato::send_to {c txt {prefix ""} {echo 1}} {
+
+  foreach x [process_input $c $txt] {
+    if { $x ne "" } {
+         send_to_real $c "$prefix$x" $echo
        }
-     }
-
-  if { $history } {
-       if { $sep ne "" && [info exists conn($c,world)] && $world($conn($c,world),splitInputCmds) } {
-            foreach x [split $string $sep] {
-               addToInputHistory $c $x ""
-            }
-          } else {
-            addToInputHistory $c $string $sep
-          }
-     }
+  }
   return;
-
 };# ::potato::send_to
 
-#: proc ::potato::send_to_sub
-#: arg c connection id
-#: arg string string to process
-#: arg prefix Prefix to add to non-/command lines. Defaults to "".
-#: arg echo Echo if the option is on?
-#: desc parse $string to see if it's a /command, and send to connection $c
-#: return nothing
-proc ::potato::send_to_sub {c string {prefix ""} {echo 1}} {
+proc ::potato::send_to_noparse {c txt {prefix ""} {echo 1}} {
 
-  if { [string index $string 0] ne "/" } {
-       send_to_real $c "$prefix$string" $echo
-     } elseif { [string index $string 1] eq "/" } {
-       send_to_real $c "$prefix[string range $string 1 end]" $echo
-     } else {
-       process_slash_cmd $c $string
-     }
+  foreach x [split $txt "\n"] {
+    send_to_real $c "$prefix$x" $echo
+  }
 
   return;
-
-};# ::potato::send_to_sub
+};# ::potato::send_to_noparse
 
 #: proc ::potato::send_to_real
 #: arg c connection id
@@ -8179,6 +8130,10 @@ proc ::potato::send_to_sub {c string {prefix ""} {echo 1}} {
 proc ::potato::send_to_real {c string {echo 1}} {
   variable conn;
   variable world;
+
+  if { $c eq "" } {
+       set c [up]
+     }
 
   if { $c == 0 || ![info exists conn($c,connected)] || $conn($c,connected) != 1 } {
        return;
@@ -8204,22 +8159,18 @@ proc ::potato::send_to_real {c string {echo 1}} {
 #: proc ::potato::addToInputHistory
 #: arg c connection id
 #: arg cmd command to add
-#: arg sep the character separating multiple commands in the string, or "" if none
-#: desc add the given command to the input history for connection $c. If $sep != "",
-#: desc the command is a list of commands with each individual command separated by the character $sep
+#: desc add the given command to the input history for connection $c.
 #: return nothing
-proc ::potato::addToInputHistory {c cmd sep} {
+proc ::potato::addToInputHistory {c cmd} {
   variable conn;
   variable world;
 
   if { $c == 0 || ![info exists conn($c,inputHistory)] } {
        return;
      }
-  if { $sep eq "" } {
-       lappend conn($c,inputHistory) [list [incr conn($c,inputHistory,count)] $cmd]
-     } else {
-       lappend conn($c,inputHistory) [list [incr conn($c,inputHistory,count)] [string map [list $sep \b] $cmd]]
-     }
+
+  lappend conn($c,inputHistory) [list [incr conn($c,inputHistory,count)] [string map [list \n \b] $cmd]]
+
   set limit $world($conn($c,world),inputLimit,to)
 
   if { $world($conn($c,world),inputLimit,on) && $limit > 0 } {
@@ -8939,16 +8890,12 @@ proc ::potato::slashConfigSelect {w} {
 #: arg recursing 1 if we're recursing, 0 if not.
 #: arg upstr
 #: desc process $str as a slash command and perform the necessary action. If we're recursing, return the result, otherwise output it on screen.
-#: return nothing for outermost /commands, the result of the /command if recursing
+#: return [list <error?> <result>] for nested invocations, or the text to send to the MUSH for non-nested invocations.
 proc ::potato::process_slash_cmd {c _str {recursing 0}} {
   variable conn;
   variable world;
 
-  if { $recursing } {
-       upvar 1 $_str str;
-     } else {
-       upvar 0 _str str;
-     }
+  upvar 1 $_str str;
 
   if { ![info exists conn($c,id)] } {
        return; # Running a /command for a closed connection - maybe on a timer that didn't cancel?
@@ -8960,12 +8907,16 @@ proc ::potato::process_slash_cmd {c _str {recursing 0}} {
     set running 1
 
     set parsed [parse_slash_cmd $c str $recursing]
-    set cmd [lindex $parsed 0]
-    set cmdArgs [lindex $parsed 1]
-    if { [string index $cmd 0] ne "/" } {
-         # Not a /command, just text to send
-         send_to_real $c $cmd
-         return [list 1]
+    set wascmd [lindex $parsed 0]
+    set cmd [lindex $parsed 1]
+    set cmdArgs [lindex $parsed 2]
+    if { !$wascmd } {
+         # Not a /command, just literal text
+         if { $recursing } {
+              return [list 1 $cmd];
+            } else {
+              return $cmd;
+            }
        }
     set cmd [string range $cmd 1 end]
     # Add 20 chars to the length for the "::potato::slash_cmd_" command prefix
@@ -9075,9 +9026,14 @@ proc ::potato::parse_slash_cmd {c _str recursing} {
   set esc 0
   set cmd_found 0
   if { [string index $str 0] eq "/" } {
-       set cmd_present 1
-       set cmd "/"
-       set str [string range $str 1 end]
+       if { [string index $str 1] eq "/" } {
+            set str [string range $str 1 end]
+            set cmd_present 0
+          } else {
+            set cmd_present 1
+            set cmd "/"
+            set str [string range $str 1 end]
+          }
      } else {
        set cmd_present 0
      }
@@ -9090,6 +9046,15 @@ proc ::potato::parse_slash_cmd {c _str recursing} {
          set appendTo cmdArgs
          continue;
        }
+    if { !$recursing && !$cmd_present } {
+         if { $x in [list "\n" "\r"] } {
+              # We're done
+              break;
+            } else {
+              append $appendTo $x
+              continue;
+            }
+       }
     if { $esc } {
          set esc 0
          append $appendTo $x
@@ -9099,7 +9064,7 @@ proc ::potato::parse_slash_cmd {c _str recursing} {
          continue;
        } elseif { $x eq "\[" } {
          append $appendTo [lindex [process_slash_cmd $c str 1] 1]
-       } elseif { $x eq "\]" && $recursing } {
+       } elseif { $x eq ($recursing ? "\]" : "\n") } {
          # We're done.
          break;
        } else {
@@ -9107,7 +9072,7 @@ proc ::potato::parse_slash_cmd {c _str recursing} {
          append $appendTo $x
        }
   }
-  return [list $cmd $cmdArgs];
+  return [list $cmd_present $cmd $cmdArgs];
 
 };# ::potato::parse_slash_cmd
 
@@ -9188,7 +9153,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
   set send [string map [list %% % %0 $a(0) %1 $a(1) %2 $a(2) %3 $a(3) %4 $a(4) \
                              %5 $a(5) %6 $a(6) %7 $a(7) %8 $a(8) %9 $a(9)] $send]
 
-  send_to $c $send "" 0
+  send_to_real $c $send
 
   return [list 1];
 
@@ -9360,7 +9325,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
        return [list 0 [T "/at: Time must be in the future."]];
      }
   set when [expr {($inttime - [clock scan "now"]) * 1000}]
-  lappend conn($c,userAfterIDs) [set afterid [after $when [list ::potato::send_to $c $action "\n" 0 ""]]]
+  lappend conn($c,userAfterIDs) [set afterid [after $when [list ::potato::send_to $c $action]]]
 
   after [expr {$when + 1200}] [list ::potato::cleanup_afters $c]
   if { $recursing } {
@@ -9422,7 +9387,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
        return [list 0 [T "No such macro \"%s\"." $str]];
      }
 
-  send_to $c $world($do) "\n" 0 ""
+  send_to $c $world($do)
 
   return [list 1];
 
@@ -9892,15 +9857,14 @@ proc ::potato::customSlashCommand {c w cmd str} {
        return [list 0 [T "Invalid speedwalk command"]];
      }
 
-  set sendStr ""
   set dirs [list n north s south w west e east nw northwest ne northeast sw southwest se southeast \
                  u up d down o out]
   foreach {all num dir} [regexp -all -inline -- { *([0-9]+)? *((?:[ns][ew]|[nsewudo])) *} $str] {
      set which [expr {[lsearch -exact $dirs $dir] + 1}]
-     append sendStr [string repeat "[lindex $dirs $which]\n" $num]
+     for {set i 0} {$i < $num} {incr i} {
+       send_to_real $c [lindex $dirs $which]
+     }
   }
-
-  send_to $c [string range $sendStr 0 end-1] \n 1
 
   return [list 1];
 
@@ -10569,7 +10533,7 @@ proc ::potato::textEditor {{c ""}} {
 
   set allTxt [format {[%s get 1.0 end-1char]} $text]
   $actionMenu add command {*}[menu_label [T "Send to &World"]] \
-          -command [format {::potato::send_to %s %s \n 1} $c $allTxt]
+          -command [format {::potato::send_to_noparse %s %s} $c $allTxt]
   $actionMenu add command {*}[menu_label [T "Place in &Top Input Window"]] \
           -command [format {::potato::showInput %s 1 %s 1} $c $allTxt]
   $actionMenu add command {*}[menu_label [T "Place in &Bottom Input Window"]] \
@@ -10846,7 +10810,8 @@ proc ::potato::fcmd {num {c ""}} {
        return; # no command
      }
 
-  send_to $c $cmd "" 1
+  addToInputHistory $c $cmd
+  send_to $c $cmd
 
   return;
 
@@ -10864,16 +10829,16 @@ proc ::potato::tasksInit {} {
        inputHistory,cmd    "::potato::history" \
        inputHistory,state  notZero \
        goNorth,name        [T "Go &North"] \
-       goNorth,cmd         [list ::potato::send_to {} north {} 1] \
+       goNorth,cmd         [list ::potato::send_to_real {} north] \
        goNorth,state       connected \
        goSouth,name        [T "Go &South"] \
-       goSouth,cmd         [list ::potato::send_to {} south {} 1] \
+       goSouth,cmd         [list ::potato::send_to_real {} south] \
        goSouth,state       connected \
        goEast,name         [T "Go &East"] \
-       goEast,cmd          [list ::potato::send_to {} east {} 1] \
+       goEast,cmd          [list ::potato::send_to_real {} east] \
        goEast,state        connected \
        goWest,name         [T "Go &West"] \
-       goWest,cmd          [list ::potato::send_to {} west {} 1] \
+       goWest,cmd          [list ::potato::send_to_real {} west] \
        goWest,state        connected \
        find,name           [T "&Find"] \
        find,cmd            "::potato::findDialog" \
