@@ -10,7 +10,7 @@ The *Telnet* page of the Connection World Configuration can be used to alter the
   * *Negotiate SSL?*: Not currently supported.
   * *Negotiate NAWS?*: Should Potato tell the MU`*` the window size? Some games alter their output to make best use of the available screenwidth. (Telnet protocol 31)
   * *Use NOP Keepalive?*: Should Potato regularly send a Telnet NOP to the MU`*` to act as a Keepalive? Useful for routers that kill connections with no regular activity.
-  * *Handle GA Prompts?*: Should Potato uset the telnet GOAHEAD character for displaying MUD-style Prompts?
+  * *Handle GA Prompts?*: Should Potato use the telnet GOAHEAD character for displaying MUD-style Prompts?
   * *Ignore NL after Prompts?*: If displaying prompts, should a newline immediately after the prompt GOAHEAD be ignored? Use this if you get a blank line in the output window every time your prompt is changed.
   * *Send Client Info?* Should Potato identify itself? (Telnet protocol 24)
   * *Send Client Name As:* If Potato has been told to identify itself as, how should it do so? Defaults to "Potato".
