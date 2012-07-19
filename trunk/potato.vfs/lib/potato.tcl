@@ -32,7 +32,7 @@ proc ::potato::loadWorlds {} {
        }
      }
 
-  foreach w [worldIDs] {
+  foreach w [concat -1 [worldIDs]] {
     loadWorldDefaults $w 0
   }
   return $potato(worlds);
@@ -102,26 +102,6 @@ proc ::potato::manageWorldVersion {w version} {
        }
      }
 
-  if { ! ($version & $wf(event_matchall)) } {
-       foreach x [array names world $w,events,*,pattern] {
-         set x [string range $x 0 end-8]
-         if { ![info exists world($x,matchAll)] } {
-              set world($x,matchAll) 0
-            }
-       }
-     }
-
-  if { ! ($version & $wf(event_replace)) } {
-       foreach x [array names world $w,events,*,pattern] {
-         set x [string range $x 0 end-8]
-         if { ![info exists world($x,replace)] } {
-              set world($x,replace) 0
-              set world($x,replace,with) ""
-            }
-       }
-     }
-
-
   # Example:
   # if { ! ($version & $wf(some_new_feature)) } {
   #      set world($w,new_features_var) foobar
@@ -139,31 +119,34 @@ proc ::potato::manageWorldVersion {w version} {
 proc ::potato::loadWorldDefaults {w override} {
   variable world;
 
-  # Options we don't copy. This is a list of option names.
+  # Options we don't copy. This is a list of option name wildcard patterns.
   set nocopyPatterns [list *,font,created id *,fcmd,* events events,* timer timer,* groups slashcmd slashcmd,* macro,*]
 
   # Load preset defaults for these, don't copy from world -1. This is a list of optionName optionDefault pairs.
+  # All of these should also be matched by nocopyPatterns above.
   set standardDefaults [list fcmd,2 {} fcmd,3 {} fcmd,4 {} fcmd,5 {} fcmd,6 {} fcmd,7 {} fcmd,8 {} \
                              fcmd,9 {} fcmd,10 {} fcmd,11 {} fcmd,12 {} \
                              events {} groups [list] slashcmd [list]]
 
-  foreach optFromArr [array names world -1,*] {
-    set opt [string range $optFromArr 3 end]
-    set copy 1
-    foreach nocopy $nocopyPatterns {
-      if { [string match $nocopy $opt] } {
-           set copy 0
-           break;
+  if { $w != -1 } {
+       foreach optFromArr [array names world -1,*] {
+         set opt [string range $optFromArr 3 end]
+         set copy 1
+         foreach nocopy $nocopyPatterns {
+           if { [string match $nocopy $opt] } {
+                set copy 0
+                break;
+              }
+           if { !$override && [info exists world($w,$opt)] } {
+                set copy 0
+                break;
+              }
          }
-      if { !$override && [info exists world($w,$opt)] } {
-           set copy 0
-           break;
-         }
-    }
-    if { $copy } {
-         set world($w,$opt) $world(-1,$opt)
+         if { $copy } {
+              set world($w,$opt) $world(-1,$opt)
+            }
        }
-  }
+     }
 
   foreach {opt default} $standardDefaults {
     if { $override || ![info exists world($w,$opt)] } {
@@ -171,9 +154,9 @@ proc ::potato::loadWorldDefaults {w override} {
        }
   }
 
-  if { [info exists worlds($w,events)] } {
+  if { [info exists world($w,events)] } {
        foreach x $world($w,events) {
-         foreach {opt def} [list matchAll 0 replace 0 replace,with ""] {
+         foreach {opt def} [list matchAll 0 replace 0 "replace,with" "" name ""] {
            if { ![info exists world($w,events,$x,$opt)] } {
                 set world($w,events,$x,$opt) $def
               }
@@ -286,8 +269,9 @@ proc ::potato::worldFlags {{total 0}} {
   set f(obfusticated_pw)     8    ;# Passwords are obfusticated
   set f(many_chars)         16    ;# World has multiple characters in $world($w,charList) as [list [list name pw] [list name pw]], not $world($w,charName) and $world($w,charPass)
   set f(event_noactivity)   32    ;# Events have a noActivity option
-  set f(event_matchall)     64    ;# Events have a matchAll option
-  set f(event_replace)     128    ;# Events have replace / replace,with
+# These two are obsolete, but not reused temporarily for the benefit of anyone using SVN.
+#  set f(event_matchall)     64    ;# Events have a matchAll option
+#  set f(event_replace)     128    ;# Events have replace / replace,with
   set f(fixed_obfusticate) 256    ;# Password obfustication was broken. Like, really broken.
 
   if { !$total } {

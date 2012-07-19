@@ -318,53 +318,62 @@ proc ::potato::eventConfig {{w ""}} {
   set rightList [list]
 
   ::ttk::frame $frame.right
-  pack [::ttk::frame $frame.right.row01] -side top -anchor nw -fill x -padx 5 -pady 2
-  pack [::ttk::label $frame.right.row01.l -text [T "Pattern:"] -width 10 -justify left -anchor w] -side left -anchor nw -padx 2
-  pack [::ttk::entry $frame.right.row01.e -textvariable potato::eventConfig($w,pattern)] -side left -anchor nw \
+
+  set lwidth 13
+
+  pack [set row [::ttk::frame $frame.right.name]] -side top -anchor nw -fill x -padx 5 -pady 2
+  pack [::ttk::label $row.l -text [T "Event Name:"] -width $lwidth -justify left -anchor w] -side left -anchor nw -padx 2
+  pack [::ttk::entry $row.e -textvariable potato::eventConfig($w,name)] -side left -anchor nw \
                      -padx 2 -expand 1 -fill x
-  lappend rightList $frame.right.row01.e
+  lappend rightList $row.e
 
-  pack [::ttk::frame $frame.right.row02] -side top -anchor nw -fill x -padx 5 -pady 2
-  pack [::ttk::frame $frame.right.row02.type] -side left -anchor nw
-  pack [::ttk::label $frame.right.row02.type.l -text [T "Type:"] -width 10 -justify left -anchor w] -side left -anchor nw -padx 2
-  pack [::ttk::combobox $frame.right.row02.type.cb -values [list wildcard regexp contains] \
+  pack [set row [::ttk::frame $frame.right.pattern]] -side top -anchor nw -fill x -padx 5 -pady 2
+  pack [::ttk::label $row.l -text [T "Pattern:"] -width $lwidth -justify left -anchor w] -side left -anchor nw -padx 2
+  pack [::ttk::entry $row.e -textvariable potato::eventConfig($w,pattern)] -side left -anchor nw \
+                     -padx 2 -expand 1 -fill x
+  lappend rightList $row.e
+
+  pack [set row [::ttk::frame $frame.right.type_case]] -side top -anchor nw -fill x -padx 5 -pady 2
+  pack [::ttk::frame $row.type] -side left -anchor nw
+  pack [::ttk::label $row.type.l -text [T "Type:"] -width $lwidth -justify left -anchor w] -side left -anchor nw -padx 2
+  pack [::ttk::combobox $row.type.cb -values [list wildcard regexp contains] \
              -textvariable potato::eventConfig($w,matchtype) -state readonly] -side left -anchor nw -padx 2 -expand 1
-  lappend rightList $frame.right.row02.type.cb
-  pack [::ttk::frame $frame.right.row02.case] -side left -anchor nw -padx 4
-  pack [::ttk::label $frame.right.row02.case.l -text [T "Case?"]] -side left -anchor nw -padx 2
-  pack [::ttk::checkbutton $frame.right.row02.case.cb -variable potato::eventConfig($w,case) \
+  lappend rightList $row.type.cb
+  pack [::ttk::frame $row.case] -side left -anchor nw -padx 4
+  pack [::ttk::label $row.case.l -text [T "Case?"]] -side left -anchor nw -padx 2
+  pack [::ttk::checkbutton $row.case.cb -variable potato::eventConfig($w,case) \
               -onvalue 1 -offvalue 0] -side left -anchor nw -padx 2
-  lappend rightList $frame.right.row02.case.cb
+  lappend rightList $row.case.cb
 
-  pack [::ttk::frame $frame.right.row03] -side top -anchor nw -fill x -padx 5 -pady 2
-  pack [::ttk::frame $frame.right.row03.enabled] -side left -anchor nw
-  pack [::ttk::label $frame.right.row03.enabled.l -text [T "Enabled?"] -width 10 -justify left -anchor w] \
+  pack [set row [::ttk::frame $frame.right.enabled_continue_matchall]] -side top -anchor nw -fill x -padx 5 -pady 2
+  pack [::ttk::frame $row.enabled] -side left -anchor nw
+  pack [::ttk::label $row.enabled.l -text [T "Enabled?"] -width $lwidth -justify left -anchor w] \
          -side left -anchor nw -padx 2
-  pack [::ttk::checkbutton $frame.right.row03.enabled.cb -variable potato::eventConfig($w,enabled) \
+  pack [::ttk::checkbutton $row.enabled.cb -variable potato::eventConfig($w,enabled) \
               -onvalue 1 -offvalue 0] -side left -anchor nw -padx 2
-  lappend rightList $frame.right.row03.enabled.cb
-  pack [::ttk::frame $frame.right.row03.continue] -side left -anchor nw -padx 4
-  pack [::ttk::label $frame.right.row03.continue.l -text [T "Continue?"] -justify left -anchor w] \
+  lappend rightList $row.enabled.cb
+  pack [::ttk::frame $row.continue] -side left -anchor nw -padx 4
+  pack [::ttk::label $row.continue.l -text [T "Continue?"] -justify left -anchor w] \
               -side left -anchor nw -padx 2
-  pack [::ttk::checkbutton $frame.right.row03.continue.cb -variable potato::eventConfig($w,continue) \
+  pack [::ttk::checkbutton $row.continue.cb -variable potato::eventConfig($w,continue) \
               -onvalue 1 -offvalue 0] -side left -anchor nw -padx 2
-  lappend rightList $frame.right.row03.continue.cb
-  pack [::ttk::frame $frame.right.row03.matchAll] -side left -anchor nw -padx 4
-  pack [::ttk::label $frame.right.row03.matchAll.l -text [T "Match All?"] -justify left -anchor w] \
+  lappend rightList $row.continue.cb
+  pack [::ttk::frame $row.matchAll] -side left -anchor nw -padx 4
+  pack [::ttk::label $row.matchAll.l -text [T "Match All?"] -justify left -anchor w] \
               -side left -anchor nw -padx 2
-  pack [::ttk::checkbutton $frame.right.row03.matchAll.cb -variable potato::eventConfig($w,matchAll) \
+  pack [::ttk::checkbutton $row.matchAll.cb -variable potato::eventConfig($w,matchAll) \
               -onvalue 1 -offvalue 0] -side left -anchor nw -padx 2
-  lappend rightList $frame.right.row03.matchAll.cb
+  lappend rightList $row.matchAll.cb
 
 
-  pack [::ttk::frame $frame.right.row04] -side top -anchor nw -fill x -padx 5 -pady 2
-  pack [::ttk::frame $frame.right.row04.inactive] -side left -anchor nw
-  pack [::ttk::label $frame.right.row04.inactive.l -text [T "Run When:"] -width 10 -justify left -anchor w] \
+  pack [set row [::ttk::frame $frame.right.runwhen]] -side top -anchor nw -fill x -padx 5 -pady 2
+  pack [::ttk::frame $row.inactive] -side left -anchor nw
+  pack [::ttk::label $row.inactive.l -text [T "Run When:"] -width $lwidth -justify left -anchor w] \
               -side left -anchor nw -padx 2
   # These values not currently translatable
-  pack [::ttk::combobox $frame.right.row04.inactive.cb -values [list {Always} {Not Up} {No Focus} {Inactive}] \
+  pack [::ttk::combobox $row.inactive.cb -values [list {Always} {Not Up} {No Focus} {Inactive}] \
               -textvariable potato::eventConfig($w,inactive) -state readonly] -side left -anchor nw -padx 2
-  lappend rightList $frame.right.row04.inactive.cb
+  lappend rightList $row.inactive.cb
 
   set bg [list "Don't Change" "Normal FG" "Normal BG"]
   set fg $bg
@@ -374,67 +383,66 @@ proc ::potato::eventConfig {{w ""}} {
      lappend bg $x
   }
 
-  pack [::ttk::frame $frame.right.row05] -side top -anchor nw -fill x -padx 5 -pady 2
-  pack [::ttk::label $frame.right.row05.l -text [T "Change FG:"] -width 10 -justify left -anchor w] -side left -anchor nw -padx 2
-  pack [::ttk::combobox $frame.right.row05.cb -values $fg -textvariable potato::eventConfig($w,fg) -state readonly] \
+  pack [set row [::ttk::frame $frame.right.fg]] -side top -anchor nw -fill x -padx 5 -pady 2
+  pack [::ttk::label $row.l -text [T "Change FG:"] -width $lwidth -justify left -anchor w] -side left -anchor nw -padx 2
+  pack [::ttk::combobox $row.cb -values $fg -textvariable potato::eventConfig($w,fg) -state readonly] \
               -side left -anchor nw -padx 2
-  lappend rightList $frame.right.row05.cb
+  lappend rightList $row.cb
 
-  pack [::ttk::frame $frame.right.row06] -side top -anchor nw -fill x -padx 5 -pady 2
-  pack [::ttk::label $frame.right.row06.l -text [T "Change BG:"] -width 10 -justify left -anchor w] -side left -anchor nw -padx 2
-  pack [::ttk::combobox $frame.right.row06.cb -values $bg -textvariable potato::eventConfig($w,bg) -state readonly] \
+  pack [set row [::ttk::frame $frame.right.bg]] -side top -anchor nw -fill x -padx 5 -pady 2
+  pack [::ttk::label $row.l -text [T "Change BG:"] -width $lwidth -justify left -anchor w] -side left -anchor nw -padx 2
+  pack [::ttk::combobox $row.cb -values $bg -textvariable potato::eventConfig($w,bg) -state readonly] \
               -side left -anchor nw -padx 2
-  lappend rightList $frame.right.row06.cb
+  lappend rightList $row.cb
   unset fg bg
 
-  pack [::ttk::frame $frame.right.row07] -side top -anchor nw -fill x -padx 5 -pady 2
-  pack [::ttk::label $frame.right.row07.l -text [T "Omit From:"] -width 10 -justify left -anchor w] -side left -anchor nw -padx 2
-  pack [::ttk::label $frame.right.row07.dispL -text [T "Display?"]] -side left -anchor nw -padx 2
-  pack [::ttk::checkbutton $frame.right.row07.dispCB -variable potato::eventConfig($w,omit) \
+  pack [set row [::ttk::frame $frame.right.omit]] -side top -anchor nw -fill x -padx 5 -pady 2
+  pack [::ttk::label $row.l -text [T "Omit From:"] -width $lwidth -justify left -anchor w] -side left -anchor nw -padx 2
+  pack [::ttk::label $row.dispL -text [T "Display?"]] -side left -anchor nw -padx 2
+  pack [::ttk::checkbutton $row.dispCB -variable potato::eventConfig($w,omit) \
                -onvalue 1 -offvalue 0] -side left -anchor nw
-  lappend rightList $frame.right.row07.dispCB
-  pack [::ttk::label $frame.right.row07.logL -text [T "Logs?"]] -side left -anchor nw -padx 2
-  pack [::ttk::checkbutton $frame.right.row07.logCB -variable potato::eventConfig($w,log) \
+  lappend rightList $row.dispCB
+  pack [::ttk::label $row.logL -text [T "Logs?"]] -side left -anchor nw -padx 2
+  pack [::ttk::checkbutton $row.logCB -variable potato::eventConfig($w,log) \
                -onvalue 1 -offvalue 0] -side left -anchor nw
-  lappend rightList $frame.right.row07.logCB
-  pack [::ttk::label $frame.right.row07.actL -text [T "Activity?"]] -side left -anchor nw -padx 2
-  pack [::ttk::checkbutton $frame.right.row07.actCB -variable potato::eventConfig($w,noActivity) \
+  lappend rightList $row.logCB
+  pack [::ttk::label $row.actL -text [T "Activity?"]] -side left -anchor nw -padx 2
+  pack [::ttk::checkbutton $row.actCB -variable potato::eventConfig($w,noActivity) \
                -onvalue 1 -offvalue 0] -side left -anchor nw
-  lappend rightList $frame.right.row07.actCB
+  lappend rightList $row.actCB
 
-  pack [::ttk::frame $frame.right.row08] -side top -anchor nw -fill x -padx 5 -pady 2
-  pack [::ttk::label $frame.right.row08.l -text [T "Spawn?"] -width 10 -justify left -anchor w] -side left -anchor nw -padx 2
-  pack [::ttk::checkbutton $frame.right.row08.cb -variable potato::eventConfig($w,spawn) \
+  pack [set row [::ttk::frame $frame.right.spawn]] -side top -anchor nw -fill x -padx 5 -pady 2
+  pack [::ttk::label $row.l -text [T "Spawn?"] -width $lwidth -justify left -anchor w] -side left -anchor nw -padx 2
+  pack [::ttk::checkbutton $row.cb -variable potato::eventConfig($w,spawn) \
                 -onvalue 1 -offvalue 0] -side left -anchor nw
-  pack [::ttk::label $frame.right.row08.l2 -text [T "Spawn To:"] -justify left -anchor w] -side left -anchor nw -padx 2
-  pack [::ttk::entry $frame.right.row08.e -textvariable potato::eventConfig($w,spawnTo)] -side left -anchor nw \
+  pack [::ttk::label $row.l2 -text [T "Spawn To:"] -justify left -anchor w] -side left -anchor nw -padx 2
+  pack [::ttk::entry $row.e -textvariable potato::eventConfig($w,spawnTo)] -side left -anchor nw \
                      -padx 2 -expand 1 -fill x
-  lappend rightList $frame.right.row08.cb $frame.right.row08.e
+  lappend rightList $row.cb $row.e
 
-  pack [::ttk::frame $frame.right.row08b] -side top -anchor nw -fill x -padx 5 -pady 2
-  pack [::ttk::label $frame.right.row08b.l -text [T "Replace?"] -width 10 -justify left -anchor w] -side left -anchor nw -padx 2
-  pack [::ttk::checkbutton $frame.right.row08b.cb -variable potato::eventConfig($w,replace) \
+  pack [set row [::ttk::frame $frame.right.replace]] -side top -anchor nw -fill x -padx 5 -pady 2
+  pack [::ttk::label $row.l -text [T "Replace?"] -width $lwidth -justify left -anchor w] -side left -anchor nw -padx 2
+  pack [::ttk::checkbutton $row.cb -variable potato::eventConfig($w,replace) \
                 -onvalue 1 -offvalue 0] -side left -anchor nw
-  pack [::ttk::label $frame.right.row08b.l2 -text [T "With:"] -justify left -anchor w] -side left -anchor nw -padx 2
-  pack [::ttk::entry $frame.right.row08b.e -textvariable potato::eventConfig($w,replace,with)] -side left -anchor nw \
+  pack [::ttk::label $row.l2 -text [T "With:"] -justify left -anchor w] -side left -anchor nw -padx 2
+  pack [::ttk::entry $row.e -textvariable potato::eventConfig($w,replace,with)] -side left -anchor nw \
                      -padx 2 -expand 1 -fill x
-  lappend rightList $frame.right.row08b.cb $frame.right.row08b.e
+  lappend rightList $row.cb $row.e
 
+  pack [set row [::ttk::frame $frame.right.send]] -side top -anchor nw -expand 1 -fill x -padx 5 -pady 2
+  pack [::ttk::label $row.l -text [T "Send:"] -width $lwidth -justify left -anchor w] -side left -anchor nw -padx 2
+  pack [set send [text $row.t -width 35 -height 4]] -side left -anchor nw -expand 1 -fill x
+  lappend rightList $row.t
 
-  pack [::ttk::frame $frame.right.row09] -side top -anchor nw -expand 1 -fill x -padx 5 -pady 2
-  pack [::ttk::label $frame.right.row09.l -text [T "Send:"] -width 10 -justify left -anchor w] -side left -anchor nw -padx 2
-  pack [set send [text $frame.right.row09.t -width 35 -height 4]] -side left -anchor nw -expand 1 -fill x
-  lappend rightList $frame.right.row09.t
-
-  pack [::ttk::frame $frame.right.row10] -side top -anchor nw -expand 1 -fill x -padx 5 -pady 2
-  pack [::ttk::frame $frame.right.row10.left] -side left -anchor nw -fill x -padx 2
-  pack [::ttk::label $frame.right.row10.left.l -text [T "Input:"] -width 10 -justify left -anchor w] -side top -anchor nw
-  pack [::ttk::combobox $frame.right.row10.left.cb -width 5 -values [list None One Two Focus] \
+  pack [set row [::ttk::frame $frame.right.input]] -side top -anchor nw -expand 1 -fill x -padx 5 -pady 2
+  pack [::ttk::frame $row.left] -side left -anchor nw -fill x -padx 2
+  pack [::ttk::label $row.left.l -text [T "Input:"] -width $lwidth -justify left -anchor w] -side top -anchor nw
+  pack [::ttk::combobox $row.left.cb -width 5 -values [list None One Two Focus] \
                  -textvariable potato::eventConfig($w,input,window) -state readonly] -side top -anchor nw
-  lappend rightList $frame.right.row10.left.cb
-  pack [::ttk::frame $frame.right.row10.right] -side left -anchor nw -expand 1 -fill both
-  pack [set input [text $frame.right.row10.right.t -width 35 -height 2]] -side left -anchor nw -expand 1 -fill both
-  lappend rightList $frame.right.row10.right.t
+  lappend rightList $row.left.cb
+  pack [::ttk::frame $row.right] -side left -anchor nw -expand 1 -fill both
+  pack [set input [text $row.right.t -width 35 -height 2]] -side left -anchor nw -expand 1 -fill both
+  lappend rightList $row.right.t
 
   pack [::ttk::frame $frame.right.rowBtns] -side top -anchor nw -expand 1 -fill x -padx 5 -pady 15
   pack [::ttk::frame $frame.right.rowBtns.save] -side left -anchor nw -expand 1 -fill x -padx 5
@@ -550,6 +558,7 @@ proc ::potato::eventAdd {w} {
        incr x
      }
 
+  set world($w,events,$x,name) ""
   set world($w,events,$x,pattern) ""
   set world($w,events,$x,pattern,int) "^$"
   set world($w,events,$x,enabled) 1
@@ -630,7 +639,7 @@ proc ::potato::eventSave {w} {
   variable world;
 
   set this $eventConfig($w,conf,currentlyEdited)
-  foreach x [list pattern matchtype case enabled continue omit log noActivity spawn spawnTo matchAll replace replace,with] {
+  foreach x [list name pattern matchtype case enabled continue omit log noActivity spawn spawnTo matchAll replace replace,with] {
      set world($w,events,$this,$x) $eventConfig($w,$x)
   }
 
@@ -708,7 +717,7 @@ proc ::potato::eventConfigSelect {w states} {
 
   if { $this eq "" } {
        # Clear all info
-       foreach x [list pattern matchtype case enabled continue omit log noActivity spawn spawnTo matchAll replace replace,with] {
+       foreach x [list name pattern matchtype case enabled continue omit log noActivity spawn spawnTo matchAll replace replace,with] {
           set eventConfig($w,$x) ""
        }
        set eventConfig($w,inactive) "Always"
@@ -740,7 +749,7 @@ proc ::potato::eventConfigSelect {w states} {
   # the comboboxes, because it's too stupid to let you give a list of values to display /and/
   # a corresponding list of values to store in the variables. We also have a couple of text
   # widgets to insert stuff into.
-  foreach x [list pattern matchtype case enabled continue omit log noActivity spawn spawnTo matchAll replace replace,with] {
+  foreach x [list name pattern matchtype case enabled continue omit log noActivity spawn spawnTo matchAll replace replace,with] {
      set eventConfig($w,$x) $world($w,events,$this,$x)
   }
 
@@ -801,6 +810,7 @@ proc ::potato::eventConfigClear {w} {
        set delete 0
      }
   array unset eventConfig $w,*
+  set eventConfig($w,name) ""
   set eventConfig($w,pattern) ""
   set eventConfig($w,spawnTo) ""
   set eventConfig($w,replace,with) ""
