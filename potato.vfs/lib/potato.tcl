@@ -4609,6 +4609,10 @@ proc ::potato::addNewWorld {name host port temp} {
   set world($w,events,0,send) ""
   set world($w,events,0,spawn) 0
   set world($w,events,0,spawnTo) ""
+  set world($w,events,0,matchAll) 0
+  set world($w,events,0,replace) 0
+  set world($w,events,0,replace,with) ""
+  set world($w,events,0,name) "grabber"
 
   set world($w,slashcmd) [list grab]
   set world($w,slashcmd,grab) "^(.+)$"
