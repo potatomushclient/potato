@@ -11,7 +11,7 @@ if { ![namespace exists ::skin] || [namespace exists ::skin::potato] } {
    }
 
 # Check to make sure the version of Potato running supports the same skin spec we do
-if { ![package vsatisfies "1.3" "$::potato::potato(skinMinVersion)-"] } {
+if { ![package vsatisfies "1.4" "$::potato::potato(skinMinVersion)-"] } {
      return "";
    }
 # Basic init of the skin
@@ -20,7 +20,7 @@ namespace eval ::skin::potato::img {}
 
 set ::skin::potato::skin(init) 0
 set ::skin::potato::skin(name) "Potato Default"
-set ::skin::potato::skin(version) 1.2
+set ::skin::potato::skin(version) 1.4
 
 set ::skin::potato::skin(dir) $::potato::path(skins)
 set ::skin::potato::skin(preffile) [file join $::skin::potato::skin(dir) skin.prefs]
@@ -640,7 +640,7 @@ proc ::skin::potato::init {} {
   grid rowconfigure $widgets(statusbar) all -weight 1 -uniform status
   grid columnconfigure $widgets(statusbar) all -weight 1 -uniform status
 
-  inputWindows [expr {$::potato::world(-1,twoInputWindows) + 1}]
+  inputWindows 0 [expr {$::potato::world(-1,twoInputWindows) + 1}]
   showStatusBar
 
   set skin(init) 1
@@ -665,10 +665,11 @@ proc ::skin::potato::showStatusBar {} {
 };# ::skin::potato::showStatusBar
 
 #: proc ::skin::potato::inputWindows
+#: arg c connection id
 #: arg num Number of input windows to show (either 1 or 2)
 #: desc Show $num input windows, hiding extras if necessary
 #: return nothing
-proc ::skin::potato::inputWindows {num} {
+proc ::skin::potato::inputWindows {c num} {
   variable widgets;
 
   if { $num == 1 } {
@@ -677,7 +678,9 @@ proc ::skin::potato::inputWindows {num} {
        set hide 0
      }
 
-  $widgets(pane,btm,pane) paneconfigure $widgets(pane,btm,pane,btm) -hide $hide
+  if { $c == [::potato::up] } {
+       $widgets(pane,btm,pane) paneconfigure $widgets(pane,btm,pane,btm) -hide $hide
+     }
 
   return;
 
@@ -691,6 +694,8 @@ proc ::skin::potato::uninit {} {
   variable idle;
   variable skin;
 
+  array unset widgets conn,*,txtframe,cmd
+  array unset widgets *,withInput
   foreach x [array names widgets] {
     destroy $widgets($x)
   }
@@ -1388,12 +1393,12 @@ proc ::skin::potato::export {c} {
   $t configure -yscrollcommand {}
 
   foreach x [array names widgets conn,$c,*] {
+  puts "Destroying $x"
      catch {destroy $widgets($x)}
   }
 
   catch {array unset widgets conn,$c,*}
   unset -nocomplain disp($c)
-  worldBarButtonNames
   return;
 
 };# ::skin::potato::export
