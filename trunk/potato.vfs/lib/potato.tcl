@@ -3710,7 +3710,7 @@ proc ::potato::toggleConn {dir} {
        showConn [lindex $list $pos]
      }
 
-  tooltipLeave .;
+  tooltipLeave .
   return;
 
 };# ::potato::toggleConn
@@ -3728,7 +3728,7 @@ proc ::potato::showConn {c {main 1}} {
   variable menu;
   variable misc;
 
-  if { ![info exists conn($c,world)] } {
+  if { $c eq "" || ![info exists conn($c,world)] } {
        bell -displayof .
        return;
      }
@@ -3743,8 +3743,8 @@ proc ::potato::showConn {c {main 1}} {
 
   set state [expr {$c != 0 && $conn($c,connected) == 1}]
 
-  ::skin::$potato(skin)::show $c
   set potato(up) $c
+  ::skin::$potato(skin)::show $c
   setAppTitle
   skinStatus $c
   if { $prevUp ne "" } {
@@ -3757,7 +3757,7 @@ proc ::potato::showConn {c {main 1}} {
   if { $c == -1 } {
        update
      }
-  ::skin::$potato(skin)::inputWindows [expr {$conn($c,twoInputWindows) + 1}]
+  ::skin::$potato(skin)::inputWindows $c [expr {$conn($c,twoInputWindows) + 1}]
 
   return;
 
@@ -3841,11 +3841,26 @@ proc ::potato::setAppTitle {} {
 proc ::potato::showSkin {skin} {
   variable menu;
   variable potato;
+  variable running;
 
   ::skin::${skin}::packskin
-  #abc Surely this skin now needs to import a connection?
   set potato(skin) $skin
   set potato(skin,version) [set ::skin::${skin}::skin(version)]
+
+  if { $running } {
+       set conns [concat 0 [connIDs]]
+       foreach c $conns {
+         ::skin::${skin}::import $c
+       }
+       set c [up]
+       if { $c eq "" } {
+            set c [lindex $conns end]
+          } else {
+            set potato(up) ""
+            showConn $c
+          }
+     }
+
 
   return;
 
@@ -3856,11 +3871,11 @@ proc ::potato::showSkin {skin} {
 #: return nothing
 proc ::potato::unshowSkin {} {
   variable potato;
+  variable menu;
 
   if { $potato(skin) ne "" } {
        ::skin::$potato(skin)::unpackskin
      }
-  .m entryconfigure $menu(view) -menu {} -state disabled
 
   return;
 
@@ -5116,7 +5131,7 @@ proc ::potato::focusIn {win} {
   set focus [focus -displayof .]
   set c [up]
 
-  if { $focus ne "" } {
+  if { $c ne "" && $focus ne "" } {
        set conn($c,idle) 0
        if { $focus ni [list $conn($c,input1) $conn($c,input2)] } {
             focus $conn($c,input1)
@@ -5234,7 +5249,7 @@ proc ::potato::main {} {
   variable misc;
   variable running;
 
-  set running 1;# so potato.tcl can be re-sourced without re-running this proc
+  set running 0;
 
   set potato(name) "Potato MU* Client"
   set potato(version) [source [file join [file dirname [info script]] "potato-version.tcl"]]
@@ -5263,10 +5278,10 @@ proc ::potato::main {} {
   # Regexp which spawn names must match
   set potato(spawnRegexp) {^[A-Za-z][A-Za-z0-9_!+=""*#@'-]{0,49}$};# doubled-up " for syntax highlighting
 
-  set potato(skinMinVersion) "1.3" ;# The minimum version of the skin spec this Potato supports.
+  set potato(skinMinVersion) "1.4" ;# The minimum version of the skin spec this Potato supports.
                                    ;# All skins must be at least this to be usable.
 
-  set potato(skinCurrVersion) "1.3" ;# The current version of the skin spec. If changes made aren't
+  set potato(skinCurrVersion) "1.4" ;# The current version of the skin spec. If changes made aren't
                                     ;# incompatible, this may be higher than skinMinVersion
   cd $potato(homedir)
 
@@ -5365,6 +5380,8 @@ proc ::potato::main {} {
   setClock
 
   ::help::readFile [file join $::potato::potato(vfsdir) lib potato-help.txt]
+
+  set running 1;# so potato.tcl can be re-sourced without re-running this proc
 
   newConnection -1
   # We do this after newConnection, or the <FocusIn> binding comes up wrong
@@ -5591,6 +5608,9 @@ proc ::potato::setTheme {} {
   if { [catch {::ttk::style theme use $misc(tileTheme)} err1] && [catch {::ttk::setTheme $misc(tileTheme)} err2] } {
        errorLog "Unable to set style: $err1 // $err2" error
      }
+
+  ttk::style configure error.TLabel -foreground red
+  ttk::style layout Plain.TNotebook.Tab null
 
   return;
 
@@ -7407,7 +7427,6 @@ proc ::potato::keyboardShortcutInput {} {
   set keyShortsTmp(editWin,display) $disp
   set keyShortsTmp(editWin,task) $task
 
-  ttk::style configure error.TLabel -foreground red
   pack [set err [::ttk::label $win.error -style "error.TLabel"]] -side top -padx 4 -pady 7
   set keyShortsTmp(editWin,err) $err
 
@@ -10685,7 +10704,7 @@ proc ::potato::toggleInputWindows {{c ""} {toggle 1}} {
   if { $toggle } {
        set conn($c,twoInputWindows) [lindex [list 1 0] $conn($c,twoInputWindows)]
      }
-  ::skin::$potato(skin)::inputWindows [expr {$conn($c,twoInputWindows) + 1}]
+  ::skin::$potato(skin)::inputWindows $c [expr {$conn($c,twoInputWindows) + 1}]
 
   return;
 
@@ -11431,7 +11450,40 @@ if { [info exists ::potato::running] && $potato::running } {
 
 #
 #########################
+proc parray {a args} {
+
+  set nargs [llength $args]
+  if { $nargs > 2 } {
+       return -code error "Wrong # of arguments. Should be parray array ?type? ?pattern?"
+     }
+  upvar 1 $a array
+  if { ![array exists array] } {
+       error "\"$a\" isn't an array"
+     }
+  set maxl 0
+  set names [lsort [array names array {*}$args]]
+  foreach name $names {
+    if { [string length $name] > $maxl } {
+         set maxl [string length $name]
+       }
+  }
+  set maxl [expr {$maxl + [string length $a] + 2}]
+  foreach name $names {
+    set nameString [format %s(%s) $a $name]
+    puts stdout [format "%-*s = %s" $maxl $nameString $array($name)]
+  }
+
+}
 
 if { $tcl_platform(platform) eq "windows" } {
-     parray potato::world *,name
+     parray potato::world -regexp {^[0-9]+,name$}
+     if { !$::potato::potato(wrapped) && [file exists [file join $::potato::potato(vfsdir) lib app-potato windows stpotato.ico]] } {
+          rename toplevel _realtoplevel
+          proc toplevel {t args} {
+            uplevel 1 _realtoplevel $t {*}$args
+            catch {wm iconbitmap $t [file join $::potato::potato(vfsdir) lib app-potato windows stpotato.ico]}
+          }
+          wm iconbitmap . [file join $::potato::potato(vfsdir) lib app-potato windows stpotato.ico]
+        }
    }
+
