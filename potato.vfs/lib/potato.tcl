@@ -4613,7 +4613,7 @@ proc ::potato::addNewWorld {name host port temp} {
   set world($w,events,0,enabled) 1
   set world($w,events,0,fg) ""
   set world($w,events,0,inactive) "always"
-  set world($w,events,0,input,string) "%0"
+  set world($w,events,0,input,string) {[/get 0]}
   set world($w,events,0,input,window) 3
   set world($w,events,0,log) 0
   set world($w,events,0,matchtype) "wildcard"
@@ -8102,7 +8102,7 @@ proc ::potato::process_input {c txt} {
   set counter 0
   while { [string length $txt] && $counter < 100 } {
     incr counter
-    lappend res [process_slash_cmd $c txt]
+    lappend res [process_slash_cmd $c txt 0]
   }
 
   return $res;
@@ -8894,15 +8894,22 @@ proc ::potato::slashConfigSelect {w} {
 #: proc ::potato::process_slash_cmd
 #: arg c connection id
 #: arg _str the string entered ("/command arg arg arg"), or a var to upvar which contains it, if recursing
-#: arg recursing 1 if we're recursing, 0 if not.
-#: arg upstr
+#: arg mode 0 if we're starting to parse input, 1 if recursing, 2 if we're parsing a field from, for instance, an Event
+#: arg _vars Name of var holding option array.
 #: desc process $str as a slash command and perform the necessary action. If we're recursing, return the result, otherwise output it on screen.
 #: return [list <error?> <result>] for nested invocations, or the text to send to the MUSH for non-nested invocations.
-proc ::potato::process_slash_cmd {c _str {recursing 0}} {
+proc ::potato::process_slash_cmd {c _str mode {_vars ""}} {
   variable conn;
   variable world;
 
+  array set modes [list default 0 recursing 1 field 2]
   upvar 1 $_str str;
+  if { ![info exists str] } {
+       return;
+     }
+  if { $_vars ne "" } {
+       upvar 1 $_vars vars;
+     }
 
   if { ![info exists conn($c,id)] } {
        return; # Running a /command for a closed connection - maybe on a timer that didn't cancel?
@@ -8913,13 +8920,13 @@ proc ::potato::process_slash_cmd {c _str {recursing 0}} {
   while { ![info exists running] } {
     set running 1
 
-    set parsed [parse_slash_cmd $c str $recursing]
+    set parsed [parse_slash_cmd $c str $mode vars]
     set wascmd [lindex $parsed 0]
     set cmd [lindex $parsed 1]
     set cmdArgs [lindex $parsed 2]
     if { !$wascmd } {
          # Not a /command, just literal text
-         if { $recursing } {
+         if { $mode == $modes(recursing) } {
               return [list 1 $cmd];
             } else {
               return $cmd;
@@ -8948,14 +8955,14 @@ proc ::potato::process_slash_cmd {c _str {recursing 0}} {
     if { [info exists exact] } {
          if { [info exists custom] } {
               # Custom /command
-              set ret [customSlashCommand $c $custom $exact $recursing $cmdArgs]
+              set ret [customSlashCommand $c $custom $exact $cmdArgs]
             } else {
               # Built-in /command
-              set ret [$exact $c 1 $recursing $cmdArgs]
+              set ret [$exact $c 1 $mode $cmdArgs vars]
             }
          break;
        } elseif { [llength $partial] == 1 } {
-         set ret [[lindex $partial 0] $c 0 $recursing $cmdArgs]
+         set ret [[lindex $partial 0] $c 0 $mode $cmdArgs vars]
          break;
        } elseif { [llength $partial] == 0 } {
          # Check for unique abbreviations of custom /commands.
@@ -8982,7 +8989,7 @@ proc ::potato::process_slash_cmd {c _str {recursing 0}} {
               set ret [list 0 [T "Ambiguous /command \"%s\"." $cmd]]
               break;
             }
-         set ret [customSlashCommand $c $custom [lindex $partial 0] $recursing $cmdArgs]
+         set ret [customSlashCommand $c $custom [lindex $partial 0] $mode $cmdArgs vars]
        } else {
          set ret [list 0 [T "Ambiguous /command \"%s\"." $cmd]]
          break;
@@ -8995,11 +9002,13 @@ proc ::potato::process_slash_cmd {c _str {recursing 0}} {
        set ret [list 1 ""]
      }
 
-  if { $recursing } {
+  if { $mode == $modes(recursing) } {
        return $ret;
      } elseif { $ret eq "" || [catch {lindex $ret 0} retFirst] || $retFirst ni [list 0 1] } {
        # Malformed return value
        return [list 1 ""];
+     } elseif { $mode == $modes(field) } {
+       return [lindex $ret 1];
      } elseif { ![lindex $ret 0]} {
        bell -displayof .
        if { $c != 0 } {
@@ -9018,20 +9027,42 @@ proc ::potato::process_slash_cmd {c _str {recursing 0}} {
 #: proc ::potato::parse_slash_cmd
 #: arg c connection id
 #: arg _str name of variable containing string, to upvar
-#: arg recursing if 1, we're recursed to parse nested /commands, and should return on an unescaped "]"
+#: arg mode if 2, we're recursed to parse nested /commands, and should return on an unescaped "]". If 1, we only do anything at all if the first char is a "["
+#: arg _vars
 #: desc Parse a string as the args of a slash command; do variable expansion, parse nested /commands, etc
 #: return result of parsing the string.
-proc ::potato::parse_slash_cmd {c _str recursing} {
+proc ::potato::parse_slash_cmd {c _str mode _vars} {
   upvar 1 $_str str;
 
   if { $str eq "" } {
-       return;
+       return [list 0 "" ""];
      }
+
+  # Copied from process_slash_command
+  array set modes [list default 0 recursing 1 field 2]
+
   set cmd ""
   set cmdArgs ""
   set appendTo cmd
   set esc 0
   set cmd_found 0
+  upvar 1 $_vars vars;
+
+  if { $mode == $modes(field) } {
+       if { [string index $str 0] eq "\[" } {
+            set str [string range $str 1 end]
+            set mode $modes(recursing)
+          } else {
+            if { [string index $str 0] eq "\\" } {
+                 set copy [string range $str 1 end]
+               } else {
+                 set copy $str
+               }
+            set str ""
+            return [list 0 $copy ""];
+          }
+     }
+
   if { [string index $str 0] eq "/" } {
        if { [string index $str 1] eq "/" } {
             set str [string range $str 1 end]
@@ -9053,7 +9084,7 @@ proc ::potato::parse_slash_cmd {c _str recursing} {
          set appendTo cmdArgs
          continue;
        }
-    if { !$recursing && !$cmd_present } {
+    if { ($mode == $modes(default)) && !$cmd_present } {
          if { $x in [list "\n" "\r"] } {
               # We're done
               break;
@@ -9061,6 +9092,9 @@ proc ::potato::parse_slash_cmd {c _str recursing} {
               append $appendTo $x
               continue;
             }
+       } elseif { ($mode == $modes(field)) && $x eq "\]" } {
+         # We're done
+         break;
        }
     if { $esc } {
          set esc 0
@@ -9070,8 +9104,8 @@ proc ::potato::parse_slash_cmd {c _str recursing} {
          set esc 1
          continue;
        } elseif { $x eq "\[" } {
-         append $appendTo [lindex [process_slash_cmd $c str 1] 1]
-       } elseif { $x eq ($recursing ? "\]" : "\n") } {
+         append $appendTo [lindex [process_slash_cmd $c str 1 vars] 1]
+       } elseif { $x eq ($mode == $modes(recursing) ? "\]" : "\n") } {
          # We're done.
          break;
        } else {
@@ -9094,7 +9128,8 @@ proc ::potato::define_slash_cmd {cmd code} {
   # full = was the command name typed in full?
   # recursing = is this a nested /command?
   # str = the arg given to the /command
-  proc ::potato::slash_cmd_$cmd {c full recursing str} "$code\n;return \[list 1\]";
+  # _vars = name of var to uplevel for array of options
+  proc ::potato::slash_cmd_$cmd {c full recursing str _vars} "$code\n;return \[list 1\]";
 
   return;
 
@@ -9731,6 +9766,11 @@ proc ::potato::customSlashCommand {c w cmd str} {
                             ] ;# array set masterVars
      }
 
+  upvar 1 $_vars vars;
+  if { [info exists vars] && [array exists vars] } {
+       array set masterVars [array get vars]
+     }
+
   if { [set space [string first " " $str]] != -1 } {
        set switch [string range $str 0 $space-1]
        set str [string range $str $space+1 end]
@@ -9754,6 +9794,22 @@ proc ::potato::customSlashCommand {c w cmd str} {
      }
 
 };# /get
+
+#: /time [<format>]
+::potato::define_slash_cmd time {
+
+  set cmd [list clock format [clock seconds]]
+  if { [string length $str] } {
+       lappend cmd -format $str
+     }
+
+  if { [catch {{*}$cmd} output] } {
+       return [list 0 ???];
+     } else {
+       return [list 1 $output];
+     }
+
+};# /time
 
 #: /vars [-all|-global|-local]
 #: Print a list of all, global or local vars
