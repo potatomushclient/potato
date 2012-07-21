@@ -1,29 +1,25 @@
 
 namespace eval ::potato::proxy::SOCKS4 {}
 
-#: proc ::potato::proxy::SOCKS4::start
-#: arg c connection id
-#: arg hostlist Hostlist to connect to
-#: desc Start doing SOCKS4 negotiation on connection $c's connection
-#: return nothing
-proc ::potato::proxy::SOCKS4::start {c hostlist} {
+#: proc ::potato::proxy::SOCKS4::connect
+#: arg fid file descriptor
+#: arg host
+#: arg port
+#: desc Start doing SOCKS4 negotiation on connection $fid to $host:$port
+#: return 1 on success, -code error with failure message on failure
+proc ::potato::proxy::SOCKS4::connect {fid host port} {
   variable state;
-  upvar #0 ::potato::conn conn;
-  upvar #0 ::potato::world world;
+  variable succ;
 
-  set w $conn($c,world)
-
-  set state($c) ""
-
-  set thishost [lindex $hostlist 0]
-  set thisport [expr {$thishost eq "host" ? "port" : "port2"}]
+  set state($fid) ""
+  unset -nocomplain succ($fid)
 
   set base "\x04\x01" ;# SOCKS version 4, TCP/IP stream connection
-  set port [binary format S $world($w,$thisport)];# MUSH port
-  if { [regexp {^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$} $world($w,$thishost)] } {
+  set xport [binary format S $port];# MUSH port
+  if { [regexp {^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$} $host] } {
        # Connect with IP
        set use_ip 1
-       set ip [binary format c4 [split $world($w,$thishost) .]]
+       set ip [binary format c4 [split $host .]]
      } else {
        # Connect with hostname (SOCKS4a)
        set use_ip 0
@@ -34,63 +30,71 @@ proc ::potato::proxy::SOCKS4::start {c hostlist} {
   set username \x00
 
   if { !$use_ip } {
-       set host $world($w,$thishost)\x00
+       set xhost $host\x00
      } else {
-       set host ""
+       set xhost ""
      }
-  fconfigure $conn($c,id) -translation binary -eof {} -buffering none
+  fconfigure $fid -translation binary -eof {} -buffering none
 
-  ::potato::ioWrite -nonewline $conn($c,id) $base$port$ip$username$host
-  fileevent $conn($c,id) readable [list ::potato::proxy::SOCKS4::callback $c $hostlist]
+  ::potato::ioWrite -nonewline $fid $base$xport$ip$username$xhost
 
-  return;
+  set waitfor "[namespace which -variable succ]($fid)"
+  fileevent $fid readable [list ::potato::proxy::SOCKS4::callback $fid $host $port $waitfor]
+  vwait $waitfor
 
-};# ::potato::proxy::SOCKS4::start
+  if { [info exists $waitfor] } {
+       set res [set $waitfor]
+       unset $waitfor
+     } else {
+       set res "Unknown error"
+     }
+  if { $res eq "" } {
+       return 1;
+     } else {
+       return -code error $res;
+     }
+
+};# ::potato::proxy::SOCKS4::connect
 
 #: proc ::potato::proxy::SOCKS4::callback
-#: arg c connection id
-#: arg hostlist Hostlist to attempt connection to
-#: desc A SOCKS4 negotiation string has been sent to connection $c's socket, and now there's some data sent back. Read in as much as we need to, and see if the connection is working. Either way, call a Potato proc to inform it.
+#: arg fid
+#: arg host
+#: arg port
+#: arg resvar
+#: desc A SOCKS4 negotiation string has been sent to file descriptor $fid, and now there's some data sent back. Read in as much as we need to, and see if the connection is working.
 #: return nothing
-proc ::potato::proxy::SOCKS4::callback {c hostlist} {
+proc ::potato::proxy::SOCKS4::callback {fid host port resvar} {
   variable state;
-  upvar #0 ::potato::conn conn;
-  upvar #0 ::potato::world world;
 
-  if { [eof $conn($c,id)] } {
-       ::potato::connectVerifyProxyFail $c SOCKS4 $hostlist [::potato::T "Connection closed by proxy server."]
-       unset state($c)
+  if { [eof $fid] } {
+       unset state($fid)
+       set $resvar [::potato::T "Connection closed by proxy server."]
        return;
      }
 
-  set w $conn($c,world)
-
-  append state($c) [::potato::ioRead $conn($c,id) 1]
-  if { [string length $state($c)] != 8 } {
+  append state($fid) [::potato::ioRead $fid 1]
+  if { [string length $state($fid)] != 8 } {
        return;# not all data read yet
      }
-  fileevent $conn($c,id) readable {}
+  fileevent $fid readable {}
 
   # We have a full response now, check what it says
-  set status [string index $state($c) 1]
+  set status [string index $state($fid) 1]
   if { $status eq "\x5a" } {
        # Success!
-       ::potato::connectVerifyComplete $c
-       unset state($c)
+       unset state($fid)
+       set $resvar ""
        return;
      }
   # Failed. Try and give a specific reason why...
+  unset state($fid)
   if { $status eq "\x5c" || $status eq "\x5d" } {
-       set msg [::potato::T "identd not running/user ID could not be verified"]
+       set $restvar [::potato::T "identd not running/user ID could not be verified"]
      } else {
-       set thishost [lindex $hostlist 0]
-       set thisport [expr {$thishost eq "host" ? "port" : "port2"}]
-       set msg [::potato::T "Proxy server rejected request for %s:%s" $world($w,$thishost) $world($w,$thisport)]
+       set $resvar [::potato::T "Proxy server rejected request for %s:%d" $host $port]
      }
-  ::potato::connectVerifyProxyFail $c SOCKS4 $hostlist $msg
-  unset state($c)
   return;
 
 };# ::potato::proxy::SOCKS4::callback
 
-package provide potato-proxy-SOCKS4 1.1
+package provide potato-proxy-SOCKS4 1.2
