@@ -136,18 +136,18 @@ proc ::potato::eventsMatch {c _tagged _lineNoansi _eventInfo} {
         for {set i 0} {$i < 10} {incr i} {
              lappend mapList %$i
              if { [info exists arg($i)] && $arg($i) ne [list -1 -1] } {
-                  lappend mapList [string range $str {*}$arg($i)]
+                  set realArgs($i) [string range $str {*}$arg($i)]
+                  lappend mapList $realArgs($i)
                 } else {
                   lappend mapList ""
                 }
             };# for
 
-
         incr eventInfo(matched)
 
         if { $world($w,events,$event,spawn) && $world($w,events,$event,spawnTo) ne "" } {
-             #!set eventInfo(spawnTo) [parseUserVars $c [string map $mapList $world($w,events,$event,spawnTo)]]
-             !set eventInfo(spawnTo) [string map $mapList $world($w,events,$event,spawnTo)]
+             set spawnTo $world($w,events,$event,spawnTo)
+             !set eventInfo(spawnTo) [process_slash_cmd $c spawnTo 2 realArgs]
            }
 
         !set eventInfo(omit) $world($w,events,$event,omit)
@@ -170,18 +170,23 @@ proc ::potato::eventsMatch {c _tagged _lineNoansi _eventInfo} {
              }
            }
 
-        if { $world($w,events,$event,input,window) != 0 && \
-             [set input [string map $mapList $world($w,events,$event,input,string)]] ne "" } {
-             lappend eventInfo(input) [list $world($w,events,$event,input,window) $input]
+        if { $world($w,events,$event,input,window) != 0 } {
+             set input $world($w,events,$event,input,string)
+             set input [process_slash_cmd $c input 2 realArgs]
+             if { $input ne "" } {
+                  lappend eventInfo(input) [list $world($w,events,$event,input,window) $input]
+                }
            }
 
-        if { [set send [string map $mapList $world($w,events,$event,send)]] ne "" } {
+        set send $world($w,events,$event,send)
+        set send [process_slash_cmd $c send 2 realargs]
+        if { $send ne "" } {
              lappend eventInfo(send) $send
            }
 
         if { $world($w,events,$event,replace) } {
-             #set replaceText [parseUserVars $c [string map $mapList $world($w,events,$event,replace,with)]]
-             set replaceText [string map $mapList $world($w,events,$event,replace,with)]
+             set replacement $world($w,events,$event,replace,with);# destructively modified
+             set replaceText [process_slash_cmd $c replacement 2 realArgs]
              set replaceList [list]
              set tags [lindex $tagged $start 1]
              foreach x [split $replaceText ""] {
@@ -191,15 +196,6 @@ proc ::potato::eventsMatch {c _tagged _lineNoansi _eventInfo} {
              incr replaceOffset [expr {[string length $replaceText] - ($end - $start)}]
              set str [string replace $str $start $end $replaceText]
            }
-
-
-        # This will be necessary when it's possible to replace the displayed text via events
-        #set raw ""
-        #foreach x $tagged {
-        #  append raw [lindex $tagged 0]
-        #}
-        #set str $raw
-        #set strL [string tolower $str]
 
       };# foreach oneMatch allMatches
 
