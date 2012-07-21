@@ -5379,8 +5379,6 @@ proc ::potato::main {} {
 
   setClock
 
-  ::help::readFile [file join $::potato::potato(vfsdir) lib potato-help.txt]
-
   set running 1;# so potato.tcl can be re-sourced without re-running this proc
 
   newConnection -1
@@ -11453,7 +11451,6 @@ proc ::potato::basic_reqs {} {
                package require potato-telnet 1.1 ;
                package require potato-proxy ;
                package require potato-wikihelp ;
-               package require potato-help ;
                package require potato-font ;
                package require potato-spell ;
                package require potato-encoding ;
