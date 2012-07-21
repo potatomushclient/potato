@@ -1654,7 +1654,9 @@ proc ::potato::newConnection {w {character ""}} {
   set conn($c,world) $w
   set conn($c,char) $character
   updateConnName $c;# sets conn($c,name)
-  set conn($c,id) "" ;# we hope this doesn't break anything.
+  set conn($c,id) ""
+  set conn($c,address) [list]
+  set conn($c,address,disp) [T "Not Connected"]
   set conn($c,protocols) [list]
   set conn($c,idle) 0
   set conn($c,upload,fid) ""
@@ -2233,23 +2235,22 @@ proc ::potato::ioWrite {args} {
 #: proc ::potato::connect
 #: arg c the connection to connect
 #: arg first is this the first time we've tried to connect here? Affects messages, etc.
-#: arg hostlist List of hosts to attempt to connect to; some combination of "host" and "host2", or "". Defaults to "".
 #: desc start connecting to a world. This doesn't handle the full connection, as we connect -async and wait for a response.
 #: desc This connection may be to a proxy server, not the actual game. $hostlist contains a list telling us whether to attempt
 #: desc to connect to the primary host ("host"), the secondary host ("host2"), or both ("").
 #: return nothing
-proc ::potato::connect {c first {hostlist ""}} {
+proc ::potato::connect {c first} {
   variable conn;
   variable world;
   variable potato;
 
-  if { $conn($c,connected) != 0 || $c == 0 } {
+  if { $c == 0 || $conn($c,connected) != 0 } {
        return;# already connected or trying to connect
      }
 
   set w $conn($c,world)
 
-  after cancel $conn($c,reconnectId)
+  catch {after cancel $conn($c,reconnectId)}
   set conn($c,reconnectId) ""
 
   updateConnName $c
@@ -2257,64 +2258,140 @@ proc ::potato::connect {c first {hostlist ""}} {
 
   set up [up]
 
-  if { ![llength $hostlist] } {
-       if { !$world($w,ssl) || $potato(hasTLS) } {
-            lappend hostlist host
-          } else {
-            outputSystem $c [T "Unable to connect to primary host - SSL not available"]
-          }
-       if { [string length $world($w,host2)] && [string length $world($w,port2)] } {
-            if { !$world($w,ssl2) || $potato(hasTLS) } {
-                 lappend hostlist host2
-               } else {
-                 outputSystem $c [T "Unable to connect to secondary host - SSL not available"]
-               }
-          }
-     }
+  set tmplist [list]
+  set hostlist [list]
+  lappend tmplist [list $world($w,host) $world($w,port) $world($w,ssl)]
+  lappend tmplist [list $world($w,host2) $world($w,port2) $world($w,ssl2)]
+
+  set empty [expr {[$conn($c,textWidget) count -chars 1.0 2.0] == 1}]
+
+  foreach x $tmplist {
+    foreach {host port ssl} $x {break}
+    if { $host eq "" || ![string is integer -strict $port] } {
+         continue; # skip quietly
+       }
+    if { $ssl && !$potato(hasTLS) } {
+         outputSystem $c [T "Unable to connect to %s:%d - SSL not available." $host $port]
+         continue;
+       }
+    lappend hostlist $x
+  }
 
   if { ![llength $hostlist] } {
-       # All connections require SSL, and we don't have TLS
+       outputSystem $c [T "No valid addresses to connect to."]
        disconnect $c 0
        skinStatus $c
        return;
      }
 
-  set thishost [lindex $hostlist 0]
-  if { $thishost eq "host" } {
-       set thisport port
-       set thisssl ssl
-       set message [T "Connecting to host %s:%s..." $world($w,$thishost) $world($w,$thisport)]
+
+  if { $world($w,proxy) ne "None" && $world($w,proxy,host) ne "" && [string is integer -strict $world($w,proxy,port)] } {
+       set has_proxy 1
      } else {
-       set thisport port2
-       set thisssl ssl2
-       set message [T "Connecting to secondary host %s:%s..." $world($w,$thishost) $world($w,$thisport)]
+       set has_proxy 0
      }
 
-  if { $world($w,proxy) eq "None" } {
-       # No proxy, a straight connection to the game
-       set host $world($w,$thishost)
-       set port $world($w,$thisport)
-       !set message [T "Connecting to %s:%s..." $host $port]
-     } else {
-       # connect through a proxy. Sigh.
-       set host $world($w,proxy,host)
-       set port $world($w,proxy,port)
-       set message [T "Connecting to %s Proxy at %s:%s..." $world($w,proxy) $host $port]
-     }
-  if { !$first } {
-       # Generic reconnect message
-       !set message [T "Attempting to reconnect..."]
-     }
+  set connected 0
+  foreach x $hostlist {
+    foreach [list host port ssl] $x {break}
+    if { $has_proxy } {
+         set proxy $world($w,proxy)
+         outputSystem $c [set conn($c,address,disp) [T "Connecting to %s proxy at %s:%s..." $proxy $world($w,proxy,host) $world($w,proxy,port)]]
+         if { [catch {::potato::ioOpen $world($w,proxy,host) $world($w,proxy,port)} fid] } {
+              outputSystem $c $fid
+              disconnect $c 0
+              boot_reconnect $c
+              skinStatus $c
+              return;
+            }
+          set waitfor "[namespace which -variable conn]($c,fid,success)"
+          fileevent $fid writable [list ::potato::connectVerify $fid $waitfor]
+          vwait $waitfor
+          if { ![info exists conn($c,fid,success)] } {
+               set res -1
+             } else {
+               set res $conn($c,fid,success)
+             }
+          unset -nocomplain conn($c,fid,success)
+          switch -exact $res {
+            -1 {
+                catch {close $fid}
+                disconnect $c 0;
+                return;
+               }
+             1 {
+                # Success
+               }
+             default {# Error.
+                      outputSystem $c [T "Unable to connect to proxy: %s" $res]
+                      disconnect $c 0
+                      boot_reconnect $c
+                      skinStatus $c
+                      return;
+                     }
+          }
+       }
+    set conn($c,address) $x
+    outputSystem $c [set conn($c,address,disp) [T "Connecting to %s:%d..." $host $port]]
+    if { $has_proxy } {
+         if { [catch {::potato::proxy::${proxy}::connect $fid [lindex $x 0] [lindex $x 1]} msg] } {
+              outputSystem $c $msg
+              catch {ioClose $fid}
+              continue;
+            }
+          # Successful proxy connection! Huzzah!
+       } else {
+         if { [catch {::potato::ioOpen $host $port} fid] } {
+              outputSystem $c [T "Unable to connect to host %s:%d: %s" $host $port $fid]
+              continue;
+            }
+          set waitfor "[namespace which -variable conn]($c,fid,success)"
+          fileevent $fid writable [list ::potato::connectVerify $fid $waitfor]
+          vwait $waitfor
+          if { ![info exists conn($c,fid,success)] } {
+               set res -1
+             } else {
+               set res $conn($c,fid,success)
+             }
+          unset -nocomplain conn($c,fid,success)
+          switch $res {
+            -1 {
+                catch {close $fid}
+                return;
+                # Cancelled
+               }
+             1 {
+                # Success!
+               }
+             default {# Error.
+                      outputSystem $c [T "Unable to connect to host %s:%d: %s" $host $port $res]
+                      continue;
+                     }
+          }
+       }
 
-  outputSystem $c $message
-  if { $first } {
-       $conn($c,textWidget) delete 1.0 2.0
-     }
-  skinStatus $c
-  update idletasks
+    if { $ssl } {
+         # We use -request 0 to not bother checking the certificate. Without this, self-signed certificates
+         # (which the majority of MUSHes use) fail by default. If we ever allow for more specific filtering
+         # of certificates, we'll need to -request 1 -require 1, and modify the verifySSL procedure to do
+         # more in-depth checks of the certificate, passing self-signed by default
+         # (And fix the error message below to only give the 'make sure port is enabled' message if we
+         # have an error, instead of a validation failure)
+         if { [catch {::tls::import $fid -command ::potato::connectVerifySSL -request 0 -cipher "ALL"} sslError] || [catch {::tls::handshake $fid} sslError] } {
+              # -cipher can probably be ALL:!LOW:!EXP:+SSLv2:@STRENGTH but I'd rather be less secure than risk some games not working
+              outputSystem $c [T "Unable to negotiation SSL: %s. Please make sure the port is ssl-enabled." $sslError]
+              disconnect $c 0
+              continue;
+            }
+       }
 
-  if { [catch {::potato::ioOpen $host $port} fid] } {
-       outputSystem $c $fid
+    # Success!
+    set connected 1
+    break;
+  }
+
+  if { !$connected } {
+       # All hosts/ports failed. Boo. Try again later.
        disconnect $c 0
        boot_reconnect $c
        skinStatus $c
@@ -2322,108 +2399,45 @@ proc ::potato::connect {c first {hostlist ""}} {
      }
 
   set conn($c,id) $fid
-  if { $world($w,$thisssl) } {
+  if { $ssl } {
        addProtocol $c ssl
      }
-  fileevent $fid writable [list ::potato::connectVerify $c $hostlist]
+
+  connectComplete $c
 
   return;
 
 };# ::potato::connect
 
 #: proc ::potato::connectVerify
+#: arg fid file descriptor
+#: arg statevar name of variable (fully qualified) to set result in
 #: arg c connection id
-#: arg hostlist The hostlist, passed from ::potato::connect. List containing a combination of "host" and "host2", or an empty string, telling us which hosts to attempt connection to.
-#: desc Verify whether the newly made connection for conn $c has worked or not. If we're connected, and it's through a proxy, verify the proxy is working correctly. (If not through a proxy, we're connected successfully.)
+#: desc Verify whether the newly made connection to $fid worked. Set $statevar to 1 on success, or an error message on failure
 #: return nothing
-proc ::potato::connectVerify {c hostlist} {
+proc ::potato::connectVerify {fid statevar} {
   variable conn;
   variable world;
 
-  set id $conn($c,id)
-  catch {fileevent $id writable {}}
-
-  set w $conn($c,world)
-  if { [catch {fconfigure $id -error} err] || $err ne "" } {
-       # The connection failed. If we were attempting to connect through a proxy, or
-       # we were connecting to the last host we have, run boot_reconnect to start over
-       outputSystem $c [T "Connection failed: %s" $err]
-       disconnect $c 0
-       if { $world($w,proxy) ne "None" || [llength $hostlist] == 1 } {
-            boot_reconnect $c
-            skinStatus $c
-            return;
-          } else {
-            # Not connecting through a proxy, and we have another host to attempt
-            connect $c 0 [lrange $hostlist 1 end]
-            return;
+  catch {fileevent $fid writable {}}
+  if { [catch {fconfigure $fid -error} err] || $err ne "" } {
+       if { $err in [list 1 -1 ""] } {
+            set err "Unknown error"
           }
+       set $statevar $err
+       return;
      }
-
-
-  if { $world($w,proxy) ne "None" } {
-       connectVerifyProxy $c $hostlist
-     } else {
-       connectVerifyComplete $c
-     }
-
+  set $statevar 1
   return;
 
 };# ::potato::connectVerify
 
-#: proc ::potato::connectVerifyProxy
+
+#: proc ::potato::connectComplete
 #: arg c connection id
-#: arg hostlist List of hosts ("host", "host2") we should attempt to connect to through the proxy
-#: desc Called when a connection has been successfully established to connection $c's proxy host;
-#: desc do the required work to negotiate with the proxy to establish a connection to the end game server.
-#: desc Call connectVerifyComplete on success, or abort, [close] the connection and do standard reconnect if the proxy doesn't play nice.
+#: desc Called when we've just successfully connected to a world (possibly through a proxy), to actually mark us as connected.
 #: return nothing
-proc ::potato::connectVerifyProxy {c hostlist} {
-  variable conn;
-  variable world;
-
-  ::potato::proxy::$world($conn($c,world),proxy)::start $c $hostlist
-
-  return;
-
-};# ::potato::connectVerifyProxy
-
-#: proc ::potato::connectVerifyProxyFail
-#: arg c connection id
-#: arg proxy The proxy type (SOCKS4, SOCKS5, HTTP)
-#: arg hostlist List of hosts ("host"/"host2") we're attempting to connect to.
-#: arg err A string containing the error encountered. Defaults to ""
-#: desc Called when we've connected to a proxy server, but failed to negotiate for it to handle our connection to a MUSH.
-#: desc If we have multiple hosts to try, reconnect to the proxy and try the next. Else, do the "failed connect" stuff like print
-#: desc a message (including $err, or a default fail message if $err is ""), set up auto-reconnect, etc
-#: return nothing
-proc ::potato::connectVerifyProxyFail {c proxy hostlist err} {
-  variable conn;
-
-  if { $err eq "" } {
-       set err [T "Unable to negotiate with %s proxy" $proxy]
-     }
-  outputSystem $c [T "Connection failed: %s" $err]
-  disconnect $c 0
-
-  if { [llength $hostlist] == 1 } {
-       # No more hosts to try, do a failed connect
-       boot_reconnect $c
-       skinStatus $c
-       return;
-     } else {
-       # Try remaining hosts
-       connect $c 0 [lrange $hostlist 1 end]
-       return;
-     }
-
-};# ::potato::connectVerifyProxyFail
-
-#: proc ::potato::connectVerifyComplete
-#: arg c connection id
-#: desc Called when we've just successfully connected to a world (and verified the proxy connection, if connecting through a proxy), to actually mark us as connected.
-#: return nothing
-proc ::potato::connectVerifyComplete {c} {
+proc ::potato::connectComplete {c} {
   variable conn;
   variable world;
 
@@ -2434,30 +2448,19 @@ proc ::potato::connectVerifyComplete {c} {
 
   set conn($c,stats,connAt) [clock seconds]
   set conn($c,stats,formatted) [statsFormat 0]
+  set conn($c,address,disp) "[lindex $conn($c,address) 0]:[lindex $conn($c,address) 1]"
   incr conn($c,numConnects)
   incr world($w,stats,conns)
 
   fileevent $id writable {}
+  fileevent $id readable {}
 
   switch $world($w,type) {
      "MUSH" {set translation "\r\n"}
      "MUD"  {set translation "\n"}
      default {set translation "\r\n"}
   }
-  if { [hasProtocol $c ssl] } {
-       # We use -request 0 to not bother checking the certificate. Without this, self-signed certificates
-       # (which the majority of MUSHes use) fail by default. If we ever allow for more specific filtering
-       # of certificates, we'll need to -request 1 -require 1, and modify the verifySSL procedure to do
-       # more in-depth checks of the certificate, passing self-signed by default
-       # (And fix the error message below to only give the 'make sure port is enabled' message if we
-       # have an error, instead of a validation failure)
-       if { [catch {::tls::import $id -command ::potato::connectVerifySSL -request 0 -cipher "ALL"} sslError] || [catch {::tls::handshake $id} sslError] } {
-            # -cipher can probably be ALL:!LOW:!EXP:+SSLv2:@STRENGTH but I'd rather be less secure than risk some games not working
-            outputSystem $c [T "Unable to negotiation SSL: %s. Please make sure the port is ssl-enabled." $sslError]
-            disconnect $c 0
-            return;
-          }
-     }
+
   set conn($c,id,lineending) $translation
   set conn($c,id,lineending,length) [string length $conn($c,id,lineending)]
   set conn($c,id,lineending,length-1) [expr {[string length $conn($c,id,lineending)]-1}]
@@ -2504,7 +2507,6 @@ proc ::potato::connectVerifyComplete {c} {
 #: desc Callback function for tls::import, hacked from tls::callback
 #: return varies
 proc ::potato::connectVerifySSL {option args} {
-
   switch -- $option {
     "error" {
       lassign $args chan msg
@@ -2765,7 +2767,7 @@ proc ::potato::disconnect {{c ""} {prompt 1}} {
           }
      }
 
-
+  unset -nocomplain conn($c,fid,success)
   catch {fileevent $conn($c,id) writable {}}
   catch {fileevent $conn($c,id) readable {}}
   uploadEnd $c 1;# cancel any in-progress file upload
@@ -2778,6 +2780,8 @@ proc ::potato::disconnect {{c ""} {prompt 1}} {
        outputSystem $c [T "Disconnected from host. - %s" [timestamp]]
      }
   set conn($c,connected) 0
+  set conn($c,address) [list]
+  set conn($c,address,disp) [T "Not Connected"]
   timersStop $c
   set conn($c,protocols) [list]
   catch {after cancel $conn($c,loginInfoId)}
@@ -3607,12 +3611,19 @@ proc ::potato::outputSystem {c msg {tags ""}} {
        return;
      }
   set aE [atEnd $conn($c,textWidget)]
+  set empty [expr {[$conn($c,textWidget) count -chars 1.0 2.0] == 1}]
+
   if { [llength [$conn($c,textWidget) tag ranges prompt]] } {
        set endPos "prompt.first"
      } else {
        set endPos "end"
      }
-  $conn($c,textWidget) insert $endPos "\n" $tags $msg $tags [clock seconds] [concat $tags timestamp]
+  if { [$conn($c,textWidget) count -chars 1.0 3.0] > 1 } {
+       set inserts [list "\n" $tags $msg $tags [clock seconds] [concat $tags timestamp]]
+     } else {
+       set inserts [list $msg $tags [clock seconds] [concat $tags timestamp]]
+     }
+  $conn($c,textWidget) insert $endPos {*}$inserts
   if { $aE } {
        $conn($c,textWidget) see end
      }
@@ -5077,6 +5088,7 @@ proc ::potato::connInfo {c type} {
     inputFocus { return [expr {[focus -displayof $conn($c,input2)] eq $conn($c,input2) ? 2 : 1}]; }
     autoreconnect { return [expr {$world($conn($c,world),autoreconnect) && $conn($c,reconnectId) ne ""}]; }
     world {return $conn($c,world);}
+    address {return $conn($c,address);}
     spawns {return [removePrefix [arraySubelem conn $c,spawns] $c,spawns];}
   }
 
@@ -11346,11 +11358,11 @@ proc ::potato::setPrompt {c prompt} {
        if { $hasAnsi } {
             # We need to parse out the ANSI. Le sigh
             set ansi($c,ansi,fg) fg
-						set ansi($c,ansi,bg) bg
-						set ansi($c,ansi,flash) 0
-						set ansi($c,ansi,underline) 0
-						set ansi($c,ansi,highlight) 0
-						set ansi($c,ansi,inverse) 0
+            set ansi($c,ansi,bg) bg
+            set ansi($c,ansi,flash) 0
+            set ansi($c,ansi,underline) 0
+            set ansi($c,ansi,highlight) 0
+            set ansi($c,ansi,inverse) 0
             set inserts [flattenParsedANSI [parseANSI $prompt ansi $c] [list prompt margins]]
           } else {
             set inserts [list "$prompt" [list prompt margins]]
@@ -11378,7 +11390,7 @@ proc ::potato::setPrompt {c prompt} {
 proc ::potato::T {msgformat args} {
 
   if { [catch {::msgcat::mc $msgformat {*}$args} i18n] } {
-       errorLog "Unable to format message for translation: [buildErrorReport]" error
+       errorLog "Unable to format message for translation: $i18n" error
        if { [llength $args] && ![catch {format $msgformat {*}$args} formatted] } {
             return $formatted;
           } else {
@@ -11449,7 +11461,7 @@ proc ::potato::basic_reqs {} {
 
   if { [catch {
                package require potato-telnet 1.1 ;
-               package require potato-proxy ;
+               package require potato-proxy 1.2 ;
                package require potato-wikihelp ;
                package require potato-font ;
                package require potato-spell ;

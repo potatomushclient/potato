@@ -9,10 +9,10 @@
   package ifneeded potato-font 1.0 [list source [file join $dir .. potato-font.tcl]]
   package ifneeded potato-spell 0.1 [list source [file join $dir .. potato-spell.tcl]]
 
-  package ifneeded potato-proxy-SOCKS4 1.1 [list source [file join $dir .. potato-proxy-SOCKS4.tcl]]
-  package ifneeded potato-proxy-SOCKS5 1.1 [list source [file join $dir .. potato-proxy-SOCKS5.tcl]]
-  package ifneeded potato-proxy-HTTP 1.1 [list source [file join $dir .. potato-proxy-HTTP.tcl]]
-  package ifneeded potato-proxy 1.1 [list source [file join $dir .. potato-proxy.tcl]]
+  package ifneeded potato-proxy-SOCKS4 1.2 [list source [file join $dir .. potato-proxy-SOCKS4.tcl]]
+  package ifneeded potato-proxy-SOCKS5 1.2 [list source [file join $dir .. potato-proxy-SOCKS5.tcl]]
+  package ifneeded potato-proxy-HTTP 1.2 [list source [file join $dir .. potato-proxy-HTTP.tcl]]
+  package ifneeded potato-proxy 1.2 [list source [file join $dir .. potato-proxy.tcl]]
 
   package ifneeded potato-encoding 1.0 [list source [file join $dir .. potato-encoding.tcl]]
 
