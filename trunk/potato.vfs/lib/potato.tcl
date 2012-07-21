@@ -2284,16 +2284,14 @@ proc ::potato::connect {c first} {
        return;
      }
 
-
-  if { $world($w,proxy) ne "None" && $world($w,proxy,host) ne "" && [string is integer -strict $world($w,proxy,port)] } {
-       set has_proxy 1
-     } else {
-       set has_proxy 0
-     }
-
   set connected 0
   foreach x $hostlist {
     foreach [list host port ssl] $x {break}
+    if { $world($w,proxy) ne "None" && $world($w,proxy,host) ne "" && [string is integer -strict $world($w,proxy,port)] } {
+		       set has_proxy 1
+		     } else {
+		       set has_proxy 0
+     }
     if { $has_proxy } {
          set proxy $world($w,proxy)
          outputSystem $c [set conn($c,address,disp) [T "Connecting to %s proxy at %s:%s..." $proxy $world($w,proxy,host) $world($w,proxy,port)]]
