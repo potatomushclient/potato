@@ -2,7 +2,7 @@
 
 =Clock Format Codes=
 
-The following format codes are available for the [ConfigurePotato Clock Format], and for [Logging log file names]:
+The following format codes are available for the [ConfigurePotato Clock Format], for [Logging log file names], and the [SlashCommands /time] command:
 
   * `%%` - A literal `%`
   * `%a` - Abbreviated weekday (Mon, Tue, etc)

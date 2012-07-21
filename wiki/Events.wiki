@@ -28,13 +28,18 @@ The fields are:
 	* Activity: Suppresses taskbar and system tray flashing, and 'Activity in World' messages, for this event
   * *Spawn?*: Should we spawn this text? Must be ticked to enable spawning.
     * To: A space-separated list of spawn windows to spawn the text to
+  * *Replace?*: Should we replace the matching portion(s) of the text?
+    * With: Text to replace the matching portion(s) of the text with
   * *Send*: Text to send to the MU`*`. Multiple lines can be entered, and will be sent separately. Can include [SlashCommands /commands].
   * *Input*: Enter text to place into an input window, and select which input window to use. Can be "One" for the top input, "Two" for the bottom, or "Focus" for the one which currently has focus.
 
-For wildcard patterns, the first ten wildcards (`*` for 0 or more chars, ? for exactly one char) are captured into `%0` to `%9`, which can be used in the Spawn, Send and Input fields. For regexp patterns, the first 10 subexpressions (in parenthesis) are captured into `%0` to `%9`.
+You can run [SlashCommands /commands] in the Spawn, Replace, Send and Input fields; Potato will use the result of the command as the value for that field. See below for examples.
+
+For wildcard patterns, the first ten wildcards (`*` for 0 or more chars, ? for exactly one char) are captured into the [Variables variables] 0 - 9, which can be accessed in the Spawn, Replace, Send Input fields with the [SlashCommands /get] command. For regexp patterns, the first 10 subexpressions (in parenthesis) are captured into the variables.
 
 Some common examples are:
   * [#Spawn_Channels Spawning Channel text]
+  * [#Timestamp_Channels Add Timestamps to Chat Messages]
   * [#Spawn_Pages Spawning Pages]
   * [#Omit_OOC_Speech_From_Logs Omitting OOC speech from logs]
   * [#Recolour_Puppets Recolouring Puppet output]
@@ -46,7 +51,13 @@ For all of these examples, "Enabled" is ticked and "Continue" is not. Nothing el
   * *Pattern*: `<*> *`
   * *Type*: Wildcard
   * *Spawn*: Ticked.
-    * To: Use `channels` to spawn all channels into a single spawn window, or use `%0` to spawn each to its own, individual spawn window.
+    * To: Use `channels` to spawn all channels into a single spawn window, or use `[/get 0]` to spawn each to its own, individual spawn window.
+
+===Timestamp Channels===
+  * *Pattern*: `^<(.+?)> (.+)$`
+  * *Type*: Regexp
+  * *Replace?:* Ticked
+    * With: `[/get 0] [/time %T] [/get 1]`
 
 ===Spawn Pages===
   * *Pattern*: `^(From afar|Long distance to|\S.{1,20} pages|You paged .+? with).*$`
@@ -59,7 +70,7 @@ Tip: You can also alter the pattern so that pages to/from particular people go t
 ===Omit OOC Speech From Logs===
   * *Pattern*: `[OOC] *`
   * *Type*: Wildcard
-  * *Omit From*: Display
+  * *Omit From*: Log
 
 ===Recolour Puppets===
   * *Pattern*: `My Puppet> *`
@@ -69,6 +80,14 @@ Tip: You can also alter the pattern so that pages to/from particular people go t
 ===Newbie Greeter===
   * *Pattern*: `<Newbie> * has joined the MUSH!`
   * *Type*: Wildcard
-  * *Send*: `+newbie Welcome, %0!`
+  * *Send*: `[+newbie Welcome, [/get 0]!]`
+  
+===Praise Me===
+  * *Pattern*: Mike
+  * *Type*: Regexp
+  * *Change FG*: Red Highlight
+  * *Replace?:* Ticked
+  * *Replace With:* Our Glorious Overlord
 
+Thanks to Null, who suggested this feature and provided the example ;)
 
