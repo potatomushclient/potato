@@ -6031,12 +6031,12 @@ proc ::potato::setUpWinico {} {
 
   set dir [file join $potato(vfsdir) lib app-potato windows]
   #set mainico [file join $dir potato2.ico]
-  set mainico [file join $dir stpotato.ico]
-  if { ![file exists $dir] || ![file isdirectory $dir] || ![file exists $mainico] || ![file isfile $mainico] } {
+  set winico(mainico) [file join $dir stpotato.ico]
+  if { ![file exists $dir] || ![file isdirectory $dir] || ![file exists $winico(mainico)] || ![file isfile $winico(mainico)] } {
        return;
      }
 
-  if { [catch {set winico(main) [winico createfrom $mainico]}] } {
+  if { [catch {set winico(main) [winico createfrom $winico(mainico)]}] } {
        return;
      }
 
@@ -11481,9 +11481,9 @@ if { $tcl_platform(platform) eq "windows" } {
           rename toplevel _realtoplevel
           proc toplevel {t args} {
             uplevel 1 _realtoplevel $t {*}$args
-            catch {wm iconbitmap $t [file join $::potato::potato(vfsdir) lib app-potato windows stpotato.ico]}
+            after idle [list catch [list wm iconbitmap $t $::potato::winico(mainico)]]
           }
-          wm iconbitmap . [file join $::potato::potato(vfsdir) lib app-potato windows stpotato.ico]
+          wm iconbitmap . $::potato::winico(mainico)
         }
    }
 
