@@ -5,7 +5,7 @@
 Below is a picture of the main Potato window, with each of the compontents labelled:
 
   * The [GUIMenus Menu Bar] gives you access to all of Potato's features.
-  * The [#Toolbar] buttons let you use some of the more common features quickly and easily.
+  * The [GUI#Toolbar] buttons let you use some of the more common features quickly and easily.
   * The World Bar shows all the connections you have open. The connection you're currently viewing is shown with a blue orb, connections with new activity have an orange orb, and connections which are disconnected have a red orb.
   * The Spawn Bar appears when you have a Spawn Window open, and lists all the Spawns for the current connection. An orange orb shows that a spawn has new activity, while a green tick shows that you are currently viewing the spawn window. Click the connection's button the World Bar to return to the main window.
   * The Output Window is where text received from the MU`*` is displayed.

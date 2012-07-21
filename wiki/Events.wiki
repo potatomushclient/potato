@@ -25,7 +25,7 @@ The fields are:
   * *Omit From*: Do not print this text to
     * Display: The main output window
     * Log: Any log files
-	* Activity: Suppresses taskbar and system tray flashing, and 'Activity in World' messages, for this event
+    * Activity: Suppresses taskbar and system tray flashing, and 'Activity in World' messages, for this event
   * *Spawn?*: Should we spawn this text? Must be ticked to enable spawning.
     * To: A space-separated list of spawn windows to spawn the text to
   * *Replace?*: Should we replace the matching portion(s) of the text?
@@ -33,7 +33,7 @@ The fields are:
   * *Send*: Text to send to the MU`*`. Multiple lines can be entered, and will be sent separately. Can include [SlashCommands /commands].
   * *Input*: Enter text to place into an input window, and select which input window to use. Can be "One" for the top input, "Two" for the bottom, or "Focus" for the one which currently has focus.
 
-You can run [SlashCommands /commands] in the Spawn, Replace, Send and Input fields; Potato will use the result of the command as the value for that field. See below for examples.
+You can run [SlashCommands /commands] in the Spawn, Replace, Send and Input fields; Potato will use the result of the command as the value for that field. Just wrap the value in `[`square brackets`]` - see below for examples.
 
 For wildcard patterns, the first ten wildcards (`*` for 0 or more chars, ? for exactly one char) are captured into the [Variables variables] 0 - 9, which can be accessed in the Spawn, Replace, Send Input fields with the [SlashCommands /get] command. For regexp patterns, the first 10 subexpressions (in parenthesis) are captured into the variables.
 
