@@ -2288,9 +2288,9 @@ proc ::potato::connect {c first} {
   foreach x $hostlist {
     foreach [list host port ssl] $x {break}
     if { $world($w,proxy) ne "None" && $world($w,proxy,host) ne "" && [string is integer -strict $world($w,proxy,port)] } {
-		       set has_proxy 1
-		     } else {
-		       set has_proxy 0
+           set has_proxy 1
+         } else {
+           set has_proxy 0
      }
     if { $has_proxy } {
          set proxy $world($w,proxy)
@@ -9286,7 +9286,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
        send_to_real [up] $str
        return [list 0];
      }
-  set all_url [regexp "^$re$" $str]
+  set all_url [regexp "^$re\$" $str]
   for {set i 0} {$i < [llength $where]} {incr i} {
     set indices [lindex $where end-$i]
     foreach {start end} $indices {break}
@@ -9305,7 +9305,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
        }
   }
   if { $all_url} {
-       return [list 1 $url]
+       return [list 1 $str]
      } else {
        send_to_real [up] $str
      }
