@@ -5025,9 +5025,9 @@ proc ::potato::status {c} {
      } elseif { $conn($c,connected) == 0 } {
        return "disconnected";
      } elseif { $conn($c,idle) == 1 } {
-       return idle;
+       return "idle";
      } else {
-       return normal;
+       return "normal";
      }
 
 };# ::potato::status
@@ -11545,6 +11545,7 @@ if { $tcl_platform(platform) eq "windows" } {
           proc toplevel {t args} {
             uplevel 1 _realtoplevel $t {*}$args
             after idle [list catch [list wm iconbitmap $t $::potato::winico(mainico)]]
+            return $t;
           }
           wm iconbitmap . $::potato::winico(mainico)
         }
