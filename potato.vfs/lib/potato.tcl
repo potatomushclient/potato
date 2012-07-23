@@ -5264,7 +5264,7 @@ proc ::potato::main {} {
   set potato(name) "Potato MU* Client"
   set potato(version) [source [file join [file dirname [info script]] "potato-version.tcl"]]
   set potato(contact) "talvo@talvo.com"
-  set potato(webpage) "http://www.potatomushclient.com/"
+  set potato(webpage) "http://code.google.com/p/potatomushclient/"
 
   if { [info exists ::starkit::mode] && $::starkit::mode eq "starpack" } {
        set potato(homedir) [file dirname [info nameofexecutable]]
