@@ -132,19 +132,19 @@ proc ::potato::loadWorldDefaults {w override} {
        foreach optFromArr [array names world -1,*] {
          set opt [string range $optFromArr 3 end]
          set copy 1
+         if { !$override && [info exists world($w,$opt)] } {
+              continue;
+            }
          foreach nocopy $nocopyPatterns {
            if { [string match $nocopy $opt] } {
                 set copy 0
                 break;
               }
-           if { !$override && [info exists world($w,$opt)] } {
-                set copy 0
-                break;
-              }
-         }
-         if { $copy } {
-              set world($w,$opt) $world(-1,$opt)
+           }
+         if { !$copy } {
+              continue;
             }
+         set world($w,$opt) $world(-1,$opt)
        }
      }
 
