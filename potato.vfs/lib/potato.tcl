@@ -5057,7 +5057,7 @@ proc ::potato::connStatus {c} {
 #: arg c connection id
 #: arg type type of into to return (name, host, port, text)
 #: desc return info about the $type for connection $c
-#: return string containining the $type info for the connection
+#: return string containing the $type info for the connection
 proc ::potato::connInfo {c type} {
   variable conn;
   variable world;
@@ -6978,29 +6978,29 @@ proc ::potato::cancelCheckForUpdates {} {
 };# ::potato::cancelCheckForUpdates
 
 #: ::potato::appKeyPress
-#: arg win
-#: arg x
-#: arg y
+#: arg win Window where key was pressed
+#: arg x X-coordinate of mouse at keypress
+#: arg y Y-coordinate of mouse at keypress
 #: desc The "App" key, on Windows, should perform a 'right click' in the window with keyboard focus. We try that, then resort to a right-click where the mouse cursor is
 #: return nothing
 proc ::potato::appKeyPress {win x y} {
 
-  set focus [focus -displayof $win]
-  set sendto $win
-  if { $focus eq "" || $focus eq $win } {
-       set sendto $win
+  set withmouse [winfo containing $x $y]
+  if { $win eq "" } {
+       set sendto $withmouse
      } else {
-       foreach x [bindtags $focus] {
-         if { <Button-3> in [bind $x] } {
-              set sendto $focus
+       set sendto $withmouse
+       foreach bt [bindtags $win] {
+         if { "<Button-3>" in [bind $bt] } {
+              set sendto $win
               break;
             }
        }
      }
-  if { $sendto eq $win && [winfo containing {*}[winfo pointerxy .]] eq $win } {
-       event generate $win <Button-3> -rootx $x -rooty $y
+  if { $sendto eq $withmouse } {
+       event generate $sendto <Button-3> -rootx $x -rooty $y
      } else {
-       event generate $sendto <Button-3> -x 1 -y 1
+       event generate $sendto <Button-3> -x 4 -y 4
      }
 
   return;
