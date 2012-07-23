@@ -6977,6 +6977,36 @@ proc ::potato::cancelCheckForUpdates {} {
 
 };# ::potato::cancelCheckForUpdates
 
+#: ::potato::appKeyPress
+#: arg win
+#: arg x
+#: arg y
+#: desc The "App" key, on Windows, should perform a 'right click' in the window with keyboard focus. We try that, then resort to a right-click where the mouse cursor is
+#: return nothing
+proc ::potato::appKeyPress {win x y} {
+
+  set focus [focus -displayof $win]
+  set sendto $win
+  if { $focus eq "" || $focus eq $win } {
+       set sendto $win
+     } else {
+       foreach x [bindtags $focus] {
+         if { <Button-3> in [bind $x] } {
+              set sendto $focus
+              break;
+            }
+       }
+     }
+  if { $sendto eq $win && [winfo containing {*}[winfo pointerxy .]] eq $win } {
+       event generate $win <Button-3> -rootx $x -rooty $y
+     } else {
+       event generate $sendto <Button-3> -x 1 -y 1
+     }
+
+  return;
+
+};# ::potato::appKeyPress
+
 #: ::potato::inputWindowRightClickMenu
 #: arg input The input window being clicked
 #: arg x xcoord
@@ -7037,6 +7067,8 @@ proc ::potato::setUpBindings {} {
   bind PotatoInput <Control-Key-0> [list ::potato::showConn 10]
 
   bind PotatoInput <Button-3> [list ::potato::inputWindowRightClickMenu %W %X %Y]
+  # The <App> key may not be available on all systems
+  catch {bind PotatoInput <KeyPress-App> [list ::potato::appKeyPress %W %X %Y]}
 
   # Stop the user being able to select the last newline in the text widget. When it's selected,
   # it causes "bleed" of the selection tag if new text is inserted.
@@ -7090,11 +7122,11 @@ proc ::potato::setUpBindings {} {
       bind $x <$y> {}
     }
   }
-  bind all <MouseWheel> [list ::potato::mouseWheel %W %D]
+  catch {bind all <MouseWheel> [list ::potato::mouseWheel %W %D]}
   if { $potato(windowingsystem) eq "x11" } {
        # Some Linuxes use button 4/5 instead of <MouseWheel>. Some don't.
-       bind all <4> [list ::potato::mouseWheel %W 120]
-       bind all <5> [list ::potato::mouseWheel %W -120]
+       catch {bind all <4> [list ::potato::mouseWheel %W 120]}
+       catch {bind all <5> [list ::potato::mouseWheel %W -120]}
      }
 
   # Make Control-BackSpace delete the previous word
@@ -7143,9 +7175,8 @@ proc ::potato::setUpBindings {} {
   bind TButton <1> {%W instate !disabled { %W state pressed }}
 
   # Make Tile buttons show they have the focus when tabbed into via keyboard.
-  # This should probably use "focus" not "active", but at least on Windows, that has no effect.
-  bind TButton <FocusIn> {%W instate !disabled {%W state active}}
-  bind TButton <FocusOut> {%W instate !disabled {%W state !active}}
+  bind TButton <FocusIn> {%W instate !disabled {%W state [list active focus]}}
+  bind TButton <FocusOut> {%W instate !disabled {%W state [list !active !focus]}}
 
   # Copy some bindings from Text to PotatoOutput, so we can remove the 'Text' bindtags from it.
   # (safer to copy those we want than block those we don't, as more we don't want might be added later)
@@ -7162,12 +7193,11 @@ proc ::potato::setUpBindings {} {
   }
   bind PotatoOutput <<Copy>> [list ::potato::textCopy %W]
   bind PotatoOutput <<Cut>> [list ::potato::textCopy %W]
-  bind PotatoOutput <<Selection>> [list ::potato::selectToCopy %W]
+  bind PotatoOutput <<Selection>> "+;[list ::potato::selectToCopy %W]"
 
   bind PotatoOutput <Motion> [list ::potato::showMessageTimestamp %W %x %y]
 
-  # Use Control-Return for a newline, and Return to send text
-  bind PotatoInput <Control-Return> "[bind Text <Return>] ; break"
+  # Use Return to send text. Inserting a newline is configurable with the insertNewline task
   bind PotatoInput <Return> "::potato::send_mushage %W 0 ; break"
 
   # Counteract the annoying case-sensitiveness of bindings
@@ -7685,6 +7715,7 @@ proc ::potato::loadDefaultUserBindings {{clear 0}} {
     "fcmd12" "F12" \
     "save2history" "Shift-Escape" \
     "toggleInputFocus" "Control-KeyPress-O" \
+    "insertNewline" "Control-Return" \
     ]
   foreach {task binding} $defaults {
     if { ![taskExists $task] } {
@@ -7703,6 +7734,22 @@ proc ::potato::loadDefaultUserBindings {{clear 0}} {
   return;
 
 };# ::potato::loadDefaultUserBindings
+
+#: proc ::potato::insertNewline
+#: desc Insert a newline in the input window with the focus
+#: return nothing
+proc ::potato::insertNewline {} {
+
+  set win [focus -displayof .]
+  if { $win eq "" || [winfo class $win] ne "Text" || "PotatoInput" ni [bindtags $win] } {
+       return;
+     }
+
+  eval [string map [list "%W" $win] [bind Text <Return>]]
+
+  return;
+
+};# ::potato::insertNewline
 
 #: proc ::potato::autoConnectWindow
 #: desc Show a window allowing the user to configure auto-connects
