@@ -8149,6 +8149,11 @@ proc ::potato::send_mushage {window saveonly} {
 
 };# ::potato::send_mushage
 
+#: proc ::potato::process_input
+#: arg c connection id
+#: arg txt Text to process
+#: desc Parse a block of text for /commands, and return the result as a list of values to send to the MUSH
+#: return List of text lines to send to the MUSH
 proc ::potato::process_input {c txt} {
 
   set txt [string map [list "\r\n" "\n" "\r" "\n"] $txt]
@@ -8164,6 +8169,13 @@ proc ::potato::process_input {c txt} {
 
 };# ::potato::process_input
 
+#: proc ::potato::send_to
+#: arg c connection id
+#: arg txt Text to send to MUSH
+#: arg prefix A prefix to prepend to each line sent to the MUSH
+#: arg echo See comment on ::potato::send_to_real
+#: desc Parse a block of text for /commands, possibly append a prefix to each resulting line, and send to the MUSH
+#: return nothing
 proc ::potato::send_to {c txt {prefix ""} {echo 1}} {
 
   foreach x [process_input $c $txt] {
@@ -8174,7 +8186,16 @@ proc ::potato::send_to {c txt {prefix ""} {echo 1}} {
   return;
 };# ::potato::send_to
 
+#: proc ::potato::send_to_noparse
+#: arg c connection id
+#: arg txt Text to send to MUSH
+#: arg prefix A prefix to prepend to each line sent to the MUSH
+#: arg echo See comment on ::potato::send_to_real
+#: desc Send text to the MUSH, without parsing for /commands, possibly prepending a prefix to each line
+#: return nothing
 proc ::potato::send_to_noparse {c txt {prefix ""} {echo 1}} {
+
+  set txt [string map [list "\r\n" "\n" "\r" "\n"] $txt]
 
   foreach x [split $txt "\n"] {
     send_to_real $c "$prefix$x" $echo
@@ -8182,6 +8203,48 @@ proc ::potato::send_to_noparse {c txt {prefix ""} {echo 1}} {
 
   return;
 };# ::potato::send_to_noparse
+
+#: proc ::potato::send_to_from
+#: arg c connection id
+#: arg textWidget Path to a text widget
+#: arg parse Should we parse for /commands?
+#: arg selonly Only use the selection in the text widget?
+#: desc Wrapper function. Get all the text (or possibly just selected text) from a text widget and send to the MUSH, possibly parsing for /commands
+#: return nothing
+proc ::potato::send_to_from {c textWidget {parse 0} {selonly 0}} {
+  variable conn;
+
+  if { $c eq "" } {
+       set c [up]
+     }
+
+  if { ![info exists conn($c,id)] || ![winfo exists $textWidget] || [winfo class $textWidget] ne "Text" } {
+       return;
+     }
+
+   if { $selonly } {
+        if { [llength [set sel [$textWidget tag ranges sel]]] == 0 } {
+             # No selection
+             return;
+           }
+        set text [$textWidget get sel.first sel.last]
+      } else {
+        set text [$textWidget get 1.0 end-1c]
+      }
+
+   if { $text eq "" } {
+        return;
+      }
+
+   if { $parse } {
+        send_to $c $text
+      } else {
+        send_to_noparse $c $text
+      }
+
+  return;
+
+};# ::potato::send_to_from
 
 #: proc ::potato::send_to_real
 #: arg c connection id
@@ -10685,7 +10748,9 @@ proc ::potato::textEditor {{c ""} {edname ""} {initialtext ""}} {
 
   set allTxt [format {[%s get 1.0 end-1char]} $text]
   $actionMenu add command {*}[menu_label [T "Send to &World"]] -accelerator "Ctrl+S" \
-          -command [format {::potato::send_to_noparse %s %s} $c $allTxt]
+          -command [list ::potato::send_to_from $c $text]
+  $actionMenu add command {*}[menu_label [T "Send &Selection to World"]] -accelerator "Ctrl+Alt+S" \
+          -command [list ::potato::send_to_from $c $text 0 1]
   $actionMenu add command {*}[menu_label [T "Place in &Top Input Window"]] \
           -command [format {::potato::showInput %s 1 %s 1} $c $allTxt]
   $actionMenu add command {*}[menu_label [T "Place in &Bottom Input Window"]] \
@@ -10699,7 +10764,7 @@ proc ::potato::textEditor {{c ""} {edname ""} {initialtext ""}} {
   $actionMenu add command {*}[menu_label [T "&Save As..."]] -command [list ::potato::textEditorSave $text]
 
   $actionMenuConvert add command {*}[menu_label [T "&Returns to %r"]] -command [list ::potato::escapeChars $text 0 1 0] -accelerator Ctrl+R
-  $actionMenuConvert add command {*}[menu_label [T "Spaces to %&b"]] -command [list ::potato::escapeChars $text 0 0 1] -accelerator Ctrl+S
+  $actionMenuConvert add command {*}[menu_label [T "Spaces to %&b"]] -command [list ::potato::escapeChars $text 0 0 1] -accelerator Ctrl+B
   $actionMenuConvert add command {*}[menu_label [T "&Escape Special Characters"]] -command [list ::potato::escapeChars $text] -accelerator Ctrl+E
 
   # $actionMenuConvert add comand {*}[menu_label [T "&ANSI Colours to Tags"]] -command [list ::potato::textEditorConvertANSI $text]
@@ -10712,11 +10777,12 @@ proc ::potato::textEditor {{c ""} {edname ""} {initialtext ""}} {
   $editMenu add command {*}[menu_label [T "&Paste"]] -command [list event generate $text <<Paste>>] -accelerator Ctrl+V
   $editMenu configure -postcommand [list ::potato::editMenuCXV $editMenu 0 1 2 $text]
 
-  bind $text <Control-r> [list ::potato::escapeChars $text 0 1 0]
-  bind $text <Control-b> [list ::potato::escapeChars $text 0 0 1]
-  bind $text <Control-e> [list ::potato::escapeChars $text]
+  bind $text <Control-r> "[list ::potato::escapeChars $text 0 1 0] ; break"
+  bind $text <Control-b> "[list ::potato::escapeChars $text 0 0 1] ; break"
+  bind $text <Control-e> "[list ::potato::escapeChars $text] ; break"
 
-  bind $text <Control-s> [list $actionMenu invoke 0]
+  bind $text <Control-s> "[list $actionMenu invoke 0] ; break"
+  bind $text <Control-Alt-s> "[list $actionMenu invoke 1] ; break"
 
   $text insert end $initialtext
 
