@@ -10612,9 +10612,11 @@ proc ::potato::unregisterWindow {c win} {
 
 #: proc ::potato::textEditor
 #: arg c connection id. Defaults to ""
+#: arg edname name of editor to use, or auto-assign a numeric name if ""
+#: arg initialtext If given, text to insert/append into editor window
 #: desc Launch a text editor window for connection $c (or current connection if $c is "")
-#: return nothing
-proc ::potato::textEditor {{c ""}} {
+#: return 1 on success, 0 or failure
+proc ::potato::textEditor {{c ""} {edname ""} {initialtext ""}} {
   variable potato;
   variable conn;
   variable world;
@@ -10623,23 +10625,43 @@ proc ::potato::textEditor {{c ""}} {
        set c [up]
      }
 
-  set i 1
-  while { [winfo exists [set win .textEditor_${c}_$i]] } {
-          incr i;
-          if { $i > 5 } {
-               tk_messageBox -title $potato(name) -message [T "You can't open any more text editor windows for that world."] \
-                             -icon info -type ok
-               return;
-             }
-        }
+  if { $edname eq "" } {
+       set edname 1
+       for {set edname 1} {$edname < 1000 && [winfo exists [set win .textEditor_${c}_$edname]]} {incr edname} {
+         continue;
+       }
+     } else {
+       set win .textEditor_${c}_$edname
+     }
 
-  toplevel $win
+  if { [string first . $edname] != -1 } {
+       outputSystem $c [T "Invalid editor name '%s'." $edname]
+       return;
+     }
+
+  if { [winfo exists $win] } {
+       # Append text to existing editor
+       if { $initialtext ne "" } {
+            set text $win.frame.main.text
+            if { [$text count -chars 1.0 end] > 1 } {
+                 $text insert end "\n"
+               }
+            $text insert end $initialtext
+          }
+       reshowWindow $win 0
+       return;
+     }
+
+  if { [catch {toplevel $win}] } {
+       outputSystem $c [T "Invalid editor name '%s'." $edname]
+       return;
+     }
   registerWindow $c $win
   wm withdraw $win
   if { $c == 0 } {
-       wm title $win "TextEd $i ($potato(name))"
+       wm title $win "TextEd $edname ($potato(name))"
      } else {
-       wm title $win "TextEd $i \[$c. $world($conn($c,world),name)\]"
+       wm title $win "TextEd $edname \[$c. $world($conn($c,world),name)\]"
      }
 
   pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both -side left -anchor nw
@@ -10662,7 +10684,7 @@ proc ::potato::textEditor {{c ""}} {
   $menu add cascade {*}[menu_label [T "&Edit"]] -menu $editMenu
 
   set allTxt [format {[%s get 1.0 end-1char]} $text]
-  $actionMenu add command {*}[menu_label [T "Send to &World"]] \
+  $actionMenu add command {*}[menu_label [T "Send to &World"]] -accelerator "Ctrl+S" \
           -command [format {::potato::send_to_noparse %s %s} $c $allTxt]
   $actionMenu add command {*}[menu_label [T "Place in &Top Input Window"]] \
           -command [format {::potato::showInput %s 1 %s 1} $c $allTxt]
@@ -10677,7 +10699,7 @@ proc ::potato::textEditor {{c ""}} {
   $actionMenu add command {*}[menu_label [T "&Save As..."]] -command [list ::potato::textEditorSave $text]
 
   $actionMenuConvert add command {*}[menu_label [T "&Returns to %r"]] -command [list ::potato::escapeChars $text 0 1 0] -accelerator Ctrl+R
-  $actionMenuConvert add command {*}[menu_label [T "&Spaces to %b"]] -command [list ::potato::escapeChars $text 0 0 1] -accelerator Ctrl+S
+  $actionMenuConvert add command {*}[menu_label [T "Spaces to %&b"]] -command [list ::potato::escapeChars $text 0 0 1] -accelerator Ctrl+S
   $actionMenuConvert add command {*}[menu_label [T "&Escape Special Characters"]] -command [list ::potato::escapeChars $text] -accelerator Ctrl+E
 
   # $actionMenuConvert add comand {*}[menu_label [T "&ANSI Colours to Tags"]] -command [list ::potato::textEditorConvertANSI $text]
@@ -10691,8 +10713,12 @@ proc ::potato::textEditor {{c ""}} {
   $editMenu configure -postcommand [list ::potato::editMenuCXV $editMenu 0 1 2 $text]
 
   bind $text <Control-r> [list ::potato::escapeChars $text 0 1 0]
-  bind $text <Control-s> [list ::potato::escapeChars $text 0 0 1]
+  bind $text <Control-b> [list ::potato::escapeChars $text 0 0 1]
   bind $text <Control-e> [list ::potato::escapeChars $text]
+
+  bind $text <Control-s> [list $actionMenu invoke 0]
+
+  $text insert end $initialtext
 
   update idletasks
   center $win
@@ -11114,6 +11140,10 @@ proc ::potato::tasksInit {} {
        toggleInputFocus,name   [T "Toggle &Input Windows"] \
        toggleInputFocus,cmd    [list ::potato::toggleInputFocus] \
        toggleInputFocus,state  always \
+       insertNewline,name  [T "Insert Newline"] \
+       insertNewline,cmd   [list ::potato::insertNewline] \
+       insertNewline,state always \
+
 
   ]
 
