@@ -7569,7 +7569,7 @@ proc ::potato::keyboardShortcutInputProcess {keyname keydisp} {
     set modified [expr {([llength $modifiers] && "Shift" ni $modifiers) || [llength $modifiers] > 1}]
 
   if { [string length $keyind] == 1 } {
-       set keyname [string toupper $keyind]
+       set keyind [string toupper $keyind]
      }
 
   set realBinding [join [concat $modifiers $keyind] -]
