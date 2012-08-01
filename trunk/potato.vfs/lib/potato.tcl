@@ -5315,6 +5315,7 @@ proc ::potato::main {} {
        set path(i18n) [file join ~ .potato i18n]
      }
   set path(help) [file join $potato(vfsdir) lib help]
+  set path(i18n_int) [file join $potato(vfsdir) lib i18n]
   set dev [file join $potato(homedir) potato.dev]
 
   basic_reqs
@@ -5487,10 +5488,15 @@ proc ::potato::i18nPotato {} {
   # Load translation files. We do this in two steps:
   # 1) Load *.ptf files using [::potato::loadTranslationFile]. These are just message catalogues.
   # 2) Use ::msgcat::mcload, which loads *.msg files containing Tcl code for translations
-  foreach x [glob -nocomplain -dir $path(i18n) -- *.ptf] {
+  foreach x [glob -nocomplain -dir $path(i18n_int) -- *.ptf] {
     loadTranslationFile $x
   }
-  ::msgcat::mcload $path(i18n)
+
+  if { [file exists $path(i18n)] && [file isdir $path(i18n)] } {
+       foreach x [glob -nocomplain -dir $path(i18n) -- *.ptf] {
+         loadTranslationFile $x
+       }
+     }
 
   return;
 
@@ -5514,15 +5520,15 @@ proc ::potato::i18nPotato {} {
 proc ::potato::loadTranslationFile {file} {
 
   # The format for these files is:
-  # LOCALE: <locale>
-  # ENCODING: <encoding>  (optional)
   # <originalMsg>
   # <translatedMsg>
   # <originalMsg>
   # <translatedMsg>
   # etc.
-  # The ENCODING: line is optional. Where present, Potato attempts to change file encoding to <encoding> when
-  # reading the file in.
+  #
+  # All files should be in 7bit ascii - extended characters are specified via \xHH or \uHHHH syntax.
+  # File names are <locale>.ptf
+  # All strings are evaluated with [subst -nocommands -novariables] to parse \-syntax.
   #
   # Any empty lines, lines containing only white space, and lines starting with '#' will
   # be ignored as comments/whitespace to make the .ptf file clearer. A <translatedMsg> containing
@@ -5540,46 +5546,21 @@ proc ::potato::loadTranslationFile {file} {
        return;
      }
 
-  if { ![string match "LOCALE: *" $line] } {
-       # Malformed translation file
-       errorLog "Translation file \"[file nativename [file normalize $file]]\" is malformed: No 'Locale' line"
-       catch {close $fid}
-       return;
-     }
+  set locale [file rootname [file tail $file]]
 
-  set locale [string trim [string range $line 8 end]]
-  if { $locale eq "" } {
-       errorLog "Translation file \"[file nativename [file normalize $file]]\" is malformed: Invalid 'Locale' line"
-       catch {close $fid}
-       return;
-     }
-
-  if { [catch {gets $fid line} count] || $count < 0 } {
-       errorLog "Translation file \"[file nativename [file normalize $file]]\" is malformed: No 'Encoding' line"
-       catch {close $fid}
-       return;
-     }
-  if { [string match "ENCODING: *" $line] } {
-       # Process for encoding
-       catch {fconfigure $fid -encoding [string range $line 10 end]}
-       if { [catch {gets $fid line} count] || $count < 0 } {
-       errorLog "Translation file \"[file nativename [file normalize $file]]\" is malformed: Invalid 'Encoding' line"
-            catch {close $fid}
-            return;
-          }
-    }
+  fconfigure $fid -encoding ascii
 
   set i 0
-  set multi ""
+  set translations [list]
   while { 1 } {
     if { [string trim $line] ne "" && [string index $line 0] ne "#" } {
             if { $i } {
               set i 0;
               if { $line ne "-" } {
-                   namespace eval :: [list ::msgcat::mcset $locale $msg [string map [list "\\n" "\n"] $line]]
+                   lappend translations [subst -nocommands -novariables $msg] [subst -nocommands -novariables $line]
                  }
             } else {
-              set msg [string map [list "\\n" "\n"] $line]
+              set msg $line
               set i 1
             }
        }
@@ -5588,6 +5569,8 @@ proc ::potato::loadTranslationFile {file} {
        }
   }
   close $fid;
+  set count [namespace eval :: [list ::msgcat::mcmset $locale $translations]]
+  errorLog "$count translations set for $locale." message
 
   return $locale;
 
