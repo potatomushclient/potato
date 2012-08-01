@@ -2157,7 +2157,7 @@ proc ::potato::!set {_varname value} {
 #: proc ::potato::reconnect
 #: arg c connection id. Defaults to currently displayed connection.
 #: desc reconnect connection id $c, or the currently displayed connection. Wrapper for use by skins, etc.
-#: return nothing
+#: return 1 on successful attempt to reconnect, 0 on error
 proc ::potato::reconnect {{c ""}} {
 
   if { $c eq "" } {
@@ -2165,12 +2165,10 @@ proc ::potato::reconnect {{c ""}} {
      }
 
   if { $c == 0 } {
-       return;
+       return 0;
      }
 
-  connect $c 0
-
-  return;
+  return [connect $c 0];
 
 };# ::potato::reconnect
 
@@ -2238,14 +2236,14 @@ proc ::potato::ioWrite {args} {
 #: desc start connecting to a world. This doesn't handle the full connection, as we connect -async and wait for a response.
 #: desc This connection may be to a proxy server, not the actual game. $hostlist contains a list telling us whether to attempt
 #: desc to connect to the primary host ("host"), the secondary host ("host2"), or both ("").
-#: return nothing
+#: return 1 on successful connect, 0 otherwise
 proc ::potato::connect {c first} {
   variable conn;
   variable world;
   variable potato;
 
   if { $c == 0 || $conn($c,connected) != 0 } {
-       return;# already connected or trying to connect
+       return 0;# already connected or trying to connect
      }
 
   set w $conn($c,world)
@@ -2281,7 +2279,7 @@ proc ::potato::connect {c first} {
        outputSystem $c [T "No valid addresses to connect to."]
        disconnect $c 0
        skinStatus $c
-       return;
+       return 0;
      }
 
   set connected 0
@@ -2300,7 +2298,7 @@ proc ::potato::connect {c first} {
               disconnect $c 0
               boot_reconnect $c
               skinStatus $c
-              return;
+              return 0;
             }
           set waitfor "[namespace which -variable conn]($c,fid,success)"
           fileevent $fid writable [list ::potato::connectVerify $fid $waitfor]
@@ -2315,7 +2313,7 @@ proc ::potato::connect {c first} {
             -1 {
                 catch {close $fid}
                 disconnect $c 0;
-                return;
+                return 0;
                }
              1 {
                 # Success
@@ -2325,7 +2323,7 @@ proc ::potato::connect {c first} {
                       disconnect $c 0
                       boot_reconnect $c
                       skinStatus $c
-                      return;
+                      return 0;
                      }
           }
        }
@@ -2355,7 +2353,7 @@ proc ::potato::connect {c first} {
           switch $res {
             -1 {
                 catch {close $fid}
-                return;
+                return 0;
                 # Cancelled
                }
              1 {
@@ -2393,7 +2391,7 @@ proc ::potato::connect {c first} {
        disconnect $c 0
        boot_reconnect $c
        skinStatus $c
-       return;
+       return 0;
      }
 
   set conn($c,id) $fid
@@ -2403,7 +2401,7 @@ proc ::potato::connect {c first} {
 
   connectComplete $c
 
-  return;
+  return 1;
 
 };# ::potato::connect
 
@@ -5258,6 +5256,8 @@ proc ::potato::main {} {
   variable skins;
   variable misc;
   variable running;
+  global argc;
+  global argv;
 
   set running 0;
 
@@ -5275,6 +5275,9 @@ proc ::potato::main {} {
        set potato(vfsdir) [file join [file dirname [info script]] ..]
        set potato(wrapped) 0
      }
+  set path(help) [file join $potato(vfsdir) lib help]
+  set path(i18n_int) [file join $potato(vfsdir) lib i18n]
+
   # Number of connections made
   set potato(conns) 0
   # Number of saved worlds
@@ -5284,6 +5287,8 @@ proc ::potato::main {} {
   set potato(skin) ""
   # The current connection on display
   set potato(up) ""
+  # Are we running in local mode?
+  set potato(local) 0
 
   # Regexp which spawn names must match
   set potato(spawnRegexp) {^[A-Za-z][A-Za-z0-9_!+=""*#@'-]{0,49}$};# doubled-up " for syntax highlighting
@@ -5297,7 +5302,35 @@ proc ::potato::main {} {
 
   set path(log) $potato(homedir)
   set path(upload) $potato(homedir)
-  if { $::tcl_platform(platform) eq "windows" } {
+
+  basic_reqs
+
+  errorLogWindow;# create a window for displaying error log messages
+
+  # Parse command-line options
+  foreach x $argv {
+    if { [string range $x 0 1] ne "--" } {
+         break;
+       } else {
+         set argv [lrange $argv 1 end]
+         incr argc -1
+         if { $x eq "--local" } {
+              set potato(local) 1
+            } else {
+              errorLog "Unknown command line paramater: $x" warning
+            }
+       }
+  }
+
+  if { $potato(local) } {
+       set path(world) [file join $potato(homedir) worlds]
+       set path(skins) [file join $potato(homedir) skins]
+       set path(lib) [file join $potato(homedir) lib]
+       set path(preffile) [file join $potato(homedir) potato.ini]
+       set path(custom) [file join $potato(homedir) potato.custom]
+       set path(startupCmds) [file join $potato(homedir) potato.startup]
+       set path(i18n) [file join $potato(homedir) i18n]
+     } elseif { $::tcl_platform(platform) eq "windows" } {
        set path(world) [file join $potato(homedir) worlds]
        set path(skins) [file join $potato(homedir) skins]
        set path(lib) [file join $potato(homedir) lib]
@@ -5314,11 +5347,8 @@ proc ::potato::main {} {
        set path(startupCmds) [file join ~ .potato potato.startup]
        set path(i18n) [file join ~ .potato i18n]
      }
-  set path(help) [file join $potato(vfsdir) lib help]
-  set path(i18n_int) [file join $potato(vfsdir) lib i18n]
   set dev [file join $potato(homedir) potato.dev]
 
-  basic_reqs
 
   # This MUST be after basic_reqs, as the [tk] command isn't available on
   # linux until that's called.
@@ -5328,8 +5358,6 @@ proc ::potato::main {} {
 
   option add *Listbox.activeStyle dotbox
   option add *TEntry.Cursor xterm
-
-  errorLogWindow;# create a window for displaying error log messages
 
   if { [catch {package require http} err] } {
        errorLog "Unable to load http package: $err" warning
@@ -5343,6 +5371,7 @@ proc ::potato::main {} {
   foreach x [list world skins lib] {
      catch {file mkdir $path($x)}
   }
+  catch {file mkdir $paths(world)}
   lappend ::auto_path $path(lib)
 
   # We need to set the prefs before we load anything...
@@ -9407,7 +9436,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
 
   return [list 1];
 
-};# ::potato::slash_cmd_tinyurl
+};# /tinyurl
 
 #: /setprefix [[<window>=]<prefix>]
 #: Set the prefix for <window>, or the current output window (if not given) to <prefix>.
@@ -10177,12 +10206,28 @@ proc ::potato::customSlashCommand {c w cmd str} {
   variable world;
   variable misc;
 
-  set str [string trim $str]
-  set len [string length $str]
-  if { $len == 0 } {
-       slash_cmd_reconnect $c $full $str
+  if { [string trim $str] eq "" } {
+       if { $c == 0 } {
+            return [list 0];
+          } else {
+            taskRun $c reconnect
+          }
        return [list 1];
      }
+  switch [parseConnectRequest $str] {
+     1 {return [list 1];}
+     0 {return [list 0 [list 0 [T "No such world \"%s\". Use \"/quick host port\" to connect to a world that isn't in the address book." $str]];}
+    -1 {return [list 0 [T "Ambiguous world name \"%s\"." $str]];}
+  }
+
+};# /connect
+
+proc ::potato::parseConnectRequest {str} {
+  variable world;
+
+  set str [string trim $str]
+  set len [string length $str]
+
   set partial [list]
   foreach w [worldIDs] {
      if { [string equal -nocase $world($w,name) $str] } {
@@ -10196,17 +10241,16 @@ proc ::potato::customSlashCommand {c w cmd str} {
   set partial [lsort -dictionary $partial]
   if { [info exists exact] } {
        newConnectionDefault $exact
-       return [list 1];
+       return 1;
      } elseif { [llength $partial] == 0 } {
-       return [list 0 [T "No such world \"%s\". Use \"/quick host port\" to connect to a world that isn't in the address book." $str]];
+       return 0;
      } elseif { [llength $partial] == 1 || $misc(partialWorldMatch) } {
        newConnectionDefault [lindex $partial 0]
-       return [list 1];
+       return 1;
      } else {
-       return [list 0 [T "Ambiguous world name \"%s\"." $str]];
+       return -1;
      }
-
-};# ::potato::slash_cmd_connect
+};# ::potato::parseConnectRequest
 
 #: /quick [<host>:<port>]
 #: Connect to the given address, or show the Quick Connect window
@@ -10539,7 +10583,7 @@ proc ::potato::handleOutsideRequest {src addr {isWorld 0}} {
   # If $isWorld is 1, $addr is a world name. Else, it's either telnet://host:port, host:port or "host port".
   if { $isWorld } {
        # This is basically identical to using "/connect <world>", so we'll just trigger that.
-       slash_cmd_connect [up] 1 $addr
+       parseConnectRequest $addr
        return;
      }
 
