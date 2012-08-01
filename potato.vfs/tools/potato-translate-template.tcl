@@ -3,7 +3,7 @@ set VERSION "1.1"
 
 proc main {} {
 
-  
+
   pack [set frame [::ttk::frame .txt]] -side top -anchor nw -fill both
 
   wm title . "Potato Translation Template Generator, Version $::VERSION"
@@ -123,12 +123,13 @@ proc buildNewTemplate {} {
        tk_messageBox -message "Unable to open output file:\n[file nativename [file normalize $outputfile]]\nError: $fout" -icon error -title "Potato-Translate"
        return;
      }
-  puts $fout "LOCALE: en_gb.template"
-  puts $fout "ENCODING: [fconfigure $fout -encoding]"
-  puts $fout "# Generated on [clock format [clock seconds] -format "%A, %B %d %Y at %T"]\n"
-  puts $fout "# Encodings available by default:"
-  puts $fout "# [lsort -dictionary [encoding names]]"
-  puts $fout "\n\n"
+  #puts $fout "# LOCALE: en_gb.template"
+  #puts $fout "# Generated on [clock format [clock seconds] -format "%A, %B %d %Y at %T"]\n"
+  #puts $fout "# Encodings available by default:"
+  #foreach {i1 i2 i3 i4 i5 i6 i7 i8 i9 i10 i11 i12 i13 i14 i15} [lsort -dictionary [encoding names]] {
+  #  puts $fout "# $i1 $i2 $i3 $i4 $i5 $i6 $i7 $i8 $i9 $i10 $i11 $i12 $i13 $i14 $i15"
+  #}
+  #puts $fout "\n\n"
   set msgs 0
   foreach x $inputfiles {
     if { [catch {open $x r} fin] } {
@@ -146,10 +147,14 @@ proc buildNewTemplate {} {
   set stripby [countSharedDirs $inputfiles]
 
   foreach x [array names potatoMessages] {
+    set c "#"
+    puts $fout ""
     foreach {fname proc lineNum} $potatoMessages($x) {
-      puts $fout "# [stripDirs $fname $stripby], line $lineNum [expr {($proc ne "" ? " ($proc)" : "")}]"
+      puts -nonewline $fout "$c [stripDirs $fname $stripby], line $lineNum [expr {($proc ne "" ? " ($proc)" : "")}]"
+      set c ","
     }
-    puts $fout [string map [list "\n" "\\n"] [subst $x]]
+    puts $fout ""
+    puts $fout [string map [list "\n" "\\n"] $x]
     puts $fout "-\n"
   }
   close $fout

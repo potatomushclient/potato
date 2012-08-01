@@ -30,8 +30,7 @@ proc mergeFiles {} {
   global templateStrings;
   global translationStrings;
   global encoding;
-  global locale;
-  
+
   # Meh. ;)
 
   set fid(template) [open $files(template) r]
@@ -39,7 +38,6 @@ proc mergeFiles {} {
   set fid(translation) [open $files(translation) r]
   set fid(output) [open $files(output) w]
 
-  set locale ""
   unset -nocomplain templateStrings;
   unset -nocomplain translationStrings;
 
@@ -62,9 +60,6 @@ proc mergeFiles {} {
   # OK, we loaded successfully. So, now we need to write. Make sure we use the right encoding
   fconfigure $fid(output) -encoding $encoding
 
-  puts $fid(output) "LOCALE: $locale"
-  puts $fid(output) "ENCODING: $encoding"
-
   set done [list]
 
   puts $fid(output) "\n# Untranslated strings:"
@@ -81,7 +76,7 @@ proc mergeFiles {} {
   puts $fid(output) "\n# Obsolete strings:"
   set obsolete 0
   foreach x [array names translationStrings] {
-    if { ![info exists templateStrings($x)] } {
+    if { ![info exists templateStrings($x)] && $translationStrings($x) ne "-" } {
          puts $fid(output) "\n$x"
          puts $fid(output) $translationStrings($x)
          lappend done $x
@@ -98,7 +93,7 @@ proc mergeFiles {} {
          incr repeats
        }
   }
-  
+
   # Done!
   finishMergeFiles
   tk_messageBox -message "Done! There were $untranslated untranslated strings, $obsolete obsolete strings, and $repeats strings already translated."
@@ -109,24 +104,10 @@ proc mergeFiles {} {
 proc loadFile {type} {
   global fid;
   global encoding;
-  global locale;
   global ${type}Strings;
-
-  if { ![getLine $fid($type) line] || ![string match "LOCALE: *" $line] } {
-       return 0;
-     }
-  set encoding [string range $line 8 end]
 
   if { ![getLine $fid($type) line] } {
        return 0;
-     }
-
-  if { [string match "ENCODING: *" $line] } {
-       set encoding [string range $line 10 end]
-       fconfigure $fid($type) -encoding $encoding
-       if { ![getLine $fid($type) line] } {
-            return 0;
-          }
      }
 
   set count 0;
@@ -185,7 +166,7 @@ proc setFile {type existing} {
   if { [info exists files($type)] && $files($type) ne "" } {
        set initial [list -initialfile $files($type)]
      }
-puts $initial
+
   if { $existing } {
        set file [tk_getOpenFile {*}$initial -title "Choose $type file"]
      } else {
