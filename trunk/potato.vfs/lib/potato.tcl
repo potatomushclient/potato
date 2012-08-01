@@ -5290,6 +5290,8 @@ proc ::potato::main {} {
   # Are we running in local mode?
   set potato(local) 0
 
+  set potato(locale) "en_GB"
+
   # Regexp which spawn names must match
   set potato(spawnRegexp) {^[A-Za-z][A-Za-z0-9_!+=""*#@'-]{0,49}$};# doubled-up " for syntax highlighting
 
@@ -5499,14 +5501,12 @@ proc ::potato::keepalive {} {
 proc ::potato::i18nPotato {} {
   variable misc;
   variable path;
+  variable potato;
 
   if { [catch {package require msgcat 1.4.2} err] } {
        errorLog "Unable to load msgcat for translations: $err" error
        return;
      }
-
-  # Set our preferred locale
-  ::msgcat::mclocale $misc(locale)
 
   # Some English "translations".
   # This is where we've used more verbose messages in some places to make phrases which are repeated in English, but with
@@ -5514,18 +5514,42 @@ proc ::potato::i18nPotato {} {
   # the shorter version. NOTE: Must be done before we load translations, otherwise we may clobber the user's preferred translation.
   namespace eval :: {::msgcat::mcmset en [list "Convert To:" "To:" "Recipient:" "To:" "Limit To:" "To:" "Spawn To:" "To:"]}
 
+  set locales [list en_GB en]
+
   # Load translation files. We do this in two steps:
   # 1) Load *.ptf files using [::potato::loadTranslationFile]. These are just message catalogues.
   # 2) Use ::msgcat::mcload, which loads *.msg files containing Tcl code for translations
   foreach x [glob -nocomplain -dir $path(i18n_int) -- *.ptf] {
-    loadTranslationFile $x
+    lappend locales [loadTranslationFile $x]
   }
 
   if { [file exists $path(i18n)] && [file isdir $path(i18n)] } {
        foreach x [glob -nocomplain -dir $path(i18n) -- *.ptf] {
-         loadTranslationFile $x
+         lappend locales [loadTranslationFile $x]
        }
      }
+
+  set locales [lsearch -all -inline -not $locales ""]
+  set split [split $misc(locale) "_"]
+  set preflist [list]
+  for {set i 0} {$i < [llength $split]} {incr i} {
+    lappend preflist [join [lrange $split 0 end-$i] "_"]
+  }
+
+  foreach x $preflist {
+    if { $x in $locales } {
+         set potato(locale) $x
+         break;
+       }
+  }
+
+  if { ![info exists potato(locale)] || $potato(locale) eq "" } {
+       set potato(locale) "en"
+     }
+
+
+  # Set our preferred locale
+  ::msgcat::mclocale $potato(locale)
 
   return;
 
@@ -5566,13 +5590,13 @@ proc ::potato::loadTranslationFile {file} {
 
   if { [catch {open $file r} fid] } {
        errorLog "Unable to load translation file \"[file nativename [file normalize $file]]\": $fid" warning
-       return;
+       return "";
      }
 
   if { [catch {gets $fid line} count] || $count < 0 } {
        catch {close $fid}
        errorLog "Translation file \"[file nativename [file normalize $file]]\" is empty." warning
-       return;
+       return "";
      }
 
   set locale [file rootname [file tail $file]]
@@ -5601,7 +5625,11 @@ proc ::potato::loadTranslationFile {file} {
   set count [namespace eval :: [list ::msgcat::mcmset $locale $translations]]
   errorLog "$count translations set for $locale." message
 
-  return $locale;
+  if { $count > 0 } {
+       return $locale;
+     } else {
+       return "";
+     }
 
 };# ::potato::loadTranslationFile
 
@@ -10224,6 +10252,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
 
 proc ::potato::parseConnectRequest {str} {
   variable world;
+  variable misc;
 
   set str [string trim $str]
   set len [string length $str]
