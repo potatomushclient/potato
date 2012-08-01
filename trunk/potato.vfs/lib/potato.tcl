@@ -1629,14 +1629,14 @@ proc ::potato::newConnection {w {character ""}} {
        set world($w,bottom,font,created) [font create {*}[font actual $world($w,bottom,font)]]
      }
 
-  set conn($c,textWidget) [text .conn_${c}_textWidget -undo 0]
+  set conn($c,textWidget) [text .conn_${c}_textWidget -undo 0 -height 1]
   createOutputTags $conn($c,textWidget)
   bindtags $conn($c,textWidget) [linsert [bindtags $conn($c,textWidget)] 0 PotatoUserBindings PotatoOutput]
   set pos [lsearch -exact [bindtags $conn($c,textWidget)] {Text}]
   bindtags $conn($c,textWidget) [lreplace [bindtags $conn($c,textWidget)] $pos $pos]
 
-  set conn($c,input1) [text .conn_${c}_input1 -wrap word -height 6 -undo 1]
-  set conn($c,input2) [text .conn_${c}_input2 -wrap word -height 4 -undo 1]
+  set conn($c,input1) [text .conn_${c}_input1 -wrap word -undo 1 -height 1]
+  set conn($c,input2) [text .conn_${c}_input2 -wrap word -undo 1 -height 1]
   bindtags $conn($c,input1) [linsert [bindtags $conn($c,input1)] 0 PotatoUserBindings PotatoInput]
   bindtags $conn($c,input2) [linsert [bindtags $conn($c,input2)] 0 PotatoUserBindings PotatoInput]
   $conn($c,input1) configure -background $world($w,bottom,bg) -font $world($w,bottom,font,created) \
@@ -1981,7 +1981,7 @@ proc ::potato::createOutputTags {t} {
   $t tag raise ANSI_flash
   $t tag raise sel
 
-  $t configure -wrap word -height 24 -highlightthickness 0 -borderwidth 0
+  $t configure -wrap word -highlightthickness 0 -borderwidth 0 -height 1
 
   return;
 
@@ -6254,8 +6254,7 @@ proc ::potato::history {{c ""}} {
 
   pack [set frame [::ttk::frame $win.frame]] -side left -expand 1 -fill both -anchor nw
 
-  set text [T "Select a command and press 1 to place it in the top input window, 2 to place it in the lower input window, or 3 to send it directly to the MU*. \
-               Press 4 to copy it to the clipboard. Press escape to close the window."]
+  set text [T "Select a command and press 1 to place it in the top input window, 2 to place it in the lower input window, or 3 to send it directly to the MU*. Press 4 to copy it to the clipboard. Press escape to close the window."]
   ::ttk::label $frame.label -text $text -wraplength 350
   pack $frame.label -side top -pady 5 -padx 10 -fill x
 
@@ -7209,6 +7208,9 @@ proc ::potato::setUpBindings {} {
            }
      }
   }
+
+  # Right-click while resizing a paned window to cancel
+  bind Panedwindow <3> {catch {%W proxy forget} ; unset -nocomplain ::tk::Priv(sash) ::tk::Priv(dx) ::tk::Priv(dy)}
   setUpUserBindings
 
   return;
@@ -7657,9 +7659,9 @@ proc ::potato::setUpUserBindings {} {
      bind PotatoUserBindings <$keyShorts($task)> "[list ::potato::taskRun $task] ; break"
      set list [split $keyShorts($task) -]
      set last [lindex $list end]
-     if { [string length $last] == 1 && $last ne [string tolower $last] } {
+     if { [string length $last] == 1 && [set reverse [lsearch -inline -not [list [string toupper $last] [string tolower $last]] $last]] ne "" } {
           bind PotatoUserBindings \
-                  <[join [lreplace $list end end [string tolower $last]] -]> \
+                  <[join [lreplace $list end end $reverse] -]> \
                   "[list ::potato::taskRun $task] ; break"
         }
   }
