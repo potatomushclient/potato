@@ -16,3 +16,6 @@
   * New option allows disabling the 256 XTERM colours. When enabled, they are automatically converted to the standard 16 ANSI colour palette. Downgrade mappings provided by Padraic.
   * Removed the white background from the 16x16 icon on Windows. Requested by quite a few people.
   * The fields in [Events] which previously used %0-%9 for variables no longer do. Instead, they can be parsed for [SlashCommands /commands], and thus have access to `/get`.
+  * The connection code has been completely rewritten; many new features had been bolted onto the original code, causing it to break down in certain circumstances. Now it's far less hacky. Various issues reported by Paige.
+  * The 'Visit Potato Website' option now takes you to the Google Code site, instead of potatomushclient.com - all the domain does now is link you to the Google Code site, anyway. Suggested by qa'toq.
+  * Code for loading translations of messages has been improved, and the first translation - Croatian - has been added. Translations provided by Stoko.
