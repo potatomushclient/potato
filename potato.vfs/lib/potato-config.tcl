@@ -827,7 +827,7 @@ $sub.cb state disabled
              -values [list All Once None] -width 20 -state readonly] -side left -padx 3
 
   pack [set sub [::ttk::frame $frame.selectToCopy]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text [T "Sekect to Copy?"] -width 20 -justify left -anchor w] -side left
+  pack [::ttk::label $sub.label -text [T "Select to Copy?"] -width 20 -justify left -anchor w] -side left
   pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,selectToCopy) -onvalue 1 -offvalue 0] -side left
 
 

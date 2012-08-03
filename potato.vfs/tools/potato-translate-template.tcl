@@ -1,5 +1,5 @@
 # This script builds a new Translation Template for Potato.
-set VERSION "1.1"
+set VERSION "1.2"
 
 proc main {} {
 
@@ -212,7 +212,7 @@ proc processFile {fname fin var} {
 package require Tk
 cd [file dirname [info script]]
 set initialdir ../lib
-set outputdir ../../i18n
+set outputdir .
 setOutputFile [file join $outputdir potato-template.txt]
 main
 bind . <F2> {console show}
