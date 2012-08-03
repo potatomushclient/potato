@@ -1,5 +1,5 @@
 # Attempt to merge a Potato translation template with an older translation file
-set VERSION "1.1"
+set VERSION "1.2"
 
 proc main {} {
 
@@ -162,7 +162,7 @@ proc finishMergeFiles {} {
 proc setFile {type existing} {
   global files
 
-  set initial [list -initialdir ../../i18n]
+  set initial [list -initialdir ../lib/i18n]
   if { [info exists files($type)] && $files($type) ne "" } {
        set initial [list -initialfile $files($type)]
      }

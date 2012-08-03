@@ -3,8 +3,6 @@ File                       Desc
 potato.tcl                 The main code for Potato
 potato-version.tcl         [return]s the current Potato version
 potato-font.tcl            Potato's font dialog
-potato-help.tcl            Code for parsing and displaying help-files
-potato-help.txt            The old help-files, in an internal format containing markup
 potato-skin.tcl            GUI-related code
 potato-telnet.tcl          Telnet parsing code
 potato-proxy.tcl           Base Proxy support code
@@ -16,8 +14,11 @@ potato-config.tcl          Code for dealing with the configuration (and configur
 MANIFEST                   This file
 
 images/                    A numer of image files used by Potato
+  flags/                   Images of flags, used in the Change Language window
 
 help/                      The new helpfiles, from the Google Code site wiki
+
+i18n/                      Translation files for Potato's messages
 
 app-potato/                Addition libraries/extensions
  pkgIndex.tcl              The pkgIndex for all the Tcl extensions in Potato
@@ -38,4 +39,10 @@ app-potato/                Addition libraries/extensions
    potato-linflash.tcl     'package provide's linflash
    
 
+../main.tcl                Launch script for running Potato from source
 ../LICENSE                 The MIT License. This file MUST be distributed with all copies of the source.
+
+../LICENSE                 The MIT License. This file MUST be distributed with all copies of the source.
+../tools/                  Holds scripts used for working with Potato
+  potato-translate-template.tcl  Creates a template file containing all the messages in Potato which are translated
+  potato-translate-merge.tcl     Merges an existing translation file with a template file
