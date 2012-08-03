@@ -70,6 +70,7 @@ proc ::potato::setPrefs {readfile} {
   set world(-1,encoding,start) iso8859-1
   set world(-1,encoding,negotiate) 1
   set world(-1,groups) [list]
+  set world(-1,prefixes) [list]
 
   set world(-1,proxy) "None"
   set world(-1,proxy,host) ""
@@ -317,6 +318,26 @@ proc ::potato::savePrefs {} {
   close $fid
 
 };# ::potato::savePrefs
+
+#: proc ::potato::prefFlags
+#: arg total Return a total of the flags, instead of a list of name/value pairs? Defaults to 0
+#: desc Return a list (suitable for [array set]) of name/value pairs of Potato preference file flags. If $total is true, return the total of all flags instead.
+#: return list of name/value pairs, or total of all flags
+proc ::potato::prefFlags {{total 0}} {
+
+  set f(has_pref_flags) 1    ;# pref file uses flags
+
+  if { !$total } {
+       return [array get f]
+     } else {
+       set num 0
+       foreach x [array names f] {
+         set num [expr {$num | $f($x)}]
+       }
+       return $num;
+     }
+
+};# ::potato::prefFlags
 
 #: proc ::potato::managePrefVersion
 #: arg version The version of the pref file, or an empty string if none was present (ie, the pref file pre-dates versions)

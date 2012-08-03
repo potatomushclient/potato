@@ -102,6 +102,15 @@ proc ::potato::manageWorldVersion {w version} {
        }
      }
 
+  if { !($version & $wf(prefixes_list)) } {
+       !set world($w,prefixes) [list]
+       foreach x [removePrefix [arraySubelem world $w,prefixes] $w,prefixes] {
+         lappend world($w,prefixes) [list $x {*}$world($w,prefixes,$x)]
+         unset world($w,prefixes,$x)
+       }
+     }
+
+
   # Example:
   # if { ! ($version & $wf(some_new_feature)) } {
   #      set world($w,new_features_var) foobar
@@ -270,10 +279,10 @@ proc ::potato::worldFlags {{total 0}} {
   set f(many_chars)         16    ;# World has multiple characters in $world($w,charList) as [list [list name pw] [list name pw]], not $world($w,charName) and $world($w,charPass)
   set f(event_noactivity)   32    ;# Events have a noActivity option
 # These two are obsolete, but not reused temporarily for the benefit of anyone using SVN.
-#  set f(event_matchall)     64    ;# Events have a matchAll option
-#  set f(event_replace)     128    ;# Events have replace / replace,with
+#  set f(event_matchall)    64    ;# Events have a matchAll option
+#  set f(event_replace)    128    ;# Events have replace / replace,with
   set f(fixed_obfusticate) 256    ;# Password obfustication was broken. Like, really broken.
-
+  set f(prefixes_list)     512    ;# Prefixes are stored in a single list, instead of an array
   if { !$total } {
        return [array get f];
      } else {
@@ -285,26 +294,6 @@ proc ::potato::worldFlags {{total 0}} {
      }
 
 };# ::potato::worldFlags
-
-#: proc ::potato::prefFlags
-#: arg total Return a total of the flags, instead of a list of name/value pairs? Defaults to 0
-#: desc Return a list (suitable for [array set]) of name/value pairs of Potato preference file flags. If $total is true, return the total of all flags instead.
-#: return list of name/value pairs, or total of all flags
-proc ::potato::prefFlags {{total 0}} {
-
-  set f(has_pref_flags) 1    ;# pref file uses flags
-
-  if { !$total } {
-       return [array get f]
-     } else {
-       set num 0
-       foreach x [array names f] {
-         set num [expr {$num | $f($x)}]
-       }
-       return $num;
-     }
-
-};# ::potato::prefFlags
 
 #: proc ::potato::prefixWindow
 #: arg w world id. Defaults to "".
@@ -431,13 +420,14 @@ proc ::potato::prefixWindowUpdate {w {sel ""}} {
 
   $tree delete [$tree children {}]
 
-  set list [lsort -dictionary [removePrefix [arraySubelem world $w,prefixes] $w,prefixes]]
+  set list [lsort -index 0 $world($w,prefixes)]
   set states [list off on]
   set images [list ::potato::img::cb-unticked ::potato::img::cb-ticked]
   foreach x $list {
-    $tree insert {} end -id $x -values [list $x [string map [list " " [format %c 183]] [lindex $world($w,prefixes,$x) 0]]] \
-                        -tags [list [lindex $states [lindex $world($w,prefixes,$x) 1]]] \
-                        -image [list [lindex $images [lindex $world($w,prefixes,$x) 1]]]
+    foreach {window prefix enabled} $x {break}
+    $tree insert {} end -id $window -values [list $window [string map [list " " \u00b7] $prefix]] \
+                        -tags [list [lindex $states $enabled]] \
+                        -image [list [lindex $images $enabled]]
   }
   if { $sel ne "" } {
        $tree selection set $sel
@@ -471,9 +461,12 @@ proc ::potato::prefixWindowToggle {w state x y} {
        # Close enough!
        set tags [list on off]
        set images [list ::potato::img::cb-ticked ::potato::img::cb-unticked]
-       set newstate [list 1 0]
+       set newstates [list 1 0]
        $tree item $sel -tags [list [lindex $tags $state]] -image [lindex $images $state]
-       set world($w,prefixes,$sel) [lreplace $world($w,prefixes,$sel) end end [lindex $newstate $state]]
+       set pos [lsearch -exact -index 0 $world($w,prefixes) $sel]
+       set item [lindex $world($w,prefixes) $pos]
+       set item [lreplace $item 2 2 [lindex $newstates $state]]
+       set world($w,prefixes) [lreplace $world($w,prefixes) $pos $pos $item]
      }
 
   return;
@@ -494,32 +487,33 @@ proc ::potato::prefixWindowSave {w} {
   set window [$prefixWindow($w,path,aewindow) get]
   set prefix [$prefixWindow($w,path,aeprefix) get]
   # Validate window name
-  if { ![regexp $potato(spawnRegexp) $window] && $window ne "_main" && $window ne "_all" } {
+  if { [set window [validSpawnName $window 0]] eq "" || $window eq "_none" } {
         tk_messageBox -icon error -parent $toplevel -title [T "Prefixes"] \
                       -message [T "Invalid window name."]
         return;
      }
 
-  if { [info exists world($w,prefixes,$window)] && $window ne $prefixWindow($w,editing) } {
+  set existing [lsearch -exact -index 0 $world($w,prefixes) $window]
+
+  if { $existing != -1 && $window ne $prefixWindow($w,editing) } {
        set ans [tk_messageBox -icon error -parent $toplevel -title [T "Prefixes"] -type yesno \
                      -message [T "There is already a prefix for \"%s\". Override?" $window]]
        if { $ans ne "yes" } {
             return;
           }
+       set world($w,prefixes) [lreplace $world($w,prefixes) $existing $existing]
      }
 
-  if { [info exists world($w,prefixes,$prefixWindow($w,editing))] } {
-       set state [lindex $world($w,prefixes,$prefixWindow($w,editing)) 1]
-       unset world($w,prefixes,$prefixWindow($w,editing))
+  set editing [lsearch -exact -index 0 $world($w,prefixes) $prefixWindow($w,editing)]
+
+  if { $editing != -1 } {
+       set state [lindex [lindex $world($w,prefixes) $editing] 2]
+       set world($w,prefixes) [lreplace $world($w,prefixes) $editing $editing]
      } else {
        set state 1
      }
-  if { $prefix eq "" } {
-       # Empty prefix - just delete it
-       unset -nocomplain world($w,prefixes,$window)
-       set window ""
-     } else {
-       set world($w,prefixes,$window) [list $prefix $state]
+  if { $prefix ne "" } {
+       lappend world($w,prefixes) [list $window $prefix $state]
      }
 
   $prefixWindow($w,path,aewindow) delete 0 end
@@ -548,7 +542,10 @@ proc ::potato::prefixWindowDelete {w} {
        return;
      }
 
-  unset world($w,prefixes,$sel)
+  set pos [lsearch -exact -nocase -index 0 $world($w,prefixes) $sel]
+  if { $pos != -1 } {
+       set world($w,prefixes) [lreplace $world($w,prefixes) $pos $pos]
+     }
 
   prefixWindowUpdate $w
 
@@ -592,7 +589,10 @@ proc ::potato::prefixWindowEdit {w} {
     $prefixWindow($w,path,ae$x) state !disabled
   }
   $prefixWindow($w,path,aewindow) insert end $sel
-  $prefixWindow($w,path,aeprefix) insert end [lindex $world($w,prefixes,$sel) 0]
+  set pos [lsearch -exact -index 0 $world($w,prefixes) $sel]
+  if { $pos != -1 } {
+       $prefixWindow($w,path,aeprefix) insert end [lindex [lindex $world($w,prefixes) $pos] 1]
+     }
   set prefixWindow($w,editing) $sel
   focus $prefixWindow($w,path,aewindow)
 
@@ -1286,8 +1286,11 @@ proc ::potato::logWindow {{c ""}} {
 
   pack [::ttk::frame $frame.top] -side top -padx 5 -pady 10
   pack [::ttk::labelframe $frame.top.buffer -text [T "Include Buffer From: "] -padding 2] -side left -anchor nw -padx 6
-  set spawns [removePrefix [arraySubelem conn $c,spawns] $c,spawns]
-  pack [::ttk::combobox $frame.top.buffer.cb -values [linsert $spawns 0 {No Buffer} {Main Window}] \
+  set spawns [list "No Buffer" "Main Window"]
+  foreach x $conn($c,spawns) {
+    lappend spawns [lindex $x 1]
+  }
+  pack [::ttk::combobox $frame.top.buffer.cb -values $spawns \
              -textvariable potato::conn($c,logDialog,buffer) -state readonly] -side top -anchor nw
 
   pack [::ttk::labelframe $frame.top.options -text [T "Other Options"] -padding 2] -side left -anchor nw -padx 6
@@ -1398,12 +1401,12 @@ proc ::potato::doLog {c file append buffer leave timestamps} {
   puts $fid $header
   puts $fid "Log opened [clock format [clock seconds] -format $misc(clockFormat)]\n"
 
-  if { $buffer eq "" || [string equal -nocase $buffer "_none"] || [string equal -nocase $buffer {No Buffer}] } {
+  if { $buffer eq "" || $buffer eq "No Buffer" || [set buffer [validSpawnName $buffer 0]] eq "" || $buffer eq "_all" } {
        set t ""
-     } elseif { [string equal -nocase $buffer {Main Window}] || [string equal -nocase $buffer "_main"] } {
+     } elseif { $buffer eq "_main" || $buffer eq "Main Window" } {
        set t $conn($c,textWidget)
-     } elseif { [info exists conn($c,spawns,$buffer)] && [string first "," $buffer] == -1 } {
-       set t $conn($c,spawns,$buffer)
+     } elseif { [set pos [findSpawn $c $buffer]] != -1 } {
+       set t [lindex [lindex $conn($c,spawns) $pos] 0]
      } else {
        set t ""
      }
@@ -1596,6 +1599,35 @@ proc ::potato::newConnectionDefault {w} {
 
 };# ::potato::newConnectionDefault
 
+#: proc ::potato::makeTextFrames
+#: arg c connection id
+#: desc Make a set of three text widgets for conn $c: One for output, and two for input. This may be for the main output window, or for spawn windows.
+#: return a list of the three widget paths
+proc ::potato::makeTextFrames {c} {
+  variable conn;
+  variable world;
+
+  set count [incr conn($c,textFrameTotals)]
+  set w $conn($c,world)
+
+  set out [text .conn_${c}_textWidget_$count -undo 0 -height 1]
+  createOutputTags $out
+  configureTextWidget $c $out
+  bindtags $out [linsert [bindtags $out] 0 PotatoUserBindings PotatoOutput]
+  set pos [lsearch -exact [bindtags $out] "Text"]
+  bindtags $out [lreplace [bindtags $out] $pos $pos]
+
+  foreach x [list input1 input2] {
+    set $x [text .conn_${c}_${x}_$count -wrap word -undo 1 -height 1 \
+              -background $world($w,bottom,bg) -font $world($w,bottom,font,created) \
+              -foreground $world($w,bottom,fg) -insertbackground [reverseColour $world($w,bottom,bg)]]
+    bindtags [set $x] [linsert [bindtags [set $x]] 0 PotatoUserBindings PotatoInput]
+  }
+
+  return [list $out $input1 $input2];
+
+};# ::potato::makeTextFrames
+
 #: proc ::potato::newConnection
 #: arg w the id of the world to connect to
 #: arg character The name of the character in world $w's char list to connect to
@@ -1629,29 +1661,8 @@ proc ::potato::newConnection {w {character ""}} {
        set world($w,bottom,font,created) [font create {*}[font actual $world($w,bottom,font)]]
      }
 
-  set conn($c,textWidget) [text .conn_${c}_textWidget -undo 0 -height 1]
-  createOutputTags $conn($c,textWidget)
-  bindtags $conn($c,textWidget) [linsert [bindtags $conn($c,textWidget)] 0 PotatoUserBindings PotatoOutput]
-  set pos [lsearch -exact [bindtags $conn($c,textWidget)] {Text}]
-  bindtags $conn($c,textWidget) [lreplace [bindtags $conn($c,textWidget)] $pos $pos]
-
-  set conn($c,input1) [text .conn_${c}_input1 -wrap word -undo 1 -height 1]
-  set conn($c,input2) [text .conn_${c}_input2 -wrap word -undo 1 -height 1]
-  bindtags $conn($c,input1) [linsert [bindtags $conn($c,input1)] 0 PotatoUserBindings PotatoInput]
-  bindtags $conn($c,input2) [linsert [bindtags $conn($c,input2)] 0 PotatoUserBindings PotatoInput]
-  $conn($c,input1) configure -background $world($w,bottom,bg) -font $world($w,bottom,font,created) \
-                   -foreground $world($w,bottom,fg) -insertbackground [reverseColour $world($w,bottom,bg)]
-  $conn($c,input2) configure -background $world($w,bottom,bg) -font $world($w,bottom,font,created) \
-                   -foreground $world($w,bottom,fg) -insertbackground [reverseColour $world($w,bottom,bg)]
-
-  set inputSwap($conn($c,input1),count) -1
-  set inputSwap($conn($c,input1),conn) $c
-  set inputSwap($conn($c,input1),backup) ""
-  set inputSwap($conn($c,input2),count) -1
-  set inputSwap($conn($c,input2),backup) ""
-  set inputSwap($conn($c,input2),conn) $c
-
   set conn($c,world) $w
+
   set conn($c,char) $character
   updateConnName $c;# sets conn($c,name)
   set conn($c,id) ""
@@ -1696,16 +1707,25 @@ proc ::potato::newConnection {w {character ""}} {
   set conn($c,numConnects) 0
   set conn($c,twoInputWindows) $world($w,twoInputWindows)
   set conn($c,widgets) [list]
-  set conn($c,spawnAll) ""
+  set conn($c,spawnAll) [list]
+  set conn($c,spawns) [list]
   set conn($c,limited) [list]
   set conn($c,debugPackets) 0
   set conn($c,userAfterIDs) [list]
+
+  foreach [list conn($c,textWidget) conn($c,input1) conn($c,input2)] [makeTextFrames $c] {break};
+
+  set inputSwap($conn($c,input1),count) -1
+  set inputSwap($conn($c,input1),conn) $c
+  set inputSwap($conn($c,input1),backup) ""
+  set inputSwap($conn($c,input2),count) -1
+  set inputSwap($conn($c,input2),backup) ""
+  set inputSwap($conn($c,input2),conn) $c
 
   if { $w == -1 } {
        connZero
      }
 
-  configureTextWidget $c $conn($c,textWidget)
   ::skin::$potato(skin)::import $c
 
   showConn $c
@@ -1825,8 +1845,8 @@ proc ::potato::flashConnANSI {c} {
      }
 
   $conn($c,textWidget) tag configure ANSI_flash -background $col -foreground $col
-  foreach x [arraySubelem conn $c,spawns] {
-     $conn($x) tag configure ANSI_flash -background $col -foreground $col
+  foreach x $conn($c,spawns) {
+    [lindex $x 1] tag configure ANSI_flash -background $col -foreground $col
   }
 
   set conn($c,flashId) [after $time [list potato::flashConnANSI $c]]
@@ -2375,7 +2395,7 @@ proc ::potato::connect {c first} {
          # have an error, instead of a validation failure)
          if { [catch {::tls::import $fid -command ::potato::connectVerifySSL -request 0 -cipher "ALL"} sslError] || [catch {::tls::handshake $fid} sslError] } {
               # -cipher can probably be ALL:!LOW:!EXP:+SSLv2:@STRENGTH but I'd rather be less secure than risk some games not working
-              outputSystem $c [T "Unable to negotiation SSL: %s. Please make sure the port is ssl-enabled." $sslError]
+              outputSystem $c [T "Unable to negotiate SSL: %s. Please make sure the port is ssl-enabled." $sslError]
               disconnect $c 0
               continue;
             }
@@ -2719,7 +2739,7 @@ proc ::potato::timerCancel {w timer} {
 proc ::potato::skinStatus {c} {
   variable potato;
 
-  if { $potato(skin) ne "" } {
+  if { $potato(skin) ne "" && $c ne "" } {
        ::skin::${potato(skin)}::status $c
      }
 
@@ -3143,24 +3163,26 @@ proc ::potato::get_mushageProcess {c line} {
 
   set spawns $conn($c,spawnAll)
   if { !$empty && $eventInfo(matched) && $eventInfo(spawnTo) ne "" } {
-       set spawns "$spawns $eventInfo(spawnTo)"
+       lappend spawns $eventInfo(spawnTo)
      }
-  if { !$empty && [string trim $spawns] ne "" } {
+  if { !$empty && [llength $spawns] } {
        set limit [expr {$world($w,spawnLimit,on) ? $world($w,spawnLimit,to) : 0}]
        set insertedAnything 1
-       foreach {x y} [parseSpawnList $spawns $c] {
-         set aE [atEnd $x]
-         if { [$x count -chars 1.0 3.0] != 1 } {
-              $x insert end "\n" ""
+       foreach x [parseSpawnList $c $spawns] {
+         set sname [lindex $x 0]
+         set swidget [lindex $x 1]
+         set aE [atEnd $swidget]
+         if { [$swidget count -chars 1.0 3.0] != 1 } {
+              $swidget insert end "\n" ""
             }
-         $x insert end "" "" {*}$inserts
+         $swidget insert end "" "" {*}$inserts
+         ::skin::$potato(skin)::spawnUpdate $c $sname
          if { $aE } {
-              $x see end
+              $swidget see end
             }
          if { $limit } {
-              $x delete 1.0 end-${limit}lines
+              $swidget delete 1.0 end-${limit}lines
             }
-         ::skin::$potato(skin)::spawnUpdate $c $y
        }
      }
 
@@ -3226,38 +3248,75 @@ proc ::potato::beepNumTimes {num} {
 };# ::potato::beepNumTimes
 
 #: proc ::potato::parseSpawnList
-#: arg spawns A list of spawn window names, supplied by the user
 #: arg c Connection id to create new spawns from
+#: arg spawns A list of spawn window names, supplied by the user
 #: desc For each spawn window name given in $spawns, create a spawn window (if it doesn't exist and we have space), using the info from the connection $c
 #: return the list of text-widget and spawn names paths for all the spawn windows successfully created/existing
-proc ::potato::parseSpawnList {spawns c} {
+proc ::potato::parseSpawnList {c spawns} {
   variable conn;
 
-  if { $spawns eq "" || [string trim $spawns] eq "" } {
+  if { ![llength $spawns] } {
        return; # Optimize for cases when there is no spawning
      }
 
   set returnList [list]
 
   # OK, first, let's go through and get a list of valid names
-  foreach x [split [string trim $spawns] " "] {
+  foreach x $spawns {
     if { $x eq "" } {
          # Ignore empty ones silently
          continue;
-       } elseif { ([info exists conn($c,spawns,$x)] || [set create [createSpawnWindow $c $x]] eq "") } {
-         # It's good!
-         if { $conn($c,spawns,$x) ni $returnList } {
-              lappend returnList $conn($c,spawns,$x) $x
-            }
-       } else {
-         # Uh-oh
-         outputSystem $c [T "Unable to create new spawn window \"%s\": %s" $x $create]
        }
+       set this [createSpawnWindow $c $x]
+       if { [llength $this] == 1 } {
+            outputSystem $c [T "Unable to create new spawn window \"%s\": %s" $x [lindex $this 0]]
+          } else {
+            lappend returnList $this
+          }
   }
   # Return the list of successful ones
   return $returnList;
 
 };# ::potato::parseSpawnList
+
+#: proc ::potato::validSpawnName
+#: arg name Name to check
+#: arg onlyspawns Should we only check if it's a valid spawn name (1), or also allow "_main", "_none" and "_all"?
+#: desc Check if the name is a valid spawn name. Optionally, also allow for "_main" and "_all". Names are case-insensitive, and valid names are always returned lower-case.
+#: return empty string if invalid, lower-cased $name if valid
+proc ::potato::validSpawnName {name onlyspawns} {
+
+  if { ![string length [string trim $name]] } {
+       return "";
+     }
+
+  set name [string tolower $name]
+
+  if { [string index $name 0] eq "_" } {
+       if { $onlyspawns } {
+            return "";
+          }
+       if { $name ni [list "_main" "_all" "_none"] } {
+            return "";
+          }
+       return $name;
+     }
+
+  return $name;
+
+};# ::potato::validSpawnName
+
+#: proc ::potato::findSpawn
+#: arg c connection id
+#: arg name Spawn name
+#: desc Find the specified spawn for the connection
+#: return position of the spawn in the spawnlist for conn $c
+proc ::potato::findSpawn {c name} {
+  variable conn;
+
+  return [lsearch -exact -nocase -index 0 $conn($c,spawns) $name];
+
+};# ::potato::findSpawn
 
 #: proc ::potato::createSpawnWindow
 #: arg c connection id
@@ -3269,22 +3328,20 @@ proc ::potato::createSpawnWindow {c name} {
   variable conn;
   variable potato;
 
-  if { ![regexp $potato(spawnRegexp) $name] } {
-       return [T "Invalid Spawn Name"];# bad name
-     } elseif { $misc(maxSpawns) > 0 && [llength [arraySubelem conn $c,spawns]] >= $misc(maxSpawns) } {
-       return [T "Too many spawns"];# too many spawns already
+  if { [set name [validSpawnName $name 1]] eq "" } {
+       return [list [T "Invalid Spawn Name"]];
+     } elseif { [set find [findSpawn $c $name]] != -1 } {
+       # Already exists
+       return [lindex $conn($c,spawns) $find];
+     } elseif { $misc(maxSpawns) > 0 && [llength $conn($c,spawns)] >= $misc(maxSpawns) } {
+       return [list [T "Too many spawns"]];
      } else {
-       # set it up. NOTE: Using a ::ttk::frame makes it go haywire when using [wm manage]!
-       set t [text .spawn_${c}_$name]
-       set conn($c,spawns,$name) $t
-       createOutputTags $t
-       configureTextWidget $c $t
-       bindtags $t [linsert [bindtags $t] 0 PotatoUserBindings PotatoOutput]
-       set pos [lsearch -exact [bindtags $t] "Text"]
-       bindtags $t [lreplace [bindtags $t] $pos $pos]
-
-       ::skin::$potato(skin)::addSpawn $c $name
-       return "";
+       # set it up.
+       set made [makeTextFrames $c]
+       set made [linsert $made 0 $name]
+       lappend conn($c,spawns) $made
+       ::skin::$potato(skin)::addSpawn $c $made
+       return $made;
      }
 
 };# ::potato::createSpawnWindow
@@ -3292,20 +3349,23 @@ proc ::potato::createSpawnWindow {c name} {
 #: proc ::potato::destroySpawnWindow
 #: arg c connection id
 #: arg name Spawn name
-#: desc Destroy the spawn window $name from connection $c. We also notify the skin of it's impending destruction
+#: desc Destroy the spawn window $name from connection $c. We also notify the skin of its impending destruction
 #: return nothing
 proc ::potato::destroySpawnWindow {c name} {
   variable conn
   variable potato;
 
-  if { ![info exists conn($c,spawns,$name)] } {
+  set pos [findSpawn $c $name]
+  if { $pos == -1 } {
        return; # no such spawn
      }
 
-  set togo $conn($c,spawns,$name)
-  unset conn($c,spawns,$name)
+  set conn($c,spawns) [lreplace $conn($c,spawns) $pos $pos]
   ::skin::$potato(skin)::delSpawn $c $name
-  destroy $togo
+  set spawn [lindex $conn($c,spawns) $pos]
+  foreach x [lrange $spawn 1 end] {
+    destroy $x
+  }
 
   return;
 
@@ -3625,16 +3685,17 @@ proc ::potato::outputSystem {c msg {tags ""}} {
      }
 
   if { $world($conn($c,world),spawnSystem) } {
-       foreach x [arraySubelem conn $c,spawns] {
-          set aE [atEnd $conn($x)]
-          if { [$conn($x) count -chars 1.0 3.0] > 1 } {
+       foreach x $conn($c,spawns) {
+         set t [lindex $x 1]
+          set aE [atEnd $t]
+          if { [$t count -chars 1.0 3.0] > 1 } {
                set newline "\n"
              } else {
                set newline ""
              }
-          $conn($x) insert end $newline $tags $msg $tags [clock seconds] [concat $tags timestamp]
+          $t insert end $newline $tags $msg $tags [clock seconds] [concat $tags timestamp]
           if { $aE } {
-               $conn($x) see end
+               $t see end
              }
        }
      }
@@ -3677,8 +3738,8 @@ proc ::potato::deleteSystemMessage {c tag} {
      }
   catch {$conn($c,textWidget) delete {*}[$conn($c,textWidget) tag ranges $tag]}
   if { $world($conn($c,world),spawnSystem) } {
-       foreach x [arraySubelem conn $c,spawns] {
-          $conn($x) delete {*}[$conn($x) tag ranges $tag]
+       foreach x $conn($c,spawns) {
+          [lindex $x 1] delete {*}[[lindex $x 1] tag ranges $tag]
        }
      }
 
@@ -3745,9 +3806,6 @@ proc ::potato::showConn {c {main 1}} {
        ::skin::$potato(skin)::unshow $prevUp
      }
 
-  # We used to do this, but it led to problems during debugging if an error occurred during this proc, so now we don't
-  #set potato(up) ""
-
   set state [expr {$c != 0 && $conn($c,connected) == 1}]
 
   set potato(up) $c
@@ -3810,7 +3868,7 @@ proc ::potato::showSpawn {c spawn} {
   # Both require confirmation that conn $c exists before they do anything (else buggy things happen).
   # For now, favour option 2.
 
-  if { ![info exists conn($c,spawns,$spawn)] } {
+  if { [findSpawn $c $spawn] == -1 } {
        bell -displayof .
        return;
      } else {
@@ -3967,8 +4025,8 @@ proc ::potato::closeConn {{c ""} {autoDisconnect 0} {prompt 1}} {
      } else {
        skinStatus [up]
      }
-  foreach spawn [removePrefix [arraySubelem conn $c,spawns] $c,spawns] {
-    destroySpawnWindow $c $spawn
+  foreach x $conn($c,spawns) {
+    destroySpawnWindow $c [lindex $x 0]
   }
 
   ::skin::$potato(skin)::export $c
@@ -5085,7 +5143,7 @@ proc ::potato::connInfo {c type} {
     autoreconnect { return [expr {$world($conn($c,world),autoreconnect) && $conn($c,reconnectId) ne ""}]; }
     world {return $conn($c,world);}
     address {return $conn($c,address);}
-    spawns {return [removePrefix [arraySubelem conn $c,spawns] $c,spawns];}
+    spawns {return $conn($c,spawns);}
   }
 
   # Note: "input1" and "input2" return the WIDGET PATH of those input windows.
@@ -7367,11 +7425,9 @@ proc ::potato::textWidgetName {text {c ""}} {
      }
 
   # Check spawn widgets
-  foreach x [arraySubelem conn $c,spawns] {
-    if { $conn($x) eq $text } {
-         return [removePrefix $x $c,spawns];
-       }
-  }
+  if { [set pos [lsearch -exact -index 1 $conn($c,spawns) $text]] != -1 } {
+       return [lindex [lindex $conn($c,spawns) $pos] 0];
+     }
 
   # Can't find it - return empty string as error
   return "";
@@ -8209,15 +8265,23 @@ proc ::potato::send_mushage {window saveonly} {
        set worlds [list $w -1]
      }
   foreach w $worlds {
+    if { [info exists prefix] } {
+         break;
+       }
     foreach x $windows {
-      if { ![info exists world($w,prefixes,$x)] || ![lindex $world($w,prefixes,$x) 1] } {
-           continue;
+      set pos [lsearch -exact -index 0 $world($w,prefixes) $x]
+      if { $pos != -1 } {
+           set entry [lindex $world($w,prefixes) $pos]
+           if { [lindex $entry 2] == 1 } {
+                set prefix [lindex $entry 1]
+                break;
+              }
          }
-      !set prefix [lindex $world($w,prefixes,$x) 0]
-      break;
     }
   }
-  !set prefix ""
+  if { ![info exists prefix] } {
+       set prefix ""
+     }
 
   set txt [$window get 1.0 end-1char]
   $window edit separator
@@ -9539,7 +9603,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
   # Validate window name
   if { $window eq "" } {
        set window [textWidgetName [activeTextWidget] $c]
-     } elseif { ![regexp $potato(spawnRegexp) $window] } {
+     } elseif { [set window [validSpawnName $c $window]] ne "" } {
        bell -displayof .
        return [list 0];
      }
@@ -9550,7 +9614,12 @@ proc ::potato::customSlashCommand {c w cmd str} {
      } else {
        # Update prefix. We enable the new prefix, even if there
        # was an existing, disabled one.
-       set world($w,prefixes,$window) [list $str 1]
+       set curr [lsearch -exact -nocase -index 0 $world($w,prefixes) $window]
+       if { $curr == -1 } {
+            lappend world($w,prefixes) [list $window $str 1]
+          } else {
+            set world($w,prefixes) [lreplace $world(prefixes) $curr [list $window $str 1]]
+          }
      }
 
   return [list 1];
@@ -9669,39 +9738,28 @@ proc ::potato::customSlashCommand {c w cmd str} {
 
 };# /cancelat
 
-#: /addspawn <spawn>[ <spawnN>]
-#: Add each of the space-separated list of spawns to the spawn-all list for the connection
+#: /addspawn <spawn>
+#: Add the specified spawn to the spawn-all list for the connection
 ::potato::define_slash_cmd addspawn {
   variable conn;
 
-  set spawns [split $conn($c,spawnAll) " "]
-  set str [split $str " "]
-  foreach x $str {
-    if { $x eq "" || $x in $spawns } {
-         continue;
-       }
-    lappend spawns $x
-  }
-  set conn($c,spawnAll) [join $spawns " "]
+  set lc [string tolower $str]
+  if { [string length $lc] && $lc ni $conn($c,spawnAll) } {
+       lappend conn($c,spawnAll) $lc
+     }
   return [list 1];
 
 };# /addspawn
 
-#: /delspawn <spawn>[ <spawnN>]
-#: Delete each of the space-separated list of spawns from the spawn-all list for the connection
+#: /delspawn <spawn>
+#: Delete the specified spawn from the spawn-all list for the connection
 ::potato::define_slash_cmd delspawn {
   variable conn;
 
-  set spawns [split $conn($c,spawnAll) " "]
-  set str [split $str " "]
-  foreach x $str {
-    if { $x eq "" || $x ni $spawns } {
-         continue;
-       }
-    set pos [lsearch -exact $spawns $x]
-    set spawns [lreplace $spawns $pos $pos]
-  }
-  set conn($c,spawnAll) [join $spawns " "]
+  set pos [lsearch -exact -nocase $conn($c,spawnAll) $str]
+  if { $pos != -1 } {
+       set conn($c,spawnAll) [lreplace $conn($c,spawnAll) $pos $pos]
+     }
   return [list 1];
 
 };# /delspawn
@@ -9839,8 +9897,9 @@ proc ::potato::customSlashCommand {c w cmd str} {
           }
        outputSystem $c $status
        $conn($c,textWidget) delete 1.0 2.0;# remove leading newline
-     } elseif { [info exists conn($c,spawns,$window)] } {
-       $conn($c,spawns,$window) delete 1.0 end
+     } elseif { [set pos [findSpawn $c $window]] != -1 } {
+       set spawn [lindex $conn($c,spawns) $pos]
+       [lindex $pos 1] delete 1.0 end
      } else {
        return [list 0 [T "/cls: No such window."]]
      }
@@ -9882,20 +9941,22 @@ proc ::potato::customSlashCommand {c w cmd str} {
   if { [string is integer -strict $str] } {
        # Just got a connection number
        showConn $str
-     } elseif { [regexp -nocase {^(?:([0-9]+)\.)?(_main|[a-zA-Z][a-zA-Z0-9_-]{0,49})?$} $str {} c2 window] } {
+       return [list 1];
+     } elseif { [regexp -nocase {^(?:([0-9]+)\.)?(.+?)$} $str {} c2 window] } {
        # We have an optional connection number, and a valid spawn name
        if { $c2 eq "" } {
             set c2 $c
           }
-       # $window may signify the main text widget, but by using showSpawn not showConn we
-       # request the skin show the main text widget, if it's not already doing so.
-       showSpawn $c2 $window
-       return [list 1];
+       set str $window
      } else {
-       # Invalid arg
-       return [list 0];
+       set c2 $c
      }
-
+  if { [set window [validSpawnName $window]] eq "" || [findSpawn $c2 $window] == -1 } {
+       return [list 0]
+     }
+  # $window may signify the main text widget, but by using showSpawn not showConn we
+  # request the skin show the main text widget, if it's not already doing so.
+  showSpawn $c2 $window
   return [list 1];
 
 };# /show

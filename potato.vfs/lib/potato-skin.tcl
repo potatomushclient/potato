@@ -471,17 +471,17 @@ proc ::skin::potato::init {} {
      -width 1
 
   image create photo ::skin::potato::img::spawnbarUp -data {
-     R0lGODlhDwAPANUAANnZ2ZXgk4naiInSgoPUfXHRbnGlc3i8c3PEbGO/XWeo
-     aXu6e2OzXlWyVU+fU3KlglKiWk6jUz6WQ2uneHy6fnS3c26vdCqLNBuCKA18
-     G2qXc2CsYlusWjaZN02hVUGdRwR+AgOBAzGFOh+cHwmOBAiKBQqJCgyJCg2D
-     DV2sYAauAwysCQymCQKiAF6gYli9U0TeKDzbJza3LYHQZ3bbU5y7mP//////
-     /////////////////////////////////yH5BAEAAAAALAAAAAAPAA8AAAZU
-     QIBwSCwaj8hiQJAcDggFQxJwQCQUScCC0XAYH0RIRFKcUCoW4QWT0Rg3nI7n
-     AwqJkCNSyXRCJYEp1YrVcgEBwiHxBYvJiETijFYjEolEIpFIJAKCADs=
+     R0lGODlhDwAUANUAANnZ2ZXgk4naiInSgoPUfXHRbnGlc3i8c3PEbGO/XWeoa
+     Xu6e2OzXlWyVU+fU3KlglKiWk6jUz6WQ2uneHy6fnS3c26vdCqLNBuCKA18G2
+     qXc2CsYlusWjaZN02hVUGdRwR+AgOBAzGFOh+cHwmOBAiKBQqJCgyJCg2DDV2
+     sYAauAwysCQymCQKiAF6gYli9U0TeKDzbJza3LYHQZ3bbU5y7mP//////////
+     /////////////////////////////yH5BAEAAAAALAAAAAAPABQAAAZNQIBwS
+     Cwaj8ikcslEBgTMAaFgUB4QCYVywWg4jA8iJCIpTigVi/CCyWiMG07H8wGFRM
+     gRqWQ6oZIpKissLS5KLzAxMkwzNDVNkJGSSUEAOw==
   }
 
   image create photo ::skin::potato::img::spawnbarNormal \
-     -height [image height ::skin::potato::img::spawnbarUp] \
+     -height [image height ::skin::potato::img::worldbarNewact] \
      -width 1
 
 
@@ -1220,10 +1220,16 @@ proc ::skin::potato::activeTextWidget {{c ""}} {
        set c [::potato::up]
      }
 
-  if { ![info exists disp($c)] || $disp($c) eq "" || ![info exists ::potato::conn($c,spawns,$disp($c))]} {
+  if { ![info exists disp($c)] || $disp($c) eq "" } {
        return [potato::connInfo $c textWidget];
      } else {
-       return $::potato::conn($c,spawns,$disp($c));
+       set pos [::potato::findSpawn $c $disp($c)]
+       if { $pos == -1 } {
+            return [::potato::connInfo $c textWidget];
+          } else {
+            set spawn [lindex [::potato::connInfo $c spawns] $pos]
+            return [lindex $spawn 1];
+          }
      }
 
 };# ::skin::potato::activeTextWidget
@@ -1395,7 +1401,6 @@ proc ::skin::potato::export {c} {
   $t configure -yscrollcommand {}
 
   foreach x [array names widgets conn,$c,*] {
-  puts "Destroying $x"
      catch {destroy $widgets($x)}
   }
 
@@ -1467,16 +1472,16 @@ proc ::skin::potato::connectMenu {} {
 
 #: proc ::skin::potato::addSpawn
 #: arg c connection id
-#: arg name Spawn name
+#: arg sinfo List of spawn name and its output and 2 input widgets
 #: desc REQUIRED by the skin protocol. Display the new spawn widget $name, created for connection $c.
 #: return nothing
-proc ::skin::potato::addSpawn {c name} {
+proc ::skin::potato::addSpawn {c sinfo} {
 
   if { [::potato::up] == $c } {
        spawnBar $c
      }
 
-  set t $::potato::conn($c,spawns,$name)
+  foreach [list name t i1 i2] $sinfo {break}
   bind $t <Button-3> [list ::skin::potato::rightclickOutput $c $t %x %y %X %Y]
 
   return;
@@ -1503,7 +1508,8 @@ proc ::skin::potato::spawnBar {{c ""}} {
        return;
      }
 
-  foreach name [lsort -dictionary [::potato::connInfo $c spawns]] {
+  foreach x [lsort -dictionary -index 0 [::potato::connInfo $c spawns]] {
+     set name [lindex $x 0]
      set btn $widgets(spawnbar).spawn_$name
      ttk::button $btn -text $name -command [list ::skin::potato::showSpawn $c $name] -style Toolbutton -compound left
      if { [info exists disp($c)] && $disp($c) eq $name } {
