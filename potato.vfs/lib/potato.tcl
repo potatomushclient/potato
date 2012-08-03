@@ -3831,7 +3831,7 @@ proc ::potato::setAppTitle {} {
   variable conn;
 
   set c [up]
-  if { $c == 0 } {
+  if { $c eq "" || $c == 0 } {
        wm title . [T "%s Version %s" $potato(name) $potato(version)]
      } else {
        wm title . "$potato(name) - \[$c. $world($conn($c,world),name)\]"
@@ -5267,16 +5267,17 @@ proc ::potato::main {} {
   set potato(webpage) "http://code.google.com/p/potatomushclient/"
 
   if { [info exists ::starkit::mode] && $::starkit::mode eq "starpack" } {
-       set potato(homedir) [file dirname [info nameofexecutable]]
-       set potato(vfsdir) [info nameofexecutable]
+       set path(homedir) [file dirname [info nameofexecutable]]
+       set path(vfsdir) [info nameofexecutable]
        set potato(wrapped) 1
      } else {
-       set potato(homedir) [file join [file dirname [info script]] .. ..]
-       set potato(vfsdir) [file join [file dirname [info script]] ..]
+       set path(homedir) [file join [file dirname [info script]] .. ..]
+       set path(vfsdir) [file join [file dirname [info script]] ..]
        set potato(wrapped) 0
      }
-  set path(help) [file join $potato(vfsdir) lib help]
-  set path(i18n_int) [file join $potato(vfsdir) lib i18n]
+  set path(lib) [file join $path(vfsdir) lib]
+  set path(help) [file join $path(lib) help]
+  set path(i18n_int) [file join $path(lib) i18n]
 
   # Number of connections made
   set potato(conns) 0
@@ -5290,7 +5291,7 @@ proc ::potato::main {} {
   # Are we running in local mode?
   set potato(local) 0
 
-  set potato(locale) "en_GB"
+  set potato(locale) "en_gb"
 
   # Regexp which spawn names must match
   set potato(spawnRegexp) {^[A-Za-z][A-Za-z0-9_!+=""*#@'-]{0,49}$};# doubled-up " for syntax highlighting
@@ -5300,10 +5301,10 @@ proc ::potato::main {} {
 
   set potato(skinCurrVersion) "1.4" ;# The current version of the skin spec. If changes made aren't
                                     ;# incompatible, this may be higher than skinMinVersion
-  cd $potato(homedir)
+  cd $path(homedir)
 
-  set path(log) $potato(homedir)
-  set path(upload) $potato(homedir)
+  set path(log) $path(homedir)
+  set path(upload) $path(homedir)
 
   basic_reqs
 
@@ -5325,31 +5326,31 @@ proc ::potato::main {} {
   }
 
   if { $potato(local) } {
-       set path(world) [file join $potato(homedir) worlds]
+       set path(world) [file join $path(homedir) worlds]
        set path(skins) [file join $potato(homedir) skins]
-       set path(lib) [file join $potato(homedir) lib]
-       set path(preffile) [file join $potato(homedir) potato.ini]
-       set path(custom) [file join $potato(homedir) potato.custom]
-       set path(startupCmds) [file join $potato(homedir) potato.startup]
-       set path(i18n) [file join $potato(homedir) i18n]
+       set path(userlib) [file join $path(homedir) lib]
+       set path(preffile) [file join $path(homedir) potato.ini]
+       set path(custom) [file join $path(homedir) potato.custom]
+       set path(startupCmds) [file join $path(homedir) potato.startup]
+       set path(i18n) [file join $path(homedir) i18n]
      } elseif { $::tcl_platform(platform) eq "windows" } {
-       set path(world) [file join $potato(homedir) worlds]
-       set path(skins) [file join $potato(homedir) skins]
-       set path(lib) [file join $potato(homedir) lib]
-       set path(preffile) [file join $potato(homedir) potato.ini]
-       set path(custom) [file join $potato(homedir) potato.custom]
-       set path(startupCmds) [file join $potato(homedir) potato.startup]
-       set path(i18n) [file join $potato(homedir) i18n]
+       set path(world) [file join $path(homedir) worlds]
+       set path(skins) [file join $path(homedir) skins]
+       set path(userlib) [file join $path(homedir) lib]
+       set path(preffile) [file join $path(homedir) potato.ini]
+       set path(custom) [file join $path(homedir) potato.custom]
+       set path(startupCmds) [file join $path(homedir) potato.startup]
+       set path(i18n) [file join $path(homedir) i18n]
      } else {
        set path(world) [file join ~ .potato worlds]
        set path(skins) [file join ~ .potato skins]
-       set path(lib) [file join ~ .potato lib]
+       set path(userlib) [file join ~ .potato lib]
        set path(preffile) [file join ~ .potato config]
        set path(custom) [file join ~ .potato potato.custom]
        set path(startupCmds) [file join ~ .potato potato.startup]
        set path(i18n) [file join ~ .potato i18n]
      }
-  set dev [file join $potato(homedir) potato.dev]
+  set dev [file join $path(homedir) potato.dev]
 
 
   # This MUST be after basic_reqs, as the [tk] command isn't available on
@@ -5374,7 +5375,7 @@ proc ::potato::main {} {
      catch {file mkdir $path($x)}
   }
   catch {file mkdir $paths(world)}
-  lappend ::auto_path $path(lib)
+  lappend ::auto_path $path(userlib)
 
   # We need to set the prefs before we load anything...
   setPrefs 1
@@ -5502,6 +5503,7 @@ proc ::potato::i18nPotato {} {
   variable misc;
   variable path;
   variable potato;
+  variable locales;
 
   if { [catch {package require msgcat 1.4.2} err] } {
        errorLog "Unable to load msgcat for translations: $err" error
@@ -5514,42 +5516,39 @@ proc ::potato::i18nPotato {} {
   # the shorter version. NOTE: Must be done before we load translations, otherwise we may clobber the user's preferred translation.
   namespace eval :: {::msgcat::mcmset en [list "Convert To:" "To:" "Recipient:" "To:" "Limit To:" "To:" "Spawn To:" "To:"]}
 
-  set locales [list en_GB en]
+  set loclist [list en_gb]
 
   # Load translation files. We do this in two steps:
   # 1) Load *.ptf files using [::potato::loadTranslationFile]. These are just message catalogues.
   # 2) Use ::msgcat::mcload, which loads *.msg files containing Tcl code for translations
   foreach x [glob -nocomplain -dir $path(i18n_int) -- *.ptf] {
-    lappend locales [loadTranslationFile $x]
+    lappend loclist [loadTranslationFile $x]
   }
 
   if { [file exists $path(i18n)] && [file isdir $path(i18n)] } {
        foreach x [glob -nocomplain -dir $path(i18n) -- *.ptf] {
-         lappend locales [loadTranslationFile $x]
+         lappend loclist [loadTranslationFile $x]
        }
      }
 
-  set locales [lsearch -all -inline -not $locales ""]
-  set split [split $misc(locale) "_"]
-  set preflist [list]
-  for {set i 0} {$i < [llength $split]} {incr i} {
-    lappend preflist [join [lrange $split 0 end-$i] "_"]
-  }
+  array set locales [list \
+     map,en      "English" \
+     map,en_gb   "English (British)" \
+     map,en_us   "English (United States)" \
+     map,hr_hr   "Hrvatski (Croatian)" \
+     map,es      "Spanish"]
 
-  foreach x $preflist {
-    if { $x in $locales } {
-         set potato(locale) $x
-         break;
+  set loclist [lsearch -all -inline -not -regexp $loclist {^(.*,.*)?$}]
+
+  foreach x $loclist {
+    if { [info exists locales(map,$x)] } {
+         set locales($x) $locales(map,$x)
+       } else {
+         set locales($x) $x
        }
   }
 
-  if { ![info exists potato(locale)] || $potato(locale) eq "" } {
-       set potato(locale) "en"
-     }
-
-
-  # Set our preferred locale
-  ::msgcat::mclocale $potato(locale)
+  ::potato::setLocale
 
   return;
 
@@ -5565,6 +5564,46 @@ proc ::potato::i18nPotato {} {
   # [T "&Cancel"] from tk_messageBox
 
 };# ::potato::i18nPotato
+
+#: proc ::potato::setLocale
+#: desc Using $misc(locale) - the desired locale - set potato(locale) to the best possible locale, update the display everywhere to show stuff in the new language.
+#: return nothing
+proc ::potato::setLocale {} {
+  variable misc;
+  variable potato;
+  variable locales;
+
+  set split [split $misc(locale) "_"]
+  set preflist [list]
+  for {set i 0} {$i < [llength $split]} {incr i} {
+    lappend preflist [join [lrange $split 0 end-$i] "_"]
+  }
+
+  set potato(locale) ""
+  foreach x $preflist {
+    if { [info exists locales($x)] } {
+         set potato(locale) $x
+         break;
+       }
+  }
+
+  if { ![info exists potato(locale)] || $potato(locale) eq "" } {
+       set potato(locale) "en_GB"
+     }
+
+  # Set our best available
+  ::msgcat::mclocale $potato(locale)
+
+  # Update display to make sure we're using it
+  if { $potato(skin) ne "" } {
+       ::skin::${potato(skin)}::locale
+     }
+  setUpMenu
+  setAppTitle
+
+  return;
+
+};# ::potato::setLocale
 
 #: ::potato::loadTranslationFile
 #: arg file The filename to load
@@ -5626,7 +5665,8 @@ proc ::potato::loadTranslationFile {file} {
   errorLog "$count translations set for $locale." message
 
   if { $count > 0 } {
-       return $locale;
+       # msgcat uses lower-case names, so we will too.
+       return [string tolower $locale];
      } else {
        return "";
      }
@@ -6062,7 +6102,7 @@ proc ::potato::minimizeToTray {w} {
 #: return nothing
 proc ::potato::setUpWinico {} {
   variable winico;
-  variable potato;
+  variable path;
   variable misc;
 
   set winico(loaded) 0
@@ -6077,7 +6117,7 @@ proc ::potato::setUpWinico {} {
        return;
      }
 
-  set dir [file join $potato(vfsdir) lib app-potato windows]
+  set dir [file join $path(vfsdir) lib app-potato windows]
   #set mainico [file join $dir potato2.ico]
   set winico(mainico) [file join $dir stpotato.ico]
   if { ![file exists $dir] || ![file isdirectory $dir] || ![file exists $winico(mainico)] || ![file isfile $winico(mainico)] } {
@@ -6435,9 +6475,9 @@ proc ::potato::historySub {c top lb key} {
 #: desc create the images, in the ::potato::img namespace, used by the app
 #: return nothing
 proc ::potato::createImages {} {
-  variable potato;
+  variable path;
 
-  set imgPath [file join $potato(vfsdir) lib images]
+  set imgPath [file join $path(lib) images]
 
   image create photo ::potato::img::uparrow -file [file join $imgPath uparrow.gif]
   image create photo ::potato::img::downarrow -file [file join $imgPath downarrow.gif]
@@ -6487,8 +6527,8 @@ proc ::potato::setUpFlash {} {
      } else {
        if { [catch {package require potato-linflash}] } {
             # Attempt to copy linflash out for the first time
-            catch {file copy -force [file join $potato(vfsdir) lib app-potato linux linflash1.0] $path(lib)}
-            catch {exec [file join $path(lib) linflash1.0 compile]}
+            catch {file copy -force [file join $path(lib) app-potato linux linflash1.0] $path(userlib)}
+            catch {exec [file join $path(userlib) linflash1.0 compile]}
           }
        if { ![catch {package require potato-linflash} err] } {
             set taskbarCmd {linflash .}
@@ -6786,6 +6826,10 @@ proc ::potato::build_menu_options {m} {
   createMenuTask $m slashCmds
   createMenuTask $m macroWindow
 
+  $m add separator
+
+  createMenuTask $m pickLocale
+
   return;
 
 };# ::potato::build_menu_options
@@ -6837,6 +6881,9 @@ proc ::potato::build_menu_help {m} {
 proc ::potato::setUpMenu {} {
   variable menu;
 
+  if { [winfo exists .m] } {
+       destroy .m
+     }
   menu .m -tearoff 0
   . configure -menu .m
   set menu(file,path) [menu .m.file -tearoff 0 -postcommand [list ::potato::build_menu_file .m.file]]
@@ -11105,168 +11152,171 @@ proc ::potato::tasksInit {} {
 
   # Set map of task names and commands
   array set tasks [list \
-       inputHistory,name   [T "Show Input &History Window"] \
+       inputHistory,name   [X "Show Input &History Window"] \
        inputHistory,cmd    "::potato::history" \
        inputHistory,state  notZero \
-       goNorth,name        [T "Go &North"] \
+       goNorth,name        [X "Go &North"] \
        goNorth,cmd         [list ::potato::send_to_real {} north] \
        goNorth,state       connected \
-       goSouth,name        [T "Go &South"] \
+       goSouth,name        [X "Go &South"] \
        goSouth,cmd         [list ::potato::send_to_real {} south] \
        goSouth,state       connected \
-       goEast,name         [T "Go &East"] \
+       goEast,name         [X "Go &East"] \
        goEast,cmd          [list ::potato::send_to_real {} east] \
        goEast,state        connected \
-       goWest,name         [T "Go &West"] \
+       goWest,name         [X "Go &West"] \
        goWest,cmd          [list ::potato::send_to_real {} west] \
        goWest,state        connected \
-       find,name           [T "&Find"] \
+       find,name           [X "&Find"] \
        find,cmd            "::potato::findDialog" \
        find,state          notZero \
-       disconnect,name     [T "&Disconnect"] \
+       disconnect,name     [X "&Disconnect"] \
        disconnect,cmd      "::potato::disconnect" \
        disconnect,state    {$c != 0 && ($conn($c,connected) != 0 || ($conn($c,connected) == 0 && $conn($c,reconnectId) ne ""))} \
-       reconnect,name      [T "&Reconnect"] \
+       reconnect,name      [X "&Reconnect"] \
        reconnect,cmd       "::potato::reconnect" \
        reconnect,state     {$c != 0 && $conn($c,connected) == 0} \
-       reconnectAll,name   [T "Reconnect All"] \
+       reconnectAll,name   [X "Reconnect All"] \
        reconnectAll,cmd    "::potato::reconnectAll" \
        reconnectAll,state  {[llength [connIDs]] != 0} \
-       close,name          [T "&Close Connection"] \
+       close,name          [X "&Close Connection"] \
        close,cmd           "::potato::closeConn" \
        close,state         notZero \
-       nextConn,name       [T "&Next Connection"] \
+       nextConn,name       [X "&Next Connection"] \
        nextConn,cmd        [list ::potato::toggleConn 1] \
        nextConn,state      {[llength [connIDs]] > 1} \
-       prevConn,name       [T "&Previous Connection"] \
+       prevConn,name       [X "&Previous Connection"] \
        prevConn,cmd        [list ::potato::toggleConn -1] \
        prevConn,state      {[llength [connIDs]] > 1} \
-       config,name         [T "Configure &World"] \
+       config,name         [X "Configure &World"] \
        config,cmd          "::potato::configureWorld" \
        config,state        notZero \
-       programConfig,name  [T "Configure Program &Settings"] \
+       programConfig,name  [X "Configure Program &Settings"] \
        programConfig,cmd   [list ::potato::configureWorld -1] \
        programConfig,state always \
-       events,name         [T "Configure &Events"] \
+       events,name         [X "Configure &Events"] \
        events,cmd          "::potato::eventConfig" \
        events,state        notZero \
-       globalEvents,name   [T "&Global Events"] \
+       globalEvents,name   [X "&Global Events"] \
        globalEvents,cmd    [list ::potato::eventConfig -1] \
        globalEvents,state  always \
-       slashCmds,name      [T "Customise &Slash Commands"] \
+       slashCmds,name      [X "Customise &Slash Commands"] \
        slashCmds,cmd       "::potato::slashConfig" \
        slashCmds,state     notZero \
-       globalSlashCmds,name [T "Global S&lash Commands"] \
+       globalSlashCmds,name [X "Global S&lash Commands"] \
        globalSlashCmds,cmd [list ::potato::slashConfig -1] \
        globalSlashCmds,state always \
-       log,name            [T "Show &Log Window"] \
+       log,name            [X "Show &Log Window"] \
        log,cmd             "::potato::logWindow" \
        log,state           notZero \
-       logStop,name        [T "Close &All Logs"] \
+       logStop,name        [X "Close &All Logs"] \
        logStop,cmd         "::potato::stopLog" \
        logStop,state       {[llength [array names ::potato::conn $c,log,*]] > 0} \
-       upload,name         [T "&Upload File"] \
+       upload,name         [X "&Upload File"] \
        upload,cmd          "::potato::uploadWindow" \
        upload,state        always \
-       help,name           [T "Show &Helpfiles"] \
+       help,name           [X "Show &Helpfiles"] \
        help,cmd            "::wikihelp::help" \
        help,state          always \
-       about,name          [T "&About Potato"] \
+       about,name          [X "&About Potato"] \
        about,cmd           "::potato::about" \
        about,state         always \
-       exit,name           [T "E&xit"] \
+       exit,name           [X "E&xit"] \
        exit,cmd            "::potato::chk_exit" \
        exit,state          always \
-       textEd,name         [T "&Text Editor"] \
+       textEd,name         [X "&Text Editor"] \
        textEd,cmd          "::potato::textEditor" \
        textEd,state        always \
-       twoInputWins,name   [T "Show Two Input Windows?"] \
+       twoInputWins,name   [X "Show Two Input Windows?"] \
        twoInputWins,cmd    "::potato::toggleInputWindows" \
        twoInputWins,state  always \
-       connectMenu,name    [T "&Connect To..."] \
+       connectMenu,name    [X "&Connect To..."] \
        connectMenu,cmd     "::potato::connectMenuPost" \
        connectMenu,state   always \
-       customKeyboard,name [T "Customize Keyboard Shortcuts"] \
+       customKeyboard,name [X "Customize Keyboard Shortcuts"] \
        customKeyboard,cmd  "::potato::keyboardShortcutWin" \
        customKeyboard,state always \
-       mailWindow,name     [T "Open &Mail Window"] \
+       mailWindow,name     [X "Open &Mail Window"] \
        mailWindow,cmd      "::potato::mailWindow" \
        mailWindow,state    notZero \
-       prevHistCmd,name    [T "Previous History Command"] \
+       prevHistCmd,name    [X "Previous History Command"] \
        prevHistCmd,cmd     "::potato::inputHistoryScroll -1" \
        prevHistCmd,state   always \
-       nextHistCmd,name    [T "Next History Command"] \
+       nextHistCmd,name    [X "Next History Command"] \
        nextHistCmd,cmd     "::potato::inputHistoryScroll 1" \
        nextHistCmd,state   always \
-       escHistCmd,name     [T "Clear History Command"] \
+       escHistCmd,name     [X "Clear History Command"] \
        escHistCmd,cmd      "::potato::inputHistoryReset" \
        escHistCmd,state    always \
-       manageWorlds,name   [T "&Address Book"] \
+       manageWorlds,name   [X "&Address Book"] \
        manageWorlds,cmd    "::potato::manageWorlds" \
        manageWorlds,state  always \
-       autoConnects,name   [T "Manage &Auto-Connects"] \
+       autoConnects,name   [X "Manage &Auto-Connects"] \
        autoConnects,cmd    "::potato::autoConnectWindow" \
        autoConnects,state  always \
        fcmd2,state         always \
        fcmd2,cmd           "::potato::fcmd 2" \
-       fcmd2,name          [T "Run F2 Command"] \
+       fcmd2,name          [X "Run F2 Command"] \
        fcmd3,state         always \
        fcmd3,cmd           "::potato::fcmd 3" \
-       fcmd3,name          [T "Run F3 Command"] \
+       fcmd3,name          [X "Run F3 Command"] \
        fcmd4,state         always \
        fcmd4,cmd           "::potato::fcmd 4" \
-       fcmd4,name          [T "Run F4 Command"] \
+       fcmd4,name          [X "Run F4 Command"] \
        fcmd5,state         always \
        fcmd5,cmd           "::potato::fcmd 5" \
-       fcmd5,name          [T "Run F5 Command"] \
+       fcmd5,name          [X "Run F5 Command"] \
        fcmd6,state         always \
        fcmd6,cmd           "::potato::fcmd 6" \
-       fcmd6,name          [T "Run F6 Command"] \
+       fcmd6,name          [X "Run F6 Command"] \
        fcmd7,state         always \
        fcmd7,cmd           "::potato::fcmd 7" \
-       fcmd7,name          [T "Run F7 Command"] \
+       fcmd7,name          [X "Run F7 Command"] \
        fcmd8,state         always \
        fcmd8,cmd           "::potato::fcmd 8" \
-       fcmd8,name          [T "Run F8 Command"] \
+       fcmd8,name          [X "Run F8 Command"] \
        fcmd9,state         always \
        fcmd9,cmd           "::potato::fcmd 9" \
-       fcmd9,name          [T "Run F9 Command"] \
+       fcmd9,name          [X "Run F9 Command"] \
        fcmd10,state        always \
        fcmd10,cmd          "::potato::fcmd 10" \
-       fcmd10,name         [T "Run F10 Command"] \
+       fcmd10,name         [X "Run F10 Command"] \
        fcmd11,state        always \
        fcmd11,cmd          "::potato::fcmd 11" \
-       fcmd11,name         [T "Run F11 Command"] \
+       fcmd11,name         [X "Run F11 Command"] \
        fcmd12,state        always \
        fcmd12,cmd          "::potato::fcmd 12" \
-       fcmd12,name         [T "Run F12 Command"] \
-       spellcheck,name     [T "Check &Spelling"] \
+       fcmd12,name         [X "Run F12 Command"] \
+       spellcheck,name     [X "Check &Spelling"] \
        spellcheck,cmd      "::potato::spellcheck" \
        spellcheck,state    {[file exists $::potato::misc(aspell)]} \
-       macroWindow,name    [T "&Macro Window"] \
+       macroWindow,name    [X "&Macro Window"] \
        macroWindow,cmd     "::potato::macroWindow" \
        macroWindow,state   notZero \
-       globalMacros,name   [T "Global &Macro Window"] \
+       globalMacros,name   [X "Global &Macro Window"] \
        globalMacros,cmd    "::potato::macroWindow -1" \
        globalMacros,state  always \
-       convertNewlines,name [T "Convert &Returns to %r"] \
+       convertNewlines,name [X "Convert &Returns to %r"] \
        convertNewlines,cmd  [list ::potato::escapeChars "" 0 1 0] \
        convertNewlines,state always \
-       convertSpaces,name  [T "Convert &Spaces to %b"] \
+       convertSpaces,name  [X "Convert &Spaces to %b"] \
        convertSpaces,cmd   [list ::potato::escapeChars "" 0 0 1] \
        convertSpaces,state always \
-       convertChars,name   [T "&Escape Special Chars"] \
+       convertChars,name   [X "&Escape Special Chars"] \
        convertChars,cmd    [list ::potato::escapeChars ""] \
        convertChars,state  always \
-       save2history,name   [T "Save to Input History"] \
+       save2history,name   [X "Save to Input History"] \
        save2history,cmd    [list ::potato::send_mushage "" 1] \
        save2history,state  notZero \
-       toggleInputFocus,name   [T "Toggle &Input Windows"] \
+       toggleInputFocus,name   [X "Toggle &Input Windows"] \
        toggleInputFocus,cmd    [list ::potato::toggleInputFocus] \
        toggleInputFocus,state  always \
-       insertNewline,name  [T "Insert Newline"] \
+       insertNewline,name  [X "Insert Newline"] \
        insertNewline,cmd   [list ::potato::insertNewline] \
        insertNewline,state always \
+       pickLocale,name     [X "Change &Language"] \
+       pickLocale,cmd      [list ::potato::pickLocale] \
+       pickLocale,state    always \
 
 
   ]
@@ -11381,9 +11431,9 @@ proc ::potato::taskLabel {task {menu 0}} {
      }
 
   if { $menu } {
-       return $tasks($task,name);
+       return [T $tasks($task,name)];
      } else {
-       return [string map [list & ""] $tasks($task,name)];
+       return [string map [list & ""] [T $tasks($task,name)]];
      }
 
 };# ::potato::taskLabel
@@ -11601,8 +11651,19 @@ proc ::potato::T {msgformat args} {
 
 };# ::potato::T
 
+#: proc ::potato::X
+#: arg msgformat
+#: desc Returns $msgformat. Used for tagging messages which are translatable, but which should not be instantly translated like "T" does.
+#: returns $msgformat
+proc ::potato::X {msgformat} {
+
+  return $msgformat;
+
+};# ::potato::X
+
 namespace eval ::potato {
   namespace export T
+  namespace export X
 }
 
 #: proc ::potato::loadSubFiles
@@ -11741,7 +11802,7 @@ proc parray {a args} {
 
 if { $tcl_platform(platform) eq "windows" } {
      parray potato::world -regexp {^[0-9]+,name$}
-     if { !$::potato::potato(wrapped) && [file exists [file join $::potato::potato(vfsdir) lib app-potato windows stpotato.ico]] } {
+     if { !$::potato::potato(wrapped) && [file exists [file join $::potato::path(vfsdir) lib app-potato windows stpotato.ico]] } {
           rename toplevel _realtoplevel
           proc toplevel {t args} {
             uplevel 1 _realtoplevel $t {*}$args

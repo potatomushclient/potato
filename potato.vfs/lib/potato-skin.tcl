@@ -943,6 +943,8 @@ proc ::skin::potato::status {c} {
             $widgets(toolbar,disconnect) configure -state disabled
             $widgets(toolbar,reconnect) configure -state disabled
             $widgets(toolbar,close) configure -state disabled
+            $widgets(statusbar,connstatus,sub,msg) configure -text [::potato::T "Not Connected"]
+            $widgets(statusbar,hostinfo,label) configure -text [::potato::T "Not Connected"]
           } elseif { $status == "disconnected" } {
             if { [::potato::connInfo $c autoreconnect] } {
                  $widgets(toolbar,disconnect) configure -state normal
@@ -1654,10 +1656,16 @@ proc ::skin::potato::loadPrefs {} {
 
 };# ::skin::potato::loadPrefs
 
+#: proc ::skin::tabbed::locale
+#: desc REQUIRED. Called when Potato changes locale, so the skin can update displayed text to the new locale
+#: return nothing
+proc ::skin::potato::locale {} {
 
+  status [::potato::up]
 
+  return;
 
-
+};# ::skin::potato::locale
 
 
 

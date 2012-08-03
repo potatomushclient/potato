@@ -187,7 +187,8 @@ proc ::potato::setPrefs {readfile} {
 
   set misc(checkForUpdates) 1
 
-  # Default locale
+  # misc(locale) is the user's preferred locale. potato(locale), set in main/i18nPotato is
+  # the locale that's actually currently being used
   set misc(locale) "en_gb";# Colour, not Color :)
 
   # Default skin
@@ -206,7 +207,6 @@ proc ::potato::setPrefs {readfile} {
        set misc(tileTheme) alt
      }
   set defaultTheme $misc(tileTheme)
-
 
   # These are static, but this is still probably the best place to set them
   set tinyurl(TinyURL,post) "url"
@@ -259,6 +259,8 @@ proc ::potato::setPrefs {readfile} {
   if { $misc(aspell) eq "" } {
        set misc(aspell) [auto_execok aspell]
      }
+
+  set misc(locale) [string tolower $misc(locale)]
 
   return;
 
@@ -2006,3 +2008,106 @@ proc ::potato::configureShow {canvas tree} {
   return;
 
 };# ::potato::configureShow
+
+#: proc ::potato::pickLocale
+#: desc Show the window for changing Potato's locale/language
+#: return nothing
+proc ::potato::pickLocale {} {
+  variable misc;
+  variable potato;
+  variable path;
+  variable locales;
+
+  set win .chooseLocale
+  if { [reshowWindow $win] } {
+       return;
+     }
+
+  toplevel $win
+  wm withdraw $win
+  wm title $win [T "Language Selection"]
+
+  pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both -anchor nw
+  pack [::ttk::label $frame.l -text [T "Please select your desired language below and click Save\n\nNote that changes may not take effect until after you reboot."]] -padx 8 -pady 5 -anchor nw
+  pack [set lf [::ttk::frame $frame.langs]] -padx 15 -pady 5 -anchor nw
+
+  image create photo ::potato::img::locale_none -height 32 -width 32
+  set images [list "none"]
+
+  set loclist [list]
+  foreach x [array names locales -regexp {^[^,]+$}] {
+    lappend loclist [list $x $locales($x)]
+  }
+  set loclist [lsort -index 1 $loclist]
+
+  if { [lsearch -nocase  [::msgcat::mcpreferences] $misc(locale)] == -1} {
+       if { [info exists locales(map,$misc(locale))] } {
+            set name "$locales(map,$misc(locale)) ($misc(locale))"
+          } elseif { [info exists "locales(map,[lindex [split $misc(locale) "_"] 0])"] } {
+            set name "$locales(map,[lindex [split $misc(locale) "_"] 0]) ($misc(locale))"
+          } else {
+            set name $misc(locale)
+          }
+       lappend loclist [list $misc(locale) "$name (Current setting - not available)"]
+       set locales(conf,curr) $misc(locale)
+     } else {
+       set locales(conf,curr) $potato(locale)
+     }
+
+
+  foreach x $loclist {
+    set code [lindex $x 0]
+    set name [lindex $x 1]
+    set shortcode [lindex [split $code "_"] 0]
+    foreach img [list $code $shortcode none] {
+      if { $img in $images } {
+           break;
+       } elseif { [file exists [set file [file join $path(vfsdir) lib images flags $img.gif]]] } {
+         image create photo ::potato::img::locale_$img -file $file
+         lappend images $img
+         break;
+       }
+    }
+    pack [::ttk::radiobutton $lf.r_$code -text $name -takefocus 0 -image "::potato::img::locale_$img" -compound left -variable ::potato::locales(conf,curr) -value $code] -anchor nw
+  }
+
+  pack [::ttk::frame $frame.btns] -fill x -pady 5 -anchor nw
+  set save [::ttk::button $frame.btns.save -text [T "Save"] -command [list ::potato::saveLocale $win]]
+  set cancel [::ttk::button $frame.btns.cancel -text [T "Cancel"] -command [list destroy $win]]
+  grid $save $cancel -padx 5
+  grid configure $save -sticky e
+  grid configure $cancel -sticky w
+
+  grid columnconfigure $frame.btns 0 -weight 1 -uniform x
+  grid columnconfigure $frame.btns 1 -weight 1 -uniform x
+
+  update
+  center $win
+  wm deiconify $win
+
+  bind $win <Destroy> [list array unset ::potato::locales conf,*]
+
+};# ::potato::pickLocale
+
+#: proc ::potato::saveLocale
+#: arg win Path of locale-config toplevel
+#: desc Save the newly selected locale, update the locale being used, destroy $win
+#: return nothing
+proc ::potato::saveLocale {win} {
+  variable locales;
+  variable misc;
+  variable potato;
+
+  set new $locales(conf,curr)
+  array unset locales conf,*
+
+  if { $new ne $misc(locale) } {
+       set misc(locale) $new
+       setLocale
+     }
+
+  destroy $win;
+
+  return;
+
+};# ::potato::saveLocale
