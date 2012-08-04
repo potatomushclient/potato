@@ -1606,6 +1606,7 @@ proc ::potato::newConnectionDefault {w} {
 proc ::potato::makeTextFrames {c} {
   variable conn;
   variable world;
+  variable inputSwap;
 
   set count [incr conn($c,textFrameTotals)]
   set w $conn($c,world)
@@ -1618,10 +1619,14 @@ proc ::potato::makeTextFrames {c} {
   bindtags $out [lreplace [bindtags $out] $pos $pos]
 
   foreach x [list input1 input2] {
-    set $x [text .conn_${c}_${x}_$count -wrap word -undo 1 -height 1 \
+    set t .conn_${c}_${x}_$count
+    set $x [text $t -wrap word -undo 1 -height 1 \
               -background $world($w,bottom,bg) -font $world($w,bottom,font,created) \
               -foreground $world($w,bottom,fg) -insertbackground [reverseColour $world($w,bottom,bg)]]
     bindtags [set $x] [linsert [bindtags [set $x]] 0 PotatoUserBindings PotatoInput]
+    set inputSwap($t,count) -1
+    set inputSwap($t,conn) $c
+    set inputSwap($t,backup) ""
   }
 
   return [list $out $input1 $input2];
@@ -1637,7 +1642,6 @@ proc ::potato::newConnection {w {character ""}} {
   variable potato;
   variable conn;
   variable world;
-  variable inputSwap;
 
   if { $w == -1 } {
        # Set up the "not connected" connection
@@ -1714,13 +1718,6 @@ proc ::potato::newConnection {w {character ""}} {
   set conn($c,userAfterIDs) [list]
 
   foreach [list conn($c,textWidget) conn($c,input1) conn($c,input2)] [makeTextFrames $c] {break};
-
-  set inputSwap($conn($c,input1),count) -1
-  set inputSwap($conn($c,input1),conn) $c
-  set inputSwap($conn($c,input1),backup) ""
-  set inputSwap($conn($c,input2),count) -1
-  set inputSwap($conn($c,input2),backup) ""
-  set inputSwap($conn($c,input2),conn) $c
 
   if { $w == -1 } {
        connZero
