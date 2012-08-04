@@ -1611,7 +1611,8 @@ proc ::potato::makeTextFrames {c} {
   set count [incr conn($c,textFrameTotals)]
   set w $conn($c,world)
 
-  set out [text .conn_${c}_textWidget_$count -undo 0 -height 1]
+  set t .conn_${c}_textWidget_$count
+  set out [text $t -undo 0 -height 1]
   createOutputTags $out
   configureTextWidget $c $out
   bindtags $out [linsert [bindtags $out] 0 PotatoUserBindings PotatoOutput]
@@ -1619,14 +1620,13 @@ proc ::potato::makeTextFrames {c} {
   bindtags $out [lreplace [bindtags $out] $pos $pos]
 
   foreach x [list input1 input2] {
-    set t .conn_${c}_${x}_$count
-    set $x [text $t -wrap word -undo 1 -height 1 \
+    set $x [text .conn_${c}_${x}_$count -wrap word -undo 1 -height 1 \
               -background $world($w,bottom,bg) -font $world($w,bottom,font,created) \
               -foreground $world($w,bottom,fg) -insertbackground [reverseColour $world($w,bottom,bg)]]
     bindtags [set $x] [linsert [bindtags [set $x]] 0 PotatoUserBindings PotatoInput]
-    set inputSwap($t,count) -1
-    set inputSwap($t,conn) $c
-    set inputSwap($t,backup) ""
+    set inputSwap([set $x],count) -1
+    set inputSwap([set $x],conn) $c
+    set inputSwap([set $x],backup) ""
   }
 
   return [list $out $input1 $input2];
@@ -1686,7 +1686,6 @@ proc ::potato::newConnection {w {character ""}} {
   set conn($c,upload,mpp,gt) 0
   set conn($c,upload,mpp,buffer) ""
   set conn($c,connected) 0
-  set conn($c,flashId) ""
   set conn($c,reconnectId) ""
   set conn($c,loginInfoId) ""
   set conn($c,telnet,state) 0
@@ -1818,35 +1817,38 @@ proc ::potato::sendRaw {c str telnet} {
 
 };# ::potato::sendRaw
 
-#: proc ::potato::flashConnANSI
-#: arg c connection id
-#: desc flash the ANSI text in the windows for connection $c
+#: proc ::potato::flashANSI
+#: arg flashing Are we currently flashing?
+#: desc flash the ANSI text for all connections where appropriate
 #: return nothing
-proc ::potato::flashConnANSI {c} {
+proc ::potato::flashANSI {flashing} {
   variable misc;
   variable conn;
   variable world;
 
-  if { ![info exists conn($c,world)] } {
-       return;
-     }
-  set w $conn($c,world)
-
-  set col [$conn($c,textWidget) tag cget ANSI_flash -background]
-  if { $col eq "" } {
-       set col $world($w,top,bg)
-       set time $misc(ansiFlashDelay,off)
+  if { $flashing } {
+       foreach c [connIDs] {
+         set w $conn($c,world)
+         $conn($c,textWidget) tag configure ANSI_flash -background "" -foreground ""
+         foreach x $conn($c,spawns) {
+           [lindex $x 1] tag configure ANSI_flash -background "" -foreground ""
+         }
+       }
+       after $misc(ansiFlashDelay,on) [list ::potato::flashANSI 0]
      } else {
-       set col ""
-       set time $misc(ansiFlashDelay,on)
+       foreach c [connIDs] {
+         set w $conn($c,world)
+         if { !$world($w,ansi,flash) } {
+              continue;
+            }
+         set bgcol $world($w,top,bg)
+         $conn($c,textWidget) tag configure ANSI_flash -background $bgcol -foreground $bgcol
+         foreach x $conn($c,spawns) {
+           [lindex $x 1] tag configure ANSI_flash -background $bgcol -foreground $bgcol
+         }
+       }
+       after $misc(ansiFlashDelay,off) [list ::potato::flashANSI 1]
      }
-
-  $conn($c,textWidget) tag configure ANSI_flash -background $col -foreground $col
-  foreach x $conn($c,spawns) {
-    [lindex $x 1] tag configure ANSI_flash -background $col -foreground $col
-  }
-
-  set conn($c,flashId) [after $time [list potato::flashConnANSI $c]]
 
   return;
 
@@ -1894,17 +1896,6 @@ proc ::potato::configureTextWidget {c t} {
   $t configure -inactiveselectbackground [$t cget -selectbackground]
   $t tag configure prompt
 
-  if { $world($w,ansi,flash) } {
-       if { $conn($c,flashId) eq "" } {
-            flashConnANSI $c
-          }
-     } elseif { $conn($c,flashId) ne "" } {
-       if { $c != -1 } {
-            after cancel $conn($c,flashId)
-            set conn($c,flashId) ""
-          }
-       $t tag configure ANSI_flash -background {} -foreground {}
-     }
   $t configure -width $world($w,wrap,at)
 
   if { $world($w,wrap,indent) == 0 } {
@@ -5526,6 +5517,10 @@ proc ::potato::main {} {
   if { $misc(checkForUpdates) } {
        after 3500 [list ::potato::checkForUpdates 1]
      }
+
+
+  # Start ANSI-flashing
+  after $misc(ansiFlashDelay,on) ::potato::flashANSI 1
 
   return;
 
