@@ -2168,7 +2168,7 @@ proc ::potato::connZero {} {
   set font(subhead) [list -family Tahoma -size 14]
   set font(normal) [list -family Tahoma -size 12]
   set font(world) [list -family Tahoma -size 12 -underline 1]
-  set linkcol "#ff1493"
+  set linkcol $world(-1,ansi,link)
 
   connZeroAddText $canvas 175 y 0 [T "Open Address Book"] $font(link) [list clickable addressbook]
   connZeroAddText $canvas 350 y 0 \u2022 [list Tahoma 7 bold]
