@@ -7236,16 +7236,16 @@ proc ::potato::checkForUpdates {{background 0}} {
   pack [set top [::ttk::frame $frame.top]] -padx 10 -pady 10
   set labelfont [font actual [::ttk::style lookup TLabel -font]]
   dict set labelfont -size [expr {round([dict get $labelfont -size] * 1.5)}]
-  pack [::ttk::label $top.l1 -text "You are currently running version:" -font $labelfont -justify center] -side top
+  pack [::ttk::label $top.l1 -text [T "You are currently running version:"] -font $labelfont -justify center] -side top
   pack [::ttk::label $top.l2 -textvariable potato::potato(version) -font [concat $labelfont -weight bold] -justify center] -side top
-  pack [::ttk::label $top.l3 -text "Checking for updates..." -font $labelfont -justify center]
+  pack [::ttk::label $top.l3 -text [T "Checking for updates..."] -font $labelfont -justify center]
 
   pack [set progress [::ttk::frame $frame.progress]] -side top -padx 10 -pady 10
   pack [::ttk::progressbar $progress.bar -orient horizontal -mode indeterminate -length 160]
   $progress.bar start 1
 
   pack [set btns [::ttk::frame $frame.buttons]] -side top -padx 10 -pady 10
-  pack [::ttk::button $btns.cancel -text "Cancel" -command [list destroy $win]]
+  pack [::ttk::button $btns.cancel -text [T "Cancel"] -command [list destroy $win]]
 
   set update(win) $win
   set update(main) $progress
