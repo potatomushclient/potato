@@ -36,7 +36,7 @@ proc mergeFiles {} {
   set fid(translation) [open $files(translation) r]
   set fid(output) [open $files(output) w]
   fconfigure $fid(translation) -encoding utf-8
-  fconfigure $fid(output) -encoding utf-8
+  fconfigure $fid(output) -encoding utf-8 -translation cr
 
   unset -nocomplain templateStrings;
   unset -nocomplain translationStrings;
@@ -159,7 +159,11 @@ proc finishMergeFiles {} {
 proc setFile {type existing} {
   global files
 
-  set initial [list -initialdir ../lib/i18n]
+  if { $type eq "template" } {
+       set initial [list -initialdir .]
+     } else {
+       set initial [list -initialdir ../lib/i18n]
+     }
   if { [info exists files($type)] && $files($type) ne "" } {
        set initial [list -initialfile $files($type)]
      }

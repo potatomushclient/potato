@@ -5911,7 +5911,7 @@ proc ::potato::loadTranslationFile {file} {
   # <translatedMsg>
   # etc.
   #
-  # All files should be in 7bit ascii - extended characters are specified via \xHH or \uHHHH syntax.
+  # All files should be in utf-8 or 7bit ascii - extended characters can be specified via \xHH or \uHHHH syntax.
   # File names are <locale>.ptf
   # All strings are evaluated with [subst -nocommands -novariables] to parse \-syntax.
   #
@@ -5933,7 +5933,7 @@ proc ::potato::loadTranslationFile {file} {
 
   set locale [file rootname [file tail $file]]
 
-  fconfigure $fid -encoding ascii
+  fconfigure $fid -encoding utf-8
 
   set i 0
   set translations [list]

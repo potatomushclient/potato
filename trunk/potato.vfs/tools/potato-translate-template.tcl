@@ -123,13 +123,7 @@ proc buildNewTemplate {} {
        tk_messageBox -message "Unable to open output file:\n[file nativename [file normalize $outputfile]]\nError: $fout" -icon error -title "Potato-Translate"
        return;
      }
-  #puts $fout "# LOCALE: en_gb.template"
-  #puts $fout "# Generated on [clock format [clock seconds] -format "%A, %B %d %Y at %T"]\n"
-  #puts $fout "# Encodings available by default:"
-  #foreach {i1 i2 i3 i4 i5 i6 i7 i8 i9 i10 i11 i12 i13 i14 i15} [lsort -dictionary [encoding names]] {
-  #  puts $fout "# $i1 $i2 $i3 $i4 $i5 $i6 $i7 $i8 $i9 $i10 $i11 $i12 $i13 $i14 $i15"
-  #}
-  #puts $fout "\n\n"
+  fconfigure $outputfile -translation cr
   set msgs 0
   foreach x $inputfiles {
     if { [catch {open $x r} fin] } {
