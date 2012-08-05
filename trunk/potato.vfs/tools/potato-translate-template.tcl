@@ -123,7 +123,7 @@ proc buildNewTemplate {} {
        tk_messageBox -message "Unable to open output file:\n[file nativename [file normalize $outputfile]]\nError: $fout" -icon error -title "Potato-Translate"
        return;
      }
-  fconfigure $outputfile -translation cr
+  fconfigure $fout -translation cr
   set msgs 0
   foreach x $inputfiles {
     if { [catch {open $x r} fin] } {
