@@ -2123,7 +2123,7 @@ proc ::potato::connZero {} {
 
   set fgcol $world(-1,ansi,fg)
 
-  set logo ::potato::img::logo
+  set logo ::potato::img::logoSmall
 
   set x 25
   set y 25
@@ -2134,11 +2134,11 @@ proc ::potato::connZero {} {
 
   set textpos2 [expr {((700 - $textpos)/2)+$textpos}]
 
-  connZeroAddText $canvas $textpos2 y 1 $potato(name) [list Tahoma 24 bold] [list h1] -width 350
+  connZeroAddText $canvas $textpos2 y 1 $potato(name) [list Tahoma 18 bold] [list h1] -width 350
   connZeroAddText $canvas $textpos2 y 1 [T "The Graphical MU* Client for Windows and Linux"] \
-    [list Tahoma 19 bold] [list h2] -width 350
+    [list Tahoma 16 bold] [list h2] -width 350
   connZeroAddText $canvas $textpos2 y 1 [T "Version %s. Written by Mike Griffiths (%s)" $potato(version) $potato(contact)] \
-    [list Tahoma 10 bold] [list h3] -width 350
+    [list Tahoma 9 bold] [list h3] -width 350
 
   foreach {h1(x1) y1 h1(x2) -} [$canvas bbox h1] {break}
   foreach {h2(x1) - h2(x2) -} [$canvas bbox h2] {break}
@@ -2162,16 +2162,18 @@ proc ::potato::connZero {} {
 
   unset -nocomplain y1 y2 textheight imageheight imgy1 imgy2
 
-  incr y 20 ;# margin
+  incr y 15 ;# margin
 
-  set font(link) [list -family Tahoma -size 14 -weight bold -underline 1]
-  set font(subhead) [list -family Tahoma -size 14]
-  set font(normal) [list -family Tahoma -size 12]
-  set font(world) [list -family Tahoma -size 12 -underline 1]
+  set font(link) [list -family Tahoma -size 12 -weight bold -underline 1]
+  set font(subhead) [list -family Tahoma -size 12]
+  set font(normal) [list -family Tahoma -size 10]
+  set font(world) [list -family Tahoma -size 10 -underline 1]
+  set font(dot) [list -family Tahoma -size 7]
+
   set linkcol $world(-1,ansi,link)
 
   connZeroAddText $canvas 175 y 0 [T "Open Address Book"] $font(link) [list clickable addressbook]
-  connZeroAddText $canvas 350 y 0 \u2022 [list Tahoma 7 bold]
+  connZeroAddText $canvas 350 y 0 \u2022 $font(dot)
   connZeroAddText $canvas 525 y 1 [T "Add New World"] $font(link) [list clickable addnewworld]
   connZeroAddText $canvas 350 y 1 [T "Quick Connection"] $font(link) [list clickable quickconnect]
 
@@ -2190,6 +2192,7 @@ proc ::potato::connZero {} {
        set height 0
        set prevheight 0
        set dotspace 3
+       set linespace 8
        foreach winfo $worldList {
           foreach {w name} $winfo {break}
           if { $first } {
@@ -2197,19 +2200,19 @@ proc ::potato::connZero {} {
              } else {
                set startx 355
              }
-          set dot [$canvas create text $startx $y -text \u2022 -font $font(normal) -justify left -anchor nw -fill $fgcol]
+          set dot [$canvas create text $startx $y -text \u2022 -font $font(dot) -justify left -anchor nw -fill $fgcol]
           foreach {x1 - x2 -} [$canvas bbox $dot] {break}
           set width [expr {$x2 - $x1}]
-          set entry [$canvas create text [expr {$startx + $width + $dotspace}] $y -text $name -font $font(world) -tags [list clickable world$w] -justify left -anchor nw -width 600];#[expr {320 - $width - $dotspace}]]
+          set entry [$canvas create text [expr {$startx + $width + $dotspace}] $y -text $name -font $font(world) -tags [list clickable world$w] -justify left -anchor nw -width 600]
           foreach {x1 y1 x2 y2} [$canvas bbox $entry] {break}
           incr width [expr {($x2 - $x1) + $dotspace}]
           set height [expr {$y2 - $y1}]
           if { $width > 320 } {
                if { $first } {
-                    incr y [expr {$height + 10}]
+                    incr y [expr {$height + $linespace}]
                   } else {
-                    set by [expr {$prevheight + 10}]
-                    incr y [expr {$by + $height + 10}]
+                    set by [expr {$prevheight + $linespace}]
+                    incr y [expr {$by + $height + $linespace}]
                     $canvas move $dot -330 $by
                     $canvas move $entry -330 $by
                     set prevheight 0
@@ -2220,7 +2223,7 @@ proc ::potato::connZero {} {
                set prevheight $height
              } else {
                set first 1
-               incr y [expr {$height + 10}]
+               incr y [expr {$height + $linespace}]
                set prevheight 0
              }
        }
@@ -2251,7 +2254,7 @@ proc ::potato::connZeroAddText {canvas x _y incry text font {tags ""} args} {
   if { $incry } {
        set bbox [$canvas bbox $id]
        set y [lindex $bbox 3]
-       incr y 13;# margin;
+       incr y 8;# margin;
      }
 
   return $id;
