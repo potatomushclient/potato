@@ -29,7 +29,6 @@ proc mergeFiles {} {
   global global fid;
   global templateStrings;
   global translationStrings;
-  global encoding;
 
   # Meh. ;)
 
@@ -58,8 +57,6 @@ proc mergeFiles {} {
        finishMergeFiles
        return;
      }
-  # OK, we loaded successfully. So, now we need to write. Make sure we use the right encoding
-  fconfigure $fid(output) -encoding $encoding
 
   set done [list]
 
@@ -104,7 +101,6 @@ proc mergeFiles {} {
 
 proc loadFile {type} {
   global fid;
-  global encoding;
   global ${type}Strings;
 
   if { ![getLine $fid($type) line] } {
