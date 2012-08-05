@@ -2277,6 +2277,8 @@ proc ::potato::connZeroFact {} {
 
   set stupid [list \
     "Over 99% of the people we asked said Potato was their favourite MUSH client ever. (Survey included two people... they may both have been me.)" \
+    "Potato is one of the fastest growing clients on the intertubers." \
+    "If Potato can't do it, nobody can. Or maybe you'll want to submit a feature request."
   ]
 
   set allfacts [concat $food $client $stupid]
