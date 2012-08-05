@@ -10864,10 +10864,26 @@ proc ::potato::itemize {list {join "and"}} {
 proc ::potato::timeFmt {seconds full} {
   set timeList [list]
   if { $full } {
-       set singles [list [T "day"] [T "hour"] [T "minute"] [T "second"]]
-       set plurals [list [T "days"] [T "hours"] [T "minutes"] [T "seconds"]]
+       # Each [T] must be on its own line, or the template-generator won't pick them all up
+       set singles [list \
+                     [T "day"] \
+                     [T "hour"] \
+                     [T "minute"] \
+                     [T "second"]\
+                   ]
+       set plurals [list \
+                     [T "days"] \
+                     [T "hours"] \
+                     [T "minutes"] \
+                     [T "seconds"] \
+                   ]
      } else {
-       set singles [list [T "d"] [T "h"] [T  "m"] [T "s"]]
+       set singles [list \
+                      [T "d"] \
+                      [T "h"] \
+                      [T  "m"] \
+                      [T "s"] \
+                    ]
        set plurals $singles
      }
   foreach div {86400 3600 60 1} mod {0 24 60 60} single $singles plural $plurals {
