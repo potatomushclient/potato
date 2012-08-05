@@ -349,11 +349,6 @@ Enable this timer?
 -
 
 
-# potato.tcl, line 10884  (::potato::timeFmt)
- 
--
-
-
 # potato.tcl, line 1298  (::potato::logWindow)
 Leave Log Open?
 -
@@ -1266,6 +1261,11 @@ Run F11 Command
 
 # potato-spell.tcl, line 65  (::potato::spellcheck::spellcheck)
 Replace
+-
+
+
+# potato.tcl, line 10884  (::potato::timeFmt)
+m
 -
 
 

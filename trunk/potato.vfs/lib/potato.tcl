@@ -10881,7 +10881,7 @@ proc ::potato::timeFmt {seconds full} {
        set singles [list \
                       [T "d"] \
                       [T "h"] \
-                      [T  "m"] \
+                      [T "m"] \
                       [T "s"] \
                     ]
        set plurals $singles

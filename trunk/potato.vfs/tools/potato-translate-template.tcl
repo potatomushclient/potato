@@ -173,7 +173,7 @@ proc processFile {fname fin var} {
     incr lineNum
     if { [regexp {^proc +(\S+) } $line -> tmp] } {
          set proc $tmp
-       } elseif { [regexp {.+?\[(?:\:\:potato\:\:)?[TX] (.+)$} $line -> tmp] } {
+       } elseif { [regexp {.+?\[(?:\:\:potato\:\:)?[TX] +(.+)$} $line -> tmp] } {
          # Now we need to parse out the message, as it may contain escaped quotes and Tcl doesn't do lookbehind regexps.
          if { [string match {"*} $tmp] } {
               # Quoted string

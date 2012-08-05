@@ -34,9 +34,10 @@ proc mergeFiles {} {
   # Meh. ;)
 
   set fid(template) [open $files(template) r]
-  set encoding [fconfigure $fid(template) -encoding]
   set fid(translation) [open $files(translation) r]
   set fid(output) [open $files(output) w]
+  fconfigure $fid(translation) -encoding utf-8
+  fconfigure $fid(output) -encoding utf-8
 
   unset -nocomplain templateStrings;
   unset -nocomplain translationStrings;
