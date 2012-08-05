@@ -1982,6 +1982,10 @@ proc ::potato::configureWorldCommit {w win} {
 
   saveWorlds
 
+  if { [up] == 0 } {
+       connZero
+     }
+
   return;
 
 };# ::potato::configureWorldCommit

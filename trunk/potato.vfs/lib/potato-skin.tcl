@@ -1277,6 +1277,9 @@ proc ::skin::potato::rightclickOutput {c t evx evy evX evY} {
   if { $t eq "" } {
        set t [activeTextWidget $c]
      }
+  if { [winfo class $t] ne "Text" } {
+       return;
+     }
   set conns [lsort -integer -index 0 [::potato::connList]]
   if { $c == 0 || [llength $conns] < 2 } {
        $menu entryconfigure 0 -state disabled
@@ -1377,7 +1380,7 @@ proc ::skin::potato::import {c} {
 #: return nothing
 proc ::skin::potato::scrollActiveTextWidget {c delta} {
 
-  ::potato::mouseWheel [activeTextWidget $c] %D
+  ::potato::mouseWheel [activeTextWidget $c] $delta
   return;
 
 };# ::skin::potato::scrollActiveTextWidget

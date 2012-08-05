@@ -1612,12 +1612,16 @@ proc ::potato::makeTextFrames {c} {
   set w $conn($c,world)
 
   set t .conn_${c}_textWidget_$count
-  set out [text $t -undo 0 -height 1]
-  createOutputTags $out
-  configureTextWidget $c $out
-  bindtags $out [linsert [bindtags $out] 0 PotatoUserBindings PotatoOutput]
-  set pos [lsearch -exact [bindtags $out] "Text"]
-  bindtags $out [lreplace [bindtags $out] $pos $pos]
+  if { $c == 0 } {
+       set out [canvas $t -width 700 -height 500 -highlightthickness 0]
+     } else {
+       set out [text $t -undo 0 -height 1]
+       createOutputTags $out
+       configureTextWidget $c $out
+       bindtags $out [linsert [bindtags $out] 0 PotatoUserBindings PotatoOutput]
+       set pos [lsearch -exact [bindtags $out] "Text"]
+       bindtags $out [lreplace [bindtags $out] $pos $pos]
+     }
 
   foreach x [list input1 input2] {
     set $x [text .conn_${c}_${x}_$count -wrap word -undo 1 -height 1 \
@@ -1857,7 +1861,7 @@ proc ::potato::flashANSI {flashing} {
 #: proc ::potato::configureTextWidget
 #: arg c the connection the widget is being configured for
 #: arg t the text widget to be configured
-#: desc set the ANSI colours, ANSI underline, BG, FG, system, and echo colours for the text widget based on it's connection's world's settings, and turn ANSI flash on/off as appropriate.
+#: desc set the ANSI colours, ANSI underline, BG, FG, system, and echo colours for the text widget based on it's connection's world's settings
 #: return nothing
 proc ::potato::configureTextWidget {c t} {
   variable conn;
@@ -2109,42 +2113,209 @@ proc ::potato::connZero {} {
   if { ![info exists conn(0,textWidget)] || ![winfo exists $conn(0,textWidget)] } {
        return;
      }
-  set t $conn(0,textWidget)
-  $t delete 1.0 end
-  $t insert end [T "%s Version %s" $potato(name) $potato(version)] [list system margins]
-  $t insert end "\n" [list system margins] [T "Written by Mike Griffiths (%s)" $potato(contact)] [list system margins]
-  $t insert end "\n\n"
 
-  if { $potato(worlds) > 0 } {
-       $t insert end [T "Defined Worlds (click to connect):"] [list margins]
-       set worldList [potato::worldList]
-       set worldList [lsort -dictionary -index 1 $worldList]
-       foreach x $worldList {
-          foreach {w name} $x {break}
-          $t insert end "\n\n"
-          $t insert end $name [list link connect_$w margins]
-          if { [string trim $world($w,description)] ne "" } {
-               $t insert end " - $world($w,description)" [list margins]
-             }
-          $t tag bind connect_$w <ButtonRelease-1> [list potato::newConnectionDefault $w]
-       }
-       $t insert end "\n\n"
-       $t insert end [T "Alternatively, you can use the "]
-       $t insert end [T "Quick Connect"] [list link quickconnect margins]
-       $t insert end [T " to connect to a new world quickly."]
+
+  set canvas $conn(0,textWidget)
+
+  $canvas configure -background $world(-1,top,bg)
+
+  $canvas delete all
+
+  set fgcol $world(-1,ansi,fg)
+
+  set logo ::potato::img::logo
+
+  set x 25
+  set y 25
+
+
+  $canvas create image $x $y -anchor nw -image $logo -tags [list logo]
+  set textpos [expr {($x * 2) + [image width $logo]}]
+
+  set textpos2 [expr {((700 - $textpos)/2)+$textpos}]
+
+  connZeroAddText $canvas $textpos2 y 1 $potato(name) [list Tahoma 24 bold] [list h1] -width 350
+  connZeroAddText $canvas $textpos2 y 1 [T "The Graphical MU* Client for Windows and Linux"] \
+    [list Tahoma 19 bold] [list h2] -width 350
+  connZeroAddText $canvas $textpos2 y 1 [T "Version %s. Written by Mike Griffiths (%s)" $potato(version) $potato(contact)] \
+    [list Tahoma 10 bold] [list h3] -width 350
+
+  foreach {h1(x1) y1 h1(x2) -} [$canvas bbox h1] {break}
+  foreach {h2(x1) - h2(x2) -} [$canvas bbox h2] {break}
+  foreach {h3(x1) - h3(x2) y2} [$canvas bbox h3] {break}
+
+  set textheight [expr {$y2 - $y1}]
+  foreach {- imgy1 - imgy2} [$canvas bbox logo] {break}
+  set imageheight [expr {$imgy2 - $imgy1}]
+
+  if { $imageheight > $textheight } {
+       set amount [expr {($imageheight - $textheight) / 2}]
+       $canvas move h1 0 $amount
+       $canvas move h2 0 $amount
+       $canvas move h3 0 $amount
+       set y [expr {$imgy2+20}]
      } else {
-       $t insert end [T "There are no worlds defined. You should either "] [list margins]
-       $t insert end [T "add a new world"] [list link addnewworld margins]
-       $t insert end [T " to the address book, or use the "] [list margins]
-       $t insert end [T "Quick Connect"] [list link quickconnect margins]
-       $t insert end [T " to connect to a new world quickly."] [list margins]
-       $t tag bind addnewworld <ButtonRelease-1> [list potato::newWorld 0]
+       set amount [expr {($textheight - $imageheight) / 2}]
+       $canvas move logo 0 $amount
+       set y [expr {$y2+20}]
      }
 
-  $t tag bind quickconnect <ButtonRelease-1> [list potato::newWorld 1]
-  return;
+  unset -nocomplain y1 y2 textheight imageheight imgy1 imgy2
+
+  incr y 20 ;# margin
+
+  set font(link) [list -family Tahoma -size 14 -weight bold -underline 1]
+  set font(subhead) [list -family Tahoma -size 14]
+  set font(normal) [list -family Tahoma -size 12]
+  set font(world) [list -family Tahoma -size 12 -underline 1]
+  set linkcol "#ff1493"
+
+  connZeroAddText $canvas 175 y 0 [T "Open Address Book"] $font(link) [list clickable addressbook]
+  connZeroAddText $canvas 350 y 0 \u2022 [list Tahoma 7 bold]
+  connZeroAddText $canvas 525 y 1 [T "Add New World"] $font(link) [list clickable addnewworld]
+  connZeroAddText $canvas 350 y 1 [T "Quick Connection"] $font(link) [list clickable quickconnect]
+
+  $canvas bind clickable <Enter> "[list %W itemconfig current -fill red] ; [list %W configure -cursor hand2]"
+  $canvas bind clickable <Leave> "[list %W itemconfig current -fill $linkcol] ; [list %W configure -cursor {}]"
+  $canvas bind clickable <Button-1> [list ::potato::connZeroClick %W]
+
+  incr y 25;# widen the gap
+
+  connZeroAddText $canvas $x y 1 [T "Existing Worlds:"] [list Tahoma 14] [list existing] -justify left -anchor nw
+
+  if { $potato(worlds) > 0 } {
+       set worldList [potato::worldList]
+       set worldList [lsort -dictionary -index 1 $worldList]
+       set first 1
+       set height 0
+       set prevheight 0
+       set dotspace 3
+       foreach winfo $worldList {
+          foreach {w name} $winfo {break}
+          if { $first } {
+               set startx 25
+             } else {
+               set startx 355
+             }
+          set dot [$canvas create text $startx $y -text \u2022 -font $font(normal) -justify left -anchor nw -fill $fgcol]
+          foreach {x1 - x2 -} [$canvas bbox $dot] {break}
+          set width [expr {$x2 - $x1}]
+          set entry [$canvas create text [expr {$startx + $width + $dotspace}] $y -text $name -font $font(world) -tags [list clickable world$w] -justify left -anchor nw -width 600];#[expr {320 - $width - $dotspace}]]
+          foreach {x1 y1 x2 y2} [$canvas bbox $entry] {break}
+          incr width [expr {($x2 - $x1) + $dotspace}]
+          set height [expr {$y2 - $y1}]
+          if { $width > 320 } {
+               if { $first } {
+                    incr y [expr {$height + 10}]
+                  } else {
+                    set by [expr {$prevheight + 10}]
+                    incr y [expr {$by + $height + 10}]
+                    $canvas move $dot -330 $by
+                    $canvas move $entry -330 $by
+                    set prevheight 0
+                    set first 1
+                  }
+             } elseif { $first } {
+               set first 0
+               set prevheight $height
+             } else {
+               set first 1
+               incr y [expr {$height + 10}]
+               set prevheight 0
+             }
+       }
+     } else {
+       set noworlds [T "You don't have any worlds defined yet! Use one of the links above to add a world."]
+       connZeroAddText $canvas $x y 1 $noworlds $font(normal) [list] -justify left -anchor nw -width 600
+     }
+
+  incr y 50;# widen the gap
+
+  # Fact of the Day
+  connZeroAddText $canvas $x y 1 [T "Did you know?"] $font(subhead) [list facthead] -justify left -anchor nw
+  connZeroAddText $canvas $x y 1 [connZeroFact] $font(normal) [list fact] -justify left -anchor nw -width 600
+
+  foreach item [$canvas find withtag clickable] {
+    $canvas itemconfigure $item -fill $linkcol
+  }
+
+  $canvas configure -scrollregion [list 0 0 700 [expr {$y + 50}]]
 
 };# ::potato::connZero
+
+proc ::potato::connZeroAddText {canvas x _y incry text font {tags ""} args} {
+  upvar 1 $_y y;
+  upvar 1 fgcol fgcol;
+
+  set id [$canvas create text $x $y -text $text -font $font -tags $tags -justify center -fill $fgcol -anchor n {*}$args]
+  if { $incry } {
+       set bbox [$canvas bbox $id]
+       set y [lindex $bbox 3]
+       incr y 13;# margin;
+     }
+
+  return $id;
+
+};# ::potato::connZeroAdd
+
+proc ::potato::connZeroFact {} {
+
+  set food [list \
+    "Potatoes were the first food to be grown in space, aboard the shuttle Columbia, in 1995." \
+    "Potatoes were first eaten more than 6,000 years ago by indigenous people living in the Andes mountains of Peru." \
+    "In 1778 Prussia and Austria fought the Potato War in which each side tried to starve the other by consuming their potato crop." \
+    "Potatoes are the world's fourth food staple - after wheat, corn and rice." \
+    "The world’s largest potato weighed in at 18 pounds, 4 ounces according to the Guinness Book of World Records. That’s enough for 73 portions of medium fries at McDonalds." \
+    "There are over 5,000 variety of Potato worldwide, not including MUSH clients." \
+  ]
+
+  set client [list \
+  ]
+
+  set stupid [list \
+    "Over 99% of the people we asked said Potato was their favourite MUSH client ever. (Survey included two people... they may both have been me.)" \
+  ]
+
+  set allfacts [concat $food $client $stupid]
+
+  set rand [expr {round(floor(rand() * [llength $allfacts]))}]
+
+  return [lindex $allfacts $rand];
+
+};# ::potato::connZeroFact
+
+proc ::potato::connZeroClick {win} {
+
+  set index [$win find withtag current]
+  if { [llength $index] != 1 } {
+       return;
+     }
+  set tags [$win itemcget $index -tags]
+  set tags [lsearch -all -inline -not $tags clickable]
+  set tags [lsearch -all -inline -not $tags current]
+  if { [llength $tags] != 1 } {
+       return;
+     }
+  set tag [lindex $tags 0]
+  switch $tag {
+    quickconnect {newWorld 1 ; return}
+    addnewworld  {newWorld 0 ; return}
+    addressbook  {manageWorlds ; return}
+  }
+
+  if { [string range $tag 0 4] == "world" } {
+       set id [string range $tag 5 end]
+       if { [string is integer -strict $id] } {
+            potato::newConnectionDefault $id
+            return;
+          }
+     }
+
+  bell -displayof .
+
+  return;
+
+};# ::potato::connZeroClick
 
 #: proc ::potato::!set
 #: arg _varname Variable to set
@@ -5650,6 +5821,9 @@ proc ::potato::setLocale {} {
      }
   setUpMenu
   setAppTitle
+  if { [up] == 0 } {
+       connZero
+     }
 
   return;
 
@@ -5732,6 +5906,9 @@ proc ::potato::treeviewHack {} {
                   Key-Down Key-Up B1-Motion Double-Button-1 ButtonRelease-1 Button-1] {
      bind Treeview <$x> [format {if { ![%%W instate disabled] } { %s }} [bind Treeview <$x>]]
   }
+
+  # Clear MouseWheel binding in favour of our own binding on "all"
+  bind Treeview <MouseWheel> {}
 
   return;
 
@@ -7236,7 +7413,7 @@ proc ::potato::setUpBindings {} {
   bind PotatoInput <Control-Shift-End> {continue}
 
   # Make "End" show the end of the output window, if we're already at the end of the input window
-  bind PotatoInput <End> {if { [%W compare insert == end-1char] } {[::potato::activeTextWidget] see end; #break}}
+  bind PotatoInput <End> {if { [%W compare insert == end-1char] } { if { [::potato::up] == 0 } { [::potato::activeTextWidget] yview moveto 1.0} else {[::potato::activeTextWidget] see end}}}
 
   # Scroll output window by a page
   bind PotatoInput <Prior> {[::potato::activeTextWidget] yview scroll -1 pages}
@@ -7259,11 +7436,9 @@ proc ::potato::setUpBindings {} {
     }
   }
   catch {bind all <MouseWheel> [list ::potato::mouseWheel %W %D]}
-  if { $potato(windowingsystem) eq "x11" } {
-       # Some Linuxes use button 4/5 instead of <MouseWheel>. Some don't.
-       catch {bind all <4> [list ::potato::mouseWheel %W 120]}
-       catch {bind all <5> [list ::potato::mouseWheel %W -120]}
-     }
+  # Some Linuxes use button 4/5 instead of <MouseWheel>. Some don't.
+  catch {bind all <4> [list ::potato::mouseWheel %W 120]}
+  catch {bind all <5> [list ::potato::mouseWheel %W -120]}
 
   # Make Control-BackSpace delete the previous word
   bind Text <Control-BackSpace> {set val [%W index insert]
@@ -8198,27 +8373,51 @@ proc ::potato::mouseWheel {widget delta} {
        return; # For some reason, $delta isn't always set right on MacOS, so be extra safe.
      }
 
-  if { $::tcl_platform(os) eq "Darwin" } {
-       # Better MacOS values
-       set cmd [list yview scroll [expr {-15 * ($delta)}] pixels]
-     } else {
-       if { $delta >= 0 } {
-            set cmd [list yview scroll [expr {-$delta/3}] pixels]
-          } else {
-            set cmd [list yview scroll [expr {(2-$delta)/3}] pixels]
-          }
-     }
   set over [winfo containing -displayof $widget {*}[winfo pointerxy $widget]]
-  if { $over eq "" || [catch {$over {*}$cmd}] } {
-       catch {$widget {*}$cmd}
+  if { $over eq "" || ![mouseWheelScroll $over $delta] } {
+       mouseWheelScroll $widget $delta
      }
-
-  #abc Update so Treeviews can have their <Mousewheel> binding removed and replaced with this
-  # Requires checking widget class and scrolling the appropriate amount.
 
   return;
 
 };# ::potato::mouseWheel
+
+proc ::potato::mouseWheelScroll {widget delta} {
+
+  if { $widget eq "" || ![winfo exists $widget] } {
+       return 0;
+     }
+
+  set cmd [list yview scroll]
+
+  switch [winfo class $widget] {
+    Canvas {lappend cmd [expr {($delta / abs($delta)) * -1}] units}
+    Treeview {lappend cmd [expr {-($delta/120)}] units}
+  }
+
+  if { [llength $cmd] == 2 } {
+       if { [up] == 0 } {
+            lappend cmd [expr {($delta / abs($delta)) * -1}] units
+       } elseif { $::tcl_platform(os) eq "Darwin" || [tk windowingsystem] eq "aqua"} {
+            # Better MacOS values
+            set cmd [list yview scroll [expr {-15 * ($delta)}] pixels]
+          } else {
+            if { $delta >= 0 } {
+                 set cmd [list yview scroll [expr {-$delta/3}] pixels]
+               } else {
+                 set cmd [list yview scroll [expr {(2-$delta)/3}] pixels]
+               }
+          }
+       }
+
+  if { [catch {$widget {*}$cmd} ] } {
+       return 0;
+     } else {
+       return 1;
+     }
+
+  return;
+};# ::potato::mouseWheelScroll
 
 #: proc ::potato::send_mushage
 #: arg window the text widget to send from
