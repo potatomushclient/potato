@@ -3403,6 +3403,7 @@ proc ::potato::get_mushageProcess {c line} {
               $swidget insert end "\n" ""
             }
          $swidget insert end "" "" {*}$inserts
+         $swidget insert end [clock seconds] [list timestamp]
          ::skin::$potato(skin)::spawnUpdate $c $sname
          if { $aE } {
               $swidget see end
