@@ -2165,23 +2165,68 @@ proc ::potato::connZero {} {
   incr y 15 ;# margin
 
   set font(link) [list -family Tahoma -size 12 -weight bold -underline 1]
-  set font(subhead) [list -family Tahoma -size 12]
-  set font(normal) [list -family Tahoma -size 10]
+  set font(subhead) [list -family Tahoma -size 12 -weight bold]
+  set font(normal) [list -family Tahoma -size 12]
   set font(world) [list -family Tahoma -size 10 -underline 1]
   set font(dot) [list -family Tahoma -size 7]
 
   set linkcol $world(-1,ansi,link)
 
-  connZeroAddText $canvas 175 y 0 [T "Open Address Book"] $font(link) [list clickable addressbook]
-  connZeroAddText $canvas 350 y 0 \u2022 $font(dot)
-  connZeroAddText $canvas 525 y 1 [T "Add New World"] $font(link) [list clickable addnewworld]
-  connZeroAddText $canvas 350 y 1 [T "Quick Connection"] $font(link) [list clickable quickconnect]
+  set backup_y $y
+  set addressbook [connZeroAddText $canvas 0 y 1 [T "Open Address Book"] $font(link) [list clickable addressbook]]
+  foreach {x1 y1 x2 y2} [$canvas bbox $addressbook] {break}
+  set width [expr {$x2-$x1}]
+  set lines 1
+  if { $width > 220 } {
+       connZeroAddText $canvas 25 backup_y 0 \u2022 $font(dot)
+       $canvas move $addressbook 35 0
+       $canvas itemconfigure $addressbook -justify left -anchor w
+       connZeroAddText $canvas 25 y 0 \u2022 $font(dot)
+       set addnewworld [connZeroAddText $canvas 35 y 1 [T "Add New World"] $font(link) [list clickable addnewworld]]
+       $canvas itemconfigure $addnewworld -justify left -anchor w
+       set lines 2
+     } else {
+       set backup_y2 $y
+       set addnewworld [connZeroAddText $canvas 0 y 1 [T "Add New World"] $font(link) [list clickable addnewworld]]
+       foreach {x1 y1 x2 y2} [$canvas bbox $addnewworld] {break}
+       set width [expr {$x2-$x1}]
+       if { $width > 220 || $lines > 1} {
+            $canvas move $addressbook 350 0
+            $canvas move $addnewworld 350 0
+            set lines 2
+          } else {
+            $canvas move $addressbook 233 0
+            $canvas coords $addnewworld 466 $backup_y
+            set y $backup_y2
+          }
+     }
+  set backup_y3 $y
+  set quickconnect [connZeroAddText $canvas 0 y 1 [T "Quick Connection"] $font(link) [list clickable quickconnect]]
+
+  foreach {x1 y1 x2 y2} [$canvas bbox $quickconnect] {break}
+  set width [expr {$x2-$x1}]
+  if { $lines == 1 && $width < 220 } {
+       set y $backup_y
+       $canvas coords $addressbook 116 $backup_y
+       connZeroAddText $canvas 233 backup_y 0 \u2022 $font(dot)
+       $canvas coords $addnewworld 349 $backup_y
+       connZeroAddText $canvas 466 backup_y 0 \u2022 $font(dot)
+       $canvas coords $quickconnect 582 $backup_y
+     } elseif { $lines == 1 } {
+       $canvas move $quickconnect 350 0
+       connZeroAddText $canvas 350 backup_y 0 \u2022 $font(dot)
+     } else {
+       connZeroAddText $canvas 25 backup_y3 0 \u2022 $font(dot)
+       $canvas move $quickconnect 35 0
+       $canvas itemconfigure $quickconnect -justify left -anchor w
+     }
+
+  set y [expr {[lindex [$canvas bbox $quickconnect] 3] + 25}]
 
   $canvas bind clickable <Enter> "[list %W itemconfig current -fill red] ; [list %W configure -cursor hand2]"
   $canvas bind clickable <Leave> "[list %W itemconfig current -fill $linkcol] ; [list %W configure -cursor {}]"
   $canvas bind clickable <Button-1> [list ::potato::connZeroClick %W]
 
-  incr y 25;# widen the gap
 
   connZeroAddText $canvas $x y 1 [T "Existing Worlds:"] [list Tahoma 14] [list existing] -justify left -anchor nw
 
@@ -2196,7 +2241,7 @@ proc ::potato::connZero {} {
        foreach winfo $worldList {
           foreach {w name} $winfo {break}
           if { $first } {
-               set startx 25
+               set startx 35
              } else {
                set startx 355
              }
@@ -2207,7 +2252,7 @@ proc ::potato::connZero {} {
           foreach {x1 y1 x2 y2} [$canvas bbox $entry] {break}
           incr width [expr {($x2 - $x1) + $dotspace}]
           set height [expr {$y2 - $y1}]
-          if { $width > 320 } {
+          if { $width > 310 } {
                if { $first } {
                     incr y [expr {$height + $linespace}]
                   } else {
@@ -2246,6 +2291,17 @@ proc ::potato::connZero {} {
 
 };# ::potato::connZero
 
+#: proc ::potato::connZeroAddText
+#: arg canvas Path to canvas widget
+#: arg x x-coord to add text at
+#: arg _y Varname holding y-coord to add text at
+#: arg incry Should we increment the $_y var by the height of the new text?
+#: arg text Text to add
+#: arg font Font to add text with
+#: arg tags List of tags to give text
+#: arg args Optional extra args to the [$canvas create text] command
+#: desc Add text to the connZero convas, possibly updaying the y position for the next insert
+#: return canvas id of new text
 proc ::potato::connZeroAddText {canvas x _y incry text font {tags ""} args} {
   upvar 1 $_y y;
   upvar 1 fgcol fgcol;
@@ -2261,6 +2317,9 @@ proc ::potato::connZeroAddText {canvas x _y incry text font {tags ""} args} {
 
 };# ::potato::connZeroAdd
 
+#: proc ::potato::connZeroFact
+#: desc Return a random fact about Potatoes to display on connZero screen
+#: return string to use as a fact
 proc ::potato::connZeroFact {} {
 
   set food [list \
@@ -2289,6 +2348,10 @@ proc ::potato::connZeroFact {} {
 
 };# ::potato::connZeroFact
 
+#: proc ::potato::connZeroClick
+#: arg win Canvas widget
+#: desc Handle a click on a link in the connZero canvas $win, either to connect to a world, open the address book or add a new world
+#: return nothing
 proc ::potato::connZeroClick {win} {
 
   set index [$win find withtag current]
