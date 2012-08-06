@@ -689,11 +689,6 @@ Limit Output Lines?
 -
 
 
-# potato.tcl, line 11574  (::potato::tasksInit)
-Customize Keyboard Shortcuts
--
-
-
 # potato-skin.tcl, line 870  (::skin::potato::viewMenuPost)
 Show Spawn Toolbar?
 -
@@ -976,6 +971,11 @@ Copy
 
 # potato.tcl, line 4404  (::potato::manageWorlds)
 Copy World
+-
+
+
+# potato.tcl, line 11574  (::potato::tasksInit)
+Customise Keyboard Shortcuts
 -
 
 

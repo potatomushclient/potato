@@ -169,7 +169,8 @@ proc processFile {fname fin var} {
          set proc $tmp
        } elseif { [regexp {.+?\[(?:\:\:potato\:\:)?[TX] +(.+)$} $line -> tmp] } {
          # Now we need to parse out the message, as it may contain escaped quotes and Tcl doesn't do lookbehind regexps.
-         if { [string match {"*} $tmp] } {
+         set tmp [string trim $tmp]
+         if { [string index $tmp 0] eq {"} } {
               # Quoted string
               set tmp [string range $tmp 1 end] ;# skip opening quote
               for {set i 0} {$i < [string length $tmp]} {incr i} {
@@ -181,7 +182,7 @@ proc processFile {fname fin var} {
                      break;
                    }
               }
-            } elseif { [regexp {\$[a-zA-Z0-9]+\]} $tmp] } {
+            } elseif { [regexp {^\$[a-zA-Z0-9(),$_-]+\]} $tmp] } {
               continue;
             } else {
               for {set i 0} {$i < [string length $tmp]} {incr i} {
