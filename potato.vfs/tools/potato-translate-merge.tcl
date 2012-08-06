@@ -26,7 +26,7 @@ proc main {} {
 
 proc mergeFiles {} {
   global files;
-  global global fid;
+  global fid;
   global templateStrings;
   global translationStrings;
 
@@ -85,7 +85,7 @@ proc mergeFiles {} {
   puts $fid(output) "\n# Existing translations:"
   set repeats 0
   foreach x [array names translationStrings] {
-    if { $x ni $done } {
+    if { $x ni $done && $translationStrings($x) ne "-" } {
          puts $fid(output) "\n$x"
          puts $fid(output) $translationStrings($x)
          incr repeats
