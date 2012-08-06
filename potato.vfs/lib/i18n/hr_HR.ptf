@@ -1,6 +1,12 @@
 
 # Untranslated strings:
 
+Variable
+Varijabla
+
+Value
+Vrijednost
+
 # Obsolete strings:
 
 Spawns
@@ -41,113 +47,113 @@ Poka\u017ei Imena Alata?
 
 # Existing translations:
 
-MU* Type:
-Vrsta MU*-a:
+Handle GA Prompts?
+Tretiraj GA Promptove?
 
 Miscellaneous Options
 Ostale Opcije
 
-Handle GA Prompts?
-Tretiraj GA Promptove?
+MU* Type:
+Vrsta MU*-a:
 
 Toggle to Main Window?
 Prebaci u Glavni Prozor?
 
-&Text Editor
-Program Za Obradu &Teksta
-
 MPP Formatted?
 MPP Formatirano?
+
+&Text Editor
+Program Za Obradu &Teksta
 
 Send to &World
 Po\u0161alji u &Svijet
 
-Temp/Deleted
-Priv/Obrisani
-
 Save Character
 Snimi Lika
 
-Would you like to use the settings for \[%s. %s\], rather than quick-connected?
-\u017deli\u0161 li koristiti postavke za \[%s. %s\] umjesto onih za brzo spajanje?
+Temp/Deleted
+Priv/Obrisani
 
-Delete Event
-Obri\u0161i Doga\u0111aj
+Upload
+Upload
 
 &Connect To...
 &Spoji Se...
 
-Upload
-Upload
+Delete Event
+Obri\u0161i Doga\u0111aj
 
-Pattern
-Uzorak
-
-Add Character
-Dodaj Lika
+Would you like to use the settings for \[%s. %s\], rather than quick-connected?
+\u017deli\u0161 li koristiti postavke za \[%s. %s\] umjesto onih za brzo spajanje?
 
 Done
 Gotovo
 
-&Add New Prefix
-&Dodaj Prefiks
+Add Character
+Dodaj Lika
+
+Pattern
+Uzorak
+
+%dh %dm
+%dh %dm
 
  bytes
  bajtova
 
-%dh %dm
-%dh %dm
-
-&View
-Po&gled
-
-Direction
-Smjer
-
-Name
-Ime
+&Add New Prefix
+&Dodaj Prefiks
 
 Disconnected.
 Veza prekinuta.
 
-Select a command, then click a button to edit its binding
-Izaberi naredbu, pa klikni na gumb da promijeni\u0161 njenu pre\u010dicu
+Name
+Ime
+
+Direction
+Smjer
+
+&View
+Po&gled
 
 The Keyboard Shortcut '%s' is already in use by the task '%s'. Do you want to override it?
 Tipkovni\u010dnu pre\u010dicu '%s' ve\u0107 koristi proces '%s'. \u017deli\u0161 li ga sprije\u010diti?
 
-Replace?
-Zamijeni?
-
-Invalid editor name '%s'.
-Neispravno ime programa za obradu teksta '%s'.
+Select a command, then click a button to edit its binding
+Izaberi naredbu, pa klikni na gumb da promijeni\u0161 njenu pre\u010dicu
 
 About %s
 O Programu %s
 
-Macros for %s
-Makroi za %s
+Invalid editor name '%s'.
+Neispravno ime programa za obradu teksta '%s'.
+
+Replace?
+Zamijeni?
 
 Restore
 Vrati
 
-Click a misspelled word to begin
-Da po\u010dne\u0161, klikni na krivo napisanu rije\u010d
-
-F-Commands
-F-Naredbe
+Macros for %s
+Makroi za %s
 
 Unable to save preferences: %s
 Ne mogu snimiti postavke: %s
 
+F-Commands
+F-Naredbe
+
+Click a misspelled word to begin
+Da po\u010dne\u0161, klikni na krivo napisanu rije\u010d
+
 Show Verbose Messages?
 Prikazuj Vi\u0161e Poruka?
 
-&Delete Prefix
-&Obri\u0161i Prefiks
-
 /history: Invalid position
 /history: Neispravna pozicija
+
+&Delete Prefix
+&Obri\u0161i Prefiks
 
 seconds
 sekundi
@@ -569,6 +575,9 @@ U\u010destalost
 Packet Debugger for \[%d. %s\]
 Debager paketa za \[%d. %s\]
 
+Continuously
+Kontinuirano
+
 Do you really want to delete \"%s\"?
 \u017deli\u0161 li stvarno obrisati \"%s\"?
 
@@ -581,275 +590,272 @@ Dva prozora za unos?
 No such macro \"%s\".
 Ne postoji makro \"%s\".
 
-Continuously
-Kontinuirano
+Sorry, we were unable to check for a new version at this time. Please try again later.\n\nIf the problem persists, please let us know.
+Žao mi je, u ovom trenutku nismo mogli provjeriti postoji li nova verzija. Molim, pokušaj ponovo kasnije.\n\nAko problem potraje, molim da nas obavijestiš.
 
 MU* Name
 Ime MU*-a
 
-Sorry, we were unable to check for a new version at this time. Please try again later.\n\nIf the problem persists, please let us know.
-Žao mi je, u ovom trenutku nismo mogli provjeriti postoji li nova verzija. Molim, pokušaj ponovo kasnije.\n\nAko problem potraje, molim da nas obavijestiš.
-
-That is not a valid name.
-To nije ispravno ime.
+With:
+Sa:
 
 /at: Time must be in the future.
 /at: Vrijeme mora biti u budu\u0107nosti.
 
-With:
-Sa:
+That is not a valid name.
+To nije ispravno ime.
 
 Logged to \"%s\".
 Logirano u \"%s\".
 
-Add New Group
-Dodaj Novu Grupu
-
 Keyboard Shortcut for \"%s\"
 Tipkovni\u010dna Pre\u010dica za \"%s\"
+
+Add New Group
+Dodaj Novu Grupu
 
 Add Timer for %s
 Dodaj Tajmer za %s
 
-Close &All Logs
-&Zatvori Sve Logove
+Split Input Cmds?
+Razdvoji Naredbe U Unosu?
 
 Times
 Puta
 
-Split Input Cmds?
-Razdvoji Naredbe U Unosu?
-
-Copy
-Kopija
+Close &All Logs
+&Zatvori Sve Logove
 
 Copy World
 Kopiraj Svijet
 
-Did you know?
-Da li znaš?
+Copy
+Kopija
 
 Customise Keyboard Shortcuts
 Prilagodi Tipkovni\u010dne Pre\u010dice
 
+Did you know?
+Da li znaš?
+
 /at cancelled.
 /at poni\u0161ten.
-
-Invalid name.
-Neispravno ime.
 
 Ambiguous character name \"%s\"
 Vi\u0161ezna\u010dno ime lika \"%s\"
 
+Invalid name.
+Neispravno ime.
+
 Edit Timer
 Izmijeni Tajmer
-
-You don't have any worlds defined yet! Use one of the links above to add a world.
-Još nemaš definiranih svjetova! Upotrijebi jedan od gornjih linkova da dodaš svijet.
-
-&Macro Window
-Prozor s Mak&roima
-
-Clear History Command
-Obri\u0161i Raniju Naredbu
 
 Configure &World
 Konfiguriraj &Svijet
 
-Please wait. Checking spelling...
-Molim, pri\u010dekati. Provjeravam pravopis...
+Clear History Command
+Obri\u0161i Raniju Naredbu
 
-You must enter a character name.
-Mora\u0161 unijeti ime lika.
+&Macro Window
+Prozor s Mak&roima
+
+You don't have any worlds defined yet! Use one of the links above to add a world.
+Još nemaš definiranih svjetova! Upotrijebi jedan od gornjih linkova da dodaš svijet.
 
 /cls: Invalid window name.
 /cls: Neispravno ime prozora.
 
-Add Timer
-Dodaj Tajmer
+You must enter a character name.
+Mora\u0161 unijeti ime lika.
+
+Please wait. Checking spelling...
+Molim, pri\u010dekati. Provjeravam pravopis...
+
+Log
+Log
 
 Potato Auto-Connects
 Potato-ova Automatska Spajanja
 
-Log
-Log
-
-Run F2 Command
-Pokreni F2 Naredbu
+Add Timer
+Dodaj Tajmer
 
 Send:
 Po\u0161alji:
 
-Default Char:
-Automatski lik:
-
-Ignore empty lines?
-Ignoriraj prazne retke?
-
-Recipient:
-Prima:
-
-&Logging
-&Logiranje
+Run F2 Command
+Pokreni F2 Naredbu
 
 Add to History?
 Dodaj u Prija\u0161nje Naredbe?
 
-Proxy Type:
-Vrsta Proxyja:
+&Logging
+&Logiranje
+
+Recipient:
+Prima:
+
+Ignore empty lines?
+Ignoriraj prazne retke?
+
+Default Char:
+Automatski lik:
 
 You are currently running version:
 Trenutno koristiš verziju:
 
-&Yes
-&Da
+Proxy Type:
+Vrsta Proxyja:
 
 &Tools
 &Alati
 
-Negotiate NAWS?
-Dogovori NAWS?
-
-&No Character
-&Bez Lika
-
-Run F6 Command
-Pokreni F6 Naredbu
-
-Down
-Dolje
+&Yes
+&Da
 
 Auto-reconnect cancelled.
 Automatsko obnavljanje veze obustavljeno.
 
-Invalid connection id/character name
-Neispravan id veze/ime lika
+Down
+Dolje
 
-Configuration Options for '%s'
-Konfiguracijske Opcije svijeta '%s'
+Run F6 Command
+Pokreni F6 Naredbu
+
+&No Character
+&Bez Lika
+
+Negotiate NAWS?
+Dogovori NAWS?
 
 Unable to connect to %s:%d - SSL not available.
 Ne mogu se spojiti na %s:%d - SSL nije dostupan.
 
-Limit Spawn Lines?
-Ograni\u010di Spawn Retke?
+Configuration Options for '%s'
+Konfiguracijske Opcije svijeta '%s'
 
-&Open...
-&Otvori...
-
-Pattern Type:
-Vrsta Uzorka:
-
-C&ut
-&Izre\u017ei
+Invalid connection id/character name
+Neispravan id veze/ime lika
 
 Do you really want to delete the group \"%s\"?
 \u017deli\u0161 li stvarno obrisati grupu \"%s\"?
 
-Hide Icon
-Sakrij Ikonu
+C&ut
+&Izre\u017ei
 
-Delete World
-Obri\u0161i Svijet
+Pattern Type:
+Vrsta Uzorka:
 
-Delete
-Obri\u0161i
+&Open...
+&Otvori...
+
+Limit Spawn Lines?
+Ograni\u010di Spawn Retke?
 
 Potato Error Log
 Potato-ov Log Gre\u0161aka
 
+Delete
+Obri\u0161i
+
+Delete World
+Obri\u0161i Svijet
+
+Hide Icon
+Sakrij Ikonu
+
 d
 d
-
-Start Maximized?
-Zapo\u010dni Maksimiziran?
-
-Starting Encoding:
-Po\u010detno Enkodiranje:
 
 Show Two Input Windows?
 Poka\u017ei dva prozora za unos?
 
+Starting Encoding:
+Po\u010detno Enkodiranje:
+
+Start Maximized?
+Zapo\u010dni Maksimiziran?
+
 &Show Connection Stats
 Prika\u017ei S&tatistike Veza
-
-Copy &Hyperlink
-Kopiraj &Hiperlink
-
-Go &North
-Idi &Sjeverno
 
 Allow Partial Names?
 Dozvoli Djelomi\u010dna Imena?
 
-h
-h
+Go &North
+Idi &Sjeverno
 
-Input History for %d. %s
-Pro\u0161le Naredbe za %d. %s
-
-Choose Output Font for %s
-Izaberi Font Ispisa za %s
+Copy &Hyperlink
+Kopiraj &Hiperlink
 
 No such world \"%s\". Use \"/quick host port\" to connect to a world that isn't in the address book.
 Ne postoji svijet \"%s\". Upotrijebi \"/quick adresa port\" za spajanje na svijet koji nije u adresaru.
 
-Disconnect and close the window?
-Prekinuti vezu i zatvoriti prozor?
+Choose Output Font for %s
+Izaberi Font Ispisa za %s
+
+Input History for %d. %s
+Pro\u0161le Naredbe za %d. %s
+
+h
+h
 
 Add New World
 Dodaj Novi Svijet
 
-Run F11 Command
-Pokreni F11 Naredbu
+Disconnect and close the window?
+Prekinuti vezu i zatvoriti prozor?
 
 Replace
 Zamijeni
 
-m
-m
-
-Up
-Gore
-
-Change FG:
-Slova:
+Run F11 Command
+Pokreni F11 Naredbu
 
 Change Input Font
 Promijeni Font Unosa
 
-Convert To:
-U:
+Change FG:
+Slova:
+
+Up
+Gore
+
+m
+m
 
 %s Version %s
 %s Verzija %s
 
+Convert To:
+U:
+
 (Temp)
 (Priv)
-
-Edit Macro
-Izmijeni Makro
-
-Pattern:
-Uzorak:
-
-Enter the connection information\nfor the new world below.
-Dolje upi\u0161i podatke za spajanje\nna novi svijet.
-
-Accept
-Prihvati
 
 Edit Global Timer
 Izmijeni Globalni Tajmer
 
+Accept
+Prihvati
+
+Enter the connection information\nfor the new world below.
+Dolje upi\u0161i podatke za spajanje\nna novi svijet.
+
+Pattern:
+Uzorak:
+
+Edit Macro
+Izmijeni Makro
+
 /cls cannot be abbreviated.
 /cls se ne može skratiti.
 
-s
-s
-
 Add Macro
 Dodaj Makro
+
+s
+s
 
 &Retry
 &Poku\u0161aj ponovno
@@ -860,20 +866,20 @@ Pokaži XTERM Boje?
 Normal Colours
 Normalne Boje
 
-Add
-Dodaj
+Uploading file \"%s\"...
+Uploadam datoteku \"%s\"...
 
 Configure Program &Settings
 Konfiguriraj &Postavke Programa
 
-Uploading file \"%s\"...
-Uploadam datoteku \"%s\"...
-
-&Edit Prefix
-&Izmijeni Prefiks
+Add
+Dodaj
 
 identd not running/user ID could not be verified
 identd nije pokrenut/korisni\u010dki ID se ne mo\u017ee verificirati
+
+&Edit Prefix
+&Izmijeni Prefiks
 
 &Paste
 &Zalijepi
@@ -881,56 +887,56 @@ identd nije pokrenut/korisni\u010dki ID se ne mo\u017ee verificirati
 Play Beeps?
 Sviraj Bipove?
 
-Select to Copy?
-Kopiraj Odabir?
-
 Connected - %s - %s
 Veza uspostavljena - %s - %s
 
-All words are spelled correctly.
-Sve rije\u010di su ispravno napisane.
+Select to Copy?
+Kopiraj Odabir?
 
 Choose Default Output Font
 Izaberi Po\u010detni Font Ispisa
 
-Do you really want to cancel the file upload for \[%d. %s\]?
-Da li stvarno \u017eeli\u0161 obustaviti upload datoteke na \[%d. %s\]?
-
-Character:
-Lik:
-
-Editor
-Tekst
-
-Clear
-O\u010disti
-
-Place in &Bottom Input Window
-Stavi u &Donji Prozor Za Unos
+All words are spelled correctly.
+Sve rije\u010di su ispravno napisane.
 
 Go &South
 Idi &Ju\u017eno
 
-Convert &Spaces to %b
-Konvertiraj Razmake u %&b
+Place in &Bottom Input Window
+Stavi u &Donji Prozor Za Unos
 
-None
-Ni\u0161ta
+Clear
+O\u010disti
+
+Editor
+Tekst
+
+Character:
+Lik:
+
+Do you really want to cancel the file upload for \[%d. %s\]?
+Da li stvarno \u017eeli\u0161 obustaviti upload datoteke na \[%d. %s\]?
 
 Warning! Using that key is not recommended!
 Upozorenje! Upotreba te tipke nije preporučena!
 
+None
+Ni\u0161ta
+
+Convert &Spaces to %b
+Konvertiraj Razmake u %&b
+
 &Ignore
 &Ignoriraj
 
-&Save As...
-&Snimi Kao...
+Top Input
+Gornji Unos
 
 Find...
 Tra\u017ei...
 
-Top Input
-Gornji Unos
+&Save As...
+&Snimi Kao...
 
 Disconnect from %d. %s?
 Prekinuti vezu %d. %s?
@@ -938,74 +944,74 @@ Prekinuti vezu %d. %s?
 Logging to %d logfiles stopped.
 Logiranje u %d logova zaustavljeno.
 
-Current Window Size
-Trenutna Veli\u010dina Prozora
+day
+dan
 
 User-defined commands for this world: %s
 Korisni\u010dki definirane naredbe za ovaj svijet: %s
 
-day
-dan
-
-Show Timestamps?
-Prikazuj Oznake Vremena?
+Current Window Size
+Trenutna Veli\u010dina Prozora
 
 Allow ANSI Underline?
 Dozvoli ANSI Podcrtavanje?
 
-No valid addresses to connect to.
-Nema ispravnih adresa za spajanje.
-
-Select a command and press 1 to place it in the top input window, 2 to place it in the lower input window, or 3 to send it directly to the MU*. Press 4 to copy it to the clipboard. Press escape to close the window.
-Izaberi naredbu i pritisni 1 da je stavi\u0161 u gornji prozor za unos, 2 da je stavi\u0161 u donji prozor za unos, ili 3 da je po\u0161alje\u0161 izravno na MU*. Pritisni 4 da je kopira\u0161 u clipboard. Pritisni escape da zatvori\u0161 ovaj prozor.
-
-Show &Log Window
-Poka\u017ei Prozor Za &Logiranje
+Show Timestamps?
+Prikazuj Oznake Vremena?
 
 Proxy Port:
 Proxyjev Port:
 
+Show &Log Window
+Poka\u017ei Prozor Za &Logiranje
+
+Select a command and press 1 to place it in the top input window, 2 to place it in the lower input window, or 3 to send it directly to the MU*. Press 4 to copy it to the clipboard. Press escape to close the window.
+Izaberi naredbu i pritisni 1 da je stavi\u0161 u gornji prozor za unos, 2 da je stavi\u0161 u donji prozor za unos, ili 3 da je po\u0161alje\u0161 izravno na MU*. Pritisni 4 da je kopira\u0161 u clipboard. Pritisni escape da zatvori\u0161 ovaj prozor.
+
+No valid addresses to connect to.
+Nema ispravnih adresa za spajanje.
+
 Backwards
 Natrag
-
-Name:
-Ime:
-
-Case?
-Vel/mal?
 
 ANSI, Colours and Fonts
 ANSI, Boje i Fontovi
 
-&Cancel
-&Odustani
+Case?
+Vel/mal?
+
+Name:
+Ime:
 
 Include Buffer From: 
 Uklju\u010di Buffer Iz:
 
+&Cancel
+&Odustani
+
 Do you really want to clear the Keyboard Shortcut for \"%s\"?
 Da li stvarno \u017eeli\u0161 obrisati Tipkovni\u010dnu Pre\u010dicu za \"%s\"?
-
-Format: /at <time>=<string>
-Format: /at <vrijeme>=<tekst>
-
-&Prefix...
-&Prefiks...
-
-Prefix
-Prefiks
-
-Previous History Command
-Ranija Naredba
 
 Char
 Lik
 
-Save File
-Snimi Datoteku
+Previous History Command
+Ranija Naredba
+
+Prefix
+Prefiks
+
+&Prefix...
+&Prefiks...
+
+Format: /at <time>=<string>
+Format: /at <vrijeme>=<tekst>
 
 &ANSI Colour...
 &ANSI Boja...
+
+Save File
+Snimi Datoteku
 
 Delete Character
 Obri\u0161i Lika
@@ -1013,35 +1019,35 @@ Obri\u0161i Lika
 Invalid Spawn Name
 Neispravno Ime Za Spawn
 
-Replacement:
-Zamjena:
-
-Open File
-Otvori Datoteku
+Send
+\u0160alji
 
 Font style:
 Stil fonta:
 
-Send
-\u0160alji
+Open File
+Otvori Datoteku
 
-Find:
-Tra\u017ei:
-
-After connecting, wait
-Nakon spajanja, \u010dekaj
+Replacement:
+Zamjena:
 
 Show World Toolbar?
 Poka\u017ei Traku Sa Svjetovima?
 
-Encoding changed to %s
-Enkodiranje promijenjeno u %s
+After connecting, wait
+Nakon spajanja, \u010dekaj
+
+Find:
+Tra\u017ei:
+
+Show Toolbar &Labels?
+Poka\u017ei &Imena Alata?
 
 Connection closed by proxy server.
 Vezu je zatvorio proxy server.
 
-Show Toolbar &Labels?
-Poka\u017ei &Imena Alata?
+Encoding changed to %s
+Enkodiranje promijenjeno u %s
 
 Size:
 Veli\u010dina:
@@ -1055,71 +1061,71 @@ Snimi
 Next History Command
 Kasnija Naredba
 
-Check for Updates on Startup?
-Potraži Nadogradnje pri Pokretanju?
-
-Check &Spelling
-Provjeri &Pravopis
-
-That name is already in use.
-To ime se ve\u0107 koristi.
+Unable to open file \"%s\": %s
+Ne mogu otvoriti datoteku \"%s\": %s
 
 Exit
 Izlaz
 
-Unable to open file \"%s\": %s
-Ne mogu otvoriti datoteku \"%s\": %s
+That name is already in use.
+To ime se ve\u0107 koristi.
 
-AaBbYyZz
-AaBbCc\u010c\u010d123
+Check &Spelling
+Provjeri &Pravopis
+
+Check for Updates on Startup?
+Potraži Nadogradnje pri Pokretanju?
 
 Type:
 Vrsta:
 
-Run F3 Command
-Pokreni F3 Naredbu
+AaBbYyZz
+AaBbCc\u010c\u010d123
 
 Choose %s Colour
 Izaberi %s Boju
 
-&Abort
-&Prekini
-
-Are you sure you want to quit? There are still open connections!
-Da li stvarno \u017eeli\u0161 iza\u0107i iz programa? Jo\u0161 postoje otvorene veze!
+Run F3 Command
+Pokreni F3 Naredbu
 
 Description:
 Opis:
 
-Insert Newline
-Umetni Novu Liniju
+Are you sure you want to quit? There are still open connections!
+Da li stvarno \u017eeli\u0161 iza\u0107i iz programa? Jo\u0161 postoje otvorene veze!
 
-Custom /command Config
-Konfiguracija Proizvoljne /naredbe
-
-Run:
-Pokreni:
-
-Allow ANSI Flash?
-Dozvoli ANSI Bljeskanje?
+&Abort
+&Prekini
 
 Ambiguous world name \"%s\".
 Vi\u0161ezna\u010dno ime svijeta \"%s\".
 
-Connecting to %s:%d...
-Spajam se na %s:%d...
+Allow ANSI Flash?
+Dozvoli ANSI Bljeskanje?
 
-Configure &Prefixes/Auto-Say
-Konfiguriraj &Prefikse/Automatski govor
+Run:
+Pokreni:
 
-&Escape Special Characters
-&Izbaci Posebne Znakove
+Custom /command Config
+Konfiguracija Proizvoljne /naredbe
+
+Insert Newline
+Umetni Novu Liniju
+
+System, Echo and Link Colours
+Boje Za Sustav, Jeku i Linkove
 
 Auto Reconnect when booted?
 Auto. Obnavljanje Veze nakon izbacivanja?
 
-System, Echo and Link Colours
-Boje Za Sustav, Jeku i Linkove
+&Escape Special Characters
+&Izbaci Posebne Znakove
+
+Configure &Prefixes/Auto-Say
+Konfiguriraj &Prefikse/Automatski govor
+
+Connecting to %s:%d...
+Spajam se na %s:%d...
 
 Run F7 Command
 Pokreni F7 Naredbu
@@ -1130,95 +1136,95 @@ Unos:
 Show &Helpfiles
 Poka\u017ei &Pomo\u0107
 
-Return (%d): %s
-Return (%d): %s
+Limit To:
+Na:
 
 Delete Timer
 Obri\u0161i Tajmer
 
-Limit To:
-Na:
-
-&Close Spawn
-&Zatvori Spawn
-
-Browser Command:
-Naredba Za Internet Preglednik:
+Return (%d): %s
+Return (%d): %s
 
 There is already a prefix for \"%s\". Override?
 Ve\u0107 postoji prefiks za \"%s\". Zanemari?
 
-Copy to Clipboard
-Kopiraj u Clipboard
+Browser Command:
+Naredba Za Internet Preglednik:
 
-Display
-Prikaz
+&Close Spawn
+&Zatvori Spawn
 
 &File
 &Datoteka
 
-Unable to create TinyURL: %s
-Ne mogu stvoriti TinyURL: %s
+Display
+Prikaz
 
-&Debug Packets?
-&Debagiraj Pakete?
-
-Show Beeps?
-Prikazuj Bipove?
+Copy to Clipboard
+Kopiraj u Clipboard
 
 New Group
 Nova Grupa
 
-Available slash commands: %s
-Dostupne kosocrtne naredbe: %s
+Show Beeps?
+Prikazuj Bipove?
 
-Connection
-Veza
+&Debug Packets?
+&Debagiraj Pakete?
 
-Clear Previous 'New Activity'?
-Ukloni Raniju 'Novu Aktivnost'?
+Unable to create TinyURL: %s
+Ne mogu stvoriti TinyURL: %s
 
 Sorry, that key is not allowed.
 Žao mi je, ta tipka nije dozvoljena.
 
-&Default Character (%s)
-&Automatski Lik (%s)
+Clear Previous 'New Activity'?
+Ukloni Raniju 'Novu Aktivnost'?
+
+Connection
+Veza
+
+Available slash commands: %s
+Dostupne kosocrtne naredbe: %s
 
 /cls: No such window.
 /cls: Nema takvog prozora.
 
-&Options
-&Opcije
-
-Commands
-Naredbe
+&Default Character (%s)
+&Automatski Lik (%s)
 
 Discard
 Odbaci
 
-You are already using the latest version of Potato.
-Već koristiš najnoviju verziju Potatoa.
+Commands
+Naredbe
 
-&Previous Connection
-&Prethodna Veza
+&Options
+&Opcije
 
 Unable to connect to proxy: %s
 Ne mogu se spojiti na proxy: %s
 
-Edit /command
-Izmijeni /naredbu
+&Previous Connection
+&Prethodna Veza
 
-2nd Address:
-Druga Adresa:
+You are already using the latest version of Potato.
+Već koristiš najnoviju verziju Potatoa.
 
 Send before Login info:
 \u0160alji prije Prijave:
 
-Suggestions:
-Prijedlozi:
+2nd Address:
+Druga Adresa:
+
+Edit /command
+Izmijeni /naredbu
 
 Run F12 Command
 Pokreni F12 Naredbu
+
+Suggestions:
+Prijedlozi:
 
 Change
 Promijeni
@@ -1226,326 +1232,326 @@ Promijeni
 Show SysTray Icon?
 Poka\u017ei Ikonu u System Trayu?
 
-Enter the name for the new Group, and click Add.
-Upi\u0161i ime za novu Grupu, i klikni na Dodaj.
-
 Invalid %s pattern \"%s\": %s
 Neispravan %s uzorak \"%s\": %s
 
-Send to MUSH:
-\u0160alji na MUSH:
-
-Options
-Opcije
+Enter the name for the new Group, and click Add.
+Upi\u0161i ime za novu Grupu, i klikni na Dodaj.
 
 Continue?
 Nastavi?
 
-Keyboard Shortcut
-Tipkovni\u010dna Pre\u010dica
+Options
+Opcije
 
-Flash SysTray Icon?
-Bljeskanje Ikone u System Trayu?
-
-Events
-Doga\u0111aji
+Send to MUSH:
+\u0160alji na MUSH:
 
 Match All?
 Sva Podudaranja?
 
+Events
+Doga\u0111aji
+
+Flash SysTray Icon?
+Bljeskanje Ikone u System Trayu?
+
+Keyboard Shortcut
+Tipkovni\u010dna Pre\u010dica
+
 &Find
 &Tra\u017ei
-
-Characters
-Likovi
-
-Window
-Prozor
-
-E&xit
-&Izlaz
-
-&About Potato
-&O Potato-u
-
-&Disconnect
-&Prekini
 
 Edit Event
 Izmijeni Doga\u0111aj
 
-World Name
-Ime Svijeta
+&Disconnect
+&Prekini
 
-Run When:
-Pokreni:
+&About Potato
+&O Potato-u
+
+E&xit
+&Izlaz
+
+Window
+Prozor
+
+Characters
+Likovi
 
 Allow Auto-Connects?
 Dozvoli Automatska Spajanja?
 
-minute
-minuta
+Run When:
+Pokreni:
 
-Manage &Auto-Connects
-Podesi &Automatsko Spajanje
-
-BCC:
-BCC:
+World Name
+Ime Svijeta
 
 Delete World?
 Obrisati Svijet?
 
-Add Event
-Dodaj Doga\u0111aj
+BCC:
+BCC:
 
-2nd Port:
-Drugi Port:
+Manage &Auto-Connects
+Podesi &Automatsko Spajanje
+
+minute
+minuta
 
 World Name:
 Ime Svijeta:
 
-second
-sekunda
+2nd Port:
+Drugi Port:
 
-Error: %s
-Greška: %s
-
-Ignore
-Ignoriraj
+Add Event
+Dodaj Doga\u0111aj
 
 Ambiguous /command \"%s\".
 Vi\u0161ezna\u010dna /naredba \"%s\".
 
-Quick Connection
-Brzo Spajanje
+Ignore
+Ignoriraj
 
-Delete Macro
-Obri\u0161i Makro
+Error: %s
+Greška: %s
 
-Show 'New Activity'?
-Poka\u017ei natpis 'Nova Aktivnost'?
+second
+sekunda
 
 Unknown /command \"%s\". Use /slash for a list. Use //command to send directly to MU*.
 Nepoznata /naredba \"%s\". Upotrijebi /slash za popis. Upotrijebi //naredba za izravno slanje na MU*.
 
-Connecting to %s proxy at %s:%s...
-Spajam se na %s proxy na %s:%s...
+Show 'New Activity'?
+Poka\u017ei natpis 'Nova Aktivnost'?
+
+Delete Macro
+Obri\u0161i Makro
+
+Quick Connection
+Brzo Spajanje
 
 Global Macros
 Globalni Makroi
 
-Set auto-prefixes to apply for %s below.
-Dolje postavi automatske prefikse za %s.
-
-Next
-Sljed
-
-%s - Event Configuration
-%s - Konfiguracija Doga\u0111aja
+Connecting to %s proxy at %s:%s...
+Spajam se na %s proxy na %s:%s...
 
 Upload of \"%s\" cancelled.
 Upload filea \"%s\" obustavljen.
 
-Global User-defined commands: %s
-Globalne Korisni\u010dki Definirane naredbe: %s
+%s - Event Configuration
+%s - Konfiguracija Doga\u0111aja
 
-Auto-reconnect in %s...
-Automatsko Obnavljanje Veze za %s...
+Next
+Sljed
+
+Set auto-prefixes to apply for %s below.
+Dolje postavi automatske prefikse za %s.
 
 Please select your desired language below and click Save\n\nNote that changes may not take effect until after you reboot.
 Dolje odaberi željeni jezik i klikni na Snimi, molim\n\nUzmi u obzir da promjene neće imati efekta do ponovnog pokretanja programa.
 
-Go &East
-Idi &Isto\u010dno
+Auto-reconnect in %s...
+Automatsko Obnavljanje Veze za %s...
 
-Connected.
-Veza uspostavljena.
-
-Invalid var name
-Neispravno ime varijable
-
-Connection Settings
-Pode\u0161enja veze
+Global User-defined commands: %s
+Globalne Korisni\u010dki Definirane naredbe: %s
 
 Echo Timer Commands?
 Ispisuj Tajmirane Naredbe?
 
-&Cancel Add/Edit
-&Poni\u0161ti Dodaj/Izmijeni
+Connection Settings
+Pode\u0161enja veze
+
+Invalid var name
+Neispravno ime varijable
+
+Connected.
+Veza uspostavljena.
+
+Go &East
+Idi &Isto\u010dno
 
 New World
 Novi Svijet
 
+&Cancel Add/Edit
+&Poni\u0161ti Dodaj/Izmijeni
+
 Custom /commands for %s
 Proizvoljne /naredbe za %s
-
-Logs?
-Logova?
-
-Log file \"%s\" is ambiguous.
-Log \"%s\" je vi\u0161ezna\u010dan.
 
 Save to Input History
 Snimi u Ranije Naredbe
 
-Main Window
-Glavni Prozor
+Log file \"%s\" is ambiguous.
+Log \"%s\" je vi\u0161ezna\u010dan.
+
+Logs?
+Logova?
 
 Unable to negotiate SSL: %s. Please make sure the port is ssl-enabled.
 Ne mogu dogovoriti SSL: %s. Molim, provjeriti je li ssl omogućen na portu.
 
-Convert NBSPs?
-Konvertiraj NBSP-ove?
+Main Window
+Glavni Prozor
 
 Cancel
 Odustani
 
-Font
-Font
+Convert NBSPs?
+Konvertiraj NBSP-ove?
+
+Port:
+Port:
 
 Delete Group?
 Obrisati Grupu?
 
-Port:
-Port:
+Font
+Font
 
 CC:
 CC:
-
-Words:
-Rije\u010di:
 
 Delay (seconds):
 \u010cekanje (sekunde):
 
-&ANSI Colours to Tags
-&ANSI Boje u Oznake
+Words:
+Rije\u010di:
 
 &Error Log Window
 Prozor s Logom &Gre\u0161aka
 
-Global S&lash Commands
-Globalne &Kosocrtne Naredbe
+&ANSI Colours to Tags
+&ANSI Boje u Oznake
 
 Invalid setting \"%s\" for \"%s\"
 Neispravna postavka \"%s\" za \"%s\"
 
-Disconnected. Auto-reconnect in %s.
-Veza prekinuta. Obnavljanje veze za %s.
+Global S&lash Commands
+Globalne &Kosocrtne Naredbe
 
 No of Connections
 Broj Spajanja
 
+Disconnected. Auto-reconnect in %s.
+Veza prekinuta. Obnavljanje veze za %s.
+
 Wrap text at:
 Sabij \u0161irinu teksta na:
-
-Global Prefixes
-Globalni Prefiksi
 
 Spawn Sys Messages?
 Spawnaj Sust. Poruke?
 
-There is a newer version of Potato (%s) available.\nYou can download it from Potato's Google Code site.\nWould you like to do so now?
-Dostupna je novija verzija Potatoa (%s).\nMožeš je downloadati s Potatovog sitea na Google Codeu.\nŽeliš li to sada učiniti?
+Global Prefixes
+Globalni Prefiksi
 
 Keyboard Shortcuts
 Tipkovni\u010dne Pre\u010dice
 
-Negotiate SSL?
-Dogovori SSL?
+There is a newer version of Potato (%s) available.\nYou can download it from Potato's Google Code site.\nWould you like to do so now?
+Dostupna je novija verzija Potatoa (%s).\nMožeš je downloadati s Potatovog sitea na Google Codeu.\nŽeliš li to sada učiniti?
 
 Find
 Tra\u017ei
 
-Unable to connect to host %s:%d: %s
-Ne mogu se spojiti na server %s:%d: %s
-
-Type
-Vrsta
-
-Run the commands:
-Pokreni naredbe:
-
-Sample
-Primjer
+Negotiate SSL?
+Dogovori SSL?
 
 Proxy Host:
 Proxyjeva Adresa:
 
-&Stop Logging
-&Prestani Logirati
+Sample
+Primjer
 
-&Returns to %r
-&Krajeve redaka u %r
+Run the commands:
+Pokreni naredbe:
 
-Connection Statistics
-Statistike Veza
+Type
+Vrsta
+
+Unable to connect to host %s:%d: %s
+Ne mogu se spojiti na server %s:%d: %s
 
 Mail Window
 Po\u0161ta
 
-Sorry, that's not a valid character name.
-\u017dao mi je, to nije ispravno ime za lika.
+Connection Statistics
+Statistike Veza
+
+&Returns to %r
+&Krajeve redaka u %r
+
+&Stop Logging
+&Prestani Logirati
 
 &Action
 &Akcija
 
-Upload Status - \[%d. %s\]
-Stanje Uploada - \[%d. %s\]
-
-ASpell executable:
-Izvr\u0161ni program za ASpell:
-
-ID
-ID
+Sorry, that's not a valid character name.
+\u017dao mi je, to nije ispravno ime za lika.
 
 Text
 Tekst
 
+ID
+ID
+
+ASpell executable:
+Izvr\u0161ni program za ASpell:
+
+Upload Status - \[%d. %s\]
+Stanje Uploada - \[%d. %s\]
+
 hour
 sat
-
-Visit Potato &Website
-Potato-ova &Internet Stranica
-
-Choose Input Font for %s
-Izaberi Font Unosa za %s
-
-Continuous
-Kontinuirano
 
 &Copy Selected Text
 &Kopiraj Izabrani Tekst
 
-Find Next
-Tra\u017ei Sljede\u0107e
+Continuous
+Kontinuirano
+
+Choose Input Font for %s
+Izaberi Font Unosa za %s
+
+Visit Potato &Website
+Potato-ova &Internet Stranica
 
 Change &Language
 Promijeni &Jezik
 
-Notes
-Bilje\u0161ke
+Find Next
+Tra\u017ei Sljede\u0107e
 
 Send &Selection to World
 Pošalji &Odabir u Svijet
 
-Open &Mail Window
-Otvori Prozor za &Po\u0161tu
-
-Add Global Timer
-Dodaj Globalni Tajmer
-
-Auto-Sends
-Automatska Slanja
+Notes
+Bilje\u0161ke
 
 Every
 Svakih
 
-TinyURL Provider:
-Davatelj TinyURL-a:
+Auto-Sends
+Automatska Slanja
+
+Add Global Timer
+Dodaj Globalni Tajmer
+
+Open &Mail Window
+Otvori Prozor za &Po\u0161tu
 
 &Global Events
 &Globalni Doga\u0111aji
+
+TinyURL Provider:
+Davatelj TinyURL-a:
 
 Global Timers
 Globalni Tajmeri
@@ -1553,86 +1559,86 @@ Globalni Tajmeri
 Run F4 Command
 Pokreni F4 Naredbu
 
-File Upload - \[%d. %s\]
-Upload Datoteke - \[%d. %s\]
-
-Global &Macro Window
-Prozor s Globalnim &Makroima
+Limit Input Lines?
+Ograni\u010di Retke Unosa?
 
 /command Name:
 Ime /naredbe:
 
-Limit Input Lines?
-Ograni\u010di Retke Unosa?
+Global &Macro Window
+Prozor s Globalnim &Makroima
 
-Reconnect All
-Obnovi Sve Veze
-
-Run F8 Command
-Pokreni F8 Naredbu
+File Upload - \[%d. %s\]
+Upload Datoteke - \[%d. %s\]
 
 Not connected.
 Veza nije uspostavljena.
 
-&Upload File
-&Uploadaj Datoteku
+Run F8 Command
+Pokreni F8 Naredbu
+
+Reconnect All
+Obnovi Sve Veze
 
 Unable to save world info: directory does not exist.
 Ne mogu snimiti podatke o svijetu: direktorij ne postoji.
 
+&Upload File
+&Uploadaj Datoteku
+
 Convert &Returns to %r
 Konvertiraj Returnove u %&r
-
-Log from \[%d. %s\]
-Log za \[%d. %s\]
-
-&Next Connection
-&Sljede\u0107a Veza
-
-Choose Colour
-Izaberi Boju
-
-Prev
-Pret
 
 File Upload
 Upload Datoteke
 
-Invalid speedwalk command
-Neispravna speedwalk naredba
+Prev
+Pret
 
-Edit Timer for %s
-Izmijeni Tajmer za %s
+Choose Colour
+Izaberi Boju
 
-Input Colour:
-Boja Unosa:
+&Next Connection
+&Sljede\u0107a Veza
+
+Log from \[%d. %s\]
+Log za \[%d. %s\]
 
 Spawn To:
 U:
 
-1st Port:
-Prvi Port:
+Input Colour:
+Boja Unosa:
+
+Edit Timer for %s
+Izmijeni Tajmer za %s
+
+Invalid speedwalk command
+Neispravna speedwalk naredba
 
 Echo
 Jeka
 
-Disconnected from host. - %s
-Veza sa serverom prekinuta. - %s
-
-Effects
-Efekti
-
-Allow ANSI Colours?
-Dozvoli ANSI Boje?
+1st Port:
+Prvi Port:
 
 /cls: Invalid connection.
 /cls: Neispravna veza.
 
-External Requests:
-Vanjski Zahtjevi:
+Allow ANSI Colours?
+Dozvoli ANSI Boje?
+
+Effects
+Efekti
+
+Disconnected from host. - %s
+Veza sa serverom prekinuta. - %s
 
 Check for &Updates
 Potraži &Nadogradnje
+
+External Requests:
+Vanjski Zahtjevi:
 
 All words are now spelled correctly.
 Sve rije\u010di su sada ispravno napisane.
@@ -1643,125 +1649,125 @@ Konfiguracija Globalnih Doga\u0111aja
 Send upon first connect, before Login info:
 Pošalji pri prvom spajanju prije podataka za prijavu:
 
-MSSP Info for \[%d. %s\]
-MSSP Podaci za \[%d. %s\]
-
 Place in &Top Input Window
 Stavi u &Gornji Prozor Za Unos
 
-%s - Help
-%s - Pomo\u0107
+MSSP Info for \[%d. %s\]
+MSSP Podaci za \[%d. %s\]
 
-Invalid /at ID.
-Neispravan ID /at-a.
-
-There is already a character with that name. Overwrite?
-Ve\u0107 postoji lik s tim imenom. Da ga prebri\u0161em?
+Link
+Link
 
 Prefixes
 Prefiksi
 
-Link
-Link
+There is already a character with that name. Overwrite?
+Ve\u0107 postoji lik s tim imenom. Da ga prebri\u0161em?
 
-Customise &Slash Commands
-Prilagodi Koso&crtne Naredbe
+Invalid /at ID.
+Neispravan ID /at-a.
+
+%s - Help
+%s - Pomo\u0107
 
 Unable to launch TinyURL at \"%s\": %s
 Ne mogu pokrenuti TinyURL na \"%s\": %s
 
-Forwards
-Naprijed
+Customise &Slash Commands
+Prilagodi Koso&crtne Naredbe
 
 Unable to read file \"%s\".
 Ne mogu pro\u010ditati datoteku \"%s\".
 
-&Convert...
-&Transformiraj...
-
-Reconnecting...
-Obnavljam vezu...
+Forwards
+Naprijed
 
 Delete /command
 Obri\u0161i /naredbu
 
-Argument Pattern:
-Uzorak Argumen(a)ta:
+Reconnecting...
+Obnavljam vezu...
+
+&Convert...
+&Transformiraj...
 
 Toggle &Input Windows
 Biraj Prozor za &Unos
 
-Ignore NL after Prompts?
-Ignoriraj NL nakon Promptova?
-
-Unable to spell-check text: %s
-Ne mogu provjeriti pravopis u tekstu: %s
+Argument Pattern:
+Uzorak Argumen(a)ta:
 
 Not Connected
 Veza Nije Uspostavljena
 
-Spellchecker
-Provjerava\u010d Pravopisa
+Unable to spell-check text: %s
+Ne mogu provjeriti pravopis u tekstu: %s
 
- of 
- od 
+Ignore NL after Prompts?
+Ignoriraj NL nakon Promptova?
 
 ----- Activity in %d. %s -----
 ----- Aktivnost u %d. %s -----
 
+ of 
+ od 
+
+Spellchecker
+Provjerava\u010d Pravopisa
+
 Default World Settings
 Po\u010detne Postavke Svjetova
-
-Sys
-Sus
 
 Unable to create new spawn window \"%s\": %s
 Ne mogu stvoriti novi spawn-prozor \"%s\": %s
 
-1st Address:
-Prva Adresa:
+Sys
+Sus
 
 Invalid input window \"%s\": must be 1, 2 or 3
 Neispravan prozor za unos \"%s\": mora biti 1, 2 ili 3
 
-hours
-sati
+1st Address:
+Prva Adresa:
 
 Log file \"%s\" not found.
 Log \"%s\" nije prona\u0111en.
 
-Subject:
-Naslov:
+hours
+sati
 
 Do you want to save this world for later?
 \u017deli\u0161 li snimiti ovaj svijet za kasnije?
 
-Too many spawns
-Previ\u0161e spawnova
+Subject:
+Naslov:
 
 Convert returns?
 Transformiraj krajeve redaka?
 
+Too many spawns
+Previ\u0161e spawnova
+
 &Close Connection
 &Zatvori Vezu
-
-minutes
-minuta
-
-Global Custom /commands
-Globalne Proizvoljne /naredbe
 
 Not Connected - Reconnect Every %s
 Veza Nije Uspostavljena - Obnavljam Vezu Svakih %s
 
-Regexp Match?
-Regexp Podudaranje?
+Global Custom /commands
+Globalne Proizvoljne /naredbe
 
-Progress: 
-Napredovanje:
+minutes
+minuta
+
+Program Configuration for %s
+Konfiguracija Programa %s
 
 Omit From:
 Izostavi Iz:
 
-Program Configuration for %s
-Konfiguracija Programa %s
+Progress: 
+Napredovanje:
+
+Regexp Match?
+Regexp Podudaranje?
