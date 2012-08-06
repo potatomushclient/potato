@@ -19,5 +19,7 @@
   * The connection code has been completely rewritten; many new features had been bolted onto the original code, causing it to break down in certain circumstances. Now it's far less hacky. Various issues reported by Paige.
   * The 'Visit Potato Website' option now takes you to the Google Code site, instead of potatomushclient.com - all the domain does now is link you to the Google Code site, anyway. Suggested by qa'toq.
   * Code for loading translations of messages has been improved, and the first translation - Croatian - has been added. Translations provided by Stoko.
+  * Added an English (United States) translation (mostly s → z and removal of "u"s). This is now the default language.
   * Spawns can now have almost any name, instead of being limited to A-Z and a few symbols. (They still can't start with underscores, which are reserved.) Because they can now contain spaces, Events can only spawn to a single spawn each, instead of a list, and [SlashCommands /addspawn] and /delspawn now take a single spawn name, instead of a list. Requested by many people, including Nathan Corbier and AnneLions.
   * The screen shown when Potato is open with no connections has been spruced up, as it was rather plain and dull before. Suggested by Paige.
+  * Spawn windows didn't have mouse-over timestamps like the main output window. Reported by Damian Karver.
