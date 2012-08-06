@@ -2332,7 +2332,7 @@ proc ::potato::connZeroFact {} {
   ]
 
   set client [list \
-    "Nearly all of Potato's keyboard shortcuts can be customized via the Options menu." \
+    "Nearly all of Potato's keyboard shortcuts can be customised via the Options menu." \
   ]
 
   set stupid [list \
@@ -11571,7 +11571,7 @@ proc ::potato::tasksInit {} {
        connectMenu,name    [X "&Connect To..."] \
        connectMenu,cmd     "::potato::connectMenuPost" \
        connectMenu,state   always \
-       customKeyboard,name [X "Customize Keyboard Shortcuts"] \
+       customKeyboard,name [X "Customise Keyboard Shortcuts"] \
        customKeyboard,cmd  "::potato::keyboardShortcutWin" \
        customKeyboard,state always \
        mailWindow,name     [X "Open &Mail Window"] \

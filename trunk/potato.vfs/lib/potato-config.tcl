@@ -190,7 +190,7 @@ proc ::potato::setPrefs {readfile} {
 
   # misc(locale) is the user's preferred locale. potato(locale), set in main/i18nPotato is
   # the locale that's actually currently being used
-  set misc(locale) "en_gb";# Colour, not Color :)
+  set misc(locale) "en_us";# most people probably want this default
 
   # Default skin
   set misc(skin) "potato";# Hah. Not that there will ever be another skin this century.
@@ -2110,6 +2110,7 @@ proc ::potato::pickLocale {} {
   center $win
   wm deiconify $win
 
+  bind $win <Escape> [list destroy $win]
   bind $win <Destroy> [list array unset ::potato::locales conf,*]
 
 };# ::potato::pickLocale
