@@ -979,7 +979,7 @@ proc ::potato::uploadWindowStart {c} {
 
   pack [::ttk::frame $frame.btns] -side top -anchor center -fill x -padx 6 -pady 8
   pack [::ttk::frame $frame.btns.ok] -side left -padx 6 -expand 1 -fill x
-  pack [set okBtn [::ttk::button $frame.btns.ok.btn -command [list potato::uploadWindowInvoke $c $win] \
+  pack [set okBtn [::ttk::button $frame.btns.ok.btn -command [list ::potato::uploadWindowInvoke $c $win] \
              -text [T "Upload"] -underline 0 -width 8 -default active]] -side top -anchor center
   lappend bindings u $frame.btns.ok.btn
   pack [::ttk::frame $frame.btns.cancel] -side left -padx 6 -expand 1 -fill x
@@ -1124,7 +1124,7 @@ proc ::potato::uploadBegin {c} {
        set delay 0
      }
 
-  set conn($c,upload,after) [after $delay [list potato::uploadBegin $c]]
+  set conn($c,upload,after) [after $delay [list ::potato::uploadBegin $c]]
 
   return;
 
@@ -1163,14 +1163,14 @@ proc ::potato::uploadProgressWindow {c} {
 
   pack [::ttk::frame $frame.progress] -side top -fill x -padx 6 -pady 10
   pack [::ttk::progressbar $frame.progress.pb -orient horizontal -length 275 -maximum $conn($c,upload,fileSize) \
-               -variable potato::conn($c,upload,bytes)] -side left -expand 1 -fill x
+               -variable ::potato::conn($c,upload,bytes)] -side left -expand 1 -fill x
 
   pack [::ttk::frame $frame.btns] -side top -fill x -padx 6 -pady 10
   pack [::ttk::frame $frame.btns.hide] -side left -expand 1 -fill x
   pack [::ttk::button $frame.btns.hide.btn -text [T "Hide"] -width 8 -default active \
                -underline 0 -command [list destroy $win]] -side top
   pack [::ttk::frame $frame.btns.cancel] -side left -expand 1 -fill x
-  pack [::ttk::button $frame.btns.cancel.btn -text [T "Cancel"] -width 8 -underline 0 -command [list potato::uploadCancel $c $win]] -side top
+  pack [::ttk::button $frame.btns.cancel.btn -text [T "Cancel"] -width 8 -underline 0 -command [list ::potato::uploadCancel $c $win]] -side top
 
   bind $win <Escape> [list $frame.btns.hide.btn invoke]
   bind $win <Return> [list $frame.btns.hide.btn invoke]
@@ -1319,7 +1319,7 @@ proc ::potato::logWindow {{c ""}} {
   pack [::ttk::frame $frame.btns] -side top -anchor center -expand 1 -fill x -padx 6 -pady 4
   pack [::ttk::frame $frame.btns.ok] -side left -expand 1 -fill x -padx 8
   pack [::ttk::button $frame.btns.ok.btn -text [T "Log"] -width 8 -underline 0 -default active \
-              -command [list potato::logWindowInvoke $c $win]] -side top
+              -command [list ::potato::logWindowInvoke $c $win]] -side top
   lappend bindings l $frame.btns.ok.btn
   pack [::ttk::frame $frame.btns.cancel] -side left -expand 1 -fill x -padx 8
   pack [::ttk::button $frame.btns.cancel.btn -text [T "Cancel"] -width 8 -underline 0 \
@@ -2895,7 +2895,7 @@ proc ::potato::timerQueue {c w timerId first} {
 
   set type [expr {$first ? "delay" : "every"}]
   set conn($c,timer,$timerId-$w,after) \
-           [after [expr {$world($w,timer,$timerId,$type) * 1000}] [list potato::timerRun $c $w $timerId]]
+           [after [expr {$world($w,timer,$timerId,$type) * 1000}] [list ::potato::timerRun $c $w $timerId]]
   return;
 
 };# ::potato::timerQueue
@@ -5062,13 +5062,13 @@ proc ::potato::macroWindow {{w ""}} {
   pack [set bframe [::ttk::frame $left.bframe]] -side top -anchor n -pady 13
 
   pack [set add [::ttk::button $bframe.add -image ::potato::img::event-new \
-            -command [list potato::macroWindowAdd $w]]] -side left -padx 8
+            -command [list ::potato::macroWindowAdd $w]]] -side left -padx 8
   tooltip $add [T "Add Macro"]
   pack [set edit [::ttk::button $bframe.edit -image ::potato::img::event-edit \
-            -command [list potato::macroWindowEdit $w]]] -side left -padx 8
+            -command [list ::potato::macroWindowEdit $w]]] -side left -padx 8
   tooltip $edit [T "Edit Macro"]
   pack [set delete [::ttk::button $bframe.delete -image ::potato::img::event-delete \
-            -command [list potato::macroWindowDelete $w]]] -side top -padx 8
+            -command [list ::potato::macroWindowDelete $w]]] -side top -padx 8
   tooltip $delete [T "Delete Macro"]
 
   pack [set nframe [::ttk::frame $right.name]] -side top -anchor w -padx 10 -pady 10 -expand 1 -fill x
@@ -6320,7 +6320,7 @@ proc ::potato::showStats {} {
      }
      bindtags $lb [list $win all]
   }
-  scrollbar $sb -orient vertical -command [list potato::multiscroll $listboxes yview]
+  scrollbar $sb -orient vertical -command [list ::potato::multiscroll $listboxes yview]
 
   pack {*}$listboxes -side left -anchor nw -fill both -expand 1
   pack $sb -side left -anchor nw -fill y
@@ -6541,7 +6541,7 @@ proc ::potato::winicoFlashOn {} {
   set newpos [lindex [list 1 0] $winico(pos)]
   winico taskbar modify $winico(main) -pos $newpos -text $potato(name)
   set winico(pos) $newpos
-  set winico(after) [after 750 {potato::winicoFlashOn}]
+  set winico(after) [after 750 {::potato::winicoFlashOn}]
   set winico(flashing) 1
   return;
 
@@ -7494,8 +7494,8 @@ proc ::potato::setUpBindings {} {
 
   bind PotatoInput <Tab> "[bind Text <Control-Tab>] ; break"
   bind PotatoInput <Shift-Tab> "[bind Text <Control-Shift-Tab>] ; break"
-  bind PotatoInput <Control-Tab> {potato::toggleConn 1 ; break}
-  bind PotatoInput <Control-Shift-Tab> {potato::toggleConn -1 ; break}
+  bind PotatoInput <Control-Tab> {::potato::toggleConn 1 ; break}
+  bind PotatoInput <Control-Shift-Tab> {::potato::toggleConn -1 ; break}
   foreach x [list "" Shift- Control- Control-Shift-] {
      bind PotatoOutput <${x}Tab> [bind PotatoInput <${x}Tab>]
   }
@@ -10962,7 +10962,7 @@ proc ::potato::about {} {
 #: return nothing
 proc ::potato::ddeStart {} {
 
-  dde servername -handler [list potato::handleOutsideRequest dde] -- potatoMUClient
+  dde servername -handler [list ::potato::handleOutsideRequest dde] -- potatoMUClient
   return;
 
 };# ::potato::ddeStart
