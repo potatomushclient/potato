@@ -19,14 +19,14 @@ proc main {} {
   grid rowconfigure $frame $text -weight 1
   grid columnconfigure $frame $text -weight 1
 
-  pack [set frame [ttk::frame .output]] -side top -fill both -anchor nw
-  pack [ttk::label $frame.l -textvariable ::outputfile -width 60] -side left
-  pack [ttk::button $frame.b -text "Select Output File" -command setOutputFile] -side left
+  pack [set frame [::ttk::frame .output]] -side top -fill both -anchor nw
+  pack [::ttk::label $frame.l -textvariable ::outputfile -width 60] -side left
+  pack [::ttk::button $frame.b -text "Select Output File" -command setOutputFile] -side left
 
-  pack [set frame [ttk::frame .btns]] -side top -fill both -anchor nw
-  pack [ttk::button $frame.add -text "Add files!" -command [list addFiles $text]] -side left
-  pack [ttk::button $frame.reset -text "Reset files" -command [list resetFiles $text]] -side left
-  pack [ttk::button $frame.go -text "Go!" -command buildNewTemplate] -side left
+  pack [set frame [::ttk::frame .btns]] -side top -fill both -anchor nw
+  pack [::ttk::button $frame.add -text "Add files!" -command [list addFiles $text]] -side left
+  pack [::ttk::button $frame.reset -text "Reset files" -command [list resetFiles $text]] -side left
+  pack [::ttk::button $frame.go -text "Go!" -command buildNewTemplate] -side left
 
   set files [glob -nocomplain -dir $::initialdir *.tcl]
   if { $files ne "" } {
@@ -140,7 +140,7 @@ proc buildNewTemplate {} {
 
   set stripby [countSharedDirs $inputfiles]
 
-  foreach x [array names potatoMessages] {
+  foreach x [lsort -dictionary [array names potatoMessages]] {
     set c "#"
     puts $fout ""
     foreach {fname proc lineNum} $potatoMessages($x) {

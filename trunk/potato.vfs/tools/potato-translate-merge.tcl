@@ -5,23 +5,27 @@ proc main {} {
 
   wm title . "Potato Translation File Merger, Version $::VERSION"
 
-  pack [set frame [frame .template]] -side top -pady 8
-  pack [label $frame.l -text "Template:" -justify left -width 14] -side left -padx 4
-  pack [entry $frame.e -textvariable files(template) -width 35] -side left -padx 4
-  pack [button $frame.b -command [list setFile template 1] -text "..."] -side left -padx 4
+  pack [set frame [::ttk::frame .template]] -expand 1 -fill x -side top -pady 8
+  pack [::ttk::label $frame.l -text "Template:" -justify left -width 14] -side left -padx 4
+  pack [::ttk::entry $frame.e -textvariable files(template) -width 50] -expand 1 -fill x -side left -padx 4
+  pack [::ttk::button $frame.b -command [list setFile template 1] -text "..." -width 4] -side left -padx 4
 
-  pack [set frame [frame .trans]] -side top -pady 8
-  pack [label $frame.l -text "Translation:" -justify left -width 14] -side left -padx 4
-  pack [entry $frame.e -textvariable files(translation) -width 35] -side left -padx 4
-  pack [button $frame.b -command [list setFile translation 1] -text "..."] -side left -padx 4
+  pack [set frame [::ttk::frame .trans]] -expand 1 -fill x -side top -pady 8
+  pack [::ttk::label $frame.l -text "Translation:" -justify left -width 14] -side left -padx 4
+  pack [::ttk::entry $frame.e -textvariable files(translation) -width 50] -expand 1 -fill x -side left -padx 4
+  pack [::ttk::button $frame.b -command [list setFile translation 1] -text "..." -width 4] -side left -padx 4
 
-  pack [set frame [frame .output]] -side top -pady 8
-  pack [label $frame.l -text "Ouput To:" -justify left -width 14] -side left -padx 4
-  pack [entry $frame.e -textvariable files(output) -width 35] -side left -padx 4
-  pack [button $frame.b -command [list setFile output 0] -text "..."] -side left -padx 4
+  pack [set frame [::ttk::frame .output]] -expand 1 -fill x -side top -pady 8
+  pack [::ttk::label $frame.l -text "Ouput To:" -justify left -width 14] -side left -padx 4
+  pack [::ttk::entry $frame.e -textvariable files(output) -width 50] -expand 1 -fill x -side left -padx 4
+  pack [::ttk::button $frame.b -command [list setFile output 0] -text "..." -width 4] -side left -padx 4
 
-  pack [set frame [frame .btns]] -side top -pady 15 -fill x
-  pack [button $frame.go -text "Go!" -width 8 -command mergeFiles]
+  pack [set frame [::ttk::frame .btns]] -side top -pady 15 -fill x
+  pack [::ttk::button $frame.go -text "Go!" -width 8 -command mergeFiles]
+
+  if { [file exists ./potato-template.txt] } {
+       set ::files(template) [file nativename [file normalize "./potato-template.txt"]]
+     }
 }
 
 proc mergeFiles {} {
@@ -62,7 +66,7 @@ proc mergeFiles {} {
 
   puts $fid(output) "\n# Untranslated strings:"
   set untranslated 0
-  foreach x [array names templateStrings] {
+  foreach x [lsort -dictionary [array names templateStrings]] {
     if { ![info exists translationStrings($x)] || $translationStrings($x) eq "-" } {
          puts $fid(output) "\n$x"
          puts $fid(output) $templateStrings($x)
@@ -73,7 +77,7 @@ proc mergeFiles {} {
 
   puts $fid(output) "\n# Obsolete strings:"
   set obsolete 0
-  foreach x [array names translationStrings] {
+  foreach x [lsort -dictionary [array names translationStrings]] {
     if { ![info exists templateStrings($x)] && $translationStrings($x) ne "-" } {
          puts $fid(output) "\n$x"
          puts $fid(output) $translationStrings($x)
@@ -84,7 +88,7 @@ proc mergeFiles {} {
 
   puts $fid(output) "\n# Existing translations:"
   set repeats 0
-  foreach x [array names translationStrings] {
+  foreach x [lsort -dictionary [array names translationStrings]] {
     if { $x ni $done && $translationStrings($x) ne "-" } {
          puts $fid(output) "\n$x"
          puts $fid(output) $translationStrings($x)
@@ -176,7 +180,7 @@ proc setFile {type existing} {
   if { $file eq "" } {
        return;
      }
-  set files($type) $file
+  set files($type) [file nativename [file normalize $file]]
 };# setFile
 package require Tk
 main
