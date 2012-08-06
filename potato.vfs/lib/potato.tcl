@@ -651,6 +651,7 @@ proc ::potato::mailWindow {{c ""}} {
        return;
      }
   toplevel $win
+  wm withdraw $win
   registerWindow $c $win
 
   set w $conn($c,world)
@@ -737,6 +738,7 @@ proc ::potato::mailWindow {{c ""}} {
 
   mailWindowFormatChange $c
 
+  center $win
   reshowWindow $win 0
 
   return;
@@ -5278,10 +5280,10 @@ proc ::potato::grid_with_scrollbars {widget x y} {
 #: desc center window $win on the screen
 #: return nothing
 proc ::potato::center {win} {
-  # Center window $win on the screen
 
-  set w [winfo width $win]
-  set h [winfo height $win]
+  update
+  set w [winfo reqwidth $win]
+  set h [winfo reqheight $win]
 
   set sh [winfo screenheight $win]
   set sw [winfo screenwidth $win]
