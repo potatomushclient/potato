@@ -6259,8 +6259,8 @@ proc ::potato::showMSSP {} {
   grid_with_scrollbars $tree $x $y
 
 
-  $tree heading Variable -text Variable -anchor w
-  $tree heading Value -text Value -anchor w
+  $tree heading Variable -text [T "Variable"] -anchor w
+  $tree heading Value -text [T "Value"] -anchor w
   $tree column Variable -width 100
   $tree column Value -width 250
 
