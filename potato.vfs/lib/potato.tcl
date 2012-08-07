@@ -10146,22 +10146,13 @@ proc ::potato::customSlashCommand {c w cmd str} {
        return [list 0 [T "/cls: Invalid connection."]];# bad connection
      }
 
-  if { $window eq "_main" || $window eq "" } {
-       $conn($c,textWidget) delete 1.0 end
-       if { $conn($c,connected) == 1 } {
-            set status [T "Connected."]
-          } elseif { $conn($c,connected) == -1 } {
-            set status [T "Reconnecting..."]
-          } elseif { [connInfo $c autoreconnect] && [connInfo $c autoreconnect,time] > 0 } {
-            set status [T "Disconnected. Auto-reconnect in %s." [timeFmt [connInfo $c autoreconnect,time] 0]]
+  if { $window eq "_main" || $window eq "" || [set pos [findSpawn $c $window]] != -1 } {
+       if { ![info exists pos] } {
+            set t $conn($c,textWidget)
           } else {
-            set status [T "Disconnected."]
+            set t [lindex $pos 1]
           }
-       outputSystem $c $status
-       $conn($c,textWidget) delete 1.0 2.0;# remove leading newline
-     } elseif { [set pos [findSpawn $c $window]] != -1 } {
-       set spawn [lindex $conn($c,spawns) $pos]
-       [lindex $pos 1] delete 1.0 end
+       clearOutputWindow $c $t
      } else {
        return [list 0 [T "/cls: No such window."]]
      }
@@ -10773,6 +10764,43 @@ proc ::potato::parseConnectRequest {str} {
   return [list 1];
 
 };# /history
+
+#: proc ::potato::clearOutputWindow
+#: c connection id
+#: t text widget path
+#: desc For conn $c, empty the text widget $t. If it's the main output window, re-print the current connection status and leave the prompt.
+#: return nothing
+proc ::potato::clearOutputWindow {c t} {
+  variable conn;
+
+  if { $c eq "" } {
+       set c [up]
+     }
+
+  if { $c == 0 || ![winfo exists $t] || [winfo class $t] ne "Text" } {
+       return;
+     }
+
+  if { [llength [$conn($c,textWidget) tag ranges prompt]] } {
+       $t delete 1.0 prompt.first
+     } else {
+       $t delete 1.0 end
+     }
+  if { $t eq $conn($c,textWidget) } {
+       if { $conn($c,connected) == 1 } {
+            set status [T "Connected."]
+          } elseif { $conn($c,connected) == -1 } {
+            set status [T "Reconnecting..."]
+          } elseif { [connInfo $c autoreconnect] && [connInfo $c autoreconnect,time] > 0 } {
+            set status [T "Disconnected. Auto-reconnect in %s." [timeFmt [connInfo $c autoreconnect,time] 0]]
+          } else {
+            set status [T "Disconnected."]
+          }
+       outputSystem $c $status
+     }
+
+  return;
+};# ::potato::clearOutputWindow
 
 #: proc ::potato::cleanup_afters
 #: arg c connection id
