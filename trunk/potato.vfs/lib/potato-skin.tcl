@@ -1167,16 +1167,14 @@ proc ::skin::potato::show {c} {
 proc ::skin::potato::fixWindowOrder {c} {
   variable widgets;
 
-  raise $widgets(toolbar)
-  raise $widgets(worldbar)
-  if { [winfo exists $widgets(spawnbar)] && [winfo manager $widgets(spawnbar)] ne "" } {
-       raise $widgets(spawnbar)
-     }
-  raise $widgets(conn,$c,txtframe)
+  foreach x [list $widgets(toolbar) $widgets(worldbar) $widgets(spawnbar) $widgets(conn,$c,txtframe) \
+                  [::potato::connInfo $c input1] [::potato::connInfo $c input2] $widgets(pane,btm,idle)] {
+    if { [winfo exists $x] && [winfo manager $x] ne "" } {
+         raise $x
+       }
+  }
 
-  raise [::potato::connInfo $c input1]
-  raise [::potato::connInfo $c input2]
-  raise $widgets(pane,btm,idle)
+  return;
 
 };# ::skin::potato::fixWindowOrder
 
@@ -1296,6 +1294,8 @@ proc ::skin::potato::rightclickOutput {c t evx evy evX evY} {
      } else {
        $menu entryconfigure 2 -state disabled
      }
+  $menu add separator
+  $menu add command {*}[::potato::menu_label [::potato::T "Clear Output Buffer"]] -command [list ::potato::clearOutputWindow $c $t]
   if { $c != 0 } {
        $menu add separator
        foreach x $conns {
