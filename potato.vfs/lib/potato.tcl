@@ -3420,7 +3420,6 @@ proc ::potato::get_mushageProcess {c line} {
   if { $eventInfo(matched) && [info exists eventInfo(send)] } {
        foreach x $eventInfo(send) {
          send_to $c $x
-         addToInputHistory $c $x
        }
      }
 
