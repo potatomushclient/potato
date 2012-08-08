@@ -2,9 +2,9 @@
 
 =Downloading Potato=
 
-You can currently download binaries of Potato for Windows and Linux.
+A binary .exe of Potato is available for MS Windows.
 
-The code is also available to download as a Starkit, and as a zip archive of Tcl source code files. You can also [RunFromSource checkout the latest copy from SVN]. These methods all require a copy of the [GettingTcl Tcl Intepreter].
+You can also download a [RunFromSource source code archive, or checkout the latest copy from SVN]. Potato can be run from source (without compiling) on Windows and Linux, and probably on MacOS X too.
 
 ==Windows==
 
@@ -12,11 +12,9 @@ You can download the *[http://code.google.com/p/potatomushclient/downloads/list?
 
 ==Linux==
 
-The easiest way to run Potato on Linux is currently [RunFromSource running from source].
+The easiest way to run Potato on Linux is currently [RunFromSource running from source]. There is no compiling required.
 
-32 bit Linux binaries can be found at *[http://code.google.com/p/potatomushclient/downloads/list?can=3&q=OpSys%3ALinux+Type%3AExecutable&colspec=Filename+Summary+Uploaded+Size+DownloadCount+Opsys+Type available here]*. You can also download [http://code.google.com/p/potatomushclient/downloads/list?can=1&q=OpSys%3ALinux+Type%3AExecutable&colspec=Filename+Summary+Uploaded+Size+DownloadCount+Opsys+Type older versions].
-
-_Note: To run these on a 64 bit system you may need compatibility libraries. On Fedora this is provided by the 'compat-libstdc++' package. Functionality on other distros is tentative. 64 bit binaries should be available with next release._
+Linux binaries are no longer provided, as they actually proved more troublesome for people to use than the source. However, if you'd like a Linux binary, I can provide them on request.
 
 ==MacOS X==
 
