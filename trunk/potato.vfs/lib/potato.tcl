@@ -1280,6 +1280,7 @@ proc ::potato::logWindow {{c ""}} {
   set conn($c,logDialog,future) 1
   #set conn($c,logDialog,wrap) 0
   set conn($c,logDialog,timestamps) 0
+  set conn($c,logDialog,html) 0
   set conn($c,logDialog,file) ""
 
   set bindings [list]
@@ -1305,6 +1306,9 @@ proc ::potato::logWindow {{c ""}} {
   pack [::ttk::checkbutton $frame.top.options.timestamps -variable potato::conn($c,logDialog,timestamps) \
              -onvalue 1 -offvalue 0 -text [T "Show Timestamps?"] -underline 5] -side top -anchor w
   lappend bindings t $frame.top.options.timestamps
+  pack [::ttk::checkbutton $frame.top.options.html -variable potato::conn($c,logDialog,html) \
+             -onvalue 1 -offvalue 0 -text [T "Log as HTML?"] -underline 7] -side top -anchor w
+  lappend bindings h $frame.top.options.html
 
   #pack [::ttk::checkbutton $frame.top.options.wrap -variable potato::conn($c,logDialog,wrap) \
   #           -onvalue 1 -offvalue 0 -text [T "Wrap Lines?"] -underline 0] -side top -anchor w
@@ -1314,7 +1318,12 @@ proc ::potato::logWindow {{c ""}} {
   pack [::ttk::entry $frame.file.e -textvariable potato::conn($c,logDialog,file) -width 30] -side left -expand 1 -fill x
   $frame.file.e state readonly
 
-  pack [::ttk::button $frame.file.sel -command [list ::potato::selectFile potato::conn($c,logDialog,file) $win 1] \
+
+  set html {
+    {{HTML Files}       {.html}        }
+  }
+
+  pack [::ttk::button $frame.file.sel -command [list ::potato::selectFile potato::conn($c,logDialog,file) $win 1 $html] \
               -image ::potato::img::dotdotdot] -side left -padx 8
   lappend bindings f $frame.file.sel
 
@@ -1357,7 +1366,7 @@ proc ::potato::logWindowInvoke {c win} {
        return; # no file selected, or told not to log anything
      }
 
-  doLog $c $conn($c,logDialog,file) $conn($c,logDialog,append) $conn($c,logDialog,buffer) $conn($c,logDialog,future) $conn($c,logDialog,timestamps)
+  doLog $c $conn($c,logDialog,file) $conn($c,logDialog,append) $conn($c,logDialog,buffer) $conn($c,logDialog,future) $conn($c,logDialog,timestamps) $conn($c,logDialog,html)
   unregisterWindow $c $win
   destroy $win
   array unset conn $c,logDialog,*
@@ -1372,13 +1381,15 @@ proc ::potato::logWindowInvoke {c win} {
 #: arg buffer "No Buffer" or "_none" to not include buffered output, "Main Window" or "_main" for $c's main window, or the name of a spawn window
 #: arg leave leave the logfile open for future output?
 #: arg timestamps Include timestamps for each logged line?
+#: arg html Log as HTML instead of plain text?
 #: desc Create a log file for connection $c, writing to file $file (and appending, if $append is true and the file exists). If $buffer != "_none"/"No Buffer",
 #: desc include output from one of the windows. If $leave, don't close the file, leave it open to log incoming text to, possibly causing us to close an already-open log file.
 #: return nothing
-proc ::potato::doLog {c file append buffer leave timestamps} {
+proc ::potato::doLog {c file append buffer leave timestamps html} {
   variable conn;
   variable world;
   variable misc;
+  variable potato;
 
   if { ![info exists conn($c,world)] } {
        return;
@@ -1390,22 +1401,19 @@ proc ::potato::doLog {c file append buffer leave timestamps} {
        set file $newfile
      }
 
-  set err [catch {open $file $mode} fid]
-  if { $err } {
-       outputSystem $c "Unable to log to \"$file\": $fid"
-       return;
-     }
-
-  set header "Logfile from $world($conn($c,world),name)"
+  set header [T "Logfile from %s" $world($conn($c,world),name)]
   if { $conn($c,char) ne "" } {
        append header " ($conn($c,char))"
      }
-  puts $fid $header
-  puts $fid "Log opened [clock format [clock seconds] -format $misc(clockFormat)]\n"
 
-  if { $buffer eq "" || $buffer eq "No Buffer" || [set buffer [validSpawnName $buffer 0]] eq "" || $buffer eq "_all" } {
+  if { [catch {set subheader [T "Log opened %s" [clock format [clock seconds] -format $misc(clockFormat)]]}] } {
+       set subheader ""
+       set timestamps 0
+     }
+
+  if { $buffer eq "" || $buffer eq "No Buffer" || $buffer eq "_all" || [set buffer [validSpawnName $buffer 0]] eq "" } {
        set t ""
-     } elseif { $buffer eq "_main" || $buffer eq "Main Window" } {
+     } elseif { $buffer eq "_main" || $buffer eq "main window" } {
        set t $conn($c,textWidget)
      } elseif { [set pos [findSpawn $c $buffer]] != -1 } {
        set t [lindex [lindex $conn($c,spawns) $pos] 0]
@@ -1413,22 +1421,163 @@ proc ::potato::doLog {c file append buffer leave timestamps} {
        set t ""
      }
 
-  if { $timestamps && [catch {clock format [clock seconds] -format $misc(clockFormat)}] } {
-       set timestamps 0
+  if { !$leave && $t eq "" } {
+       outputSystem $c [T "Log what?"]
+       return;
      }
 
-  if { [winfo exists $t] && [winfo class $t] eq {Text} } {
-       set max [$t count -lines 1.0 end]
-       for {set i 1} {$i < $max} {incr i} {
-         if { "nobacklog" in [$t tag names $i.0] } {
-              continue;
-            };
-         if { $timestamps } {
-              set curr "\[[clock format [$t get {*}[$t tag nextrange timestamp $i.0]] -format $misc(clockFormat)]\] "
-            } else {
-              set curr ""
+  set err [catch {open $file $mode} fid]
+  if { $err } {
+       outputSystem $c "Unable to log to \"$file\": $fid"
+       return;
+     }
+  fconfigure $fid -encoding utf-8
+
+  if { $html } {
+       set leave 0;# not currently supported
+     }
+
+  if { $html } {
+       puts $fid {<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">}
+       puts $fid {<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">}
+       puts $fid {<head>}
+       puts $fid "\t<title>[htmlEscape $header]</title>"
+       puts -nonewline $fid "\t"
+       puts $fid {<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />}
+       puts $fid "\t<meta name=\"description\" content=\"[htmlEscape "$header. $subheader"]\"  />"
+       puts $fid [format {%s<meta name="author" content="%s Version %s" />} \t $potato(name) $potato(version)]
+       if { $t eq "" } {
+            set thtml $conn($c,textWidget)
+          } else {
+            set thtml $t
+          }
+       puts $fid "\t<style type=\"text/css\">"
+       puts $fid "\t\t<!--"
+       puts $fid "\t\t body {"
+       puts $fid "\t\t\tbackground-color:[htmlColor [$thtml cget -background]];"
+       puts $fid "\t\t\tcolor:[htmlColor [$thtml cget -foreground]];"
+       array set font [font actual [$thtml cget -font]]
+       puts $fid "\t\t\tfont-family: $font(-family),\"$font(-family)\",monospace;"
+       puts $fid "\t\t\tfont-size: $font(-size)pt;"
+       if { $font(-weight) eq "bold " } {
+            puts $fid "\t\t\tfont-weight:bold;"
+          }
+       if { $font(-slant) eq "italic" } {
+            puts $fid "\t\t\tfont-style:italic;"
+          }
+       if { $font(-underline) && $font(-overstrike) } {
+            puts $fid "\t\t\ttext-decoration:underline line-through;"
+          } elseif { $font(-underline) } {
+            puts $fid "\t\t\ttext-decoration:underline;"
+          } elseif { $font(-overstrike) } {
+            puts $fid "\t\t\ttext-decoration:line-through;"
+          }
+       puts $fid "\t\t}"
+
+       set styles [lsort -dictionary [lsearch -all -inline -glob [$thtml tag names] ANSI*]]
+       if { !$leave } {
+            # We only need to put the styles we've used
+            for {set i [llength $styles];incr i -1} {$i >= 0} {incr i -1} {
+              if { ![llength [$thtml tag ranges [lindex $styles $i]]] } {
+                   set styles [lreplace $styles $i $i]
+                 }
             }
-         puts $fid "$curr[$t get -displaychars -- "$i.0" "$i.0 lineend"]"
+          }
+       lappend styles system echo
+       foreach x $styles {
+         set this ""
+         if { [set col [$thtml tag cget $x -foreground]] ne "" } {
+              append this "color:[htmlColor $col];"
+            }
+         if { [set col [$thtml tag cget $x -background]] ne "" } {
+              append this "background-color:[htmlColor $col];"
+            }
+         if { $this ne "" } {
+              puts $fid "\t\t.$x {$this}"
+            }
+       }
+       if { "ANSI_underline" in $styles } {
+            puts $fid "\t\t.ANSI_underline {text-decoration:underline;}"
+          }
+       lappend styles weblink
+       puts $fid "\t\t.center {text-align:center}"
+       puts $fid "\t\t-->"
+       puts $fid "\t</style>"
+       puts $fid {</head>}
+       puts $fid {<body>}
+       puts $fid "\t<h1>[htmlEscape $header]</h1>"
+       puts $fid "\t<h2>[htmlEscape $subheader]</h2>"
+     } else {
+       puts $fid "$header\n$subheader\n"
+     }
+
+  if { [winfo exists $t] && [winfo class $t] eq "Text" } {
+       set max [$t count -lines 1.0 end]
+       for {set i 1} {$i <= $max} {incr i} {
+         set linking 0
+         set omit 0
+         set opentags [list]
+         if { "nobacklog" in [set tags [$t tag names $i.0]] } {
+              continue;
+            }
+         if { $html } {
+              puts -nonewline $fid "\t<div";
+              if { "center" in $tags } {
+                   puts -nonewline $fid { class="center"}
+                 }
+              puts -nonewline $fid ">"
+            }
+         if { $timestamps } {
+              if { $html } {
+                   # nothing yet
+                 } else {
+                   puts -nonewline $fid "\[[clock format [$t get {*}[$t tag nextrange timestamp $i.0]] -format $misc(clockFormat)]\] "
+                 }
+            }
+         if { $html } {
+              set data [$t dump -tag -text $i.0 "$i.0 lineend"]
+              foreach {what info where} $data {
+                switch $what {
+                  tagon {if { $info eq "weblink" } {
+                              set linking 1
+                            } elseif { $info eq "timestamp" } {
+                              set omit 1
+                            } elseif { $linking } {
+                              # nothing
+                            } elseif { $info in $styles } {
+                              puts -nonewline $fid "<span class=\"$info\">"
+                              lappend opentags $info
+                            }
+                         }
+                  tagoff {if { $linking } {
+                               set linking 0
+                               puts -nonewline $fid "<a href=\"[htmlEscape $link]\" target=\"_blank\">[htmlEscape $link]</a>"
+                               set link ""
+                             } elseif { $omit } {
+                               set omit 0
+                             } elseif { $info in $opentags } {
+                               puts -nonewline $fid "</span>"
+                               set pos [lsearch -exact $opentags $info]
+                               set opentags [lreplace $opentags $pos $pos]
+                             }
+                         }
+                  text {if { $linking } {
+                             append link $info
+                           } elseif { $omit } {
+                             continue
+                           } else {
+                             puts -nonewline $fid [htmlEscape $info]
+                           }
+                       }
+                }
+              }
+              foreach span $opentags {
+                puts -nonewline $fid "</span>";
+              }
+              puts $fid "</div>"
+            } else {
+              puts $fid [$t get -displaychars -- "$i.0" "$i.0 lineend"]
+            }
        }
        flush $fid
      }
@@ -1438,11 +1587,35 @@ proc ::potato::doLog {c file append buffer leave timestamps} {
        set conn($c,log,$fid) [file nativename [file normalize $file]]
        set conn($c,log,$fid,timestamps) $timestamps
      } else {
+       if { $html } {
+            puts $fid "</body>\n</html>"
+          }
        outputSystem $c [T "Logged to \"%s\"." $file]
        close $fid
      }
 
+  return;
+
 };# ::potato::doLog
+
+proc ::potato::htmlColor {color} {
+
+  foreach [list red green blue] [winfo rgb . $color] {break}
+
+  set red [expr {$red / 256}]
+  set blue [expr {$blue / 256}]
+  set green [expr {$green / 256}]
+
+  return [format "#%02x%02x%02x" $red $green $blue];
+
+};# ::potato::htmlColor
+
+proc ::potato::htmlEscape {str} {
+
+  set map [list "&" "&amp;" "<" "&lt;" ">" "&gt;" {"} "&quot;" " " "&nbsp;" "\u00a0" "&nbsp;"]
+  return [string map $map $str];
+
+};# ::potato::htmlEscape
 
 #: proc ::potato::stopLog
 #: arg c connection id. Defaults to ""
@@ -1548,8 +1721,8 @@ proc ::potato::log {c str} {
 #: arg save Is this a saveFile dialog (1), or an openFile dialog (0)?
 #: desc Show a dialog for selecting a file to either save to or open. If a file is selected, save it into the variable given in $var
 #: return nothing
-proc ::potato::selectFile {var win save} {
-  variable potato;
+proc ::potato::selectFile {var win save {basetypes ""}} {
+  variable path;
   upvar #0 $var local;
 
   if { $save } {
@@ -1559,7 +1732,7 @@ proc ::potato::selectFile {var win save} {
      }
 
   if { $local eq "" } {
-       set basedir $potato(homedir)
+       set basedir $path(homedir)
        set basefile ""
      } else {
        set basedir [file dirname $local]
@@ -1569,8 +1742,11 @@ proc ::potato::selectFile {var win save} {
   set filetypes {
     {{Text Files}       {.txt}        }
     {{Text Files}       {.log}        }
-    {{All Files}        *             }
   }
+  if { $basetypes ne "" } {
+       set filetypes [concat $filetypes $basetypes]
+     }
+  lappend filetypes {{All Files}        *             }
   set file [$cmd -parent $win -initialdir $basedir -initialfile $basefile \
                  -defaultextension ".txt" -filetypes $filetypes]
 
@@ -2335,12 +2511,23 @@ proc ::potato::connZeroFact {} {
 
   set client [list \
     "Nearly all of Potato's keyboard shortcuts can be customised via the Options menu." \
+    "Potato is the only MUSH client with two input windows." \
+    "You can use /commands to perform custom actions when Events run." \
+    "You can make Potato your default Telnet client on Windows. You probably can on Linux, too, but I couldn't tell you how." \
+    "Potato runs on Windows and Linux." \
+    "You can force Potato to load/save its configuration and world files in the same directory as the Potato executable or source code by using the --local command line option. This is useful if you're running it on a flash drive." \
+    "Potato can run in any language, and there are now translations available for more than 2 languages! (OK, so that's not a lot.) If you'd like to help translate Potato into another language, please let us know." \
+    "If you have ASpell installed on your computer, Potato can use it to perform spellchecking." \
+    "Potato can log as HTML to preserve ANSI colours in the output." \
   ]
 
   set stupid [list \
     "Over 99% of the people we asked said Potato was their favourite MUSH client ever. (Survey included two people... they may both have been me.)" \
     "Potato is one of the fastest growing clients on the intertubers." \
     "If Potato can't do it, nobody can. Or maybe you'll want to submit a feature request." \
+    "'Potato' is the only word which is pronounced exactly the same in every language on the planet, except for the word 'gullible'." \
+    "It's rumoured that the man in our logo, Mr Potato, is the illegitimate son of Mr Peanut, though this has never been substantiated." \
+    "Anyone who donates towards Potato's development can request a signed photo of the Potato mascot, Mr Potato." \
   ]
 
   set allfacts [concat $food $client $stupid]
@@ -3378,7 +3565,7 @@ proc ::potato::get_mushageProcess {c line} {
        if { $world($w,act,clearOldNewActNotices) && [llength [$t tag nextrange newact 1.0]] } {
             $t delete {*}[$t tag ranges newact]
           }
-       $t insert $endPos "\n" [list system center newact] $newActStr [list system center newact] [clock seconds] [list system center newact timestamp]
+       $t insert $endPos "\n" [list newact] $newActStr [list system center newact] [clock seconds] [list newact timestamp]
        set insertedAnything 1
      }
 
@@ -3892,7 +4079,7 @@ proc ::potato::outputSystem {c msg {tags ""}} {
   variable conn;
   variable world;
 
-  set tags [concat $tags [list system margins]]
+  set alltags [concat $tags [list system margins]]
   if { ![info exists conn($c,textWidget)] || ![winfo exists $conn($c,textWidget)] } {
        return;
      }
@@ -3905,9 +4092,9 @@ proc ::potato::outputSystem {c msg {tags ""}} {
        set endPos "end"
      }
   if { [$conn($c,textWidget) count -chars 1.0 3.0] > 1 } {
-       set inserts [list "\n" $tags $msg $tags [clock seconds] [concat $tags timestamp]]
+       set inserts [list "\n" $tags $msg $alltags [clock seconds] timestamp]
      } else {
-       set inserts [list $msg $tags [clock seconds] [concat $tags timestamp]]
+       set inserts [list $msg $alltags [clock seconds] timestamp]
      }
   $conn($c,textWidget) insert $endPos {*}$inserts
   if { $aE } {
@@ -3923,7 +4110,7 @@ proc ::potato::outputSystem {c msg {tags ""}} {
              } else {
                set newline ""
              }
-          $t insert end $newline $tags $msg $tags [clock seconds] [concat $tags timestamp]
+          $t insert end $newline $tags $msg $alltags [clock seconds] timestamp
           if { $aE } {
                $t see end
              }
@@ -5615,7 +5802,7 @@ proc ::potato::main {} {
 
   if { $potato(local) } {
        set path(world) [file join $path(homedir) worlds]
-       set path(skins) [file join $potato(homedir) skins]
+       set path(skins) [file join $path(homedir) skins]
        set path(userlib) [file join $path(homedir) lib]
        set path(preffile) [file join $path(homedir) potato.ini]
        set path(custom) [file join $path(homedir) potato.custom]
@@ -10503,7 +10690,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
      }
 
   # Try and parse out options...
-  array set options [list -buffer 0 -append 1 -leave 1 -timestamps 0]
+  array set options [list -buffer "_main" -append 1 -leave 1 -timestamps 0 -html 0]
   set error ""
   set finished 0
   set file [list]
@@ -10542,7 +10729,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
                   }
               } else {
                 # Looking for a value to the option $match
-                if { $match in [list "-append" "-leave" "-timestamps"] } {
+                if { $match in [list "-append" "-leave" "-timestamps" "-html"] } {
                      if { [string is boolean -strict $x] } {
                           set options($match) [string is true -strict $x]
                         } else {
@@ -10550,13 +10737,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
                           break;
                         }
                    } elseif { $match eq "-buffer" } {
-                     if { [string equal $x "_none"] } {
-                          set options(-buffer) "No Buffer"
-                        } elseif { [string equal $x "_main"] } {
-                          set options(-buffer) "Main Window"
-                        } else {
-                          set options(-buffer) $x;# name of a spawn window
-                        }
+                     set options(-buffer) $x;# name of a spawn window
                    }
                 set needOpt 1
               }
@@ -10564,7 +10745,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
      }
 
   if { $error ne "" } {
-       return [list 0 "/log: $error";]
+       return [list 0 "/log: $error"];
      }
 
   set file [join $file " "]
@@ -10574,7 +10755,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
        return [list 1];
      }
 
-  doLog $c $file $options(-append) $options(-buffer) $options(-leave) $options(-timestamps)
+  doLog $c $file $options(-append) $options(-buffer) $options(-leave) $options(-timestamps) $options(-html)
   return [list 1];
 
 };# /log
