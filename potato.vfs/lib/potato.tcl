@@ -7505,6 +7505,8 @@ proc ::potato::checkForUpdatesSub {token} {
             destroy $update(win)
           } else {
             pack [::ttk::label $update(main).error -text $errorText -font $font]
+            update
+            center $update(win)
           }
        return;
      }
@@ -7517,8 +7519,8 @@ proc ::potato::checkForUpdatesSub {token} {
        pack [::ttk::button $update(btns).yes -text [T "Yes"] \
                -command "[list ::potato::launchWebPage http://code.google.com/p/potatomushclient/wiki/Downloads?tm=2] ; [list destroy $update(win)]"] -side left -before $update(btns).ok -padx 8
        if { $background } {
-            update;
-            center $update(win);
+            update
+            center $update(win)
             wm deiconify $update(win)
             bell -displayof $update(win)
           }
@@ -7527,6 +7529,8 @@ proc ::potato::checkForUpdatesSub {token} {
             destroy $update(win)
           } else {
             pack [::ttk::label $update(main).uptodate -text [T "You are already using the latest version of Potato."] -font $font]
+            update
+            center $update(win)
           }
      }
 
