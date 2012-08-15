@@ -4093,9 +4093,9 @@ proc ::potato::outputSystem {c msg {tags ""}} {
        set endPos "end"
      }
   if { [$conn($c,textWidget) count -chars 1.0 3.0] > 1 } {
-       set inserts [list "\n" $tags $msg $alltags [clock seconds] timestamp]
+       set inserts [list "\n" $tags $msg $alltags [clock seconds] [concat $tags timestamp]]
      } else {
-       set inserts [list $msg $alltags [clock seconds] timestamp]
+       set inserts [list $msg $alltags [clock seconds] [concat $tags timestamp]]
      }
   $conn($c,textWidget) insert $endPos {*}$inserts
   if { $aE } {
@@ -4111,7 +4111,7 @@ proc ::potato::outputSystem {c msg {tags ""}} {
              } else {
                set newline ""
              }
-          $t insert end $newline $tags $msg $alltags [clock seconds] timestamp
+          $t insert end $newline $tags $msg $alltags [clock seconds] [concat timestamp $tags]
           if { $aE } {
                $t see end
              }
