@@ -15,10 +15,10 @@ All of these methods require that you have [GettingTcl Tcl installed].
 
 ==Windows==
 ===Source===
-Extract the Potato.zip file into your C:\ drive - it contains a folder called potato.vfs. Download the [GettingTcl TclKit] into the potato.vfs directory, and then drag-and-drop the file "main.tcl" onto the TclKit.exe to run.
+Extract the Potato.zip file into your C:\ drive - it contains a folder called potato.vfs. Download the [GettingTcl TclKit] into the potato.vfs directory, and then drag-and-drop the file "main.tcl" onto the !TclKit.exe to run.
 
 ===Starkit===
-If you're using a Starkit, make a folder (for instance, *C:\Potato*) and place the [Downloads#Source Potato Starkit] in it. Download the [GettingTcl TclKit] into the same directory, and drag-and-drop the Potato.kit file onto the TclKit.exe to run.
+If you're using a Starkit, make a folder (for instance, *C:\Potato*) and place the [Downloads#Source Potato Starkit] in it. Download the [GettingTcl TclKit] into the same directory, and drag-and-drop the Potato.kit file onto the !TclKit.exe to run.
 
 ===SVN===
 Check out the potato.vfs folder from SVN. If you're using a command-line SVN client, the command is 
@@ -31,7 +31,7 @@ You'll need to perform a second SVN checkout to get the helpfiles. After checkin
 svn checkout http://potatomushclient.googlecode.com/svn/wiki/ help
 }}}
 
-Download the [GettingTcl TclKit] into the potato.vfs directory, and then drag-and-drop the file "main.tcl" onto the TclKit.exe to run.
+Download the [GettingTcl TclKit] into the potato.vfs directory, and then drag-and-drop the file "main.tcl" onto the !TclKit.exe to run.
 
 ==Linux and MacOS X==
 ===Source===
