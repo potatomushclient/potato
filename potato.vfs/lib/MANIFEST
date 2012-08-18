@@ -41,8 +41,9 @@ app-potato/                Addition libraries/extensions
 
 ../main.tcl                Launch script for running Potato from source
 ../LICENSE                 The MIT License. This file MUST be distributed with all copies of the source.
+../INSTALL                 Instructions for running Potato from source
 
-../LICENSE                 The MIT License. This file MUST be distributed with all copies of the source.
 ../tools/                  Holds scripts used for working with Potato
   potato-translate-template.tcl  Creates a template file containing all the messages in Potato which are translated
   potato-translate-merge.tcl     Merges an existing translation file with a template file
+  potato-template.txt            A blank template file for Potato translations

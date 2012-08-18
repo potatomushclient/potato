@@ -142,7 +142,6 @@ proc buildNewTemplate {} {
 
   foreach x [lsort -dictionary [array names potatoMessages]] {
     set c "#"
-    puts $fout ""
     foreach {fname proc lineNum} $potatoMessages($x) {
       puts -nonewline $fout "$c [stripDirs $fname $stripby], line $lineNum [expr {($proc ne "" ? " ($proc)" : "")}]"
       set c ","
