@@ -11807,39 +11807,39 @@ proc ::potato::tasksInit {} {
        autoConnects,name   [X "Manage &Auto-Connects"] \
        autoConnects,cmd    "::potato::autoConnectWindow" \
        autoConnects,state  always \
+       fcmd2,name          [X "Run F2 Command"] \
        fcmd2,state         always \
        fcmd2,cmd           "::potato::fcmd 2" \
-       fcmd2,name          [X "Run F2 Command"] \
+       fcmd3,name          [X "Run F3 Command"] \
        fcmd3,state         always \
        fcmd3,cmd           "::potato::fcmd 3" \
-       fcmd3,name          [X "Run F3 Command"] \
+       fcmd4,name          [X "Run F4 Command"] \
        fcmd4,state         always \
        fcmd4,cmd           "::potato::fcmd 4" \
-       fcmd4,name          [X "Run F4 Command"] \
-       fcmd5,state         always \
-       fcmd5,cmd           "::potato::fcmd 5" \
        fcmd5,name          [X "Run F5 Command"] \
+       fcmd5,state         always \
+       fcmd6,name          [X "Run F6 Command"] \
+       fcmd5,cmd           "::potato::fcmd 5" \
        fcmd6,state         always \
        fcmd6,cmd           "::potato::fcmd 6" \
-       fcmd6,name          [X "Run F6 Command"] \
+       fcmd7,name          [X "Run F7 Command"] \
        fcmd7,state         always \
        fcmd7,cmd           "::potato::fcmd 7" \
-       fcmd7,name          [X "Run F7 Command"] \
+       fcmd8,name          [X "Run F8 Command"] \
        fcmd8,state         always \
        fcmd8,cmd           "::potato::fcmd 8" \
-       fcmd8,name          [X "Run F8 Command"] \
+       fcmd9,name          [X "Run F9 Command"] \
        fcmd9,state         always \
        fcmd9,cmd           "::potato::fcmd 9" \
-       fcmd9,name          [X "Run F9 Command"] \
+       fcmd10,name         [X "Run F10 Command"] \
        fcmd10,state        always \
        fcmd10,cmd          "::potato::fcmd 10" \
-       fcmd10,name         [X "Run F10 Command"] \
+       fcmd11,name         [X "Run F11 Command"] \
        fcmd11,state        always \
        fcmd11,cmd          "::potato::fcmd 11" \
-       fcmd11,name         [X "Run F11 Command"] \
+       fcmd12,name         [X "Run F12 Command"] \
        fcmd12,state        always \
        fcmd12,cmd          "::potato::fcmd 12" \
-       fcmd12,name         [X "Run F12 Command"] \
        spellcheck,name     [X "Check &Spelling"] \
        spellcheck,cmd      "::potato::spellcheck" \
        spellcheck,state    {[file exists $::potato::misc(aspell)]} \
