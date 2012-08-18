@@ -2520,6 +2520,8 @@ proc ::potato::connZeroFact {} {
     "Potato can run in any language, and there are now translations available for more than 2 languages! (OK, so that's not a lot.) If you'd like to help translate Potato into another language, please let us know." \
     "If you have ASpell installed on your computer, Potato can use it to perform spellchecking." \
     "Potato can log as HTML to preserve ANSI colours in the output." \
+    "Potato is the only modern graphical MU* client that runs on Windows and Linux natively. It should run on MacOS X, too, though it's not as heavily tested." \
+    "Potato has full Unicode support, allowing you to MU* in any language on games which support it, such as TinyMUXes." \
   ]
 
   set stupid [list \
