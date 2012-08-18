@@ -970,7 +970,7 @@ proc ::potato::uploadWindowStart {c} {
   pack [::ttk::frame $frame.options.delay] -side top -pady 3 -anchor nw
   pack [::ttk::label $frame.options.delay.l -text [T "Delay (seconds):"] -width 20  -anchor w -justify left] \
                   -side left -anchor nw -padx 3
-  pack [spinbox $frame.options.delay.sb -textvariable ::potato::conn($c,upload,delay) -from 0 -to 60 \
+  pack [pspinbox $frame.options.delay.sb -textvariable ::potato::conn($c,upload,delay) -from 0 -to 60 \
              -validate all -validatecommand {regexp {^[0-9]*\.?[0-9]?$} %P} -width 4 -increment 0.5] -side left
 
   pack [::ttk::frame $frame.file] -side top -anchor center -fill x -padx 6 -pady 8
@@ -8661,7 +8661,7 @@ proc ::potato::mouseWheelScroll {widget delta} {
   if { [llength $cmd] == 2 } {
        if { [up] == 0 } {
             lappend cmd [expr {($delta / abs($delta)) * -1}] units
-       } elseif { $::tcl_platform(os) eq "Darwin" || [tk windowingsystem] eq "aqua"} {
+          } elseif { $::tcl_platform(os) eq "Darwin" || [tk windowingsystem] eq "aqua"} {
             # Better MacOS values
             set cmd [list yview scroll [expr {-15 * ($delta)}] pixels]
           } else {
@@ -12296,6 +12296,19 @@ proc ::potato::basic_reqs {} {
 
 };# ::potato::basic_reqs
 
+#: proc ::potato::pspinbox
+#: arg args List of arguments
+#: desc Wrapper function. Try and create a ttk::spinbox with the given args. Failing that, fall back on a basic Tk spinbox
+#: return widget path
+proc ::potato::pspinbox {args} {
+
+  if { [catch {::ttk::spinbox {*}$args} sb] } {
+       return [spinbox {*}$args];
+     } else {
+       return $sb;
+     }
+}
+
 #########################
 # Things below this line are temporary. #abc
 
@@ -12365,4 +12378,3 @@ if { $tcl_platform(platform) eq "windows" } {
           wm iconbitmap . $::potato::winico(mainico)
         }
    }
-

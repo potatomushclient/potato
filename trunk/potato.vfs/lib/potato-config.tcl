@@ -577,7 +577,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [set sub [::ttk::frame $frame.autorecTime]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "Auto Reconnect after (seconds):"] \
              -width 35 -justify left -anchor w] -side left -padx 3
-  pack [spinbox $sub.spin -textvariable ::potato::worldconfig($w,autoreconnect,time) -from 0 -to 3600 \
+  pack [pspinbox $sub.spin -textvariable ::potato::worldconfig($w,autoreconnect,time) -from 0 -to 3600 \
              -validate all -validatecommand {string is integer %P} -width 6] -side left
 
   pack [set sub [::ttk::frame $frame.encStart]] -side top -pady 5 -anchor nw
@@ -600,7 +600,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [set sub [::ttk::frame $frame.loginDelay]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "Send Login Details after (seconds):"] \
              -width 35 -justify left -anchor w] -side left -padx 3
-  pack [spinbox $sub.spin -textvariable ::potato::worldconfig($w,loginDelay) -from 0 -to 60 -increment 0.5 \
+  pack [pspinbox $sub.spin -textvariable ::potato::worldconfig($w,loginDelay) -from 0 -to 60 -increment 0.5 \
              -validate all -validatecommand {string is double %P} -width 6] -side left
 
 
@@ -740,13 +740,13 @@ $sub.cb state disabled
 
   pack [set sub [::ttk::frame $frame.wrap]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.l -text [T "Wrap text at:"] -width 20 -anchor w -justify left] -side left
-  pack [spinbox $sub.spin -textvariable ::potato::worldconfig($w,wrap,at) -from 0 -to 1000 \
+  pack [pspinbox $sub.spin -textvariable ::potato::worldconfig($w,wrap,at) -from 0 -to 1000 \
              -validate all -validatecommand {string is integer %P} -width 6] -side left
   pack [::ttk::button $sub.b -text " [T "Current Window Size"] " -command [list ::potato::currentWindowSize ::potato::worldconfig($w,wrap,at) $w 1000]] -side left -padx 8
 
   pack [set sub [::ttk::frame $frame.indent]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.l -text [T "Indent By:"] -width 20 -anchor w -justify left] -side left
-  pack [spinbox $sub.spin -textvariable ::potato::worldconfig($w,wrap,indent) -from 0 -to 20 \
+  pack [pspinbox $sub.spin -textvariable ::potato::worldconfig($w,wrap,indent) -from 0 -to 20 \
              -validate all -validatecommand {string is integer %P} -width 6] -side left
 
   pack [set sub [::ttk::frame $frame.echo]] -side top -pady 5 -anchor nw
@@ -809,7 +809,7 @@ $sub.cb state disabled
   pack [::ttk::checkbutton $sub.output.cb -variable potato::worldconfig($w,outputLimit,on) -onvalue 1 -offvalue 0] -side left
   pack [::ttk::frame $sub.output-to] -padx 5 -side left
   pack [::ttk::label $sub.output-to.l -text [T "Limit To:"] -width 5] -side left
-  pack [spinbox $sub.output-to.spin -textvariable ::potato::worldconfig($w,outputLimit,to) -from 0 -to 5000 \
+  pack [pspinbox $sub.output-to.spin -textvariable ::potato::worldconfig($w,outputLimit,to) -from 0 -to 5000 \
              -validate all -validatecommand {string is integer %P} -width 6] -side left
 
   pack [set sub [::ttk::frame $frame.spawn]] -side top -pady 5 -anchor nw
@@ -818,7 +818,7 @@ $sub.cb state disabled
   pack [::ttk::checkbutton $sub.spawn.cb -variable potato::worldconfig($w,spawnLimit,on) -onvalue 1 -offvalue 0] -side left
   pack [::ttk::frame $sub.spawn-to] -padx 5 -side left
   pack [::ttk::label $sub.spawn-to.l -text [T "Limit To:"] -width 5] -side left
-  pack [spinbox $sub.spawn-to.spin -textvariable ::potato::worldconfig($w,spawnLimit,to) -from 0 -to 5000 \
+  pack [pspinbox $sub.spawn-to.spin -textvariable ::potato::worldconfig($w,spawnLimit,to) -from 0 -to 5000 \
              -validate all -validatecommand {string is integer %P} -width 6] -side left
 
   pack [set sub [::ttk::frame $frame.input]] -side top -pady 5 -anchor nw
@@ -827,7 +827,7 @@ $sub.cb state disabled
   pack [::ttk::checkbutton $sub.input.cb -variable potato::worldconfig($w,inputLimit,on) -onvalue 1 -offvalue 0] -side left
   pack [::ttk::frame $sub.input-to] -padx 5 -side left
   pack [::ttk::label $sub.input-to.l -text [T "Limit To:"] -width 5] -side left
-  pack [spinbox $sub.input-to.spin -textvariable ::potato::worldconfig($w,inputLimit,to) -from 0 -to 5000 \
+  pack [pspinbox $sub.input-to.spin -textvariable ::potato::worldconfig($w,inputLimit,to) -from 0 -to 5000 \
              -validate all -validatecommand {string is integer %P} -width 6] -side left
 
   pack [set sub [::ttk::frame $frame.telnet]] -side top -pady 5 -anchor nw
@@ -1473,7 +1473,7 @@ proc ::potato::configureTimerAddEdit {w add win} {
 
   pack [::ttk::frame $frame.delay] {*}$styles
   pack [::ttk::label $frame.delay.l1 -text [T "After connecting, wait"]] -side left -anchor w
-  pack [spinbox $frame.delay.sb -from 0 -to 18000 -increment 1 -width 5 -justify right -validate key \
+  pack [pspinbox $frame.delay.sb -from 0 -to 18000 -increment 1 -width 5 -justify right -validate key \
                                  -validatecommand {string is integer %P} \
                                  -textvariable potato::worldconfig($w,timer,ae,delay)] -side left -anchor w -padx 5
   pack [::ttk::label $frame.delay.l2 -text [T "seconds"]] -side left -anchor w
@@ -1487,7 +1487,7 @@ proc ::potato::configureTimerAddEdit {w add win} {
 
   pack [::ttk::frame $frame.every] {*}$styles
   pack [::ttk::label $frame.every.l1 -text [T "And repeat every"]] -side left -anchor w
-  pack [spinbox $frame.every.sb -from 0 -to 18000 -increment 1 -width 5 -justify right \
+  pack [pspinbox $frame.every.sb -from 0 -to 18000 -increment 1 -width 5 -justify right \
                                 -validate key -validatecommand {string is integer %P} \
                                 -textvariable potato::worldconfig($w,timer,ae,every)] -side left -anchor w -padx 5
   pack [::ttk::label $frame.every.l2 -text [T "seconds"]] -side left -anchor w
@@ -1502,7 +1502,7 @@ proc ::potato::configureTimerAddEdit {w add win} {
   pack [::ttk::radiobutton $frame.howmany.count.rb -variable ::potato::worldconfig($w,timer,ae,continuous) \
                    -value 0 -command [list $frame.howmany.count.sb configure -state normal] \
                    -text [T "Exactly"]] -side left -anchor w
-  pack [spinbox $frame.howmany.count.sb -from 0 -to 10000 -increment 1 -width 5 -justify right \
+  pack [pspinbox $frame.howmany.count.sb -from 0 -to 10000 -increment 1 -width 5 -justify right \
                         -validate key -validatecommand {string is integer %P} \
                         -textvariable potato::worldconfig($w,timer,ae,count)] \
                         -side left -anchor w -padx 5
