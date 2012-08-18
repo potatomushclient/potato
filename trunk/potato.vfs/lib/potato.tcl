@@ -6121,7 +6121,8 @@ proc ::potato::loadTranslationFile {file} {
        return "";
      }
 
-  set locale [file rootname [file tail $file]]
+  # msgcat uses lower-case names, so we will too.
+  set locale [string tolower [file rootname [file tail $file]]]
 
   fconfigure $fid -encoding utf-8
 
@@ -6148,8 +6149,7 @@ proc ::potato::loadTranslationFile {file} {
   errorLog "$count translations set for $locale." message
 
   if { $count > 0 } {
-       # msgcat uses lower-case names, so we will too.
-       return [string tolower $locale];
+       return $locale;
      } else {
        return "";
      }
