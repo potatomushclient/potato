@@ -23,3 +23,9 @@
   * Spawns can now have almost any name, instead of being limited to A-Z and a few symbols. (They still can't start with underscores, which are reserved.) Because they can now contain spaces, Events can only spawn to a single spawn each, instead of a list, and [SlashCommands /addspawn] and /delspawn now take a single spawn name, instead of a list. Requested by many people, including Nathan Corbier and AnneLions.
   * The screen shown when Potato is open with no connections has been spruced up, as it was rather plain and dull before. Suggested by Paige.
   * Spawn windows didn't have mouse-over timestamps like the main output window. Reported by Damian Karver.
+  * Events no longer add strings they send to the MUSH to the Input History. Suggested by analoghuman.
+  * You can now [Logging log] the output buffer as HTML, to keep ANSI colours, etc.
+  * When the 'Activity in <World>' notifications were turned on, it was possible for stray timestamps to be left dotted throughout the output window, causing anything that used the timestamps (like hovering over a line, or logging) to throw an error. Reported by anony858.
+  * Added an INSTALL file, for people who download the source and then don't know what to do with it.
+  * Double-clicking a command in the Input History window now sends it directly to the MUSH, as it used to. Suggested by qa'toq.
+  * Control+Alt+R resends the last command you typed to the MUSH. Suggested by qa'toq.

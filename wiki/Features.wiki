@@ -23,6 +23,7 @@ Below is a list of the main features supported by Potato.
     * Spawn to an additional output window. Useful for separating channel chat and pages from RP.
     * Send a response back to the MUSH
     * Place a string into the input window
+    * Replace portions of the matched text with something else
   * [ConfigureWorldsTimers Timers], to send commands repeatedly at regular intervals
   * Automatic reconnect when booted, or when a connection fails
   * Unlimited, searchable output buffer
