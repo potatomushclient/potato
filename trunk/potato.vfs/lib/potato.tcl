@@ -6824,10 +6824,10 @@ proc ::potato::history {{c ""}} {
   ::ttk::label $frame.label -text $text -wraplength 350
   pack $frame.label -side top -pady 5 -padx 10 -fill x
 
-  ::ttk::frame $frame.cmds
-  pack $frame.cmds -side top -padx 10 -pady 5 -expand 1 -fill both
-  set tree [::ttk::treeview $frame.cmds.lb -height 15 -show headings -selectmode browse \
-          -yscrollcommand [list $frame.cmds.sby set] -xscrollcommand [list $frame.cmds.sbx set] \
+  set cmds [::ttk::frame $frame.cmds]
+  pack $cmds -side top -padx 10 -pady 5 -expand 1 -fill both
+  set tree [::ttk::treeview $cmds.lb -height 15 -show headings -selectmode browse \
+          -yscrollcommand [list $cmds.sby set] -xscrollcommand [list $cmds.sbx set] \
           -columns [list ID Command]]
   $tree heading ID -text "[T "ID"] " -anchor e
   $tree heading Command -text [T "Command"]
@@ -6836,10 +6836,10 @@ proc ::potato::history {{c ""}} {
   foreach x $conn($c,inputHistory) {
      $tree insert {} end -id [lindex $x 0] -values $x
   }
-  ::ttk::scrollbar $frame.cmds.sby -orient vertical -command [list $frame.cmds.lb yview]
-  ::ttk::scrollbar $frame.cmds.sbx -orient horizontal -command [list $frame.cmds.lb xview]
-  grid_with_scrollbars $frame.cmds.lb $frame.cmds.sbx $frame.cmds.sby
-  pack $frame.cmds -expand 1 -fill both
+  ::ttk::scrollbar $cmds.sby -orient vertical -command [list $cmds.lb yview]
+  ::ttk::scrollbar $cmds.sbx -orient horizontal -command [list $cmds.lb xview]
+  grid_with_scrollbars $cmds.lb $cmds.sbx $cmds.sby
+  pack $cmds -expand 1 -fill both
 
   pack [::ttk::frame $frame.filter] -side top -fill x -anchor n -padx 5 -pady 3
   pack [set filter [::ttk::entry $frame.filter.e -validate key \
@@ -6871,6 +6871,7 @@ proc ::potato::history {{c ""}} {
     bind $win <KeyPress-$x> [list ::potato::historySub $c $win $tree $x]
     bind $filter <KeyPress-$x> {break}
   }
+  bind $tree <Double-ButtonPress-1> [list ::potato::historySub $c $win $tree 5]
 
 
   update idletasks
@@ -6947,6 +6948,8 @@ proc ::potato::historySub {c top lb key} {
        addToInputHistory $c $cmd
        send_to $c $cmd
        destroy $top
+     } elseif { $key == 5 } {
+       send_to $c $cmd
      } elseif { $key == 4 } {
        clipboard clear -displayof $top
        clipboard append -displayof $top $cmd $cmd]
