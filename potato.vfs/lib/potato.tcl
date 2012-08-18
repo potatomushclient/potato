@@ -8291,6 +8291,7 @@ proc ::potato::loadDefaultUserBindings {{clear 0}} {
     "save2history" "Shift-Escape" \
     "toggleInputFocus" "Control-KeyPress-O" \
     "insertNewline" "Control-Return" \
+    "resendLastCmd" "Control-Alt-R" \
     ]
   foreach {task binding} $defaults {
     if { ![taskExists $task] } {
@@ -11870,6 +11871,9 @@ proc ::potato::tasksInit {} {
        pickLocale,name     [X "Change &Language"] \
        pickLocale,cmd      [list ::potato::pickLocale] \
        pickLocale,state    always \
+       resendLastCmd,name  [X "&Resend Last Command"] \
+       resendLastCmd,cmd   [list ::potato::resendLastCmd] \
+       resendLastCmd,state connected \
 
 
   ]
@@ -12044,6 +12048,33 @@ proc ::potato::glob2Regexp {pattern} {
   return "^$temp\$";
 
 };# ::potato::glob2Regexp
+
+#: proc ::potato::resendLastCmd
+#: arg c connection id
+#: desc Resend the last command from the command history for conn $c to the MUSH
+#: return 1 on success, 0 on failure
+proc ::potato::resendLastCmd {{c ""}} {
+  variable conn;
+
+  if { $c eq "" } {
+       set c [up]
+     }
+
+  if { $c == 0 } {
+       return 0;
+     }
+
+  if { ![info exists conn($c,inputHistory)] || $conn($c,inputHistory,count) == 0 || \
+       [llength $conn($c,inputHistory)] == 0 } {
+       return 0;
+     }
+
+  set cmd [lindex $conn($c,inputHistory) end 1]
+  send_to $c $cmd
+
+  return 1;
+
+};# ::potato::resendLastCmd
 
 #: proc ::potato::inputHistoryScroll
 #: arg dir Direction to scroll, either -1 (older commands), or 1 (newer commands)
