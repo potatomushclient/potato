@@ -4159,7 +4159,7 @@ proc ::potato::deleteSystemMessage {c tag} {
   catch {$conn($c,textWidget) delete {*}[$conn($c,textWidget) tag ranges $tag]}
   if { $world($conn($c,world),spawnSystem) } {
        foreach x $conn($c,spawns) {
-          [lindex $x 1] delete {*}[[lindex $x 1] tag ranges $tag]
+          catch {[lindex $x 1] delete {*}[[lindex $x 1] tag ranges $tag]}
        }
      }
 
