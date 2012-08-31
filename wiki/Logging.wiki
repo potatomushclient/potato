@@ -10,6 +10,8 @@ There are two ways to start a log.
 ==The Log Window==
 You can open the Log Window by selecting *Logging* → *Show Log Window*. From here you can select the desired options for the log, and choose a file to log to.
 
+[http://potatomushclient.googlecode.com/svn/wiki/Logging.gif]
+
 ==/log==
 
 The `/log` [SlashCommands /command] allows you to start or stop logging, and can be used from the input window, via [Events] or [AutoSends Auto-Sends], or anywhere else [SlashCommands /commands] can be used.
