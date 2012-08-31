@@ -1,0 +1,40 @@
+#summary Logging to a file
+=Logging=
+
+Potato allows you to log the text received from a MU`*` to a file. The log can include output already received, and can be left open for messages received in the future.
+
+It's also possible to log in HTML, which preserves formatting and colours. HTML logs cannot currently be left open.
+
+There are two ways to start a log.
+
+==The Log Window==
+You can open the Log Window by selecting *Logging* → *Show Log Window*. From here you can select the desired options for the log, and choose a file to log to.
+
+==/log==
+
+The `/log` [SlashCommands /command] allows you to start or stop logging, and can be used from the input window, via [Events] or [AutoSends Auto-Sends], or anywhere else [SlashCommands /commands] can be used.
+
+The syntax for `/log` is:
+  * Show the log window
+{{{
+/log
+}}}
+  * Start logging to a new file
+{{{
+/log ?-buffer <buffer>? ?-append <bool>? ?-leave <bool>? ?-timestamps <bool>? ?-html <bool>? <file>
+}}}
+All arguments are optional. -buffer should be one of `_main` to include the main output window, `_none` to have no buffer, or the name of a spawn window to include the output in that spawn. It defaults to `_main`.
+-append should be 1 to append to an existing file, or 0 to overwrite it. It defaults to 1.
+-leave determines whether the file should be left open for future input, and defaults to 1.
+-timestamps determines whether lines are logged with timestamps, and defaults to 0.
+-html determines whether it should be an HTML log, and defaults to 0.
+
+
+  * Stop logging
+{{{
+/log -stop ?<file>?
+}}}
+If `<file>` is specified, stop logging to that file only. Otherwise, stop all open logs.
+
+==Stopping Logging==
+If you have left one or more logfiles open, they can be stopped from the *Logging* → *Stop Logging* menu, either individually or all at once. You can also use `/log -stop`, as documented above.
