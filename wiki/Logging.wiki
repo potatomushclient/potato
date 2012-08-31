@@ -14,7 +14,7 @@ You can open the Log Window by selecting *Logging* → *Show Log Window*. From h
 
 ==/log==
 
-The `/log` [SlashCommands /command] allows you to start or stop logging, and can be used from the input window, via [Events] or [AutoSends Auto-Sends], or anywhere else [SlashCommands /commands] can be used.
+The `/log` [SlashCommands /command] allows you to start or stop logging, and can be used from the input window, via [Events] or [ConfigureWorldsAutoSends Auto-Sends], or anywhere else [SlashCommands /commands] can be used.
 
 The syntax for `/log` is:
   * Show the log window
