@@ -1411,7 +1411,7 @@ proc ::potato::doLog {c file append buffer leave timestamps html} {
        set timestamps 0
      }
 
-  if { $buffer eq "" || $buffer eq "No Buffer" || $buffer eq "_all" || [set buffer [validSpawnName $buffer 0]] eq "" } {
+  if { $buffer eq "" || $buffer eq "_none" || $buffer eq "No Buffer" || $buffer eq "_all" || [set buffer [validSpawnName $buffer 0]] eq "" } {
        set t ""
      } elseif { $buffer eq "_main" || $buffer eq "main window" } {
        set t $conn($c,textWidget)
