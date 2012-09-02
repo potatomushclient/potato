@@ -29,3 +29,4 @@
   * Added an INSTALL file, for people who download the source and then don't know what to do with it.
   * Double-clicking a command in the Input History window now sends it directly to the MUSH, as it used to. Suggested by qa'toq.
   * Control+Alt+R resends the last command you typed to the MUSH. Suggested by qa'toq.
+  * New [SlashCommands /reload] command, which reloads the main Potato source file, and the [CustomFile potato.custom] file. Useful for people running from svn who want to update without rebooting Potato, and people who make custom code modifications. Suggested by spork.

@@ -34,6 +34,7 @@ The following is a list of available commands, with terse descriptions:
   * `/print <message>` - Print `<message>` as a system message.
   * `/quick <address>` - Perform a [QuickConnect quick connect] to `<address>`, which is either a `host:port` or `host port` string.
   * `/reconnect` - Reconnect the current connection.
+  * `/reload` - Reloads the main Potato source file, and the [CustomFile potato.custom] file.
   * `/rename [<name>]` - Set a temporary name for the current connection, or clear the existing temporary name. Useful if you connect to one world multiple times, to make them easier to distinguish.
   * `/runmacro <macro>` - Run the given `<macro>`.
   * `/send <string>` - Send `<string>` to the current connection. Allows for nesting other /commands in `<string>`.
