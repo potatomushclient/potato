@@ -10623,6 +10623,20 @@ proc ::potato::customSlashCommand {c w cmd str} {
 
 };# /tcl
 
+#: /reload
+#: Reload the main Potato code file and the custom file.
+::potato::define_slash_cmd reload {
+  variable path;
+
+  if { [catch {source [file join $path(vfsdir) lib potato.tcl]} err] } {
+       return [list 0 [T "Error (%d): %s" [string length $err] $err];
+     } elseif { [file exists $path(custom)] && [catch {source $path(custom)} err] } {
+       return [list 0 [T "Error (%d): %s" [string length $err] $err];
+     } else {
+       return [list 1];
+     }
+};# /reload
+
 #: /eval <code>
 #: Evaluate the Tcl code <code> and print the result to the output window
 ::potato::define_slash_cmd eval {
