@@ -5471,6 +5471,9 @@ proc ::potato::grid_with_scrollbars {widget x y} {
 proc ::potato::center {win} {
 
   update
+  if { ![winfo exists $win] } {
+       return;
+     }
   set w [winfo reqwidth $win]
   set h [winfo reqheight $win]
 
@@ -10811,7 +10814,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
      }
   switch [parseConnectRequest $str] {
      1 {return [list 1];}
-     0 {return [list 0 [list 0 [T "No such world \"%s\". Use \"/quick host port\" to connect to a world that isn't in the address book." $str]];}
+     0 {return [list 0 [T "No such world \"%s\". Use \"/quick host port\" to connect to a world that isn't in the address book." $str]];}
     -1 {return [list 0 [T "Ambiguous world name \"%s\"." $str]];}
   }
 
