@@ -1,3 +1,4 @@
+#!/usr/bin/tclsh
 # This script builds a new Translation Template for Potato.
 set VERSION "1.2"
 
@@ -127,7 +128,7 @@ proc buildNewTemplate {} {
   set msgs 0
   foreach x $inputfiles {
     if { [catch {open $x r} fin] } {
-         set ans [tk_messageBox -title "Potato-Translate" -icon error -type yesno -message "Unable to open input file:\n[file nativename [file normalize $x]]\nError: $fin\nAbort?]
+         set ans [tk_messageBox -title "Potato-Translate" -icon error -type yesno -message "Unable to open input file:\n[file nativename [file normalize $x]]\nError: $fin\nAbort?"]
          if { $ans eq "yes" } {
               close $fout
               return;
