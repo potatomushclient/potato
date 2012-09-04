@@ -7,3 +7,5 @@ You can change the language Potato runs in by selecting *Options* → *Change La
 Translations of Potato are currently available in English (British and US) and Croatian, with a Spanish translation partially completed.
 
 If you're interested in translating Potato into another language, or in updating an existing translation, you can find out how [TranslatePotato here].
+
+[http://potatomushclient.googlecode.com/svn/wiki/ChangeLanguage.gif]
