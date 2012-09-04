@@ -30,3 +30,4 @@
   * Double-clicking a command in the Input History window now sends it directly to the MUSH, as it used to. Suggested by qa'toq.
   * Control+Alt+R resends the last command you typed to the MUSH. Suggested by qa'toq.
   * New [SlashCommands /reload] command, which reloads the main Potato source file, and the [CustomFile potato.custom] file. Useful for people running from svn who want to update without rebooting Potato, and people who make custom code modifications. Suggested by spork.
+  * The 'Clear Input History' command, triggered by the Escape key by default, will now always clear the input window, even if you aren't scrolling through the command history. Suggested by Paige.
