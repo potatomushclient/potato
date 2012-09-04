@@ -13,3 +13,4 @@ The following commands are available from the Options menu:
   * [Events Configure Events]
   * [SlashCommands Slash Commands]
   * [Macros Macro Window]
+  * [ChangeLanguage Change Language]

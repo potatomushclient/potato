@@ -1,0 +1,46 @@
+#summary How to Translate Potato's messages into another language
+
+=Translating Potato=
+
+If you're interested in translating Potato into another language, or would like to update an existing translation, please [ContactMe contact me] and let me know which language (just in case someone else is already working on a translation in that language, to avoid duplicated efforts).
+
+When you're ready to start, download the [http://potatomushclient.googlecode.com/svn/trunk/potato.vfs/tools/potato-template.txt Translation Template file] from the Potato SVN repo. The file is in the format:
+
+{{{
+# potato.tcl, line 11788  (::potato::tasksInit)
+Close &All Logs
+-
+
+# potato.tcl, line 6838  (::potato::history), potato.tcl, line 7917  (::potato::keyboardShortcutWin)
+Command
+-
+
+# potato.tcl, line 10127  (::potato::customSlashCommand)
+Command will run at %s, id %s
+-
+}}}
+
+The first line is a comment telling you where in the Potato source the message appears. The next line has the English (British) version of the message, and the third line is the translated message. Any translation which is a single hyphen is ignored.
+
+Some messages contain `&` symbols. These messages are used in menus, and the `&` indicates that the following letter should be underlined, and used for keyboard navigation in the menu. You can put the `&` anywhere in the translated message you feel is best, it doesn't need to be on the same letter.
+
+Other messages contain `%s` or `%d`. These are substitutions, where other pieces of text will be substituted. If you need to change the order they appear in because the sentence structure is different in the translated message, you can use `%1$s` to refer to the first `%s` in the original message, `%2$s` to refer to the second, and so on. For example,
+
+{{{
+# potato.tcl, line 10127  (::potato::customSlashCommand)
+Command will run at %s, id %s
+Command id %1$s will run at %2$s
+}}}
+
+The translation file should be saved with a utf-8 encoding, or as plain 7-bit ascii. Accents can be typed directly if saving as utf-8. For ascii files, they must be encoded in the format:
+{{{
+\uXXXX
+}}}
+
+where `XXXX` is the 4-digit hex code representing the character. This can be found by entering the following command into Potato:
+
+{{{
+/eval format \\\\u%04x \[scan é %c\]
+}}}
+
+The filename should be the code for the language, with a `.ptf` extension. For example, `es.ptf` for Spanish, `en_gb.ptf` for British English, and so on.
