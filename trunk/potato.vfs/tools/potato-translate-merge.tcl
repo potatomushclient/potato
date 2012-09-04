@@ -1,3 +1,4 @@
+#!/usr/bin/tclsh
 # Attempt to merge a Potato translation template with an older translation file
 set VERSION "1.2"
 
