@@ -1,0 +1,1755 @@
+
+# Untranslated strings:
+
+%d Times
+-
+
+%s - Event Configuration
+-
+
+%s - Help
+-
+
+%s Version %s
+-
+
+%s Version %s.\nA MU* Client written in Tcl/Tk by\nMike Griffiths (%s)\n\n%s
+-
+
+&Abort
+-
+
+&Address Book
+-
+
+&ANSI Colour...
+-
+
+&ANSI Colours to Tags
+-
+
+&Close Spawn
+-
+
+&Convert...
+-
+
+&Debug Packets?
+-
+
+&Default Character (%s)
+-
+
+&Error Log Window
+-
+
+&Escape Special Characters
+-
+
+&Escape Special Chars
+-
+
+&Global Events
+-
+
+&Logging
+-
+
+&Macro Window
+-
+
+&OK
+-
+
+&Open...
+-
+
+&Prefix...
+-
+
+&Resend Last Command
+-
+
+&Returns to %r
+-
+
+&Save As...
+-
+
+&Show Connection Stats
+-
+
+&Spawns
+-
+
+&Stop Logging
+-
+
+&Upload File
+-
+
+/at cancelled.
+-
+
+/at: Time must be in the future.
+-
+
+/cls: Invalid connection.
+-
+
+/cls: Invalid window name.
+-
+
+/cls: No such window.
+-
+
+/command Name:
+-
+
+/history: Invalid position
+-
+
+1st Port:
+-
+
+2nd Address:
+-
+
+A Macro with that name already exists. Override?
+-
+
+Add /command
+-
+
+All words are spelled correctly.
+-
+
+All Worlds
+-
+
+Allow ANSI Colours?
+-
+
+Allow ANSI Flash?
+-
+
+Allow ANSI Underline?
+-
+
+Allow Auto-Connects?
+-
+
+Ambiguous /command \"%s\".
+-
+
+Ambiguous character name \"%s\"
+-
+
+Ambiguous option \"%s\"
+-
+
+Ambiguous world name \"%s\".
+-
+
+ANSI, Colours and Fonts
+-
+
+Are you sure you want to quit? There are still open connections!
+-
+
+Argument Pattern:
+-
+
+ASpell executable:
+-
+
+Attempt Telnet Negotiation?
+-
+
+Auto Reconnect after (seconds):
+-
+
+Auto Reconnect when booted?
+-
+
+Available slash commands: %s
+-
+
+Backwards
+-
+
+Basic Settings
+-
+
+C&ut
+-
+
+Case Sensitive?
+-
+
+Case?
+-
+
+Change FG:
+-
+
+Change Input Font
+-
+
+Change Output Font
+-
+
+Char
+-
+
+Check &Spelling
+-
+
+Check for &Updates
+-
+
+Check for Updates - %s
+-
+
+Check for Updates on Startup?
+-
+
+Checking for updates...
+-
+
+Choose %s Colour
+-
+
+Choose Default Input Font
+-
+
+Choose Default Output Font
+-
+
+Choose Input Font for %s
+-
+
+Choose Output Font for %s
+-
+
+Clear History Command
+-
+
+Clear Output Buffer
+-
+
+Clock Format:
+-
+
+Command will run at %s, id %s
+-
+
+Configure &Prefixes/Auto-Say
+-
+
+Configure Program &Settings
+-
+
+Connecting to %s proxy at %s:%s...
+-
+
+Connecting to %s:%d...
+-
+
+Convert &Returns to %r
+-
+
+Convert &Spaces to %b
+-
+
+Convert NBSPs?
+-
+
+Convert returns?
+-
+
+Copy to Clipboard
+-
+
+Current Window Size
+-
+
+Custom /command Config
+-
+
+Custom /commands for %s
+-
+
+Custom:
+-
+
+Customise &Slash Commands
+-
+
+Customise Keyboard Shortcuts
+-
+
+day
+-
+
+Default World Settings
+-
+
+Delay (seconds):
+-
+
+Delete /command
+-
+
+Delete World?
+-
+
+Description:
+-
+
+Disconnect and close the window?
+-
+
+Disconnect from %d. %s?
+-
+
+Disconnected. Auto-reconnect in %s.
+-
+
+Display?
+-
+
+Do you really want to cancel the file upload for \[%d. %s\]?
+-
+
+Do you really want to clear the Keyboard Shortcut for \"%s\"?
+-
+
+Do you really want to delete \"%s\"?
+-
+
+Echo
+-
+
+Echo Sent Commands?
+-
+
+Edit Timer for %s
+-
+
+Encoding changed to %s
+-
+
+Enter the connection information\nfor the new world below.
+-
+
+Enter the name for the new Group, and click Add.
+-
+
+File Upload - \[%d. %s\]
+-
+
+Flash SysTray Icon?
+-
+
+Flash Taskbar?
+-
+
+Font style:
+-
+
+Force ANSI Normal?
+-
+
+Format: /at <time>=<string>
+-
+
+Forwards
+-
+
+Global &Macro Window
+-
+
+Global Custom /commands
+-
+
+Global S&lash Commands
+-
+
+Global User-defined commands: %s
+-
+
+Go &North
+-
+
+Go to webpage: %s
+-
+
+Highlight Colours
+-
+
+identd not running/user ID could not be verified
+-
+
+Ignore Empty Lines?
+-
+
+Ignore empty lines?
+-
+
+Ignore NL after Prompts?
+-
+
+Indent By:
+-
+
+Input
+-
+
+Input Colour:
+-
+
+Input History for %d. %s
+-
+
+Input:
+-
+
+Invalid %s pattern \"%s\": %s
+-
+
+Invalid /at ID.
+-
+
+Invalid connection id/character name
+-
+
+Invalid input window \"%s\": must be 1, 2 or 3
+-
+
+Invalid option \"%s\" to /limit
+-
+
+Invalid setting \"%s\" for \"%s\"
+-
+
+Invalid Spawn Name
+-
+
+Invalid speedwalk command
+-
+
+Invalid var name
+-
+
+Invalid var string
+-
+
+Keyboard Shortcut
+-
+
+Keyboard Shortcut for \"%s\"
+-
+
+Keyboard Shortcuts
+-
+
+Leave Log Open?
+-
+
+Limit Output Lines?
+-
+
+Log as HTML?
+-
+
+Log file \"%s\" is ambiguous.
+-
+
+Log file \"%s\" not found.
+-
+
+Log from \[%d. %s\]
+-
+
+Log opened %s
+-
+
+Log what?
+-
+
+Logfile from %s
+-
+
+Logged to \"%s\".
+-
+
+Logging to %d logfiles stopped.
+-
+
+Logging to \"%s\" stopped.
+-
+
+Manage &Auto-Connects
+-
+
+Match All?
+-
+
+minute
+-
+
+Miscellaneous
+-
+
+Miscellaneous Display Options
+-
+
+Move Down
+-
+
+Move Up
+-
+
+MPP Formatted?
+-
+
+MSSP Info for \[%d. %s\]
+-
+
+Negotiate Encoding?
+-
+
+Negotiate NAWS?
+-
+
+Next History Command
+-
+
+No such macro \"%s\".
+-
+
+No such world \"%s\". Use \"/quick host port\" to connect to a world that isn't in the address book.
+-
+
+No valid addresses to connect to.
+-
+
+Note: Shortcut in use by '%s'.
+-
+
+Now logging to \"%s\".
+-
+
+Open &Mail Window
+-
+
+Packet Debugger for \[%d. %s\]
+-
+
+Pattern Type:
+-
+
+Place in &Bottom Input Window
+-
+
+Place in &Top Input Window
+-
+
+Play Beeps?
+-
+
+Please select your desired language below and click Save\n\nNote that changes may not take effect until after you reboot.
+-
+
+Potato Auto-Connects
+-
+
+Prefix
+-
+
+Prefixes for %s
+-
+
+Press the desired keyboard shortcut for '%s'.\nWhen the correct shortcut is displayed below, click Accept,\nor click Cancel to keep the current shortcut.
+-
+
+Previous History Command
+-
+
+Proxy Host:
+-
+
+Proxy Port:
+-
+
+Proxy server rejected request for %s:%d
+-
+
+Quick Connect
+-
+
+Regexp Match?
+-
+
+Replacement:
+-
+
+Return (%d): %s
+-
+
+Run F7 Command
+-
+
+Run F10 Command
+-
+
+Run the commands:
+-
+
+Run:
+-
+
+Save to Input History
+-
+
+Select a command and press 1 to place it in the top input window, 2 to place it in the lower input window, or 3 to send it directly to the MU*. Press 4 to copy it to the clipboard. Press escape to close the window.
+-
+
+Select to Copy?
+-
+
+Send &Selection to World
+-
+
+Send after Login info:
+-
+
+Send before Login info:
+-
+
+Send Client Name As:
+-
+
+Send Login Details after (seconds):
+-
+
+Send upon first connect, before Login info:
+-
+
+Set auto-prefixes to apply for %s below.
+-
+
+Set auto-prefixes to apply for all worlds below.
+-
+
+Show &Helpfiles
+-
+
+Show &Log Window
+-
+
+Show &MSSP Info
+-
+
+Show 'Activity in <World>'?
+-
+
+Show Beeps?
+-
+
+Show Input &History Window
+-
+
+Show Spawn Toolbar?
+-
+
+Show Status Bar?
+-
+
+Show SysTray Icon?
+-
+
+Show Timestamps?
+-
+
+Show Toolbar &Labels?
+-
+
+Show Verbose Messages?
+-
+
+Show World Toolbar?
+-
+
+Sorry, that key is not allowed.
+-
+
+Sorry, we were unable to check for a new version at this time. Please try again later.\n\nIf the problem persists, please let us know.
+-
+
+Spaces to %&b
+-
+
+Spawn Sys Messages?
+-
+
+Spawn To:
+-
+
+Spawn?
+-
+
+Spellcheck
+-
+
+Split Input Cmds?
+-
+
+Sys
+-
+
+System, Echo and Link Colours
+-
+
+Tcl Code &Console
+-
+
+The Graphical MU* Client for Windows and Linux
+-
+
+There is a newer version of Potato (%s) available.\nYou can download it from Potato's Google Code site.\nWould you like to do so now?
+-
+
+There is already a prefix for \"%s\". Override?
+-
+
+TinyURL Provider:
+-
+
+Toggle &Input Windows
+-
+
+Toggle to Main Window?
+-
+
+Too many spawns
+-
+
+Top Input
+-
+
+Total Connection Time
+-
+
+Two Input Windows?
+-
+
+Unable to connect to host %s:%d: %s
+-
+
+Unable to create TinyURL: %s
+-
+
+Unable to launch TinyURL at \"%s\": %s
+-
+
+Unable to negotiate SSL: %s. Please make sure the port is ssl-enabled.
+-
+
+Unable to open file \"%s\": %s
+-
+
+Unable to read file \"%s\".
+-
+
+Unable to spell-check text: %s
+-
+
+Ungrouped
+-
+
+Unknown /command \"%s\". Use /slash for a list. Use //command to send directly to MU*.
+-
+
+Upload of \"%s\" cancelled.
+-
+
+Upload Status - \[%d. %s\]
+-
+
+Uploading file \"%s\"...
+-
+
+Use NOP Keepalive?
+-
+
+User-defined commands for this world: %s
+-
+
+Value
+-
+
+Variable
+-
+
+Version %s. Written by Mike Griffiths (%s)
+-
+
+View helpfile '%s'
+-
+
+Warning! Using that key is not recommended!
+-
+
+Wrap Lines?
+-
+
+Wrap text at:
+-
+
+You are already using the latest version of Potato.
+-
+
+You are currently running version:
+-
+
+You cannot bind to that key. Sorry.
+-
+
+You don't have any worlds defined yet! Use one of the links above to add a world.
+-
+
+You must select a file.
+-
+
+# Obsolete strings:
+
+# Existing translations:
+
+ bytes
+ bytes
+
+ of 
+ de
+
+%dh %dm
+%dh %dm
+
+&About Potato
+&A cerca de Potato
+
+&Action
+&Acción
+
+&Add New Prefix
+&Agregar Nuevo Prefijo
+
+&Cancel
+&Cancelar
+
+&Cancel Add/Edit
+&Cancelar Agregar/Editar
+
+&Close Connection
+&Cerrar Conexión
+
+&Connect To...
+&Conectar A...
+
+&Copy
+&Copiar
+
+&Copy Selected Text
+&Copy Texto Seleccionado
+
+&Delete Prefix
+&Eliminar Prefijo?
+
+&Disconnect
+&Desconectar
+
+&Edit
+&Editar
+
+&Edit Prefix
+&editar Prefijo
+
+&File
+&Archivo
+
+&Find
+&Encontrar
+
+&Help
+&Ayuda
+
+&Ignore
+&Ignorar
+
+&Next Connection
+&Siguiente Connection
+
+&No
+&No
+
+&No Character
+&No Personaje
+
+&Options
+&Opcciones
+
+&Paste
+&Pegar
+
+&Previous Connection
+Conexión &Previa
+
+&Reconnect
+&Reconnectar
+
+&Retry
+&Reintentar
+
+&Text Editor
+Editor de &Texto
+
+&Tools
+&Herramientas
+
+&View
+&Ver
+
+&Yes
+&Sí
+
+(Temp)
+(Temp)
+
+----- Activity in %d. %s -----
+----- Actividad en %d. %s -----
+
+--------- New Activity ---------
+--------- Nueva Actividad ---------
+
+/cls cannot be abbreviated.
+/cls no puede ser abreviado.
+
+1st Address:
+1era Dirección:
+
+2nd Port:
+2ndo Puerto:
+
+AaBbYyZz
+AaBbYyZz
+
+About %s
+Sobre %s
+
+Accept
+Aceptar
+
+Activity Settings
+Configuración de Actividad
+
+Activity?
+¿Actividad?
+
+Add
+Agregar
+
+Add Character
+Agregar Personaje
+
+Add Event
+Agregar Evento
+
+Add Global Timer
+Agregar Timer Global
+
+Add Macro
+Agregar Macro
+
+Add New Group
+Agregar Nuevo Grupo
+
+Add New World
+Agregar nuevo mundo
+
+Add Timer
+Agregar Timer
+
+Add Timer for %s
+Agregar Timer para %s
+
+Add to History?
+¿Agregar a Historial?
+
+Address
+Dirección
+
+After connecting, wait
+Después de conectar, espere
+
+All words are now spelled correctly.
+Todas las palabras están escritas correctamente.
+
+Allow Partial Names?
+Permitir Nombres Parciales?
+
+And repeat every
+Y repetir cada
+
+Append to File?
+¿Adjuntar a Archivo?
+
+Are you sure you want to quit?
+¿Está seguro que desea salir?
+
+Auto-reconnect cancelled.
+Reconección automática cancelada.
+
+Auto-reconnect in %s...
+Auto-reconectar en %s...
+
+Auto-Sends
+Auto-Enviar
+
+Basics
+Básicos
+
+BCC:
+BCC:
+
+Bottom Input
+Input Inferior
+
+Browser Command:
+Comando de explorador:
+
+C&lose Window
+C&errar Ventana
+
+Cancel
+Cancelar
+
+CC:
+CC:
+
+Change
+Cambiar
+
+Change &Language
+Cambiar &Idioma
+
+Change BG:
+Cambiar Fondo:
+
+Character Name:
+Nombre del Personaje:
+
+Character:
+Personaje:
+
+Characters
+Personajes
+
+Choose Colour
+Elija Color
+
+Clear
+Limpiar
+
+Clear Previous 'New Activity'?
+¿Eliminar 'Nueva Actividad' Previa?
+
+Click a misspelled word to begin
+Haga clic sobre una palabra mal deletreada para iniciar.
+
+Close
+Cerrar
+
+Close &All Logs
+Cerrar &Todos los logs
+
+Command
+Comando
+
+Commands
+Comandos
+
+Commands:
+Comandos:
+
+Conf
+Conf
+
+Configuration Options for '%s'
+Opcines de Configuración para '%s'
+
+Configure &Events
+Configurar &Eventos
+
+Configure &World
+Configurar &Mundo
+
+Confirm Exit?
+¿Confirmar Salida?
+
+Connected - %s - %s
+Conectado - %s - %s
+
+Connected For:
+Conectado por:
+
+Connected.
+Conectado
+
+Connecting...
+Conectando...
+
+Connection
+Conexión
+
+Connection closed by proxy server.
+Conexión cerrada por servidor proxy.
+
+Connection Settings
+Configuración de Conexión
+
+Connection Statistics
+Estadísticas de Conexión
+
+Continue?
+¿Continuar?
+
+Continuous
+Continuo
+
+Continuously
+Continuamente
+
+Convert To:
+Convertir A:
+
+Copy
+Copiar
+
+Copy &Hyperlink
+Copiar &Hyperlink
+
+Copy World
+Copiar Mundo
+
+d
+d
+
+days
+días
+
+Default Char:
+Personaje default:
+
+Delete
+Borrar
+
+Delete Character
+Eliminar Personaje
+
+Delete Event
+Eliminar Evento
+
+Delete Group
+Eliminar Grupo
+
+Delete Group?
+¿Eliminar grupo?
+
+Delete Macro
+Eliminar Macro
+
+Delete Timer
+Eliminar TImer
+
+Delete World
+Borrar Mundo
+
+Did you know?
+¿Sabía usted?
+
+Direction
+Dirección
+
+Discard
+Descartar
+
+Disconnected from host. - %s
+Desconectar del host. - %s
+
+Disconnected.
+Desconectado.
+
+Display
+Desplegar
+
+Do you really want to delete the group \"%s\"?
+¿Realmente desea eliminar el grupo \"%s\"?
+
+Do you want to save this world for later?
+¿Desea guardar este mundo para después?
+
+Done
+Listo
+
+Down
+Abajo
+
+E&xit
+&Salir
+
+Echo Timer Commands?
+¿Echo comandos de timer?
+
+Edit /command
+Editar /comando
+
+Edit Character
+Editar Personaje
+
+Edit Event
+Editar Evento
+
+Edit Global Timer
+Editar Timer Global
+
+Edit Macro
+Editar Macro
+
+Edit Timer
+Editar Timer
+
+Edit World
+Editar Mundo
+
+Editor
+Editor
+
+Effects
+Efectos
+
+Enable this timer?
+¿Habilitar este contador?
+
+Enabled?
+¿Habilitado?
+
+Error (%d): %s
+Error (%d): %s
+
+Error: %s
+Error: %s
+
+Event Name:
+Nombre de Evento:
+
+Events
+Eventos
+
+Every
+Cada
+
+Exactly
+Excatamente
+
+Existing Worlds:
+Mundos Existentes
+
+Exit
+Salir
+
+External Requests:
+Requerimientos Externos
+
+F-Commands
+Comandos-F
+
+File Upload
+Subir Archivo
+
+Find
+Encontrar
+
+Find Next
+Encontrar Siguiente
+
+Find...
+Encontrar...
+
+Find:
+Encontrar:
+
+Font
+Fuente
+
+Font:
+Fuente:
+
+Format:
+Fomato:
+
+Frequency
+Frecuencia
+
+Global Event Configuration
+Configuración de Eventos Global
+
+Global Macros
+Macros Globales
+
+Global Prefixes
+Prefijos Globales
+
+Global Timers
+Timers Globales
+
+Go &East
+Ir al &Este
+
+Go &South
+Ir al &Sur
+
+Go &West
+ir al &Oeste
+
+Go To
+Ir a
+
+Go to Connection
+Ir a Conexión
+
+h
+h
+
+Handle GA Prompts?
+¿Manejar peticiones GA?
+
+Help
+Ayuda
+
+Hide
+Ocultar
+
+Hide Icon
+Ocultar Icono
+
+Host:
+Host:
+
+hour
+hora
+
+hours
+horas
+
+ID
+ID
+
+Ignore
+Ignorar
+
+Include Buffer From: 
+Incluir Buffer De:
+
+Insert Newline
+Insertar Nueva Línea
+
+Invalid editor name '%s'.
+Nombre de editor inválido '%s'.
+
+Invalid name.
+Nombre inválido.
+
+Invalid window name.
+Nombre de ventana inválida.
+
+Language Selection
+Elección de Idioma
+
+Limit Input Lines?
+¿Limintar líneas de entrada?
+
+Limit Spawn Lines?
+Limitar líneas emergentes
+
+Limit To:
+Limitar A:
+
+Link
+Vínculo
+
+Log
+Log/Bitácora
+
+Login Format:
+Formato de Login:
+
+Logs?
+¿Logs / Bitácoras?
+
+m
+m
+
+Macros
+Macros
+
+Macros for %s
+Macros para %s
+
+Mail Window
+Ventana de Mensaje
+
+Main Window
+Ventana Principal
+
+Manage Worlds
+Administrar Mundos
+
+Minimize to SysTray?
+Minimizar a SysTray
+
+minutes
+minutos
+
+Misc Settings
+Configuración Miscelánea
+
+Miscellaneous Options
+Opciones varias
+
+MU* Name
+Nombre del MU*
+
+MU* Type:
+Tipo de MU*:
+
+Name
+Nombre
+
+Name:
+Nombre:
+
+Negotiate SSL?
+¿Negociar SSL?
+
+New Group
+Nuevo Grupo
+
+New World
+Nuevo Mundo
+
+Next
+Siguiente
+
+No of Connections
+No. de connecciones
+
+None
+Ninguno
+
+Normal Colours
+Colores Normales
+
+Not Connected
+No conectado
+
+Not Connected - Reconnect Every %s
+No conectado - Reconectar cada %s
+
+Not connected.
+No conectado.
+
+Notes
+Notas
+
+OK
+-
+
+Omit From:
+Omitir De:
+
+Open Address Book
+Abrir Libreta de Direcciones
+
+Open File
+Abrir Archivo
+
+Options
+Opciones
+
+Other Options
+Otras Opciones
+
+Output
+Output/Salida
+
+Password:
+Contraseña:
+
+Pattern
+Patrón
+
+Pattern:
+Patrón:
+
+Please wait. Checking spelling...
+Por favor espere. Revisando ortografía...
+
+Port:
+Puerto:
+
+Potato Error Log
+Bitácora de Errores de Potato
+
+Prefixes
+Prefijos
+
+Prev
+Prev
+
+Program Configuration for %s
+Configuración de programa para %s
+
+Program Settings
+Configuración del Programa
+
+Progress: 
+Progeso:
+
+Proxy Type:
+Tipo de Proxy:
+
+Quick Connection
+Conexión Rápida
+
+Recipient:
+Destinatario:
+
+Reconnect All
+Reconectar Todo
+
+Reconnecting...
+Reconectando...
+
+Replace
+Reemplazar
+
+Replace?
+¿Reemplazar?
+
+Restore
+Restaurar
+
+Run F2 Command
+Ejecutar comando F2
+
+Run F3 Command
+Ejecutar Comando F3
+
+Run F4 Command
+Ejecutar comando F4
+
+Run F5 Command
+Ejecutar comando F5
+
+Run F6 Command
+Ejecutar Comando F6
+
+Run F8 Command
+Ejecutar comando F8
+
+Run F9 Command
+Ejecutar comando F9
+
+Run F11 Command
+Ejectuar comando F11
+
+Run F12 Command
+Ejecutar Comando F12
+
+Run When:
+Ejectuar Cuando:
+
+s
+s
+
+Sample
+Ejemplo
+
+Save
+Grabar
+
+Save Character
+Grabar Personaje
+
+Save File
+Grabar Archivo
+
+second
+segundo
+
+seconds
+segundos
+
+Select a command, then click a button to edit its binding
+Seleccione un comando, luego haga clic en un butón para editar su vínculo.
+
+Send
+Enviar
+
+Send Client Info?
+¿Enviar Información de Cliente?
+
+Send Mail - \[%d. %s\]
+Enviar Mail - \[%d. %s\]
+
+Send to &World
+Enviar a &World
+
+Send to MUSH
+Enviar a MUSH
+
+Send to MUSH:
+Enviar a MUSH:
+
+Send:
+Enviar:
+
+Show 'New Activity'?
+¿Mostrar 'Nueva Actividad'?
+
+Show Two Input Windows?
+¿Mostrar dos ventanas?
+
+Show XTERM Colours?
+¿Mostrar colores XTERM?
+
+Size:
+Tamaño
+
+Sorry, that's not a valid character name.
+Lo siento, ese no es un nombre válido para el personaje.
+
+Spellchecker
+Corrector Ortográfico
+
+Start Maximized?
+¿Iniciar en modo Maximizado?
+
+Starting Encoding:
+Iniciar codificación:
+
+Subject:
+Asunto:
+
+Suggestions:
+Sugerencias:
+
+Telnet Options
+Opciones de Telnet
+
+Temp/Deleted
+Temporal/Borrado
+
+Text
+Texto
+
+That is not a valid name.
+Ese no es un nombre válido.
+
+That name is already in use.
+Ese nombre se encuentra en uso.
+
+The Keyboard Shortcut '%s' is already in use by the task '%s'. Do you want to override it?
+El acceso (shortcut) de teclado '%s' está siendo utilizado por la tarea '%s'. ¿Desea sobreescribirlo?
+
+There is already a character with that name. Overwrite?
+Ya existe un personaje con ese nombre. ¿Sobreescribir?
+
+Timers
+Timers
+
+Times
+Tiempos
+
+Type
+Tipo
+
+Type:
+Tipo:
+
+Unable to connect to %s:%d - SSL not available.
+Imposible conectarse a %s:%d - SSL no disponible.
+
+Unable to connect to proxy: %s
+No es posible conectarse al proxy: %s
+
+Unable to create new spawn window \"%s\": %s
+No se pudo crear una ventana emergente \"%s\": %s
+
+Unable to save preferences: %s
+Imposible guardar preferencias: %s
+
+Unable to save world '%s': %s
+Imposible grabar mundo '%s': %s
+
+Unable to save world info: directory does not exist.
+Imposible guardar información de mundo: El directorio no existe.
+
+Undelete
+Deshacer elminar
+
+Unknown option \"%s\"
+Opción Desconocida \"%s\"
+
+Up
+Arriba
+
+Upload
+Cargar
+
+Upload of \"%s\" completed.
+Carga de \"%s\" completa.
+
+Use SSL?:
+¿Usar SSL?:
+
+Visit Potato &Website
+Visitar &Sitio Potato
+
+Widget Theme:
+Tema de Widget:
+
+Window
+Venana
+
+With:
+Con:
+
+Words:
+Palabras:
+
+World Name
+Nombre de Mundo
+
+World Name:
+Nombre de Mundo
+
+Would you like to use the settings for \[%s. %s\], rather than quick-connected?
+¿Desea utilizar las configuraciones para \[%s. %s\], en vez de hacer una conexión rápida?
+
+Yes
+Sí
+
+You must enter a character name.
+Debe ingrsar un nombre de personaje.
