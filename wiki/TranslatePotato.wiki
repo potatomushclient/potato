@@ -20,7 +20,7 @@ Command will run at %s, id %s
 -
 }}}
 
-The first line is a comment telling you where in the Potato source the message appears. The next line has the English (British) version of the message, and the third line is the translated message. Any translation which is a single hyphen is ignored.
+The first line is a comment telling you where in the Potato source the message appears. The next line has the English (British) version of the message, and the third line is the translated message. Any translation which is a single hyphen is ignored, so you don't have to translate the messages in order, and don't have to translate all the messages for the translation to be used.
 
 Some messages contain `&` symbols. These messages are used in menus, and the `&` indicates that the following letter should be underlined, and used for keyboard navigation in the menu. You can put the `&` anywhere in the translated message you feel is best, it doesn't need to be on the same letter.
 
