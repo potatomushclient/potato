@@ -12173,11 +12173,11 @@ proc ::potato::inputHistoryReset {{win ""}} {
        set win [focus -displayof .]
      }
   if { ![info exists inputSwap($win,conn)] } {
-       # bell -displayof .
+       $win delete 1.0 end
        return;
      }
   if { $inputSwap($win,count) == -1 } {
-       bell -displayof $win
+       $win delete 1.0 end
        return;
      }
   $win replace 1.0 end $inputSwap($win,backup)
