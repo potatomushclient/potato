@@ -43,4 +43,6 @@ where `XXXX` is the 4-digit hex code representing the character. This can be fou
 /eval format \\\\u%04x \[scan é %c\]
 }}}
 
+It may be difficult to translate some words or phrases literally - for example, several people have reported issues translating the world _Spawns_ literally. In this case, you can either leave the word/phrase in English, or use a non-literal translation with a similar meaning (for instance, _Spawns_ may be translated as _Popup Window_).
+
 The filename should be the code for the language, with a `.ptf` extension. For example, `es.ptf` for Spanish, `en_gb.ptf` for British English, and so on.
