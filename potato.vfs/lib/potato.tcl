@@ -5684,14 +5684,14 @@ proc ::potato::errorLogWindow {} {
   if { [winfo exists $win] } {
        # These messages are reset because we create the window, initially, before translation files are loaded
        # (so we can report errors in doing so), so need to be translated later, when the window is displayed.
-       catch {wm title $win [T "Potato Error Log"] ; $win.frame.btm.close configure -text [T "Close"]}
+       catch {wm title $win [T "Potato Debugging Log"] ; $win.frame.btm.close configure -text [T "Close"]}
        reshowWindow $win 0
        return;
      }
 
   toplevel $win
   wm withdraw $win
-  wm title $win [T "Potato Error Log"]
+  wm title $win [T "Potato Debugging Log"]
 
   pack [set frame [::ttk::frame $win.frame]] -side left -anchor nw -expand 1 -fill both
   pack [set cont [::ttk::frame $frame.top]] -side top -anchor nw -expand 1 -fill both
@@ -5857,6 +5857,7 @@ proc ::potato::main {} {
   }
   catch {file mkdir $paths(world)}
   lappend ::auto_path $path(userlib)
+  ::tcl::tm::path add $path(userlib)
 
   # We need to set the prefs before we load anything...
   setPrefs 1
@@ -5890,7 +5891,7 @@ proc ::potato::main {} {
   if { !$zoom || [catch {wm state . zoomed}] } {
        catch {wm geometry . $misc(windowSize)}
      }
-  wm protocol . WM_DELETE_WINDOW "::potato::chk_exit"
+  wm protocol . WM_DELETE_WINDOW [list ::potato::chk_exit]
   setUpMenu
 
   if { $misc(skin) in $skins(int) } {
@@ -5929,6 +5930,8 @@ proc ::potato::main {} {
        errorLog "Unable to source Custom file \"[file nativename [file normalize $path(custom)]]\": $err" warning
      }
 
+  loadPotatoModules
+
   if { ![file exists $path(startupCmds)] } {
        errorLog "Startup Commands file \"[file nativename [file normalize $path(startupCmds)]]\" does not exist." message
      } elseif { [catch {open $path(startupCmds) r} fid] } {
@@ -5960,6 +5963,26 @@ proc ::potato::main {} {
   return;
 
 };# ::potato::main
+
+#: proc ::potato::loadPotatoModules
+#: desc Load any code files in the userlib directory stored as Tcl modules
+#: return nothing
+proc ::potato::loadPotatoModules {} {
+  variable path;
+
+  foreach x [glob -nocomplain -directory $path(userlib) -tails *.tm] {
+    if { ![regexp {^([_[:alpha:]][:_[:alnum:]]*)-([[:digit:]].*)\.tm$} $x - name vers] } {
+         continue;
+       } elseif { [catch {package require $name $vers} err] } {
+         errorLog "Unable to load Module '$name' version '$vers': $err" error
+       } else {
+         errorLog "Module $name version $vers loaded." message
+       }
+  }
+
+  return;
+
+};# ::potato::loadPotatoModules
 
 #: proc ::potato::keepalive
 #: desc Send a Telnet NOP to each connection, as a keepalive, and repeat
@@ -7359,7 +7382,7 @@ proc ::potato::build_menu_help {m} {
        $m entryconfigure end -state disabled
      }
   $m add separator
-  $m add command {*}[menu_label [T "&Error Log Window"]] -command [list ::potato::errorLogWindow]
+  $m add command {*}[menu_label [T "&Debugging Log Window"]] -command [list ::potato::errorLogWindow]
   $m add separator
   createMenuTask $m about
   $m add command {*}[menu_label [T "Check for &Updates"]] -command [list ::potato::checkForUpdates]
