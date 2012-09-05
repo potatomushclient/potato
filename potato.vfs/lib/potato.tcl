@@ -5993,7 +5993,8 @@ proc ::potato::keepalive {} {
   variable conn;
 
   foreach c [connIDs] {
-    if { $conn($c,connected) == 1 && $world($conn($c,world),telnet,keepalive) } {
+    if { $conn($c,connected) == 1 && && [hasProtocol $c telnet] && \
+         $world($conn($c,world),telnet,keepalive) } {
          ::potato::telnet::send_keepalive $c
        }
   }
