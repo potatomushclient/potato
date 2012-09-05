@@ -11173,12 +11173,20 @@ proc ::potato::about {} {
   pack [::ttk::frame $frame.top] -side top -padx 15 -pady 15
   pack [::ttk::frame $frame.btm] -side top -padx 15 -pady 12
 
-  set str [T "%s Version %s.\nA MU* Client written in Tcl/Tk by\nMike Griffiths (%s)\n\n%s" $potato(name) $potato(version) $potato(contact) $potato(webpage)]
+  set str [T "%s Version %s.\nA MU* Client written in Tcl/Tk by\nMike Griffiths (%s)" $potato(name) $potato(version) $potato(contact)]
 
   pack [::ttk::label $frame.top.img -image ::potato::img::logoSmall] -side left -padx 15
-  pack [::ttk::label $frame.top.txt -text $str] -side left -padx 5
-  $frame.top.txt configure -font [list {*}[font actual "TkDefaultFont"] -size 12]
 
+  pack [::ttk::frame $frame.top.right] -side right -padx 5
+
+  set font [list {*}[font actual "TkDefaultFont"] -size 12]
+  set lfont [list {*}$font -underline 1]
+  pack [::ttk::label $frame.top.right.txt -text $str -justify center -font $font] -side top
+  pack [::ttk::label $frame.top.right.web -text $potato(webpage) -justify center -font $lfont -foreground blue] -side top -pady 10
+
+  bind $frame.top.right.web <Enter> [list %W configure -foreground red -cursor hand2]
+  bind $frame.top.right.web <Leave> [list %W configure -foreground blue -cursor {}]
+  bind $frame.top.right.web <ButtonRelease-1> [list ::potato::launchWebPage $potato(webpage)]
 
   pack [::ttk::button $frame.btm.close -text [T "Close"] -width 8 \
              -command [list destroy $win] -default active] -side top
