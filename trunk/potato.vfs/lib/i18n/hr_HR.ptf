@@ -425,8 +425,8 @@ Nepoznata opcija \"%s\"
 Bottom Input
 Donji Unos
 
-%s Version %s.\nA MU* Client written in Tcl/Tk by\nMike Griffiths (%s)\n\n%s
-%s Verzija %s.\nMU* Klijent napisan u Tcl/Tk-u. Autor je\nMike Griffiths (%s)\n\n%s
+%s Version %s.\nA MU* Client written in Tcl/Tk by\nMike Griffiths (%s)
+%s Verzija %s.\nMU* Klijent napisan u Tcl/Tk-u. Autor je\nMike Griffiths (%s)
 
 Basics
 Osnovno
