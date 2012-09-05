@@ -4,7 +4,10 @@
 
 If you're interested in translating Potato into another language, or would like to update an existing translation, please [ContactMe contact me] and let me know which language (just in case someone else is already working on a translation in that language, to avoid duplicated efforts).
 
-When you're ready to start, download the [http://potatomushclient.googlecode.com/svn/trunk/potato.vfs/tools/potato-template.txt Translation Template file] from the Potato SVN repo. The file is in the format:
+When you're ready to start, download the [http://potatomushclient.googlecode.com/svn/trunk/potato.vfs/tools/potato-template.txt Translation Template file] from the Potato SVN repo. 
+==File Format==
+
+The template file is in the format:
 
 {{{
 # potato.tcl, line 11788  (::potato::tasksInit)
@@ -46,3 +49,12 @@ where `XXXX` is the 4-digit hex code representing the character. This can be fou
 }}}
 
 The filename should be the code for the language, with a `.ptf` extension. For example, `es.ptf` for Spanish, `en_gb.ptf` for British English, and so on.
+
+== Testing the Translations ==
+Potato's translation files are in the directory `potato.vfs/lib/i18n`. However, if you can't access the directory (because you're running a binary copy of Potato), or you don't want to replace an existing translation file while you test, you can create a local `i18n` directory and place your `.ptf` files in there. Where you create the directory depends on how you're running Potato:
+
+  * When running with the --local command line option, create `i18n` in the same directory as your Potato executable or potato.vfs directory
+  * On Windows, it should be in the same directory as the potato.exe when running from a binary, or the same directory as your potato.vfs directory when running from source.
+  * On Linux, it should be created in `~/.potato/`
+  
+You will need to restart Potato for the new file to be noticed.
