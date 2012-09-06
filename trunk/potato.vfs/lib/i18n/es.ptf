@@ -37,10 +37,10 @@
 &Debug Packets?
 -
 
-&Default Character (%s)
+&Debugging Log Window
 -
 
-&Error Log Window
+&Default Character (%s)
 -
 
 &Escape Special Characters
@@ -541,6 +541,9 @@ Note: Shortcut in use by '%s'.
 Now logging to \"%s\".
 -
 
+OK
+-
+
 Open &Mail Window
 -
 
@@ -563,6 +566,9 @@ Please select your desired language below and click Save\n\nNote that changes ma
 -
 
 Potato Auto-Connects
+-
+
+Potato Debugging Log
 -
 
 Prefix
@@ -824,6 +830,9 @@ You must select a file.
 -
 
 # Obsolete strings:
+
+Potato Error Log
+Bitácora de Errores de Potato
 
 # Existing translations:
 
@@ -1472,9 +1481,6 @@ No conectado.
 Notes
 Notas
 
-OK
--
-
 Omit From:
 Omitir De:
 
@@ -1507,9 +1513,6 @@ Por favor espere. Revisando ortografía...
 
 Port:
 Puerto:
-
-Potato Error Log
-Bitácora de Errores de Potato
 
 Prefixes
 Prefijos
