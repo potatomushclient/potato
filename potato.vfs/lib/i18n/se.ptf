@@ -1,0 +1,1761 @@
+
+# Untranslated strings:
+
+&Debugging Log Window
+-
+
+/at cancelled.
+-
+
+/at: Time must be in the future.
+-
+
+/cls cannot be abbreviated.
+-
+
+/cls: Invalid connection.
+-
+
+/cls: Invalid window name.
+-
+
+/cls: No such window.
+-
+
+Invalid /at ID.
+-
+
+Potato Debugging Log
+-
+
+Return (%d): %s
+-
+
+# Obsolete strings:
+
+&Error Log Window
+&Felloggfönster
+
+Potato Error Log
+Potato fellogg
+
+# Existing translations:
+
+ bytes
+ byte
+
+ of 
+ av
+
+%d Times
+%d gånger
+
+%dh %dm
+%dt %dm
+
+%s - Event Configuration
+%s - Händelsekonfiguration
+
+%s - Help
+%s - Hjälp
+
+%s Version %s
+%s Version %s
+
+%s Version %s.\nA MU* Client written in Tcl/Tk by\nMike Griffiths (%s)
+%s Version %s.\nEn MU*-klient skriven i Tcl/Tk av\nMike Griffiths (%s)
+
+&Abort
+&Avbryt
+
+&About Potato
+&Om Potato
+
+&Action
+&Åtgärd
+
+&Add New Prefix
+&Lägg till nytt prefix
+
+&Address Book
+&Adressbok
+
+&ANSI Colour...
+&ANSI-färg...
+
+&ANSI Colours to Tags
+&ANSI-färg på taggar
+
+&Cancel
+&Avbryt
+
+&Cancel Add/Edit
+&Avbryt lägg till/ändra
+
+&Close Connection
+&Stäng uppkoppling
+
+&Close Spawn
+&Stäng extrafönster
+
+&Connect To...
+&Anslut till...
+
+&Convert...
+&Omvandla...
+
+&Copy
+&Kopiera
+
+&Copy Selected Text
+&Kopiera markerad text
+
+&Debug Packets?
+&Felsök paket?
+
+&Default Character (%s)
+&Standardrollperson (%s)
+
+&Delete Prefix
+&Radera prefix
+
+&Disconnect
+&Koppla ner
+
+&Edit
+&Ändra
+
+&Edit Prefix
+&Ändra prefix
+
+&Escape Special Characters
+&Escape specialtecken
+
+&Escape Special Chars
+&Escape specialtecken
+
+&File
+&Fil
+
+&Find
+&Hitta
+
+&Global Events
+&Globala händelser
+
+&Help
+&Hjälp
+
+&Ignore
+&Ignorera
+
+&Logging
+&Loggning
+
+&Macro Window
+&Macrofönster
+
+&Next Connection
+&Nästa uppkoppling
+
+&No
+&Nej
+
+&No Character
+&Ingen rollperson
+
+&OK
+&OK
+
+&Open...
+&Öppna...
+
+&Options
+&Alternativ
+
+&Paste
+&Klistra in
+
+&Prefix...
+&Prefix...
+
+&Previous Connection
+&Föregående uppkoppling
+
+&Reconnect
+&Återanslut
+
+&Resend Last Command
+&Återsänd senaste kommandot
+
+&Retry
+&Försök igen
+
+&Returns to %r
+&Retur blir %r
+
+&Save As...
+&Spara som...
+
+&Show Connection Stats
+&Visa uppkopplingsstatistik
+
+&Spawns
+&Extrafönster
+
+&Stop Logging
+&Avsluta loggning
+
+&Text Editor
+&Textredigeringsprogram
+
+&Tools
+&Verktyg
+
+&Upload File
+&Ladda upp fil
+
+&View
+&Visa
+
+&Yes
+&Ja
+
+(Temp)
+(Temp)
+
+----- Activity in %d. %s -----
+----- Aktivitet i %d. %s -----
+
+--------- New Activity ---------
+--------- Ny aktivitet ---------
+
+/command Name:
+/kommando namn:
+
+/history: Invalid position
+/historik: Ogiltig position
+
+1st Address:
+1:a adressen:
+
+1st Port:
+1:a porten:
+
+2nd Address:
+2:a adressen:
+
+2nd Port:
+2:a porten:
+
+A Macro with that name already exists. Override?
+Ett macro med det namnet finns redan. Skriv över?
+
+AaBbYyZz
+AaBbYyZz
+
+About %s
+Om %s
+
+Accept
+Acceptera
+
+Activity Settings
+Aktivitetsinställningar
+
+Activity?
+Aktivitet?
+
+Add
+Lägg till
+
+Add /command
+Lägg till /kommando
+
+Add Character
+Lägg till rollperson
+
+Add Event
+Lägg till händelse
+
+Add Global Timer
+Lägg till global timer
+
+Add Macro
+Lägg till macro
+
+Add New Group
+Lägg till ny grupp
+
+Add New World
+Lägg till ny värld
+
+Add Timer
+Lägg till timer
+
+Add Timer for %s
+Lägg till timer för %s
+
+Add to History?
+Lägg till historik?
+
+Address
+Adress
+
+After connecting, wait
+Efter uppkoppling, vänta
+
+All words are now spelled correctly.
+Alla ord är nu korrekt stavade.
+
+All words are spelled correctly.
+Alla ord är korrekt stavade.
+
+All Worlds
+Alla världar
+
+Allow ANSI Colours?
+Tillåt ANSI-färger
+
+Allow ANSI Flash?
+Tillåt ANSI-blinkning?
+
+Allow ANSI Underline?
+Tillåt ANSI-understrykning?
+
+Allow Auto-Connects?
+Tillåt auto-uppkopplingar?
+
+Allow Partial Names?
+Tillåt partiella namn?
+
+Ambiguous /command \"%s\".
+Tvetydigt /kommando \"%s\".
+
+Ambiguous character name \"%s\"
+Tvetydigt rollpersonsnamn \"%s\"
+
+Ambiguous option \"%s\"
+Tvetydigt alternativ \"%s\"
+
+Ambiguous world name \"%s\".
+Tvetydigt världsnamn \"%s\".
+
+And repeat every
+Och upprepa varje
+
+ANSI, Colours and Fonts
+ANSI, färger och teckensnitt
+
+Append to File?
+Lägg till fil?
+
+Are you sure you want to quit?
+Vill du verkligen avsluta programmet?
+
+Are you sure you want to quit? There are still open connections!
+Vill du verkligen avsluta programmet? Du är fortfarande uppkopplad!
+
+Argument Pattern:
+Argumentmönster:
+
+ASpell executable:
+ASpell körbar fil:
+
+Attempt Telnet Negotiation?
+Försök telnetförhandla?
+
+Auto Reconnect after (seconds):
+Återuppkoppla automatiskt efter (sekunder):
+
+Auto Reconnect when booted?
+Återuppkoppla när du kopplats ned?
+
+Auto-reconnect cancelled.
+Automatisk återuppkoppling avbruten.
+
+Auto-reconnect in %s...
+Automatisk återuppkoppling om %s...
+
+Auto-Sends
+Autoskickar
+
+Available slash commands: %s
+Tillgängliga snedstreckskommandon: %s
+
+Backwards
+Bakåt
+
+Basic Settings
+Allmänna inställningar
+
+Basics
+Allmänt
+
+BCC:
+BCC:
+
+Bottom Input
+Nedre inmatningsfönster
+
+Browser Command:
+Browserkommando:
+
+C&lose Window
+&Stäng fönster
+
+C&ut
+&Klipp ut
+
+Cancel
+Avbryt
+
+Case Sensitive?
+Matcha gemener/versaler?
+
+Case?
+Gemener eller versaler?
+
+CC:
+CC:
+
+Change
+Ändra
+
+Change &Language
+Ändra &språk
+
+Change BG:
+Ändra BG:
+
+Change FG:
+Ändra FG:
+
+Change Input Font
+Ändra indatateckensnitt
+
+Change Output Font
+Ändra utdatateckensnitt
+
+Char
+Rollperson
+
+Character Name:
+Rollpersonsnamn:
+
+Character:
+Rollperson:
+
+Characters
+Rollpersoner
+
+Check &Spelling
+Kontrollera &stavning
+
+Check for &Updates
+Kolla efter &uppdateringar
+
+Check for Updates - %s
+Kolla efter uppdateringar - %s
+
+Check for Updates on Startup?
+Kolla efter uppdateringar vid uppstart?
+
+Checking for updates...
+Kollar efter uppdateringar...
+
+Choose %s Colour
+Välj %s färg
+
+Choose Colour
+Välj färg
+
+Choose Default Input Font
+Välj standardteckensnitt för indata
+
+Choose Default Output Font
+Välj standardteckensnitt för utdata
+
+Choose Input Font for %s
+Välj indatateckensnitt för %s
+
+Choose Output Font for %s
+Välj utdatateckensnitt för %s
+
+Clear
+Rensa
+
+Clear History Command
+Rensa historikommando
+
+Clear Output Buffer
+Rensa utdatabuffer
+
+Clear Previous 'New Activity'?
+Rensa tidigare 'ny aktivitet'?
+
+Click a misspelled word to begin
+Klicka på ett felstavat ord för att börja
+
+Clock Format:
+Klockformat:
+
+Close
+Stäng
+
+Close &All Logs
+Stäng &alla loggar
+
+Command
+Kommando
+
+Command will run at %s, id %s
+Kommando kommer att köras vad %s, id %s
+
+Commands
+Kommandon
+
+Commands:
+Kommandon:
+
+Conf
+Konf
+
+Configuration Options for '%s'
+Konfigureringsalternativ för '%s'
+
+Configure &Events
+Konfigurera &händelser
+
+Configure &Prefixes/Auto-Say
+Konfigurera &prefix/auto-säg
+
+Configure &World
+Konfigurera &värld
+
+Configure Program &Settings
+Konfigurera program&inställningar
+
+Confirm Exit?
+Bekräfta avslut?
+
+Connected - %s - %s
+Uppkopplad - %s - %s
+
+Connected For:
+Uppkopplad i:
+
+Connected.
+Uppkopplad.
+
+Connecting to %s proxy at %s:%s...
+Kopplar upp till %s proxy vid %s:%s...
+
+Connecting to %s:%d...
+Kopplar upp till %s:%d...
+
+Connecting...
+Kopplar upp...
+
+Connection
+Uppkoppling
+
+Connection closed by proxy server.
+Uppkoppling stängd av proxyserver.
+
+Connection Settings
+Uppkopplingsinställningar
+
+Connection Statistics
+Uppkopplingsstatistik
+
+Continue?
+Fortsätt?
+
+Continuous
+Kontinuerlig
+
+Continuously
+Kontinuerligt
+
+Convert &Returns to %r
+Omvandla &returer till %r
+
+Convert &Spaces to %b
+Omvandla &blanksteg till %b
+
+Convert NBSPs?
+Omvandla NBSPs?
+
+Convert returns?
+Omvandla returer?
+
+Convert To:
+Omvandla till:
+
+Copy
+Kopiera
+
+Copy &Hyperlink
+Kopiera &länk
+
+Copy to Clipboard
+Kopiera till urklipp
+
+Copy World
+Kopiera värld
+
+Current Window Size
+Nuvarande fönsterstorlek
+
+Custom /command Config
+Anpassade /kommandon för konfigurationen
+
+Custom /commands for %s
+Anpassade /kommandon för %s
+
+Custom:
+Anpassade:
+
+Customise &Slash Commands
+Anpassa &snedstreckskommandon
+
+Customise Keyboard Shortcuts
+Anpassa tangentbordsgenvägar
+
+d
+d
+
+day
+dag
+
+days
+dagar
+
+Default Char:
+Standardrollperson:
+
+Default World Settings
+Standardinställningar för värld
+
+Delay (seconds):
+Fördröjning (sekunder):
+
+Delete
+Radera
+
+Delete /command
+Radera /kommando
+
+Delete Character
+Radera rollperson
+
+Delete Event
+Radera händelse
+
+Delete Group
+Radera grupp
+
+Delete Group?
+Radera grupp?
+
+Delete Macro
+Rsdera macro
+
+Delete Timer
+Radera timer
+
+Delete World
+Radera värld
+
+Delete World?
+Radera värld?
+
+Description:
+Beskrivning:
+
+Did you know?
+Visste du att?
+
+Direction
+Riktning
+
+Discard
+Ta bort
+
+Disconnect and close the window?
+Koppla ned och stäng fönstret?
+
+Disconnect from %d. %s?
+Koppla ned från %d. %s?
+
+Disconnected from host. - %s
+Nedkopplad från värd. -%s
+
+Disconnected.
+Nedkopplad.
+
+Disconnected. Auto-reconnect in %s.
+Nedkopplad. Återuppkoppling om %s.
+
+Display
+Visa
+
+Display?
+Visa?
+
+Do you really want to cancel the file upload for \[%d. %s\]?
+Vill du verkligen avbryta filuppladdingen för \[%d. %s\]?
+
+Do you really want to clear the Keyboard Shortcut for \"%s\"?
+Vill du verkligen rader kortkommandot för \"%s\"?
+
+Do you really want to delete \"%s\"?
+Vill du verkligen radera \"%s\"?
+
+Do you really want to delete the group \"%s\"?
+Vill du verkligen radera gruppen \"%s\"?
+
+Do you want to save this world for later?
+Vill du spara den här världen?
+
+Done
+Klart
+
+Down
+Ner
+
+E&xit
+&Avsluta
+
+Echo
+Eko
+
+Echo Sent Commands?
+Eko av skickade kommandon?
+
+Echo Timer Commands?
+Eko av timerkommandon?
+
+Edit /command
+Ändra /kommando
+
+Edit Character
+Ändra rollperson
+
+Edit Event
+Ändra händelse
+
+Edit Global Timer
+Ändra global timer
+
+Edit Macro
+Ändra macro
+
+Edit Timer
+Ändra timer
+
+Edit Timer for %s
+Ändra timer för %s
+
+Edit World
+Ändra värld
+
+Editor
+Redigeringsprogram
+
+Effects
+Effekter
+
+Enable this timer?
+Aktivera den här timern?
+
+Enabled?
+Aktiverad?
+
+Encoding changed to %s
+Kodning ändrad till %s
+
+Enter the connection information\nfor the new world below.
+Skriv uppkopplingsinformationen\nför den nya världen nedan.
+
+Enter the name for the new Group, and click Add.
+Skriv namnet på den nya gruppen, och klicka lägg till.
+
+Error (%d): %s
+Fel (%d): %s
+
+Error: %s
+Fel: %s
+
+Event Name:
+Händelsenamn:
+
+Events
+Händelser
+
+Every
+Varje
+
+Exactly
+Exakt
+
+Existing Worlds:
+Existerande världar:
+
+Exit
+Avsluta
+
+External Requests:
+Externa begäran:
+
+F-Commands
+F-kommandon
+
+File Upload
+Filuppladdning
+
+File Upload - \[%d. %s\]
+Filuppladding - \[%d. %s\]
+
+Find
+Hitta
+
+Find Next
+Hitta nästa
+
+Find...
+Hitta...
+
+Find:
+Hitta:
+
+Flash SysTray Icon?
+Blinka systrayikonen?
+
+Flash Taskbar?
+Blinka aktivitetsfältet?
+
+Font
+Teckensnitt
+
+Font style:
+Teckensnittsstil:
+
+Font:
+Teckensnitt:
+
+Force ANSI Normal?
+Kräv ANSI-normal?
+
+Format:
+Format:
+
+Format: /at <time>=<string>
+Format: /vid <time>=<string>
+
+Forwards
+Framåt
+
+Frequency
+Frekvens
+
+Global &Macro Window
+Globalt &macrofönster
+
+Global Custom /commands
+Globala egna /kommandon
+
+Global Event Configuration
+Global händelsekonfiguration
+
+Global Macros
+Globala macron
+
+Global Prefixes
+Globala prefix
+
+Global S&lash Commands
+Globala &snedstreckskommandon
+
+Global Timers
+Globala timers
+
+Global User-defined commands: %s
+Globala användardefinierade kommandon: %s
+
+Go &East
+Gå &österut
+
+Go &North
+Gå &norrut
+
+Go &South
+Gå &söderut
+
+Go &West
+Gå &västerut
+
+Go To
+Gå till
+
+Go to Connection
+Gå till uppkoppling
+
+Go to webpage: %s
+Gå till webbsidan: %s
+
+h
+t
+
+Handle GA Prompts?
+Hantera GA-prompter?
+
+Help
+Hjälp
+
+Hide
+Dölj
+
+Hide Icon
+Dölj ikon
+
+Highlight Colours
+Markeringsfärger
+
+Host:
+Värd:
+
+hour
+timme
+
+hours
+timmar
+
+ID
+ID
+
+identd not running/user ID could not be verified
+identd ej igång/användar-ID kunde inte verifieras
+
+Ignore
+Ignorera
+
+Ignore Empty Lines?
+Ignorera tomma linjer?
+
+Ignore empty lines?
+Ignorera tomma linjer?
+
+Ignore NL after Prompts?
+Ignorera NL efter prompter?
+
+Include Buffer From: 
+Inkludera buffer från:
+
+Indent By:
+Indrag med:
+
+Input
+Indata
+
+Input Colour:
+Indatafärg:
+
+Input History for %d. %s
+Indatahistorik för %d. %s
+
+Input:
+Indata:
+
+Insert Newline
+Infoga ny rad
+
+Invalid %s pattern \"%s\": %s
+Ogiltigt %s mönster \"%s\": %s
+
+Invalid connection id/character name
+Ogiligt uppkopplingsid/rollpersonsnamn
+
+Invalid editor name '%s'.
+Ogiltigt namn för redigeringsprogram '%s'.
+
+Invalid input window \"%s\": must be 1, 2 or 3
+Ogiltigt indatafönster \"%s\": måste vara 1, 2 eller 3
+
+Invalid name.
+Ogiltigt namn.
+
+Invalid option \"%s\" to /limit
+Ogiltigt alternativ \"%s\"  för /gräns
+
+Invalid setting \"%s\" for \"%s\"
+Ogiltig inställning \"%s\" för \"%s\"
+
+Invalid Spawn Name
+Ogiltigt namn för extrafönster
+
+Invalid speedwalk command
+Ogiltigt snabbgångskommando
+
+Invalid var name
+Ogiltigt var namn
+
+Invalid var string
+Ogiltig var sträng
+
+Invalid window name.
+Ogiltigt fönsternamn.
+
+Keyboard Shortcut
+Tangentbordsgenväg
+
+Keyboard Shortcut for \"%s\"
+Tangentbordsgenväg för \"%s\"
+
+Keyboard Shortcuts
+Tangentbordsgenvägar
+
+Language Selection
+Språkval
+
+Leave Log Open?
+Lämna loggen öppen?
+
+Limit Input Lines?
+Begränsa indatarader?
+
+Limit Output Lines?
+Begränsa utdatarader?
+
+Limit Spawn Lines?
+Begränsa antal rader i extrafönster?
+
+Limit To:
+Begränsa till:
+
+Link
+Länk
+
+Log
+Logg
+
+Log as HTML?
+Logga som HTML?
+
+Log file \"%s\" is ambiguous.
+Loggfil \"%s\" är tvetydigt.
+
+Log file \"%s\" not found.
+Loggfil \"%s\" ej hittad.
+
+Log from \[%d. %s\]
+Logg från \[%d. %s\]
+
+Log opened %s
+Logg öppnad %s
+
+Log what?
+Logga vad?
+
+Logfile from %s
+Loggfil från %s
+
+Logged to \"%s\".
+Loggat till \"%s\".
+
+Logging to %d logfiles stopped.
+Loggning till %d loggfilerna stoppad.
+
+Logging to \"%s\" stopped.
+Loggning till \"%s\" stoppad.
+
+Login Format:
+Loginformat:
+
+Logs?
+Loggar?
+
+m
+m
+
+Macros
+Macron
+
+Macros for %s
+Macron för %s
+
+Mail Window
+Postfönster
+
+Main Window
+Huvudfönster
+
+Manage &Auto-Connects
+Hantera &autouppkopplingar
+
+Manage Worlds
+Hantera världar
+
+Match All?
+Matcha alla?
+
+Minimize to SysTray?
+Minimera till SysTray?
+
+minute
+minut
+
+minutes
+minuter
+
+Misc Settings
+Diverse inställningar
+
+Miscellaneous
+Diverse
+
+Miscellaneous Display Options
+Diverse visningsalternativ
+
+Miscellaneous Options
+Diverse alternativ
+
+Move Down
+Gå ner
+
+Move Up
+Gå upp
+
+MPP Formatted?
+MPP-formatterad?
+
+MSSP Info for \[%d. %s\]
+MSSP info för \[%d. %s\]
+
+MU* Name
+MU* namn
+
+MU* Type:
+MU* typ:
+
+Name
+Namn
+
+Name:
+Namn:
+
+Negotiate Encoding?
+Förhandla kodning?
+
+Negotiate NAWS?
+Förhandla NAWS?
+
+Negotiate SSL?
+Förhandla SSL?
+
+New Group
+Ny grupp
+
+New World
+Ny värld
+
+Next
+Nästa
+
+Next History Command
+Nästa historikkommando
+
+No of Connections
+Antal uppkopplingar
+
+No such macro \"%s\".
+Inget macro \"%s\".
+
+No such world \"%s\". Use \"/quick host port\" to connect to a world that isn't in the address book.
+Ingen värld \"%s\". Använd \"/snabbvärdsport\" för att koppla upp dig mot en värld som inte finns i adressboken.
+
+No valid addresses to connect to.
+Inga giltiga adresser att koppla upp sig mot.
+
+None
+Inget
+
+Normal Colours
+Normala färger
+
+Not Connected
+Ej uppkopplad
+
+Not Connected - Reconnect Every %s
+Ej uppkopplad - Återuppkoppling varje %s
+
+Not connected.
+Ej uppkopplad.
+
+Note: Shortcut in use by '%s'.
+OBS: Genväg används av '%s'.
+
+Notes
+Noteringar
+
+Now logging to \"%s\".
+Loggning pågår till \"%s\".
+
+OK
+OK
+
+Omit From:
+Uteslut från:
+
+Open &Mail Window
+Öppna &postfönster
+
+Open Address Book
+Öppna adressbok
+
+Open File
+Öppna fil
+
+Options
+Alternativ
+
+Other Options
+Andra alternativ
+
+Output
+Utdata
+
+Packet Debugger for \[%d. %s\]
+Paketfelsökare för \[%d. %s\]
+
+Password:
+Lösenord:
+
+Pattern
+Mönster
+
+Pattern Type:
+Mönstertyp:
+
+Pattern:
+Mönster:
+
+Place in &Bottom Input Window
+Placera i det &nedre inmatningsfönstret
+
+Place in &Top Input Window
+Placera i det &övre inmatningsfönstret
+
+Play Beeps?
+Spela upp ljudsignaler?
+
+Please select your desired language below and click Save\n\nNote that changes may not take effect until after you reboot.
+Välj ditt önskade språk nedan och klicka Spara\n\nÄndringarna märks eventuellt inte av förrän du har startat om datorn.
+
+Please wait. Checking spelling...
+Vänta. Kontrollerar stavningen...
+
+Port:
+Port:
+
+Potato Auto-Connects
+Potato autouppkopplingar
+
+Prefix
+Prefix
+
+Prefixes
+Prefizen
+
+Prefixes for %s
+Prefixen för %s
+
+Press the desired keyboard shortcut for '%s'.\nWhen the correct shortcut is displayed below, click Accept,\nor click Cancel to keep the current shortcut.
+Tryck det valda kortkommandot för '%s'.\nNär den korrekta genvägen visas nedan, klicka acceptera,\neller klicka avbryt för att behålla den nuvarande genvägen.
+
+Prev
+Tidigare
+
+Previous History Command
+Tidigare historik kommando
+
+Program Configuration for %s
+Programinställningar för %s
+
+Program Settings
+Programinställningar:
+
+Progress: 
+Status:
+
+Proxy Host:
+Proxyvärd:
+
+Proxy Port:
+Proxyport:
+
+Proxy server rejected request for %s:%d
+Proxyservern avvisade begäran om %s:%d
+
+Proxy Type:
+Proxytyp:
+
+Quick Connect
+Snabbuppkoppling
+
+Quick Connection
+Snabbuppkoppling
+
+Recipient:
+Mottagare:
+
+Reconnect All
+Återuppkoppla alla
+
+Reconnecting...
+Återuppkopplar..
+
+Regexp Match?
+Regexp matchning?
+
+Replace
+Ersätt
+
+Replace?
+Ersätt?
+
+Replacement:
+Ersättning:
+
+Restore
+Återställ
+
+Run F2 Command
+Kör F2-kommandot
+
+Run F3 Command
+Kör F3-kommandot
+
+Run F4 Command
+Kör F4-kommandot
+
+Run F5 Command
+Kör F5-kommandot
+
+Run F6 Command
+Kör F6-kommandot
+
+Run F7 Command
+Kör F7-kommandot
+
+Run F8 Command
+Kör F8-kommandot
+
+Run F9 Command
+Kör F9-kommandot
+
+Run F10 Command
+Kör F10-kommandot
+
+Run F11 Command
+Kör F11-kommandot
+
+Run F12 Command
+Kör F12-kommandot
+
+Run the commands:
+Kör kommandona:
+
+Run When:
+Kör när:
+
+Run:
+Kör:
+
+s
+s
+
+Sample
+Prov
+
+Save
+Spara
+
+Save Character
+Spara rollperson
+
+Save File
+Spara fil
+
+Save to Input History
+Spara i indatahistoria
+
+second
+sekund
+
+seconds
+sekunder
+
+Select a command and press 1 to place it in the top input window, 2 to place it in the lower input window, or 3 to send it directly to the MU*. Press 4 to copy it to the clipboard. Press escape to close the window.
+Välj ett kommando och tryck 1 för att placera det i det övre inmatningsfönstret, 2 för att placera det i det lägre inmatningsfönstret eller 3 flr att skicka direkt till MU*. Tryck 4 för att kopiera det till urklippet. Tryck ESC för att stänga fönstret.
+
+Select a command, then click a button to edit its binding
+Välj ett kommando, klicka sen en knapp för att ändra dess bindning
+
+Select to Copy?
+Välj och kopiera?
+
+Send
+Skicka
+
+Send &Selection to World
+Skicka &markering till värld
+
+Send after Login info:
+Skicka efter logininfo:
+
+Send before Login info:
+Skicka innan logininfo:
+
+Send Client Info?
+Skicka klientinfo?
+
+Send Client Name As:
+Skicka klientnamn som:
+
+Send Login Details after (seconds):
+Skicka logindata efter (sekunder):
+
+Send Mail - \[%d. %s\]
+Skicka post - \[%d. %s\]
+
+Send to &World
+Skicka till &värld
+
+Send to MUSH
+Skicka till MUSH
+
+Send to MUSH:
+Skicka till MUSH:
+
+Send upon first connect, before Login info:
+Skicka direkt vid uppkoppling, innan logininfo:
+
+Send:
+Skicka:
+
+Set auto-prefixes to apply for %s below.
+Sätt autoprefix som gäller för %s nedan.
+
+Set auto-prefixes to apply for all worlds below.
+Sätt autoprefix som gäller för alla världarna nedan.
+
+Show &Helpfiles
+Visa &hjälpfiler
+
+Show &Log Window
+Visa &loggfönster
+
+Show &MSSP Info
+Visa &MSSP info
+
+Show 'Activity in <World>'?
+Visa 'Aktivitet i <värld>'?
+
+Show 'New Activity'?
+Visa "Ny aktivitet'?
+
+Show Beeps?
+Visa ljudsignaler?
+
+Show Input &History Window
+Visa fönster för indata&historik
+
+Show Spawn Toolbar?
+Visa verktygsfältet extrafönster?
+
+Show Status Bar?
+Visa statusfält?
+
+Show SysTray Icon?
+Visa SysTray-ikon?
+
+Show Timestamps?
+Visa tidsstämplar?
+
+Show Toolbar &Labels?
+Visa &etiketter på verktygsfält?
+
+Show Two Input Windows?
+Visa två inmatningsfönster?
+
+Show Verbose Messages?
+Visa utförliga meddelanden?
+
+Show World Toolbar?
+Visa verktygsfältet värld?
+
+Show XTERM Colours?
+Visa XTERM-färger?
+
+Size:
+Storlek:
+
+Sorry, that key is not allowed.
+Den tangenten är inte tillåten.
+
+Sorry, that's not a valid character name.
+Det är inte ett giltigt rollpersonsnamn.
+
+Sorry, we were unable to check for a new version at this time. Please try again later.\n\nIf the problem persists, please let us know.
+Det gick inte att kolla efter en ny version just nu. Försök igen senare.\n\nOm problemet kvarstår, meddela oss.
+
+Spaces to %&b
+Blanksteg till %&b
+
+Spawn Sys Messages?
+Skicka systemmeddelanden till extrafönster?
+
+Spawn To:
+Skicka till extrafönster:
+
+Spawn?
+Skapa extrafönster?
+
+Spellcheck
+Stavningskontroll
+
+Spellchecker
+Stavningskontroll
+
+Split Input Cmds?
+Dela inmatningskommando?
+
+Start Maximized?
+Starta maximerad?
+
+Starting Encoding:
+Påbörjar kodning:
+
+Subject:
+Ämne:
+
+Suggestions:
+Förslag:
+
+Sys
+Sys
+
+System, Echo and Link Colours
+System-, eko- och länkfärger.
+
+Tcl Code &Console
+Tcl-kod &konsol
+
+Telnet Options
+Telnetalternativ
+
+Temp/Deleted
+Temp/Borttagen
+
+Text
+Text
+
+That is not a valid name.
+Det är inte ett giltigt namn.
+
+That name is already in use.
+Det namnet används redan.
+
+The Graphical MU* Client for Windows and Linux
+Den grafiska MU*-klienten för Windows och Linux
+
+The Keyboard Shortcut '%s' is already in use by the task '%s'. Do you want to override it?
+Kortkommandot '%s' används redan av uppgiften '%s'. Vill du skriva över det?
+
+There is a newer version of Potato (%s) available.\nYou can download it from Potato's Google Code site.\nWould you like to do so now?
+Det finns en nyare version av Potato (%s).\nDu kan ladda ner den från Potatos Google Code sida.\nVill du göra det nu?
+
+There is already a character with that name. Overwrite?
+Det finns redan en rollperson med det namnet. Skriv över?
+
+There is already a prefix for \"%s\". Override?
+Det finns redan ett prefix för \"%s\". Skriv över?
+
+Timers
+Timers
+
+Times
+Gånger
+
+TinyURL Provider:
+TinyURL leverantör:
+
+Toggle &Input Windows
+Växla &inmatningsfönster
+
+Toggle to Main Window?
+Växla till huvudfönster?
+
+Too many spawns
+För många extrafönster
+
+Top Input
+Över inmatningsfönster
+
+Total Connection Time
+Total uppkopplingstid
+
+Two Input Windows?
+Två inmatningsfönster?
+
+Type
+Typ
+
+Type:
+Typ:
+
+Unable to connect to %s:%d - SSL not available.
+Kan ej ansluta till %s:%d - SSL ej tillgängligt.
+
+Unable to connect to host %s:%d: %s
+Kan ej ansluta till värd %s:%d: %s
+
+Unable to connect to proxy: %s
+Kan ej ansluta till proxy: %s
+
+Unable to create new spawn window \"%s\": %s
+Kan ej skapa nytt extrafönster \"%s\": %s
+
+Unable to create TinyURL: %s
+Kan ej skapa TinyURL: %s
+
+Unable to launch TinyURL at \"%s\": %s
+Kan ej öppna TinyURL \"%s\": %s
+
+Unable to negotiate SSL: %s. Please make sure the port is ssl-enabled.
+Kan ej förhandla SSL: %s. Kontrollera att porten är ssl-aktiverad.
+
+Unable to open file \"%s\": %s
+Kan ej öppna filen \"%s\": %s
+
+Unable to read file \"%s\".
+Kan ej läsa filen \"%s\".
+
+Unable to save preferences: %s
+Kan ej spara inställningar: &s
+
+Unable to save world '%s': %s
+Kan ej spara världen '%s': %s
+
+Unable to save world info: directory does not exist.
+Kan ej spara världsdetaljer: katalogen finns inte.
+
+Unable to spell-check text: %s
+Kan ej stavningskontrollera texten: %s
+
+Undelete
+Ångra radering
+
+Ungrouped
+Ogrupperad
+
+Unknown /command \"%s\". Use /slash for a list. Use //command to send directly to MU*.
+Okänt /kommando \"%s\". Använd /snedstreck för en lista. Använd //kommando för att skicka direkt till MU*.
+
+Unknown option \"%s\"
+Okänt alternativ \"%s\"
+
+Up
+Upp
+
+Upload
+Ladda upp
+
+Upload of \"%s\" cancelled.
+Uppladdning av \"%s\" avbruten.
+
+Upload of \"%s\" completed.
+Uppladding av \"%s\" klar.
+
+Upload Status - \[%d. %s\]
+Uppladdningsstatus - \[%d. %s\]
+
+Uploading file \"%s\"...
+Laddar upp filen \"%s\"...
+
+Use NOP Keepalive?
+Använd NOP Keepalive?
+
+Use SSL?:
+Använd SSL?:
+
+User-defined commands for this world: %s
+Användardefinierat kommando för denna värld: %s
+
+Value
+Värde
+
+Variable
+Variabel
+
+Version %s. Written by Mike Griffiths (%s)
+Version %s. Skriven av Mike Griffiths (%s)
+
+View helpfile '%s'
+Visa hjälpfilen '%s'
+
+Visit Potato &Website
+Besök Potatos &hemsida
+
+Warning! Using that key is not recommended!
+Varning! Det är inte rekommenderat att använda den tangenten!
+
+Widget Theme:
+Widgettema:
+
+Window
+Fönster
+
+With:
+Med:
+
+Words:
+Ord:
+
+World Name
+Världsnamn
+
+World Name:
+Världsnamn:
+
+Would you like to use the settings for \[%s. %s\], rather than quick-connected?
+Vill du använda inställningarna för \[%s. %s\], istället för snabbuppkopplingen?
+
+Wrap Lines?
+Radbyte?
+
+Wrap text at:
+Radbyte vid:
+
+Yes
+Ja
+
+You are already using the latest version of Potato.
+Du använder redan den senaste versionen av Potato.
+
+You are currently running version:
+Du använder version:
+
+You cannot bind to that key. Sorry.
+Det går inte att binda till den tangenten. Tyvärr.
+
+You don't have any worlds defined yet! Use one of the links above to add a world.
+Du har inte skapat några världar ännu! Använd en av länkarna ovan för att lägga till en värld.
+
+You must enter a character name.
+Du måste fylla i ett rollpersonsnamn.
+
+You must select a file.
+Du måste välja en fil.
