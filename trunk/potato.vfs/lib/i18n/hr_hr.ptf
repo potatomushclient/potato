@@ -1,73 +1,7 @@
 
 # Untranslated strings:
 
-&Debugging Log Window
--
-
-&Resend Last Command
--
-
-Clear Output Buffer
--
-
-Log as HTML?
--
-
-Log opened %s
--
-
-Log what?
--
-
-Logfile from %s
--
-
-Potato Debugging Log
--
-
 # Obsolete strings:
-
-&Error Log Window
-Prozor s Logom &Gre\u0161aka
-
-&Spaces to %b
-&Razmake u %b
-
-Character Password:
-    ifra Lika:
-
-Connected - %s
-Veza uspostavljena - %s
-
-Copy Selected Text
-Kopiraj Izabrani Tekst
-
-Edit Settings
-Izmijeni Postavke
-
-Invalid setting for \"%s\"
-Neispravna postavka za \"%s\"
-
-Manage &Worlds
-Podesi &Svjetove
-
-Potato Error Log
-Potato-ov Log Gre\u0161aka
-
-Show Toolbar Labels?
-Poka\u017ei Imena Alata?
-
-Spawns
-Spawnovi
-
-Toggle World
-Sljede\u0107a Veza
-
-Which /command?
-Koja /naredba?
-
-You can't open any more text editor windows for that world.
-Ne mo\u017ee\u0161 otvoriti dodatne prozore za obradu teksta za taj svijet.
 
 # Existing translations:
 
@@ -84,10 +18,10 @@ Ne mo\u017ee\u0161 otvoriti dodatne prozore za obradu teksta za taj svijet.
 %dh %dm
 
 %s - Event Configuration
-%s - Konfiguracija Doga\u0111aja
+%s - Konfiguracija Događaja
 
 %s - Help
-%s - Pomo\u0107
+%s - Pomoć
 
 %s Version %s
 %s Verzija %s
@@ -120,7 +54,7 @@ A&dresar
 &Odustani
 
 &Cancel Add/Edit
-&Poni\u0161ti Dodaj/Izmijeni
+&Poništi Dodaj/Izmijeni
 
 &Close Connection
 &Zatvori Vezu
@@ -143,11 +77,14 @@ A&dresar
 &Debug Packets?
 &Debagiraj Pakete?
 
+&Debugging Log Window
+Prozor s Logom za &Debagiranje
+
 &Default Character (%s)
 &Automatski Lik (%s)
 
 &Delete Prefix
-&Obri\u0161i Prefiks
+&Obriši Prefiks
 
 &Disconnect
 &Prekini
@@ -168,13 +105,13 @@ Ur&edi
 &Datoteka
 
 &Find
-&Tra\u017ei
+&Traži
 
 &Global Events
-&Globalni Doga\u0111aji
+&Globalni Događaji
 
 &Help
-&Pomo\u0107
+&Pomoć
 
 &Ignore
 &Ignoriraj
@@ -186,7 +123,7 @@ Ur&edi
 Prozor s Mak&roima
 
 &Next Connection
-&Sljede\u0107a Veza
+&Sljedeća Veza
 
 &No
 &Ne
@@ -215,8 +152,11 @@ U re&du
 &Reconnect
 &Obnovi
 
+&Resend Last Command
+&Ponovi Zadnju Naredbu
+
 &Retry
-&Poku\u0161aj ponovno
+&Pokušaj ponovno
 
 &Returns to %r
 &Krajeve redaka u %r
@@ -225,7 +165,7 @@ U re&du
 &Snimi Kao...
 
 &Show Connection Stats
-Prika\u017ei S&tatistike Veza
+Prikaži S&tatistike Veza
 
 &Spawns
 &Spawnovi
@@ -258,10 +198,10 @@ Po&gled
 -------- Nova Aktivnost --------
 
 /at cancelled.
-/at poni\u0161ten.
+/at poništen.
 
 /at: Time must be in the future.
-/at: Vrijeme mora biti u budu\u0107nosti.
+/at: Vrijeme mora biti u budućnosti.
 
 /cls cannot be abbreviated.
 /cls se ne može skratiti.
@@ -294,10 +234,10 @@ Druga Adresa:
 Drugi Port:
 
 A Macro with that name already exists. Override?
-Makro s tim imenom ve\u0107 postoji. Zanemari?
+Makro s tim imenom već postoji. Zanemari?
 
 AaBbYyZz
-AaBbCc\u010c\u010d123
+AaBbCcČč123
 
 About %s
 O Programu %s
@@ -321,7 +261,7 @@ Add Character
 Dodaj Lika
 
 Add Event
-Dodaj Doga\u0111aj
+Dodaj Događaj
 
 Add Global Timer
 Dodaj Globalni Tajmer
@@ -342,19 +282,19 @@ Add Timer for %s
 Dodaj Tajmer za %s
 
 Add to History?
-Dodaj u Prija\u0161nje Naredbe?
+Dodaj u Prijašnje Naredbe?
 
 Address
 Adresa
 
 After connecting, wait
-Nakon spajanja, \u010dekaj
+Nakon spajanja, čekaj
 
 All words are now spelled correctly.
-Sve rije\u010di su sada ispravno napisane.
+Sve riječi su sada ispravno napisane.
 
 All words are spelled correctly.
-Sve rije\u010di su ispravno napisane.
+Sve riječi su ispravno napisane.
 
 All Worlds
 Svi Svjetovi
@@ -372,19 +312,19 @@ Allow Auto-Connects?
 Dozvoli Automatska Spajanja?
 
 Allow Partial Names?
-Dozvoli Djelomi\u010dna Imena?
+Dozvoli Djelomična Imena?
 
 Ambiguous /command \"%s\".
-Vi\u0161ezna\u010dna /naredba \"%s\".
+Višeznačna /naredba \"%s\".
 
 Ambiguous character name \"%s\"
-Vi\u0161ezna\u010dno ime lika \"%s\"
+Višeznačno ime lika \"%s\"
 
 Ambiguous option \"%s\"
-Vi\u0161ezna\u010dna opcija \"%s\"
+Višeznačna opcija \"%s\"
 
 Ambiguous world name \"%s\".
-Vi\u0161ezna\u010dno ime svijeta \"%s\".
+Višeznačno ime svijeta \"%s\".
 
 And repeat every
 I ponavljaj svakih
@@ -396,19 +336,19 @@ Append to File?
 Nadodaj Datoteki?
 
 Are you sure you want to quit?
-Da li zaista \u017eeli\u0161 iza\u0107i iz programa?
+Da li zaista želiš izaći iz programa?
 
 Are you sure you want to quit? There are still open connections!
-Da li stvarno \u017eeli\u0161 iza\u0107i iz programa? Jo\u0161 postoje otvorene veze!
+Da li stvarno želiš izaći iz programa? Još postoje otvorene veze!
 
 Argument Pattern:
 Uzorak Argumen(a)ta:
 
 ASpell executable:
-Izvr\u0161ni program za ASpell:
+Izvršni program za ASpell:
 
 Attempt Telnet Negotiation?
-Poku\u0161aj Telnetsko Dogovaranje?
+Pokušaj Telnetsko Dogovaranje?
 
 Auto Reconnect after (seconds):
 Auto. Obnavljanje Veze nakon (sekunde):
@@ -450,7 +390,7 @@ C&lose Window
 &Zatvori Prozor
 
 C&ut
-&Izre\u017ei
+&Izreži
 
 Cancel
 Odustani
@@ -516,10 +456,10 @@ Choose Colour
 Izaberi Boju
 
 Choose Default Input Font
-Izaberi Po\u010detni Font Unosa
+Izaberi Početni Font Unosa
 
 Choose Default Output Font
-Izaberi Po\u010detni Font Ispisa
+Izaberi Početni Font Ispisa
 
 Choose Input Font for %s
 Izaberi Font Unosa za %s
@@ -528,16 +468,19 @@ Choose Output Font for %s
 Izaberi Font Ispisa za %s
 
 Clear
-O\u010disti
+Očisti
 
 Clear History Command
-Obri\u0161i Raniju Naredbu
+Obriši Raniju Naredbu
+
+Clear Output Buffer
+Obriši Memorirani Ispis
 
 Clear Previous 'New Activity'?
 Ukloni Raniju 'Novu Aktivnost'?
 
 Click a misspelled word to begin
-Da po\u010dne\u0161, klikni na krivo napisanu rije\u010d
+Da počneš, klikni na krivo napisanu riječ
 
 Clock Format:
 Format Sata:
@@ -552,7 +495,7 @@ Command
 Naredba
 
 Command will run at %s, id %s
-Naredba \u0107e biti izvr\u0161ena u %s, id %s
+Naredba će biti izvršena u %s, id %s
 
 Commands
 Naredbe
@@ -567,7 +510,7 @@ Configuration Options for '%s'
 Konfiguracijske Opcije svijeta '%s'
 
 Configure &Events
-Konfiguriraj &Doga\u0111aje
+Konfiguriraj &Događaje
 
 Configure &Prefixes/Auto-Say
 Konfiguriraj &Prefikse/Automatski govor
@@ -606,7 +549,7 @@ Connection closed by proxy server.
 Vezu je zatvorio proxy server.
 
 Connection Settings
-Pode\u0161enja veze
+Podešenja veze
 
 Connection Statistics
 Statistike Veza
@@ -648,7 +591,7 @@ Copy World
 Kopiraj Svijet
 
 Current Window Size
-Trenutna Veli\u010dina Prozora
+Trenutna Veličina Prozora
 
 Custom /command Config
 Konfiguracija Proizvoljne /naredbe
@@ -663,7 +606,7 @@ Customise &Slash Commands
 Prilagodi Koso&crtne Naredbe
 
 Customise Keyboard Shortcuts
-Prilagodi Tipkovni\u010dne Pre\u010dice
+Prilagodi Tipkovnične Prečice
 
 d
 d
@@ -678,37 +621,37 @@ Default Char:
 Automatski lik:
 
 Default World Settings
-Po\u010detne Postavke Svjetova
+Početne Postavke Svjetova
 
 Delay (seconds):
-\u010cekanje (sekunde):
+Čekanje (sekunde):
 
 Delete
-Obri\u0161i
+Obriši
 
 Delete /command
-Obri\u0161i /naredbu
+Obriši /naredbu
 
 Delete Character
-Obri\u0161i Lika
+Obriši Lika
 
 Delete Event
-Obri\u0161i Doga\u0111aj
+Obriši Događaj
 
 Delete Group
-Obri\u0161i Grupu
+Obriši Grupu
 
 Delete Group?
 Obrisati Grupu?
 
 Delete Macro
-Obri\u0161i Makro
+Obriši Makro
 
 Delete Timer
-Obri\u0161i Tajmer
+Obriši Tajmer
 
 Delete World
-Obri\u0161i Svijet
+Obriši Svijet
 
 Delete World?
 Obrisati Svijet?
@@ -747,19 +690,19 @@ Display?
 Prikaza?
 
 Do you really want to cancel the file upload for \[%d. %s\]?
-Da li stvarno \u017eeli\u0161 obustaviti upload datoteke na \[%d. %s\]?
+Da li stvarno želiš obustaviti upload datoteke na \[%d. %s\]?
 
 Do you really want to clear the Keyboard Shortcut for \"%s\"?
-Da li stvarno \u017eeli\u0161 obrisati Tipkovni\u010dnu Pre\u010dicu za \"%s\"?
+Da li stvarno želiš obrisati Tipkovničnu Prečicu za \"%s\"?
 
 Do you really want to delete \"%s\"?
-\u017deli\u0161 li stvarno obrisati \"%s\"?
+Želiš li stvarno obrisati \"%s\"?
 
 Do you really want to delete the group \"%s\"?
-\u017deli\u0161 li stvarno obrisati grupu \"%s\"?
+Želiš li stvarno obrisati grupu \"%s\"?
 
 Do you want to save this world for later?
-\u017deli\u0161 li snimiti ovaj svijet za kasnije?
+Želiš li snimiti ovaj svijet za kasnije?
 
 Done
 Gotovo
@@ -786,7 +729,7 @@ Edit Character
 Izmijeni Lika
 
 Edit Event
-Izmijeni Doga\u0111aj
+Izmijeni Događaj
 
 Edit Global Timer
 Izmijeni Globalni Tajmer
@@ -810,22 +753,22 @@ Effects
 Efekti
 
 Enable this timer?
-Uklju\u010di ovaj tajmer?
+Uključi ovaj tajmer?
 
 Enabled?
-Uklju\u010deno?
+Uključeno?
 
 Encoding changed to %s
 Enkodiranje promijenjeno u %s
 
 Enter the connection information\nfor the new world below.
-Dolje upi\u0161i podatke za spajanje\nna novi svijet.
+Dolje upiši podatke za spajanje\nna novi svijet.
 
 Enter the name for the new Group, and click Add.
-Upi\u0161i ime za novu Grupu, i klikni na Dodaj.
+Upiši ime za novu Grupu, i klikni na Dodaj.
 
 Error (%d): %s
-Gre\u0161ka (%d): %s
+Greška (%d): %s
 
 Error: %s
 Greška: %s
@@ -834,13 +777,13 @@ Event Name:
 Ime Događaja:
 
 Events
-Doga\u0111aji
+Događaji
 
 Every
 Svakih
 
 Exactly
-To\u010dno
+Točno
 
 Existing Worlds:
 Postojeći Svjetovi:
@@ -861,16 +804,16 @@ File Upload - \[%d. %s\]
 Upload Datoteke - \[%d. %s\]
 
 Find
-Tra\u017ei
+Traži
 
 Find Next
-Tra\u017ei Sljede\u0107e
+Traži Sljedeće
 
 Find...
-Tra\u017ei...
+Traži...
 
 Find:
-Tra\u017ei:
+Traži:
 
 Flash SysTray Icon?
 Bljeskanje Ikone u System Trayu?
@@ -900,7 +843,7 @@ Forwards
 Naprijed
 
 Frequency
-U\u010destalost
+Učestalost
 
 Global &Macro Window
 Prozor s Globalnim &Makroima
@@ -909,7 +852,7 @@ Global Custom /commands
 Globalne Proizvoljne /naredbe
 
 Global Event Configuration
-Konfiguracija Globalnih Doga\u0111aja
+Konfiguracija Globalnih Događaja
 
 Global Macros
 Globalni Makroi
@@ -924,16 +867,16 @@ Global Timers
 Globalni Tajmeri
 
 Global User-defined commands: %s
-Globalne Korisni\u010dki Definirane naredbe: %s
+Globalne Korisnički Definirane naredbe: %s
 
 Go &East
-Idi &Isto\u010dno
+Idi &Istočno
 
 Go &North
 Idi &Sjeverno
 
 Go &South
-Idi &Ju\u017eno
+Idi &Južno
 
 Go &West
 Idi &Zapadno
@@ -942,7 +885,7 @@ Go To
 Idi Na
 
 Go to Connection
-Sko\u010di Na Vezu
+Skoči Na Vezu
 
 Go to webpage: %s
 Idi na internet stranicu: %s
@@ -954,7 +897,7 @@ Handle GA Prompts?
 Tretiraj GA Promptove?
 
 Help
-Pomo\u0107
+Pomoć
 
 Hide
 Sakrij
@@ -963,7 +906,7 @@ Hide Icon
 Sakrij Ikonu
 
 Highlight Colours
-Nagla\u0161ene Boje
+Naglašene Boje
 
 Host:
 Adresa:
@@ -978,7 +921,7 @@ ID
 ID
 
 identd not running/user ID could not be verified
-identd nije pokrenut/korisni\u010dki ID se ne mo\u017ee verificirati
+identd nije pokrenut/korisnički ID se ne može verificirati
 
 Ignore
 Ignoriraj
@@ -993,7 +936,7 @@ Ignore NL after Prompts?
 Ignoriraj NL nakon Promptova?
 
 Include Buffer From: 
-Uklju\u010di Buffer Iz:
+Uključi Buffer Iz:
 
 Indent By:
 Uvuci Za:
@@ -1005,7 +948,7 @@ Input Colour:
 Boja Unosa:
 
 Input History for %d. %s
-Pro\u0161le Naredbe za %d. %s
+Prošle Naredbe za %d. %s
 
 Input:
 Unos:
@@ -1053,13 +996,13 @@ Invalid window name.
 Neispravno ime prozora.
 
 Keyboard Shortcut
-Tipkovni\u010dna Pre\u010dica
+Tipkovnična Prečica
 
 Keyboard Shortcut for \"%s\"
-Tipkovni\u010dna Pre\u010dica za \"%s\"
+Tipkovnična Prečica za \"%s\"
 
 Keyboard Shortcuts
-Tipkovni\u010dne Pre\u010dice
+Tipkovnične Prečice
 
 Language Selection
 Odabir Jezika
@@ -1068,13 +1011,13 @@ Leave Log Open?
 Ostavi Log Otvorenim?
 
 Limit Input Lines?
-Ograni\u010di Retke Unosa?
+Ograniči Retke Unosa?
 
 Limit Output Lines?
-Ograni\u010di Retke Ispisa?
+Ograniči Retke Ispisa?
 
 Limit Spawn Lines?
-Ograni\u010di Spawn Retke?
+Ograniči Spawn Retke?
 
 Limit To:
 Na:
@@ -1083,16 +1026,28 @@ Link
 Link
 
 Log
-Log
+Logiraj
+
+Log as HTML?
+Logiraj kao HTML?
 
 Log file \"%s\" is ambiguous.
-Log \"%s\" je vi\u0161ezna\u010dan.
+Log \"%s\" je višeznačan.
 
 Log file \"%s\" not found.
-Log \"%s\" nije prona\u0111en.
+Log \"%s\" nije pronađen.
 
 Log from \[%d. %s\]
 Log za \[%d. %s\]
+
+Log opened %s
+Log otvoren %s
+
+Log what?
+Što da logiram?
+
+Logfile from %s
+Log sa svijeta %s
 
 Logged to \"%s\".
 Logirano u \"%s\".
@@ -1119,7 +1074,7 @@ Macros for %s
 Makroi za %s
 
 Mail Window
-Po\u0161ta
+Pošta
 
 Main Window
 Glavni Prozor
@@ -1212,7 +1167,7 @@ No valid addresses to connect to.
 Nema ispravnih adresa za spajanje.
 
 None
-Ni\u0161ta
+Ništa
 
 Normal Colours
 Normalne Boje
@@ -1230,7 +1185,7 @@ Note: Shortcut in use by '%s'.
 Napomena: Prečicu koristi '%s'.
 
 Notes
-Bilje\u0161ke
+Bilješke
 
 Now logging to \"%s\".
 Sada logiram u \"%s\".
@@ -1242,7 +1197,7 @@ Omit From:
 Izostavi Iz:
 
 Open &Mail Window
-Otvori Prozor za &Po\u0161tu
+Otvori Prozor za &Poštu
 
 Open Address Book
 Otvori Adresar
@@ -1263,7 +1218,7 @@ Packet Debugger for \[%d. %s\]
 Debager paketa za \[%d. %s\]
 
 Password:
-\u0160ifra:
+Šifra:
 
 Pattern
 Uzorak
@@ -1284,16 +1239,19 @@ Play Beeps?
 Sviraj Bipove?
 
 Please select your desired language below and click Save\n\nNote that changes may not take effect until after you reboot.
-Dolje odaberi željeni jezik i klikni na Snimi, molim\n\nUzmi u obzir da promjene neće imati efekta do ponovnog pokretanja programa.
+Dolje odaberi željeni jezik i klikni na Snimi, molim\n\nUzmi u obzir da promjene možda neće imati efekta do ponovnog pokretanja programa.
 
 Please wait. Checking spelling...
-Molim, pri\u010dekati. Provjeravam pravopis...
+Molim, pričekati. Provjeravam pravopis...
 
 Port:
 Port:
 
 Potato Auto-Connects
 Potato-ova Automatska Spajanja
+
+Potato Debugging Log
+Potato-ov Log za Debagiranje
 
 Prefix
 Prefiks
@@ -1305,7 +1263,7 @@ Prefixes for %s
 Prefiksi za %s
 
 Press the desired keyboard shortcut for '%s'.\nWhen the correct shortcut is displayed below, click Accept,\nor click Cancel to keep the current shortcut.
-Pritisni \u017eeljenu tipkovni\u010dnu pre\u010dicu za '%s'.\nKad se dolje prika\u017ee \u017eeljena pre\u010dica, pritisni Prihvati,\nili pritisni Odustani da zadr\u017ei\u0161 trenutnu pre\u010dicu.
+Pritisni željenu tipkovničnu prečicu za '%s'.\nKad se dolje prikaže željena prečica, pritisni Prihvati,\nili pritisni Odustani da zadržiš trenutnu prečicu.
 
 Prev
 Pret
@@ -1434,52 +1392,52 @@ seconds
 sekundi
 
 Select a command and press 1 to place it in the top input window, 2 to place it in the lower input window, or 3 to send it directly to the MU*. Press 4 to copy it to the clipboard. Press escape to close the window.
-Izaberi naredbu i pritisni 1 da je stavi\u0161 u gornji prozor za unos, 2 da je stavi\u0161 u donji prozor za unos, ili 3 da je po\u0161alje\u0161 izravno na MU*. Pritisni 4 da je kopira\u0161 u clipboard. Pritisni escape da zatvori\u0161 ovaj prozor.
+Izaberi naredbu i pritisni 1 da je staviš u gornji prozor za unos, 2 da je staviš u donji prozor za unos, ili 3 da je pošalješ izravno na MU*. Pritisni 4 da je kopiraš u clipboard. Pritisni escape da zatvoriš ovaj prozor.
 
 Select a command, then click a button to edit its binding
-Izaberi naredbu, pa klikni na gumb da promijeni\u0161 njenu pre\u010dicu
+Izaberi naredbu, pa klikni na gumb da promijeniš njenu prečicu
 
 Select to Copy?
 Kopiraj Odabir?
 
 Send
-\u0160alji
+Šalji
 
 Send &Selection to World
 Pošalji &Odabir u Svijet
 
 Send after Login info:
-\u0160alji poslije Prijave:
+Šalji poslije Prijave:
 
 Send before Login info:
-\u0160alji prije Prijave:
+Šalji prije Prijave:
 
 Send Client Info?
-Po\u0161alji Podatke o Klijentu?
+Pošalji Podatke o Klijentu?
 
 Send Client Name As:
-Po\u0161alji Klijentovo Ime Kao:
+Pošalji Klijentovo Ime Kao:
 
 Send Login Details after (seconds):
-Po\u0161alji Prijavu nakon (sekunde):
+Pošalji Prijavu nakon (sekunde):
 
 Send Mail - \[%d. %s\]
-\u0160alji Po\u0161tu - \[%d. %s\]
+Šalji Poštu - \[%d. %s\]
 
 Send to &World
-Po\u0161alji u &Svijet
+Pošalji u &Svijet
 
 Send to MUSH
-\u0160alji na MUSH
+Šalji na MUSH
 
 Send to MUSH:
-\u0160alji na MUSH:
+Šalji na MUSH:
 
 Send upon first connect, before Login info:
 Pošalji pri prvom spajanju prije podataka za prijavu:
 
 Send:
-Po\u0161alji:
+Pošalji:
 
 Set auto-prefixes to apply for %s below.
 Dolje postavi automatske prefikse za %s.
@@ -1488,61 +1446,61 @@ Set auto-prefixes to apply for all worlds below.
 Postavi automatske prefikse za sve doljnje svjetove.
 
 Show &Helpfiles
-Poka\u017ei &Pomo\u0107
+Pokaži &Pomoć
 
 Show &Log Window
-Poka\u017ei Prozor Za &Logiranje
+Pokaži Prozor Za &Logiranje
 
 Show &MSSP Info
-Prika\u017ei &MSSP Podatke
+Prikaži &MSSP Podatke
 
 Show 'Activity in <World>'?
-Poka\u017ei natpis 'Aktivnost u <Svijetu>'?
+Pokaži natpis 'Aktivnost u <Svijetu>'?
 
 Show 'New Activity'?
-Poka\u017ei natpis 'Nova Aktivnost'?
+Pokaži natpis 'Nova Aktivnost'?
 
 Show Beeps?
 Prikazuj Bipove?
 
 Show Input &History Window
-Poka\u017ei Prozor S Ranijim &Naredbama
+Pokaži Prozor S Ranijim &Naredbama
 
 Show Spawn Toolbar?
-Poka\u017ei Traku Sa Spawnovima?
+Pokaži Traku Sa Spawnovima?
 
 Show Status Bar?
-Poka\u017ei Statusnu Traku?
+Pokaži Statusnu Traku?
 
 Show SysTray Icon?
-Poka\u017ei Ikonu u System Trayu?
+Pokaži Ikonu u System Trayu?
 
 Show Timestamps?
 Prikazuj Oznake Vremena?
 
 Show Toolbar &Labels?
-Poka\u017ei &Imena Alata?
+Pokaži &Imena Alata?
 
 Show Two Input Windows?
-Poka\u017ei dva prozora za unos?
+Pokaži dva prozora za unos?
 
 Show Verbose Messages?
-Prikazuj Vi\u0161e Poruka?
+Prikazuj Više Poruka?
 
 Show World Toolbar?
-Poka\u017ei Traku Sa Svjetovima?
+Pokaži Traku Sa Svjetovima?
 
 Show XTERM Colours?
 Pokaži XTERM Boje?
 
 Size:
-Veli\u010dina:
+Veličina:
 
 Sorry, that key is not allowed.
 Žao mi je, ta tipka nije dozvoljena.
 
 Sorry, that's not a valid character name.
-\u017dao mi je, to nije ispravno ime za lika.
+Žao mi je, to nije ispravno ime za lika.
 
 Sorry, we were unable to check for a new version at this time. Please try again later.\n\nIf the problem persists, please let us know.
 Žao mi je, u ovom trenutku nismo mogli provjeriti postoji li nova verzija. Molim, pokušaj ponovo kasnije.\n\nAko problem potraje, molim da nas obavijestiš.
@@ -1563,16 +1521,16 @@ Spellcheck
 Provjeravanje pravopisa
 
 Spellchecker
-Provjerava\u010d Pravopisa
+Provjeravač Pravopisa
 
 Split Input Cmds?
 Razdvoji Naredbe U Unosu?
 
 Start Maximized?
-Zapo\u010dni Maksimiziran?
+Započni Maksimiziran?
 
 Starting Encoding:
-Po\u010detno Enkodiranje:
+Početno Enkodiranje:
 
 Subject:
 Naslov:
@@ -1602,22 +1560,22 @@ That is not a valid name.
 To nije ispravno ime.
 
 That name is already in use.
-To ime se ve\u0107 koristi.
+To ime se već koristi.
 
 The Graphical MU* Client for Windows and Linux
 Grafički MU* Klijent za Windowse i Linux
 
 The Keyboard Shortcut '%s' is already in use by the task '%s'. Do you want to override it?
-Tipkovni\u010dnu pre\u010dicu '%s' ve\u0107 koristi proces '%s'. \u017deli\u0161 li ga sprije\u010diti?
+Tipkovničnu prečicu '%s' već koristi proces '%s'. Želiš li ga spriječiti?
 
 There is a newer version of Potato (%s) available.\nYou can download it from Potato's Google Code site.\nWould you like to do so now?
 Dostupna je novija verzija Potatoa (%s).\nMožeš je downloadati s Potatovog sitea na Google Codeu.\nŽeliš li to sada učiniti?
 
 There is already a character with that name. Overwrite?
-Ve\u0107 postoji lik s tim imenom. Da ga prebri\u0161em?
+Već postoji lik s tim imenom. Da ga prebrišem?
 
 There is already a prefix for \"%s\". Override?
-Ve\u0107 postoji prefiks za \"%s\". Zanemari?
+Već postoji prefiks za \"%s\". Zanemari?
 
 Timers
 Tajmeri
@@ -1635,7 +1593,7 @@ Toggle to Main Window?
 Prebaci u Glavni Prozor?
 
 Too many spawns
-Previ\u0161e spawnova
+Previše spawnova
 
 Top Input
 Gornji Unos
@@ -1677,7 +1635,7 @@ Unable to open file \"%s\": %s
 Ne mogu otvoriti datoteku \"%s\": %s
 
 Unable to read file \"%s\".
-Ne mogu pro\u010ditati datoteku \"%s\".
+Ne mogu pročitati datoteku \"%s\".
 
 Unable to save preferences: %s
 Ne mogu snimiti postavke: %s
@@ -1713,7 +1671,7 @@ Upload of \"%s\" cancelled.
 Upload filea \"%s\" obustavljen.
 
 Upload of \"%s\" completed.
-Upload datoteke \"%s\" dovr\u0161en.
+Upload datoteke \"%s\" dovršen.
 
 Upload Status - \[%d. %s\]
 Stanje Uploada - \[%d. %s\]
@@ -1728,7 +1686,7 @@ Use SSL?:
 Koristi SSL?:
 
 User-defined commands for this world: %s
-Korisni\u010dki definirane naredbe za ovaj svijet: %s
+Korisnički definirane naredbe za ovaj svijet: %s
 
 Value
 Vrijednost
@@ -1740,7 +1698,7 @@ Version %s. Written by Mike Griffiths (%s)
 Verzija %s. Autor: Mike Griffiths (%s)
 
 View helpfile '%s'
-Prika\u017ei helpfile '%s'
+Prikaži helpfile '%s'
 
 Visit Potato &Website
 Potato-ova &Internet Stranica
@@ -1758,7 +1716,7 @@ With:
 Sa:
 
 Words:
-Rije\u010di:
+Riječi:
 
 World Name
 Ime Svijeta
@@ -1767,13 +1725,13 @@ World Name:
 Ime Svijeta:
 
 Would you like to use the settings for \[%s. %s\], rather than quick-connected?
-\u017deli\u0161 li koristiti postavke za \[%s. %s\] umjesto onih za brzo spajanje?
+Želiš li koristiti postavke za \[%s. %s\] umjesto onih za brzo spajanje?
 
 Wrap Lines?
-Sabij \u0160irinu Redaka?
+Sabij Širinu Redaka?
 
 Wrap text at:
-Sabij \u0161irinu teksta na:
+Sabij širinu teksta na:
 
 Yes
 Da
@@ -1791,7 +1749,7 @@ You don't have any worlds defined yet! Use one of the links above to add a world
 Još nemaš definiranih svjetova! Upotrijebi jedan od gornjih linkova da dodaš svijet.
 
 You must enter a character name.
-Mora\u0161 unijeti ime lika.
+Moraš unijeti ime lika.
 
 You must select a file.
-Mora\u0161 izabrati datoteku.
+Moraš izabrati datoteku.
