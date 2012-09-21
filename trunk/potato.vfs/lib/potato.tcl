@@ -3780,9 +3780,9 @@ proc ::potato::destroySpawnWindow {c name} {
        return; # no such spawn
      }
 
+  set spawn [lindex $conn($c,spawns) $pos]
   set conn($c,spawns) [lreplace $conn($c,spawns) $pos $pos]
   ::skin::$potato(skin)::delSpawn $c $name
-  set spawn [lindex $conn($c,spawns) $pos]
   foreach x [lrange $spawn 1 end] {
     destroy $x
   }
