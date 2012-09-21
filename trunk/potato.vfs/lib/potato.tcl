@@ -6684,13 +6684,13 @@ proc ::potato::winicoMap {} {
   variable winico;
   variable potato;
 
-  if { $winico(mapped) } {
+  if { $winico(mapped) || !$winico(loaded) } {
        return;
      }
 
   if { [catch {winico taskbar add $winico(main) -text $potato(name) -pos 0 \
                         -callback [list ::potato::winicoCallback %m %x %y]}] } {
-       destroy $winico(menu)
+       catch {destroy $winico(menu)}
        catch {winico taskbar delete $winico(main)}
        catch {winico delete $winico(main)}
        set winico(loaded) 0
