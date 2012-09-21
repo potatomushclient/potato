@@ -6629,14 +6629,14 @@ proc ::potato::setUpWinico {} {
        return;
      }
 
+  set winico(mainico) [file join $dir stpotato.ico]
+
   if { [catch {package require Winico 0.6} err] } {
        errorLog "Unable to load Winico: $err" warning
        return;
      }
 
   set dir [file join $path(vfsdir) lib app-potato windows]
-  #set mainico [file join $dir potato2.ico]
-  set winico(mainico) [file join $dir stpotato.ico]
   if { ![file exists $dir] || ![file isdirectory $dir] || ![file exists $winico(mainico)] || ![file isfile $winico(mainico)] } {
        return;
      }
@@ -12455,7 +12455,7 @@ proc parray {a args} {
 
 if { $tcl_platform(platform) eq "windows" } {
      parray potato::world -regexp {^[0-9]+,name$}
-     if { !$::potato::potato(wrapped) && [file exists [file join $::potato::path(vfsdir) lib app-potato windows stpotato.ico]] } {
+     if { !$::potato::potato(wrapped) && [info exists ::potato::winico(mainico)] && [file exists $::potato::winico(mainico)] } {
           rename toplevel _realtoplevel
           proc toplevel {t args} {
             uplevel 1 _realtoplevel $t {*}$args
