@@ -6629,6 +6629,7 @@ proc ::potato::setUpWinico {} {
        return;
      }
 
+  set dir [file join $path(vfsdir) lib app-potato windows]
   set winico(mainico) [file join $dir stpotato.ico]
 
   if { [catch {package require Winico 0.6} err] } {
@@ -6636,7 +6637,6 @@ proc ::potato::setUpWinico {} {
        return;
      }
 
-  set dir [file join $path(vfsdir) lib app-potato windows]
   if { ![file exists $dir] || ![file isdirectory $dir] || ![file exists $winico(mainico)] || ![file isfile $winico(mainico)] } {
        return;
      }
@@ -10107,7 +10107,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
        if { $curr == -1 } {
             lappend world($w,prefixes) [list $window $str 1]
           } else {
-            set world($w,prefixes) [lreplace $world($w,prefixes) $curr [list $window $str 1]]
+            set world($w,prefixes) [lreplace $world($w,prefixes) $curr $curr [list $window $str 1]]
           }
      }
 
