@@ -10107,7 +10107,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
        if { $curr == -1 } {
             lappend world($w,prefixes) [list $window $str 1]
           } else {
-            set world($w,prefixes) [lreplace $world(prefixes) $curr [list $window $str 1]]
+            set world($w,prefixes) [lreplace $world($w,prefixes) $curr [list $window $str 1]]
           }
      }
 
