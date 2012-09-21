@@ -484,6 +484,20 @@ proc ::skin::potato::init {} {
      -height [image height ::skin::potato::img::worldbarNewact] \
      -width 1
 
+  image create photo ::skin::potato::img::ssl -data {
+     R0lGODlhDAAMAOYAANnZ2S4uMGpqbGprbDAwMmlrcNba37O1ubK1uW5wdCssL
+     8rR2C0vMisrLsrR2S4wM2BlbYSKlHqBi2tweGNqaH6EhGVsbXuAfg8NAG1eAO
+     /RDu3PFde5ANm7ANi6AObJD/XWFHFhABIPAB4aAJp+AP/RAP/HAP/LAP/TAP/
+     KAP/IAP/PAJ2BACAbAB4XAJp0AP+/AP/EAK6JAqmGAp12ACAYAB4WAJlwAv/C
+     A/66A//BA5FkCYleCJxyAiAXAB4UAplpB/+6CP2zCP+1B9yXDdeTDf+2B5trB
+     yAVAh0SA5hkDf+6EP+zD/+2D5tmDR8TAzEeBn9ODnlKDX9NDjQgBv////////
+     /////////////////////////////////////////////////////////////
+     /////////////////////////////     ///////////////////////////
+     //////////////////////////////////////////////yH5BAEAAAAALAAA
+     AAAMAAwAAAd2gACCAAECAwSDiQUGBwgGCYkACgsMgg0OD4kQEYkSE4kUFYkWF
+     4IYGRobHB0dHh8gISIjJCUmJygoKSorLC0uLyYwMTIzMTAmNDU2Nzg5Ojs8zT
+     o9Pj9AQUJDREVGQkFHSElKS0xMTU3lS05PAFBRUvDxU1QAgQA7
+  }
 
 
   set widgets(main) [::ttk::frame .skin_potato]
@@ -629,7 +643,7 @@ proc ::skin::potato::init {} {
 
   set widgets(statusbar,connstatus,sub) [::ttk::frame $widgets(statusbar,connstatus).sub]
   pack $widgets(statusbar,connstatus,sub) -in $widgets(statusbar,connstatus) -anchor center
-  set widgets(statusbar,connstatus,sub,msg) [::ttk::label $widgets(statusbar,connstatus,sub).msg]
+  set widgets(statusbar,connstatus,sub,msg) [::ttk::label $widgets(statusbar,connstatus,sub).msg -compound left]
   set widgets(statusbar,connstatus,sub,time) [::ttk::label $widgets(statusbar,connstatus,sub).time]
   pack $widgets(statusbar,connstatus,sub,msg) -side left -anchor e
   pack $widgets(statusbar,connstatus,sub,time) -side left -anchor w
@@ -943,7 +957,7 @@ proc ::skin::potato::status {c} {
             $widgets(toolbar,disconnect) configure -state disabled
             $widgets(toolbar,reconnect) configure -state disabled
             $widgets(toolbar,close) configure -state disabled
-            $widgets(statusbar,connstatus,sub,msg) configure -text [::potato::T "Not Connected"]
+            $widgets(statusbar,connstatus,sub,msg) configure -text [::potato::T "Not Connected"] -image {}
             $widgets(statusbar,hostinfo,label) configure -text [::potato::T "Not Connected"]
           } elseif { $status == "disconnected" } {
             if { [::potato::connInfo $c autoreconnect] } {
@@ -955,20 +969,26 @@ proc ::skin::potato::status {c} {
             $widgets(toolbar,close) configure -state normal
             set recontime [potato::connInfo $c autoreconnect,time]
             if { $recontime == 0 || ![potato::connInfo $c autoreconnect] } {
-                 $widgets(statusbar,connstatus,sub,msg) configure -text [::potato::T "Not Connected"]
+                 $widgets(statusbar,connstatus,sub,msg) configure -text [::potato::T "Not Connected"] -image {}
                } else {
-                 $widgets(statusbar,connstatus,sub,msg) configure -text [::potato::T "Not Connected - Reconnect Every %s" [potato::timeFmt $recontime 0]]
+                 $widgets(statusbar,connstatus,sub,msg) configure -image {} \
+                       -text [::potato::T "Not Connected - Reconnect Every %s" [potato::timeFmt $recontime 0]]
                }
           } elseif { $cstatus == "connecting" } {
             $widgets(toolbar,disconnect) configure -state normal;# cancel reconnect
             $widgets(toolbar,reconnect) configure -state disabled
             $widgets(toolbar,close) configure -state normal
-            $widgets(statusbar,connstatus,sub,msg) configure -text [::potato::T "Connecting..."]
+            $widgets(statusbar,connstatus,sub,msg) configure -text [::potato::T "Connecting..."] -image {}
           } else {
             $widgets(toolbar,disconnect) configure -state normal
             $widgets(toolbar,reconnect) configure -state disabled
             $widgets(toolbar,close) configure -state normal
             $widgets(statusbar,connstatus,sub,msg) configure -text [::potato::T "Connected For:"]
+            if { [::potato::hasProtocol $c ssl] } {
+                 $widgets(statusbar,connstatus,sub,msg) configure -image ::skin::potato::img::ssl
+               } else {
+                 $widgets(statusbar,connstatus,sub,msg) configure -image {}
+               }
           }
      } else {
        if { $status == "closed" } {
@@ -1145,7 +1165,7 @@ proc ::skin::potato::show {c} {
   if { $c == 0 } {
        $widgets(statusbar,worldname,label) configure -text $::potato::potato(name)
        $widgets(statusbar,hostinfo,label) configure -text [::potato::T "Not Connected"]
-       $widgets(statusbar,connstatus,sub,msg) configure -text [::potato::T "Not Connected"]
+       $widgets(statusbar,connstatus,sub,msg) configure -text [::potato::T "Not Connected"] -image {}
        $widgets(statusbar,worldname,label,prompt) configure -textvariable ""
     } else {
        $widgets(statusbar,worldname,label) configure -text "$c. [potato::connInfo $c name]"
