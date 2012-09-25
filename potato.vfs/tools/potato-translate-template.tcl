@@ -196,8 +196,10 @@ proc processFile {fname fin var} {
                    }
               }
             }
+         if { ![info exists _textvar($tmp)] } {
+              incr msgs
+            }
          lappend _textvar($tmp) $fname $proc $lineNum
-         incr msgs
        }
   }
 
