@@ -1,0 +1,26 @@
+#summary /at
+=/at=
+
+The `/at` [SlashCommands /command] lets you run [SlashCommands /commands] or send text to the MU`*` at a scheduled time. The syntax is:
+
+{{{
+/at <when>=<action>
+/cancelat <id>
+}}}
+
+The `<when>` argument tells Potato exactly when to send the text, and is quite versatile. `<action>` is the text to send to the MU`*`, and is parsed for [SlashCommands /commands] in the same way as input typed directly into the client.
+
+`<when>` can be given in any of the following formats:
+
+  * A time, in the format `hh`, `hh:mm`, or `hh:mm:ss`, optionally followed by a timezone (for example, `15:25 EST`).
+  * A date, in the format `MM/DD/YY`, `Month DD, YY`, `DD Month YY`, `YYMMDD`, or `DD-Month-YY`. Years can be 2 or 4 digits (for example, `Mar 05, 1987`, `03/05/87`, `05-March-87` are all equivilent).
+  * A combination of date and time, in the above formats and in either order.
+  * A relative time, in the format `[<base>] [[+|-]<period>] [<time>]`. `<base>` should be one of "now", "tomorrow", "today", "yesterday", and defaults to "now". `<period>` should be one of "second", "minute", "hour", "day", "week", "month", "fortnight" or "year", optionally prefixed by a number. `<time>` is an absolute time, in the formats given above. (For example, `now + 2 hours`, `7 days`, `tomorrow 05:30`)
+
+`/at` returns a unique code which can be used with the `/cancelat` /command to cancel the scheduled command without running it.
+
+==Example==
+
+{{{
+/at 45minutes=/print You have an admin meeting in 5 minutes.
+}}}

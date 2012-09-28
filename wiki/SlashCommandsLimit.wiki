@@ -13,8 +13,8 @@ With no arguments, `/limit` returns 1 if there is currently a `/limit` in effect
 
 Valid options are:
 
+  * `-glob`  -  Show only lines which match the wildcard pattern `<pattern>`. This is the default if no match type is specified.
   * `-literal`  -  Show only lines which exactly match the string `<pattern>`
-  * `-glob`  -  Show only lines which match the wildcard pattern `<pattern>`
   * `-regexp`  -  Show only lines which match the regular expression `<pattern>`
   * `-nocase`  -  Match in a case-insensitive way
   * `-v`  -  Inverted match (show lines which _don't_ match `<pattern>`
