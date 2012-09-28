@@ -10262,7 +10262,18 @@ proc ::potato::customSlashCommand {c w cmd str} {
        bell -displayof .
        return;
   }
+
   set t $conn($c,textWidget)
+
+  if { ![string length $str] } {
+       # Just report whether we have a /limit atm
+       if { [llength [$conn($c,textWidget) tag nextrange limited 1.0 end]] } {
+            return [list 1 1];
+          } else {
+            return [list 1 0];
+          }
+     }
+
   $t tag remove "limited" 1.0 end
   set conn($c,limited) [list]
 
