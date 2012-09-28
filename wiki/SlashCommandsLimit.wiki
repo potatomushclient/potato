@@ -1,0 +1,45 @@
+#summary /limit
+=/limit=
+
+The `/limit` [SlashCommands /command] allows you to filter the text received from the MU`*` in various ways. The syntax is:
+
+{{{
+/limit
+/limit [-options] [--] <pattern>
+/unlimit
+}}}
+
+With no arguments, `/limit` returns 1 if there is currently a `/limit` in effect, and 0 if not. Otherwise, the output text is filtered, with lines which do not match the given `<pattern>` being hidden.
+
+Valid options are:
+
+  * `-literal`  -  Show only lines which exactly match the string `<pattern>`
+  * `-glob`  -  Show only lines which match the wildcard pattern `<pattern>`
+  * `-regexp`  -  Show only lines which match the regular expression `<pattern>`
+  * `-nocase`  -  Match in a case-insensitive way
+  * `-v`  -  Inverted match (show lines which _don't_ match `<pattern>`
+  * `-msimple`  -  Alias for `-literal`
+  * `-mglob`  -  Alias for `-glob`
+  * `-mregexp`  -  Alias for `-regexp`
+  * `-wildcard`  -  Alias for `glob`
+  * `--`  -  Marks the end of the options. Only necessary if `<pattern>` starts with a `-`.
+  
+For extra compatability with TinyFugue, the `-a` option will be ignored.
+
+The `/unlimit` command redisplays all text received.
+
+Currently, `/limit` only affects the main output window for a world, not spawns, though this should change at some point in the future.
+
+==Examples==
+
+Filter output to show messages on code channels:
+
+{{{
+/limit -glob <*code> *
+}}}
+
+Hide all output which mentions 'foo', 'bar' or 'baz':
+
+{{{
+/limit -v -regexp -- foo|bar|baz
+}}}
