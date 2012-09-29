@@ -4082,10 +4082,10 @@ proc ::potato::outputSystem {c msg {tags ""}} {
   variable conn;
   variable world;
 
-  set alltags [concat $tags [list system margins]]
-  if { ![info exists conn($c,textWidget)] || ![winfo exists $conn($c,textWidget)] } {
+  if { $c == 0 || ![info exists conn($c,textWidget)] || ![winfo exists $conn($c,textWidget)] } {
        return;
      }
+  set alltags [concat $tags [list system margins]]
   set aE [atEnd $conn($c,textWidget)]
   set empty [expr {[$conn($c,textWidget) count -chars 1.0 2.0] == 1}]
 
