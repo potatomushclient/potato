@@ -5924,6 +5924,13 @@ proc ::potato::main {} {
           }
      }
 
+
+  # Alias some /commands
+  ::potato::alias_slash_cmd show world ;# /world
+  ::potato::alias_slash_cmd show w ;# /w
+  ::potato::alias_slash_cmd speedwalk sw;# /sw
+  ::potato::alias_slash_cmd null silent ;# /silent
+
   if { ![file exists $path(custom)] } {
        errorLog "Custom code file \"[file nativename [file normalize $path(custom)]]\" does not exist." message
      } elseif { [catch {source $path(custom)} err] } {
@@ -10004,8 +10011,6 @@ proc ::potato::customSlashCommand {c w cmd str} {
 
 };# /null
 
-::potato::alias_slash_cmd null silent ;# /silent
-
 #: /input [1|2] <stuff> - print <stuff> to input window [1|2]
 ::potato::define_slash_cmd input {
 
@@ -10452,9 +10457,6 @@ proc ::potato::customSlashCommand {c w cmd str} {
 
 };# /show
 
-::potato::alias_slash_cmd show world ;# /world
-::potato::alias_slash_cmd show w ;# /w
-
 #: /slash
 #: Print a list of all /commands
 ::potato::define_slash_cmd slash {
@@ -10717,9 +10719,6 @@ proc ::potato::customSlashCommand {c w cmd str} {
   return [list 1];
 
 };# /speedwalk
-
-# Create a /sw alias for /speedwalk
-::potato::alias_slash_cmd speedwalk sw
 
 #: /log  |  /log -close [<path>] |  /log [-options] <path>
 #: Either show the logging window, close open log(s) or start logging to a new file
