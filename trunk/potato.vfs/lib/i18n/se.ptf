@@ -1,46 +1,3 @@
-
-# Untranslated strings:
-
-&Debugging Log Window
--
-
-/at cancelled.
--
-
-/at: Time must be in the future.
--
-
-/cls cannot be abbreviated.
--
-
-/cls: Invalid connection.
--
-
-/cls: Invalid window name.
--
-
-/cls: No such window.
--
-
-Invalid /at ID.
--
-
-Potato Debugging Log
--
-
-Return (%d): %s
--
-
-# Obsolete strings:
-
-&Error Log Window
-&Felloggfönster
-
-Potato Error Log
-Potato fellogg
-
-# Existing translations:
-
  bytes
  byte
 
@@ -112,6 +69,9 @@ Potato fellogg
 
 &Debug Packets?
 &Felsök paket?
+
+&Debugging Log Window
+&Felsöker loggfönster
 
 &Default Character (%s)
 &Standardrollperson (%s)
@@ -230,11 +190,29 @@ Potato fellogg
 --------- New Activity ---------
 --------- Ny aktivitet ---------
 
+/at cancelled.
+/at avbruten.
+
+/at: Time must be in the future.
+/at: Angiven tid måste vara i framtiden.
+
+/cls cannot be abbreviated.
+/cls kan inte förkortas.
+
+/cls: Invalid connection.
+/cls: Ogiltig uppkoppling
+
+/cls: Invalid window name.
+/cls: Ogiltigt fönsternamn.
+
+/cls: No such window.
+/cls: Inget sådant fönster.
+
 /command Name:
 /kommando namn:
 
 /history: Invalid position
-/historik: Ogiltig position
+/history: Ogiltig position
 
 1st Address:
 1:a adressen:
@@ -378,7 +356,7 @@ Auto-reconnect in %s...
 Automatisk återuppkoppling om %s...
 
 Auto-Sends
-Autoskickar
+Autosänder
 
 Available slash commands: %s
 Tillgängliga snedstreckskommandon: %s
@@ -660,7 +638,7 @@ Delete Group?
 Radera grupp?
 
 Delete Macro
-Rsdera macro
+Radera macro
 
 Delete Timer
 Radera timer
@@ -708,7 +686,7 @@ Do you really want to cancel the file upload for \[%d. %s\]?
 Vill du verkligen avbryta filuppladdingen för \[%d. %s\]?
 
 Do you really want to clear the Keyboard Shortcut for \"%s\"?
-Vill du verkligen rader kortkommandot för \"%s\"?
+Vill du verkligen radera kortkommandot för \"%s\"?
 
 Do you really want to delete \"%s\"?
 Vill du verkligen radera \"%s\"?
@@ -852,7 +830,7 @@ Format:
 Format:
 
 Format: /at <time>=<string>
-Format: /vid <time>=<string>
+Format: /at <time>=<string>
 
 Forwards
 Framåt
@@ -974,6 +952,9 @@ Infoga ny rad
 Invalid %s pattern \"%s\": %s
 Ogiltigt %s mönster \"%s\": %s
 
+Invalid /at ID.
+Ogiltigt /at ID.
+
 Invalid connection id/character name
 Ogiligt uppkopplingsid/rollpersonsnamn
 
@@ -987,7 +968,7 @@ Invalid name.
 Ogiltigt namn.
 
 Invalid option \"%s\" to /limit
-Ogiltigt alternativ \"%s\"  för /gräns
+Ogiltigt alternativ \"%s\"  för /limit
 
 Invalid setting \"%s\" for \"%s\"
 Ogiltig inställning \"%s\" för \"%s\"
@@ -1251,7 +1232,7 @@ Play Beeps?
 Spela upp ljudsignaler?
 
 Please select your desired language below and click Save\n\nNote that changes may not take effect until after you reboot.
-Välj ditt önskade språk nedan och klicka Spara\n\nÄndringarna märks eventuellt inte av förrän du har startat om datorn.
+Välj ditt önskade språk nedan och klicka spara\n\nÄndringarna märks eventuellt inte av förrän du har startat om datorn.
 
 Please wait. Checking spelling...
 Vänta. Kontrollerar stavningen...
@@ -1262,11 +1243,14 @@ Port:
 Potato Auto-Connects
 Potato autouppkopplingar
 
+Potato Debugging Log
+Potato felsökningslogg
+
 Prefix
 Prefix
 
 Prefixes
-Prefizen
+Prefixen
 
 Prefixes for %s
 Prefixen för %s
@@ -1278,7 +1262,7 @@ Prev
 Tidigare
 
 Previous History Command
-Tidigare historik kommando
+Tidigare historikkommando
 
 Program Configuration for %s
 Programinställningar för %s
@@ -1330,6 +1314,9 @@ Ersättning:
 
 Restore
 Återställ
+
+Return (%d): %s
+Retur (%d): %s
 
 Run F2 Command
 Kör F2-kommandot
@@ -1389,7 +1376,7 @@ Save File
 Spara fil
 
 Save to Input History
-Spara i indatahistoria
+Spara i indatahistorik
 
 second
 sekund
@@ -1398,7 +1385,7 @@ seconds
 sekunder
 
 Select a command and press 1 to place it in the top input window, 2 to place it in the lower input window, or 3 to send it directly to the MU*. Press 4 to copy it to the clipboard. Press escape to close the window.
-Välj ett kommando och tryck 1 för att placera det i det övre inmatningsfönstret, 2 för att placera det i det lägre inmatningsfönstret eller 3 flr att skicka direkt till MU*. Tryck 4 för att kopiera det till urklippet. Tryck ESC för att stänga fönstret.
+Välj ett kommando och tryck 1 för att placera det i det övre inmatningsfönstret, 2 för att placera det i det lägre inmatningsfönstret eller 3 för att sända det direkt till MU*. Tryck 4 för att kopiera det till urklippet. Tryck ESC för att stänga fönstret.
 
 Select a command, then click a button to edit its binding
 Välj ett kommando, klicka sen en knapp för att ändra dess bindning
@@ -1407,43 +1394,43 @@ Select to Copy?
 Välj och kopiera?
 
 Send
-Skicka
+Sänd
 
 Send &Selection to World
-Skicka &markering till värld
+Sänd &markering till värld
 
 Send after Login info:
-Skicka efter logininfo:
+Sänd efter logininfo:
 
 Send before Login info:
-Skicka innan logininfo:
+Sänd innan logininfo:
 
 Send Client Info?
-Skicka klientinfo?
+Sänd klientinfo?
 
 Send Client Name As:
-Skicka klientnamn som:
+Sänd klientnamn som:
 
 Send Login Details after (seconds):
-Skicka logindata efter (sekunder):
+Sänd logindata efter (sekunder):
 
 Send Mail - \[%d. %s\]
-Skicka post - \[%d. %s\]
+Sänd post - \[%d. %s\]
 
 Send to &World
-Skicka till &värld
+Sänd till &värld
 
 Send to MUSH
-Skicka till MUSH
+Sänd till MUSH
 
 Send to MUSH:
-Skicka till MUSH:
+Sänd till MUSH:
 
 Send upon first connect, before Login info:
-Skicka direkt vid uppkoppling, innan logininfo:
+Sänd direkt vid uppkoppling, innan logininfo:
 
 Send:
-Skicka:
+Sänd:
 
 Set auto-prefixes to apply for %s below.
 Sätt autoprefix som gäller för %s nedan.
@@ -1509,7 +1496,7 @@ Sorry, that's not a valid character name.
 Det är inte ett giltigt rollpersonsnamn.
 
 Sorry, we were unable to check for a new version at this time. Please try again later.\n\nIf the problem persists, please let us know.
-Det gick inte att kolla efter en ny version just nu. Försök igen senare.\n\nOm problemet kvarstår, meddela oss.
+Det gick inte att kolla efter en ny version just nu. Försök igen senare.\n\nOm problemet kvarstår, vänligen meddela oss.
 
 Spaces to %&b
 Blanksteg till %&b
@@ -1596,13 +1583,13 @@ Toggle &Input Windows
 Växla &inmatningsfönster
 
 Toggle to Main Window?
-Växla till huvudfönster?
+Växla till huvudfönstret?
 
 Too many spawns
 För många extrafönster
 
 Top Input
-Över inmatningsfönster
+Övre inmatningsfönster
 
 Total Connection Time
 Total uppkopplingstid
@@ -1635,7 +1622,7 @@ Unable to launch TinyURL at \"%s\": %s
 Kan ej öppna TinyURL \"%s\": %s
 
 Unable to negotiate SSL: %s. Please make sure the port is ssl-enabled.
-Kan ej förhandla SSL: %s. Kontrollera att porten är ssl-aktiverad.
+Kan ej genomföra SSL-förhandling: %s. Kontrollera att porten är SSL-aktiverad.
 
 Unable to open file \"%s\": %s
 Kan ej öppna filen \"%s\": %s
@@ -1662,7 +1649,7 @@ Ungrouped
 Ogrupperad
 
 Unknown /command \"%s\". Use /slash for a list. Use //command to send directly to MU*.
-Okänt /kommando \"%s\". Använd /snedstreck för en lista. Använd //kommando för att skicka direkt till MU*.
+Okänt /kommando \"%s\". Använd /snedstreck för en lista. Använd //kommando för att sända direkt till MU*.
 
 Unknown option \"%s\"
 Okänt alternativ \"%s\"
@@ -1692,7 +1679,7 @@ Use SSL?:
 Använd SSL?:
 
 User-defined commands for this world: %s
-Användardefinierat kommando för denna värld: %s
+Användardefinierade kommandon för denna värld: %s
 
 Value
 Värde
@@ -1743,10 +1730,10 @@ Yes
 Ja
 
 You are already using the latest version of Potato.
-Du använder redan den senaste versionen av Potato.
+Du kör redan den senaste versionen av Potato.
 
 You are currently running version:
-Du använder version:
+Du kör följande version:
 
 You cannot bind to that key. Sorry.
 Det går inte att binda till den tangenten. Tyvärr.
