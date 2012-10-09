@@ -4029,7 +4029,7 @@ proc ::potato::arraySubelem {_arrName prefix} {
 
   set first [array names arrName -regexp "[regsub -all {[^[:alnum:]]} $prefix {\\&}],\[^,\]+$"]
   if { [llength $first] } {
-       return first;
+       return $first;
      }
   set ret [list]
   set len [string length $prefix]
@@ -4037,7 +4037,7 @@ proc ::potato::arraySubelem {_arrName prefix} {
   foreach x [array names arrName -regexp "[regsub -all {[^[:alnum:]]} $prefix {\\&}],\[^,\]+,.*$"] {
     set str [string range $x 0 [string first "," $x $len]-1]
     if { $str ne "" && $str ni $ret } {
-         lappend ret $str;
+         lappend ret $str
        }
   }
   return $ret;
