@@ -110,6 +110,25 @@ proc ::potato::manageWorldVersion {w version} {
        }
      }
 
+  set maplist [list "\[" "\\\[" "\]" "\\\]" \
+                    "%0" {[/get 0]} "%1" {[/get 1]} "%2" {[/get 2]} \
+                    "%3" {[/get 3]} "%4" {[/get 4]} "%5" {[/get 5]} \
+                    "%6" {[/get 6]} "%7" {[/get 7]} "%8" {[/get 8]} \
+                    "%9" {[/get 9]} \
+              ]
+  if { !($version & $wf(new_slash_cmds)) } {
+       foreach x [arraySubelem world $w,events] {
+         foreach y [list "input,string" "send"] {
+           if { [info exists world($x,$y)] && [regexp {%[0-9]} $world($x,$y)] } {
+                if { [string match "/*" $world($x,$y)] || [string match {%[0-9]} $world($x,$y)] } {
+                     set world($x,$y) [string map $maplist $world($x,$y)]
+                   } else {
+                     set world($x,$y) "\[[string map $maplist $world($x,$y)]\]"
+                   }
+              }
+         }
+       }
+     }
 
   # Example:
   # if { ! ($version & $wf(some_new_feature)) } {
@@ -283,6 +302,7 @@ proc ::potato::worldFlags {{total 0}} {
 #  set f(event_replace)    128    ;# Events have replace / replace,with
   set f(fixed_obfusticate) 256    ;# Password obfustication was broken. Like, really broken.
   set f(prefixes_list)     512    ;# Prefixes are stored in a single list, instead of an array
+  set f(new_slash_cmds)   1024    ;# new, nestable /commands, and events using [/get 0] instead of %0
   if { !$total } {
        return [array get f];
      } else {
@@ -3609,7 +3629,7 @@ proc ::potato::get_mushageProcess {c line} {
 
   if { $eventInfo(matched) && [info exists eventInfo(send)] } {
        foreach x $eventInfo(send) {
-         send_to $c $x
+         send_to_noparse $c $x
        }
      }
 
@@ -4002,12 +4022,25 @@ proc ::potato::downgradeXTERM {col bg} {
 #: proc ::potato::arraySubelem
 #: arg _arrName name of array
 #: arg prefix Prefix to match (glob pattern)
-#: desc Return a list of all the elements in the array $_arrName in the caller's space which match the {^$prefix,[^,]+$}
+#: desc Return a list of all the elements in the array $_arrName in the caller's space which match the {^$prefix,[^,]+$}. If none, check for unique ^$prefix,[^,]+ prefixes to keys.
 #: return List of matching array elements
 proc ::potato::arraySubelem {_arrName prefix} {
   upvar 1 $_arrName arrName
 
-  return [array names arrName -regexp "[regsub -all {[^[:alnum:]]} $prefix {\\&}],\[^,\]+$"];
+  set first [array names arrName -regexp "[regsub -all {[^[:alnum:]]} $prefix {\\&}],\[^,\]+$"]
+  if { [llength $first] } {
+       return first;
+     }
+  set ret [list]
+  set len [string length $prefix]
+  incr len
+  foreach x [array names arrName -regexp "[regsub -all {[^[:alnum:]]} $prefix {\\&}],\[^,\]+,.*$"] {
+    set str [string range $x 0 [string first "," $x $len]-1]
+    if { $str ne "" && $str ni $ret } {
+         lappend ret $str;
+       }
+  }
+  return $ret;
 
 };# ::potato::arraySubelem
 
@@ -9661,7 +9694,7 @@ proc ::potato::slashConfigSelect {w} {
 
 #: proc ::potato::process_slash_cmd
 #: arg c connection id
-#: arg _str the string entered ("/command arg arg arg"), or a var to upvar which contains it, if recursing
+#: arg _str var containing the string entered, to upvar ("/command arg arg arg")
 #: arg mode 0 if we're starting to parse input, 1 if recursing, 2 if we're parsing a field from, for instance, an Event
 #: arg _vars Name of var holding option array.
 #: desc process $str as a slash command and perform the necessary action. If we're recursing, return the result, otherwise output it on screen.
