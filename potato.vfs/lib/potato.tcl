@@ -7054,6 +7054,7 @@ proc ::potato::setUpFlash {} {
      } else {
        if { [catch {package require potato-linflash}] } {
             # Attempt to copy linflash out for the first time
+            catch {file mkdir $path(userlib)}
             catch {file copy -force [file join $path(lib) app-potato linux linflash1.0] $path(userlib)}
             catch {exec [file join $path(userlib) linflash1.0 compile]}
           }
