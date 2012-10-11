@@ -3617,7 +3617,9 @@ proc ::potato::get_mushageProcess {c line} {
             }
          $swidget insert end "" "" {*}$inserts
          $swidget insert end [clock seconds] [list timestamp]
-         ::skin::$potato(skin)::spawnUpdate $c $sname
+         if { !$noActivity } {
+              ::skin::$potato(skin)::spawnUpdate $c $sname
+            }
          if { $aE } {
               $swidget see end
             }
@@ -3648,13 +3650,13 @@ proc ::potato::get_mushageProcess {c line} {
         }
      }
 
-  if { $insertedAnything } {
+  if { !$noActivity && $insertedAnything } {
        if { $up != $c } {
             idle $c
           } elseif { $showNewAct } {
             set conn($c,idle) 1
           }
-       if { !$noActivity && [focus -displayof .] eq "" } {
+       if { [focus -displayof .] eq "" } {
             flash $w
           }
      }
