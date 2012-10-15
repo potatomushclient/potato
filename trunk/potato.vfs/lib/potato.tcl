@@ -10707,12 +10707,19 @@ proc ::potato::customSlashCommand {c w cmd str} {
   variable path;
 
   if { [catch {source [file join $path(vfsdir) lib potato.tcl]} err] } {
-       return [list 0 [T "Error (%d): %s" [string length $err] $err];
-     } elseif { [file exists $path(custom)] && [catch {source $path(custom)} err] } {
-       return [list 0 [T "Error (%d): %s" [string length $err] $err];
-     } else {
-       return [list 1];
+       return [list 0 $err];
      }
+  set files [list potato.tcl]
+  if { [file exists $path(custom)] } {
+       if { [catch {source $path(custom)} err] } {
+            return [list 0 $err];
+          } else {
+            lappend files [file tail $path(custom)]
+          }
+     }
+
+  return [list 1 [T "%s reloaded successfully." [itemize $files]]];
+
 };# /reload
 
 #: /eval <code>
