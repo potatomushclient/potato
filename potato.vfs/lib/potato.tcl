@@ -7444,36 +7444,38 @@ proc ::potato::build_menu_help {m} {
 proc ::potato::setUpMenu {} {
   variable menu;
 
-  if { [winfo exists .m] } {
-       destroy .m
+  set menu .potatoMainMenu
+  if { [winfo exists $menu] } {
+       destroy $menu
      }
-  menu .m -tearoff 0
-  . configure -menu .m
-  set menu(file,path) [menu .m.file -tearoff 0 -postcommand [list ::potato::build_menu_file .m.file]]
-  set menu(edit,path) [menu .m.edit -tearoff 0 -postcommand [list ::potato::build_menu_edit .m.edit]]
-  set menu(edit,convert,path) [menu .m.edit.convert -tearoff 0]
-  set menu(connect,path) [menu .m.file.connect -tearoff 0 -postcommand [list ::potato::rebuildConnectMenu .m.file.connect]]
-  set menu(view,path) [menu .m.view -tearoff 0 -postcommand [list ::potato::build_menu_view .m.view]]
-  set menu(log,path) [menu .m.log -tearoff 0 -postcommand [list ::potato::build_menu_log .m.log]]
-  set menu(log,stop,path) [menu .m.log.stop -tearoff 0 -postcommand [list ::potato::build_menu_log_stop .m.log.stop]]
-  set menu(options,path) [menu .m.options -tearoff 0 -postcommand [list ::potato::build_menu_options .m.options]]
-  set menu(tools,path) [menu .m.tools -tearoff 0 -postcommand [list ::potato::build_menu_tools .m.tools]]
-  set menu(help,path) [menu .m.help -tearoff 0 -postcommand [list ::potato::build_menu_help .m.help]]
+  menu $menu -tearoff 0
+  . configure -menu $menu
+  catch {destroy {*}[winfo children $menu]}
+  set menu(file,path) [menu $menu.file -tearoff 0 -postcommand [list ::potato::build_menu_file $menu.file]]
+  set menu(edit,path) [menu $menu.edit -tearoff 0 -postcommand [list ::potato::build_menu_edit $menu.edit]]
+  set menu(edit,convert,path) [menu $menu.edit.convert -tearoff 0]
+  set menu(connect,path) [menu $menu.file.connect -tearoff 0 -postcommand [list ::potato::rebuildConnectMenu $menu.file.connect]]
+  set menu(view,path) [menu $menu.view -tearoff 0 -postcommand [list ::potato::build_menu_view $menu.view]]
+  set menu(log,path) [menu $menu.log -tearoff 0 -postcommand [list ::potato::build_menu_log $menu.log]]
+  set menu(log,stop,path) [menu $menu.log.stop -tearoff 0 -postcommand [list ::potato::build_menu_log_stop $menu.log.stop]]
+  set menu(options,path) [menu $menu.options -tearoff 0 -postcommand [list ::potato::build_menu_options $menu.options]]
+  set menu(tools,path) [menu $menu.tools -tearoff 0 -postcommand [list ::potato::build_menu_tools $menu.tools]]
+  set menu(help,path) [menu $menu.help -tearoff 0 -postcommand [list ::potato::build_menu_help $menu.help]]
 
-  .m add cascade -menu .m.file {*}[menu_label [T "&File"]]
-  set menu(file) [.m index end]
-  .m add cascade -menu .m.edit {*}[menu_label [T "&Edit"]]
-  set menu(edit) [.m index end]
-  .m add cascade -menu .m.view {*}[menu_label [T "&View"]]
-  set menu(view) [.m index end]
-  .m add cascade -menu .m.log {*}[menu_label [T "&Logging"]]
-  set menu(logging) [.m index end]
-  .m add cascade -menu .m.options {*}[menu_label [T "&Options"]]
-  set menu(options) [.m index end]
-  .m add cascade -menu .m.tools {*}[menu_label [T "&Tools"]]
-  set menu(tools) [.m index end]
-  .m add cascade -menu .m.help {*}[menu_label [T "&Help"]]
-  set menu(help) [.m index end]
+  $menu add cascade -menu $menu.file {*}[menu_label [T "&File"]]
+  set menu(file) [$menu index end]
+  $menu add cascade -menu $menu.edit {*}[menu_label [T "&Edit"]]
+  set menu(edit) [$menu index end]
+  $menu add cascade -menu $menu.view {*}[menu_label [T "&View"]]
+  set menu(view) [$menu index end]
+  $menu add cascade -menu $menu.log {*}[menu_label [T "&Logging"]]
+  set menu(logging) [$menu index end]
+  $menu add cascade -menu $menu.options {*}[menu_label [T "&Options"]]
+  set menu(options) [$menu index end]
+  $menu add cascade -menu $menu.tools {*}[menu_label [T "&Tools"]]
+  set menu(tools) [$menu index end]
+  $menu add cascade -menu $menu.help {*}[menu_label [T "&Help"]]
+  set menu(help) [$menu index end]
 
   createMenuTask $menu(edit,convert,path) convertNewlines
   createMenuTask $menu(edit,convert,path) convertSpaces

@@ -131,7 +131,7 @@ proc ::potato::spellcheck::spellcheck {string} {
   }
   $input configure -state disabled
   if { $total == 0 } {
-       tk_messageBox -icon info -parent $top -message [T "All words are spelled correctly."]
+       tk_messageBox -title [T "Spellcheck"] -icon info -parent $top -message [T "All words are spelled correctly."]
        destroy $win;
        return [list 0 $spellcheck(string)];
      } elseif { $total > 0 } {
@@ -181,7 +181,7 @@ proc ::potato::spellcheck::rightClickTree {X Y x y} {
   variable spellcheck;
 
   event generate $spellcheck(tree) <ButtonPress-1> -rootx $X -rooty $Y -x $x -y $y
-  set m .m
+  set m .spellcheckmenu
   catch {destroy $m}
   menu $m -tearoff 0
   $m add command -label "Use this word" -command [list ::potato::spellcheck::replaceWord 1]
@@ -234,7 +234,7 @@ proc ::potato::spellcheck::suggest {{index "current"}} {
        ::potato::spellcheck::selectWord 5 5
      }
 
-  return;        
+  return;
 
 };# ::potato::spellcheck::suggest
 
@@ -302,7 +302,7 @@ proc ::potato::spellcheck::checkSpelling {string} {
   fconfigure $pipe -blocking 0
 
   set return [list]
-  
+
   puts $pipe "^$string"
 
   after 500 [list ::potato::spellcheck::checkSpellingSub $pipe]
