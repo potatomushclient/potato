@@ -84,8 +84,9 @@ proc ::potato::eventsMatch {c _tagged _lineNoansi _eventInfo} {
          }
       if { $world($w,events,$event,matchtype) eq "contains" } {
            set start $result
-           set end [expr {$result + [string length $world($w,events,$event,pattern)] - 1}]
-           set arg(0) [string range $str $start $end]
+           set reslen [expr {[string length $world($w,events,$event,pattern)] - 1}]
+           set end [expr {$result + $reslen}]
+           set arg(0) [list $start $end]
            set allMatches [list [list $start $end [array get arg]]]
          } elseif { $all && $result > 1} {
            set matchCmd [list regexp -all -inline -indices]
@@ -135,7 +136,7 @@ proc ::potato::eventsMatch {c _tagged _lineNoansi _eventInfo} {
         set mapList [list "%%" "%"]
         for {set i 0} {$i < 10} {incr i} {
              lappend mapList %$i
-             if { [info exists arg($i)] && [llength $arg($i)] eq 2 && $arg($i) ne [list -1 -1] } {
+             if { [info exists arg($i)] && [llength $arg($i)] == 2 && $arg($i) ne [list -1 -1] } {
                   set realArgs($i) [string range $str {*}$arg($i)]
                   lappend mapList $realArgs($i)
                 } else {
