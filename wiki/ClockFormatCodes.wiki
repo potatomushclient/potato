@@ -22,6 +22,7 @@ The following format codes are available for the [ConfigurePotato Clock Format],
   * `%N` - Month number, 1 digit (1-12)
   * `%p` - AM or PM
   * `%P` - am or pm
+  * `%s` - The time and date as a number of seconds past the epoch (Jan 1st 1970).
   * `%S` - Seconds, 2 digits (00-59)
   * `%T` - Short for `%H:%M:%S`
   * `%y` - Year, two digits
