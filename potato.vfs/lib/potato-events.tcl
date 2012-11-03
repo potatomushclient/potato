@@ -135,7 +135,7 @@ proc ::potato::eventsMatch {c _tagged _lineNoansi _eventInfo} {
         set mapList [list "%%" "%"]
         for {set i 0} {$i < 10} {incr i} {
              lappend mapList %$i
-             if { [info exists arg($i)] && $arg($i) ne [list -1 -1] } {
+             if { [info exists arg($i)] && [llength $arg($i)] eq 2 && $arg($i) ne [list -1 -1] } {
                   set realArgs($i) [string range $str {*}$arg($i)]
                   lappend mapList $realArgs($i)
                 } else {
