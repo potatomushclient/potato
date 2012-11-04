@@ -224,7 +224,7 @@ proc ::potato::telnet::process_sub_1 {c str} {
           } else {
             # Save anything up to - and including - the last \n
             set prompt [string range $conn($c,telnet,buffer,line) $lastNewline+$conn($c,id,lineending,length) end]
-            set conn($c,telnet,buffer,line) [string range $conn($c,telnet,buffer,line) 0 $lastNewline+$conn($c,id,lineending-1)]
+            set conn($c,telnet,buffer,line) [string range $conn($c,telnet,buffer,line) 0 "$lastNewline+$conn($c,id,lineending,length)-1"]
           }
        set conn($c,telnet,afterPrompt) 1
        ::potato::setPrompt $c $prompt
