@@ -113,7 +113,7 @@ proc ::potato::telnet::bufferGet {c} {
   if { [set linebreak [string last $conn($c,id,lineending) $conn($c,telnet,buffer,line)]] == -1 } {
        return; # no complete lines
      } else {
-       set retval [string range $conn($c,telnet,buffer,line) 0 "$linebreak+$conn($c,id,lineending,length-1)"];# includes the lineending
+       set retval [string range $conn($c,telnet,buffer,line) 0 "$linebreak+$conn($c,id,lineending,length)-1"];# includes the lineending
        set conn($c,telnet,buffer,line) [string range $conn($c,telnet,buffer,line) "$linebreak+$conn($c,id,lineending,length)" end]
        if { $retval ne "" && $conn($c,telnet,afterPrompt) } {
             set conn($c,telnet,afterPrompt) 0
