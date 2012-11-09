@@ -7065,16 +7065,20 @@ proc ::potato::createImages {} {
 };# ::potato::createImages
 
 #: proc ::potato::setUpFlash
+#: arg skippackages Skip the ?inflash packages and use the fallback?
 #: desc Set up the ::potato::flash proc, which flashes the taskbar icon and systray icon for the app.
 #: desc If we're on Windows, we try to load the potato-winflash package and use that. On Linux, we try potato-linflash.
 #: desc Else, we just "wm deiconify .". For Win we also try and flash the Winico systray icon if requested.
 #: return nothing
-proc ::potato::setUpFlash {} {
+proc ::potato::setUpFlash {{skippackages 0}} {
   variable winico;
   variable potato;
   variable path;
 
-  if { $::tcl_platform(platform) eq "windows" } {
+  if { $skippackages } {
+       set taskbarCmd {wm deiconify .}
+       set sysTrayCmd {# nothing}
+     } elseif { $::tcl_platform(platform) eq "windows" } {
        if { ![catch {package require potato-winflash} err] } {
             set taskbarCmd {winflash . -count 3 -appfocus 1}
           } else {
@@ -7094,7 +7098,7 @@ proc ::potato::setUpFlash {} {
             catch {exec [file join $path(userlib) linflash1.0 compile]}
           }
        if { ![catch {package require potato-linflash} err] } {
-            set taskbarCmd {linflash .}
+            set taskbarCmd {::potato::linflashWrapper}
             set sysTrayCmd {# nothing}
           } else {
             errorLog "Unable to load potato-linflash package: $err"
@@ -7117,6 +7121,25 @@ proc ::potato::setUpFlash {} {
   return;
 
 };# ::potato::setUpFlash
+
+#: proc ::potato::linflashWrapper
+#: desc A wrapper around [linflash] which catches errors and, if serious,
+#: desc reverts the [flash] command back to 'wm deiconify' after logging
+#: desc the error.
+#: return nothing
+proc ::potato::linflashWrapper {} {
+
+  if { ![catch {linflash .} err] || $err eq "" } {
+       return;
+     } else {
+       errorLog "Error in linflash: $err. Falling back to 'wm deiconify' for flashing."
+       setupFlash 1
+       flash .
+     }
+
+  return;
+
+};# ::potato::linflashWrapper
 
 #: proc ::potato::chk_exit
 #: arg prompt If 0, do not prompt. If 1, prompt. If -1, prompt only if there are open (meaning "not closed", as
