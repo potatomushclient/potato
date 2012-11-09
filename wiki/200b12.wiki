@@ -6,4 +6,6 @@
   * /reload is more verbose about which files it has reloaded.
   * Potato will no longer attempt Telnet negotiation if it doesn't happen in the first 90 seconds of the connection, to help prevent errors when non-Telnet aware connections send the Telnet escape character (typically a y-umlaut) as part of the text later.
   * An insanely stupid bug in the Spell Checking code could destroy the main Potato menu. Reported by elm@M*U*S*H.
-  * A bug in the argument matching code for Events could stop a connection from working. Reported by James@M*U*S*H.
+  * Events using a "contains" match were broken. Reported by James@M*U*S*H.
+  * A typo in the Telnet handling code could cause an error with prompts. Reported by spork.
+  * The 'linflash' package, used for flashing the taskbar icon on Linux systems, could throw an error message in some cases when nothing was really wrong. Reported by mhoermann.
