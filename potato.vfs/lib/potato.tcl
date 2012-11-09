@@ -7110,10 +7110,10 @@ proc ::potato::setUpFlash {{skippackages 0}} {
    variable world;
    variable winico;
    if { $world($w,act,flashTaskbar) } {
-        %s
+        catch {%s}
       }
    if { !$winico(flashing) && $world($w,act,flashSysTray) && $winico(mapped) } {
-        %s
+        catch {%s}
       }
    return;
   } $taskbarCmd $sysTrayCmd];# ::potato::flash
