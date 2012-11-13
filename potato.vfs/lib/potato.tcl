@@ -7649,11 +7649,10 @@ proc ::potato::checkForUpdatesSub {token {err ""}} {
                  append errorText [T "Error: %s" $err]
                }
             pack [::ttk::label $update(main).error -text $errorText -font $font]
+            update
+            center $update(win)
           }
        catch {::http::cleanup $token;}
-       update
-       center $update(win)
-
        return;
      }
 
