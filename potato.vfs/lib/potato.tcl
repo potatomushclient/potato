@@ -18,7 +18,7 @@ proc ::potato::loadWorlds {} {
   if { [llength $files] != 0 } {
        foreach x [lsort -dictionary $files] {
          unset -nocomplain newWorld
-         if { ![catch {source $x} return] && [lrange [split $return " "] 0 2] eq [list World Loaded Successfully] } {
+         if { ![catch {source $x} return errdict] && [lrange [split $return " "] 0 2] eq [list World Loaded Successfully] } {
               set w $potato(worlds)
               incr potato(worlds)
               foreach opt [array names newWorld] {
@@ -27,7 +27,8 @@ proc ::potato::loadWorlds {} {
               set world($w,id) $w
               manageWorldVersion $w [lindex [split $return " "] 3]
             } else {
-              errorLog "Unable to load world file \"[file nativename [file normalize $x]]\": $return" error
+              !set errdict [list]
+              errorLog "Unable to load world file \"[file nativename [file normalize $x]]\": $return" error [errorTrace $errdict]
             }
        }
      }
@@ -2291,7 +2292,7 @@ proc ::potato::launchWebPage {url} {
 
   if { ![info exists command] || [catch {exec {*}$command &} err] } {
        if { [info exists err] } {
-            errorLog "Unable to launch browser via \"$command\": $err" warning
+            errorLog "Unable to launch browser via \"$command\"" warning $err
           }
        bell -displayof .
      }
@@ -5731,7 +5732,7 @@ proc ::potato::errorLogWindow {} {
   pack [set frame [::ttk::frame $win.frame]] -side left -anchor nw -expand 1 -fill both
   pack [set cont [::ttk::frame $frame.top]] -side top -anchor nw -expand 1 -fill both
 
-  set text [text $cont.text -width 120 -height 35 -wrap word -undo 1]
+  set text [text $cont.text -width 120 -height 35 -wrap word -undo 0]
   set sbY [::ttk::scrollbar $cont.sbY -orient vertical -command [list $text yview]]
   set sbX [::ttk::scrollbar $cont.sbX -orient horizontal -command [list $text xview]]
   $text configure -yscrollcommand [list $sbY set] -xscrollcommand [list $sbX set]
@@ -5741,27 +5742,74 @@ proc ::potato::errorLogWindow {} {
   $text tag configure warning -foreground #4f4fff -lmargin2 25
   $text tag configure message -foreground #00c131 -lmargin2 25
 
+  $text tag configure margin -lmargin1 15
+
+  $text tag configure toggleBtn -lmargin1 2
+  $text tag bind toggleBtn <ButtonRelease-1> [list ::potato::errorLogToggle $text]
+  $text tag bind toggleBtn <Enter> [list $text configure -cursor arrow]
+  $text tag bind toggleBtn <Leave> [list $text configure -cursor xterm]
+  $text tag configure errorTrace -lmargin1 20 -lmargin2 25
+
+  $text tag configure errorTraceHidden -elide 1
+
   pack [set btns [::ttk::frame $frame.btm]] -side top -anchor nw -expand 0 -fill x
   pack [::ttk::button $btns.close -text [T "Close"] -underline 0 -command [list wm withdraw $win]]
+
+  $text configure -state disabled
 
   wm protocol $win WM_DELETE_WINDOW [list wm withdraw $win];# don't destroy, just hide
 
   return;
-
 
 };# ::potato::errorLogWindow
 
 #: proc ::potato::errorLog
 #: arg msg Message to display
 #: arg level The priority level of the message. One of "error", "warning" or "message". Defaults to "error"
+#: arg trace If given, an error trace for the message, to be shown with a toggle button to hide/show
 #: desc Print the given message to the Error Log window with the given priority level
 #: return nothing
-proc ::potato::errorLog {msg {level "error"}} {
+proc ::potato::errorLog {msg {level "error"} {trace ""}} {
 
-  .errorLogWin.frame.top.text insert end $msg $level \n
-  .errorLogWin.frame.top.text see end
+  set win .errorLogWin.frame.top.text
 
+  $win configure -state normal
+
+  if { $trace ne "" } {
+       $win image create end -image ::potato::img::expand -align center -padx 2 -pady 2
+       $win tag add toggleBtn end-2c end-1c
+       $win insert end $msg [list $level margin] " - \n$trace" [list $level errorTrace errorTraceHidden margin] \n
+     } else {
+       $win insert end $msg [list $level margin] \n
+     }
+  $win see end
+  $win configure -state disabled
+
+  return;
 };# ::potato::errorLog
+
+#: ::potato::errorLogToggle
+#: arg win Text widget of the Error Log window
+#: desc Called when a + or - button in the Error Log is clicked, to show/hide an error trace
+#: return nothing
+proc ::potato::errorLogToggle {win} {
+
+  set image [$win index current]
+  set tracerange [$win tag nextrange errorTrace $image]
+  if { ![llength $tracerange] } {
+       return;
+     }
+  foreach {start end} $tracerange {break}
+  if { "errorTraceHidden" in [$win tag names $start] } {
+       $win tag remove "errorTraceHidden" $start $end
+       $win image configure $image -image ::potato::img::contract
+     } else {
+       $win tag add "errorTraceHidden" $start $end
+       $win image configure $image -image ::potato::img::expand
+     }
+
+  return;
+};# ::potato::errorLogToggle
 
 #: proc ::potato::main
 #: desc called when the program starts, to do some basic init
@@ -5877,15 +5925,16 @@ proc ::potato::main {} {
 
   option add *Listbox.activeStyle dotbox
   option add *TEntry.Cursor xterm
+  createImages
 
-  if { [catch {package require http} err] } {
-       errorLog "Unable to load http package: $err" warning
+  if { [catch {package require http} errmsg errdict] } {
+       errorLog "Unable to load http package: $err" warning [errorTrace $errdict]
      }
 
   if { ![file exists $dev] } {
        errorLog "Dev file \"[file nativename [file normalize $dev]]\" does not exist." message
-     } elseif { [catch {source $dev} err] } {
-       errorLog "Unable to source \"[file nativename [file normalize $dev]]\": $err" warning
+     } elseif { [catch {source $dev} err errdict] } {
+       errorLog "Unable to source \"[file nativename [file normalize $dev]]\": $err" warning [errorTrace $errdict]
      }
   foreach x [list world skins lib] {
      catch {file mkdir $path($x)}
@@ -5903,9 +5952,9 @@ proc ::potato::main {} {
   tasksInit
 
   # Load TLS if available, for SSL connections
-  if { [catch {package require tls} err] } {
+  if { [catch {package require tls} err errdict] } {
        set potato(hasTLS) 0
-       errorLog "Unable to load TLS for SSL connecions: $err" warning
+       errorLog "Unable to load TLS for SSL connecions: $err" warning [errorTrace $errdict]
      } else {
        set potato(hasTLS) 1
      }
@@ -5914,7 +5963,6 @@ proc ::potato::main {} {
   setTheme
   loadSkins
   loadWorlds
-  createImages
 
   tooltipInit
 
@@ -5950,12 +5998,12 @@ proc ::potato::main {} {
   setUpFlash
 
   if { $::tcl_platform(platform) eq "windows" } {
-       if { ![catch {package require dde 1.3} err] } {
+       if { ![catch {package require dde 1.3} err errdict] } {
             # Start the DDE server in case we're the default telnet app.
             # Only do this on Windows when DDE is available
             ::potato::ddeStart
           } else {
-            errorLog "Unable to load DDE extension: $err" warning
+            errorLog "Unable to load DDE extension: $err" warning [errorTrace $errdict]
           }
      }
 
@@ -5968,16 +6016,16 @@ proc ::potato::main {} {
 
   if { ![file exists $path(custom)] } {
        errorLog "Custom code file \"[file nativename [file normalize $path(custom)]]\" does not exist." message
-     } elseif { [catch {source $path(custom)} err] } {
-       errorLog "Unable to source Custom file \"[file nativename [file normalize $path(custom)]]\": $err" warning
+     } elseif { [catch {source $path(custom)} err errdict] } {
+       errorLog "Unable to source Custom file \"[file nativename [file normalize $path(custom)]]\": $err" warning [errorTrace $errdict]
      }
 
   loadPotatoModules
 
   if { ![file exists $path(startupCmds)] } {
        errorLog "Startup Commands file \"[file nativename [file normalize $path(startupCmds)]]\" does not exist." message
-     } elseif { [catch {open $path(startupCmds) r} fid] } {
-       errorLog "Unable to open Startup Commands file \"[file nativename [file normalize $path(startupCmds)]]\": $fid"
+     } elseif { [catch {open $path(startupCmds) r} fid errdict] } {
+       errorLog "Unable to open Startup Commands file \"[file nativename [file normalize $path(startupCmds)]]\": $fid" [errorTrace $errdict]
      } else {
        send_to "" [read $fid] "" 0
      }
@@ -6015,8 +6063,8 @@ proc ::potato::loadPotatoModules {} {
   foreach x [glob -nocomplain -directory $path(userlib) -tails *.tm] {
     if { ![regexp {^([_[:alpha:]][:_[:alnum:]]*)-([[:digit:]].*)\.tm$} $x - name vers] } {
          continue;
-       } elseif { [catch {package require $name $vers} err] } {
-         errorLog "Unable to load Module '$name' version '$vers': $err" error
+       } elseif { [catch {package require $name $vers} err errdict] } {
+         errorLog "Unable to load Module '$name' version '$vers': $err" error [errorTrace $errdict]
        } else {
          errorLog "Module $name version $vers loaded." message
        }
@@ -6056,8 +6104,8 @@ proc ::potato::i18nPotato {} {
   variable potato;
   variable locales;
 
-  if { [catch {package require msgcat 1.4.2} err] } {
-       errorLog "Unable to load msgcat for translations: $err" error
+  if { [catch {package require msgcat 1.4.2} err errdict] } {
+       errorLog "Unable to load msgcat for translations: $err" error [errorTrace $errdict]
        return;
      }
 
@@ -6674,8 +6722,8 @@ proc ::potato::setUpWinico {} {
   set dir [file join $path(vfsdir) lib app-potato windows]
   set winico(mainico) [file join $dir stpotato.ico]
 
-  if { [catch {package require Winico 0.6} err] } {
-       errorLog "Unable to load Winico: $err" warning
+  if { [catch {package require Winico 0.6} err errdict] } {
+       errorLog "Unable to load Winico: $err" warning [errorTrace $errdict]
        return;
      }
 
@@ -7041,28 +7089,30 @@ proc ::potato::createImages {} {
 
   set imgPath [file join $path(lib) images]
 
-  image create photo ::potato::img::uparrow -file [file join $imgPath uparrow.gif]
-  image create photo ::potato::img::downarrow -file [file join $imgPath downarrow.gif]
-
-  image create photo ::potato::img::dotdotdot -file [file join $imgPath dotdotdot.gif]
-  image create photo ::potato::img::tick -file [file join $imgPath tick.gif]
-
-  image create photo ::potato::img::event-new -file [file join $imgPath event-new.gif]
-  image create photo ::potato::img::event-delete -file [file join $imgPath event-delete.gif]
-  image create photo ::potato::img::event-edit -file [file join $imgPath event-edit.gif]
-
-  image create photo ::potato::img::logo -file [file join $imgPath potato.gif]
-  image create photo ::potato::img::logoSmall -file [file join $imgPath potato-small.gif]
-
-  image create photo ::potato::img::globe -file [file join $imgPath globe.gif]
-  image create photo ::potato::img::folder -file [file join $imgPath folder.gif]
-
-  image create photo ::potato::img::cb-ticked -file [file join $imgPath cb-ticked.gif]
-  image create photo ::potato::img::cb-unticked -file [file join $imgPath cb-unticked.gif]
+  foreach x [glob -dir $imgPath -tails *.gif] {
+    image create photo ::potato::img::[file rootname $x] -file [file join $imgPath $x]
+  }
 
   return;
 
 };# ::potato::createImages
+
+#: proc ::potato:errorTrace
+#: arg errdict The error dict set by [catch $cmd $msg errdict]
+#: desc If the dict $errdict contains an -errorinfo, return it, else return an empty string
+#: return error trace, or empty string
+proc ::potato::errorTrace {errdict} {
+
+
+  if { [dict exists $errdict -errorinfo] } {
+       set trace [dict get $errdict -errorinfo]
+     } else {
+       set trace ""
+     }
+
+  return $trace;
+
+};# ::potato::errorTrace
 
 #: proc ::potato::setUpFlash
 #: arg skippackages Skip the [wl]inflash packages and use the fallback?
@@ -7079,10 +7129,10 @@ proc ::potato::setUpFlash {{skippackages 0}} {
        set taskbarCmd {wm deiconify .}
        set sysTrayCmd {# nothing}
      } elseif { $::tcl_platform(platform) eq "windows" } {
-       if { ![catch {package require potato-winflash} err] } {
+       if { ![catch {package require potato-winflash} err errdict] } {
             set taskbarCmd {winflash . -count 3 -appfocus 1}
           } else {
-            errorLog "Unable to load potato-winflash package: $err" error
+            errorLog "Unable to load potato-winflash package: $err" error [errorTrace $errdict]
             set taskbarCmd {wm deiconify .}
           }
        if { $winico(loaded) } {
@@ -7097,11 +7147,11 @@ proc ::potato::setUpFlash {{skippackages 0}} {
             catch {file copy -force [file join $path(lib) app-potato linux linflash1.0] $path(userlib)}
             catch {exec [file join $path(userlib) linflash1.0 compile]}
           }
-       if { ![catch {package require potato-linflash} err] } {
+       if { ![catch {package require potato-linflash} err errdict] } {
             set taskbarCmd {::potato::linflashWrapper}
             set sysTrayCmd {# nothing}
           } else {
-            errorLog "Unable to load potato-linflash package: $err"
+            errorLog "Unable to load potato-linflash package: $err" [errorTrace $errdict]
             set taskbarCmd {wm deiconify .}
             set sysTrayCmd {# nothing}
           }
@@ -7129,10 +7179,10 @@ proc ::potato::setUpFlash {{skippackages 0}} {
 #: return nothing
 proc ::potato::linflashWrapper {} {
 
-  if { ![catch {linflash .} err] || $err eq "" } {
+  if { ![catch {linflash .} err errdict] || $err eq "" } {
        return;
      } else {
-       errorLog "Error in linflash: $err. Falling back to 'wm deiconify' for flashing."
+       errorLog "Error in linflash: $err. Falling back to 'wm deiconify' for flashing." [errorTrace $errdict]
        setupFlash 1
        flash .
      }
