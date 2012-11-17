@@ -6076,16 +6076,23 @@ proc ::potato::loadPotatoModules {} {
 
 #: proc ::potato::keepalive
 #: desc Send a Telnet NOP to each connection, as a keepalive, and repeat
-#: desc every 45 seconds.
+#: desc every 45 seconds. Also send a null-byte as a keepalive for worlds
+#: desc with that enabled.
 #: return nothing
 proc ::potato::keepalive {} {
   variable world;
   variable conn;
 
   foreach c [connIDs] {
-    if { $conn($c,connected) == 1 && [hasProtocol $c telnet] && \
+    if { $conn($c,connected) != 1 } {
+         continue;
+       }
+    if { [hasProtocol $c telnet] &&
          $world($conn($c,world),telnet,keepalive) } {
          ::potato::telnet::send_keepalive $c
+       }
+    if { $world($conn($c,world),nbka) } {
+         sendRaw $c "\0" 0
        }
   }
 
@@ -12449,9 +12456,13 @@ namespace eval ::potato {
 proc ::potato::loadSubFiles {dir} {
 
   foreach x [list events config] {
-    if { [catch {source [file join $dir "potato-$x.tcl"]} err] } {
+    if { [catch {source [file join $dir "potato-$x.tcl"]} err errdict] } {
          set file [file nativename [file normalize [file join $dir "potato-$x.tcl"]]]
          set msg "Unable to load required file $file:\n$err\n";
+         set trace [errorTrace $errdict]
+         if { $trace ne "" } {
+              append msg "$trace\n"
+            }
          append msg "Please make sure your Potato installation is complete, and feel free \n"
          append msg "to blame Cheetah, who bugged me to split potato.tcl into more files."
          tk_messageBox -icon error -title Potato -message $msg

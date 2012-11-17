@@ -71,6 +71,7 @@ proc ::potato::setPrefs {readfile} {
   set world(-1,encoding,negotiate) 1
   set world(-1,groups) [list]
   set world(-1,prefixes) [list]
+  set world(-1,nbka) 0
 
   set world(-1,proxy) "None"
   set world(-1,proxy,host) ""
@@ -603,6 +604,9 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [pspinbox $sub.spin -textvariable ::potato::worldconfig($w,loginDelay) -from 0 -to 60 -increment 0.5 \
              -validate all -validatecommand {string is double %P} -width 6] -side left
 
+  pack [set sub [::ttk::frame $frame.nbka]] -side top -pady 5 -anchor nw
+  pack [::ttk::label $sub.label -text [T "Send null-byte keepalives?"] -width 35 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,nbka) -onvalue 1 -offvalue 0] -side left
 
   # Connection -> Telnet
   set frame [configureFrame $canvas [T "Telnet Options"]]
