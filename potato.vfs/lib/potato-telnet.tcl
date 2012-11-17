@@ -1,4 +1,3 @@
-package provide potato-telnet 1.1
 
 namespace eval ::potato::telnet {}
 
@@ -505,3 +504,5 @@ proc ::potato::telnet::send_keepalive {c} {
 };# ::potato::telnet::send_keepalive
 
 ::potato::telnet::init
+
+package provide potato-telnet 1.1

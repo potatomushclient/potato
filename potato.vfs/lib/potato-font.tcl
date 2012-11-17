@@ -1,3 +1,4 @@
+# A font chooser dialog
 
 # Initial init of fonts
 namespace eval ::font {
@@ -137,7 +138,7 @@ proc ::font::done {win ok} {
   destroy $win
   return;
 
-};# font::done
+};# ::font::done
 
 #: proc ::font::init
 #: arg win Toplevel font dialog window
@@ -173,7 +174,7 @@ proc ::font::init {win {defaultFont ""}} {
 
   return;
 
-};# font::init
+};# ::font::init
 
 #: proc ::font::click
 #: arg win Toplevel font dialog window
@@ -194,7 +195,7 @@ proc ::font::click {win what} {
 
   return;
 
-};# font::click
+};# ::font::click
 
 #: proc ::font::tracer
 #: arg win Toplevel font dialog window
@@ -236,7 +237,7 @@ proc ::font::tracer {win var1 var2 op} {
 
   return;
 
-};# font::tracer
+};# ::font::tracer
 
 #: proc ::font::show
 #: arg win The toplevel font dialog window
@@ -262,6 +263,6 @@ proc ::font::show {win} {
 
   return;
 
-};# font::show
+};# ::font::show
 
 package provide potato-font 1.0

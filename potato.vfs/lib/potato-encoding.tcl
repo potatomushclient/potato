@@ -256,6 +256,7 @@ proc ::potato::unicode-to-latin1_init {} {
     \u1D7F0 52 \u1D7F1 53 \u1D7F2 54 \u1D7F3 55 \u1D7F4 56 \u1D7F5 57 \u1D7F6 48 \u1D7F7 49 \u1D7F8 50 \u1D7F9 51  \
     \u1D7FA 52 \u1D7FB 53 \u1D7FC 54 \u1D7FD 55 \u1D7FE 56 \u1D7FF 57   ]
 
+  unset -nocomplain enc
   foreach {x y} $unicode_to_latin1 {
     lappend enc(unicode_to_latin1) $x [format %c $y]
   }
