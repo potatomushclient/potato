@@ -463,7 +463,7 @@ proc ::potato::telnet::do_MSSP {c data} {
 
 };# ::potato::telnet::do_MSSP
 
-proc ::potato::telnet::do_NAWS {c} {
+proc ::potato::telnet::do_NAWS {c {height ""}} {
   upvar ::potato::conn conn;
   upvar ::potato::world world;
   variable tCmd;
@@ -482,8 +482,16 @@ proc ::potato::telnet::do_NAWS {c} {
 
   # Always report height as 24. We could check for window resize and resend NAWS every time, but
   # there's not a whole lot of point.
-  set bigHeight 0
-  set smallHeight 24
+  if { ![string is integer -strict $height] || $height < 1 || $height > 1000} {
+       set height $conn($c,nawsheight)
+     }
+  if { $height < 1 } {
+       set height 24
+     } elseif { $height > 1000 } {
+       set height 1000
+     }
+  set bigHeight [expr {$height / 256}]
+  set smallHeight [expr {$height % 256}]
 
   set response "$tCmd(IAC)$tCmd(SB)$tOpt(NAWS)[escape [format %c%c%c%c $bigWidth $smallWidth $bigHeight $smallHeight]]$tCmd(IAC)$tCmd(SE)"
   ::potato::sendRaw $c $response 1

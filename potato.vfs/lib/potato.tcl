@@ -1919,6 +1919,7 @@ proc ::potato::newConnection {w {character ""}} {
   set conn($c,limited) [list]
   set conn($c,debugPackets) 0
   set conn($c,userAfterIDs) [list]
+  set conn($c,nawsheight) 24
 
   foreach [list conn($c,textWidget) conn($c,input1) conn($c,input2)] [makeTextFrames $c] {break};
 
@@ -4280,9 +4281,53 @@ proc ::potato::showConn {c {main 1}} {
      }
   ::skin::$potato(skin)::inputWindows $c [expr {$conn($c,twoInputWindows) + 1}]
 
+  connMaybeNAWS $c
+
   return;
 
 };# ::potato::showConn
+
+#: proc ::potato::connMaybeNAWS
+#: arg c connection id
+#: desc Called when connection $c is shown, or when its text widget is resized. If the connection is
+#: desc active, and has negotiated NAWS via telnet, send the window size if it's changed.
+#: return nothing
+proc ::potato::connMaybeNAWS {{c ""}} {
+  variable conn;
+
+  if { $c eq "" } {
+       set c [up]
+     }
+
+  if { $c != 0 && [info exists conn($c,textWidget)] && \
+       [winfo exists $conn($c,textWidget)] && \
+       [winfo viewable $conn($c,textWidget)] && \
+       ![catch {countWindowHeight $conn($c,textWidget)} height] && \
+       $height > 0 } {
+       set oldheight $conn($c,nawsheight)
+       set conn($c,nawsheight) $height
+       if { $conn($c,connected) == 1 && [hasProtocol $c telnet,NAWS] } {
+            ::potato::telnet::do_NAWS $c $height
+          }
+     }
+
+  return;
+
+};# ::potato::connMaybeNAWS
+
+#: proc ::potato::countWindowHeight
+#: arg win Text widget path
+#: desc Count the height, in whole lines of text, of $win
+#: return number of lines
+proc ::potato::countWindowHeight {win} {
+
+  update
+  set winheight [winfo height $win]
+  set metrics [font metrics [$win cget -font]]
+  set lineheight [dict get $metrics -linespace]
+  return [expr {int($winheight / $lineheight)}];
+
+};# ::potato::countWindowHeight
 
 #: proc ::potato::showSpawn
 #: arg c connection id.
@@ -7935,6 +7980,8 @@ proc ::potato::setUpBindings {} {
   bind PotatoOutput <<Copy>> [list ::potato::textCopy %W]
   bind PotatoOutput <<Cut>> [list ::potato::textCopy %W]
   bind PotatoOutput <<Selection>> "+;[list ::potato::selectToCopy %W]"
+
+  bind PotatoOutput <Configure> [list ::potato::connMaybeNAWS]
 
   bind PotatoOutput <Motion> [list ::potato::showMessageTimestamp %W %x %y]
 
