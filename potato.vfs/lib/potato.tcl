@@ -1665,11 +1665,12 @@ proc ::potato::stopLog {{c ""} {file ""} {verboseReturn 0}} {
         foreach x [removePrefix $list $c,log] {
           catch {puts $x $footer}
           close $x
-          unset conn($c,log,$x)
-          array unset conn $c,log,$x,*
         }
+        array unset conn $c,log,*
      } else {
-       if { ![info exists conn($c,log,$file)] } {
+       if { [info exists conn($c,log,$file)] && ![string match "*,*" $file] } {
+            set match $file
+          } else {
             set realfile [file nativename [file normalize $file]]
             set shortrealfile [file tail $file]
             set count 0
@@ -1688,8 +1689,6 @@ proc ::potato::stopLog {{c ""} {file ""} {verboseReturn 0}} {
                } elseif { $count > 1 } {
                  return -2;
                }
-          } else {
-            set match $file
           }
        set msg [T "Logging to \"%s\" stopped." $conn($c,log,$match)]
        catch {puts $match $footer}
