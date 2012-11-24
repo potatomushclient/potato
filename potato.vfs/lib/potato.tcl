@@ -3662,6 +3662,10 @@ proc ::potato::get_mushageProcess {c line} {
           }
      }
 
+  if { $insertedAnything && !$world($w,telnet,promptsPersist) } {
+       setPrompt $c ""
+     }
+
   beepNumTimes $beepCount
 
   skinStatus $c
