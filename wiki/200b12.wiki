@@ -9,3 +9,7 @@
   * Events using a "contains" match were broken. Reported by James@M*U*S*H.
   * A typo in the Telnet handling code could cause an error with prompts. Reported by spork.
   * The 'linflash' package, used for flashing the taskbar icon on Linux systems, could throw an error message in some cases when nothing was really wrong. Reported by mhoermann.
+  * When checking for updates failed under certain circumstances, an unfriendly error message would be generated. Reported by Paige.
+  * When the Debugging Log Window reports a Tcl script error - for instance, from the potato.custom file - it will now provide a full error trace, instead of a simple error message. Suggested by Paige.
+  * Potato has always reported the window width via the Telnet NAWS option, but it previously lied about the window height, always claiming 24 lines. Now it reports it honestly. Because I was bugged by Reaver.
+  * Potato can now do prompts using the telnet EOR (End of Record) negotiation, as well as using GA (Go Ahead).
