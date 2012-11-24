@@ -643,7 +643,7 @@ $sub.cb state disabled
   pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,telnet,keepalive) -onvalue 1 -offvalue 0] -side left
 
   pack [set sub [::ttk::frame $frame.prompts]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text [T "Handle GA Prompts?"] -width 35 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::label $sub.label -text [T "Handle GA/EOR Prompts?"] -width 35 -justify left -anchor w] -side left -padx 3
   pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,telnet,prompts) -onvalue 1 -offvalue 0] -side left
 
   pack [set sub [::ttk::frame $frame.promptNL]] -side top -pady 5 -anchor nw

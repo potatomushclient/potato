@@ -25,7 +25,7 @@ proc ::potato::telnet::init {} {
                  [list STATUS 5 0 859] \
                  [list TIMING-MARK 6 0 860] \
                  [list TTYPE 24 1 1091] \
-                 [list EOR 25 0 885] \
+                 [list EOR 25 1 885] \
                  [list NAWS 31 1 1073] \
                  [list TERMINAL-SPEED 32 0 1079] \
                  [list FLOW 33 0 1372] \
@@ -202,7 +202,7 @@ proc ::potato::telnet::process_sub_1 {c str} {
   # and maybe GA, so for any other known commands, just skip them.
   set goodCmds [list $tCmd(DO) $tCmd(DONT) $tCmd(WILL) $tCmd(WONT) $tCmd(SB)]
   if { $world($conn($c,world),telnet,prompts) } {
-       lappend goodCmds $tCmd(GA)
+       lappend goodCmds $tCmd(GA) $tCmd(EOR)
      }
   if { [lsearch -exact $goodCmds $cmdChar] == -1 } {
        set conn($c,telnet,state) 0
@@ -213,7 +213,7 @@ proc ::potato::telnet::process_sub_1 {c str} {
        # We have a subnegotiation
        set conn($c,telnet,state) 3
        return [process_sub_3 $c $remainder];
-     } elseif { $cmdChar eq $tCmd(GA) } {
+     } elseif { $cmdChar eq $tCmd(GA) || $cmdChar eq $tCmd(EOR) } {
        # Display everything since the last newline as a prompt
        set lastNewline [string last $conn($c,id,lineending) $conn($c,telnet,buffer,line)]
        if { $lastNewline == -1 } {
@@ -271,6 +271,8 @@ proc ::potato::telnet::process_sub_2 {c str} {
        set will $world($w,telnet,term)
      } elseif { $optChar == $tOpt(STARTTLS) } {
        set will [expr {0 && !0 && $world($w,telnet,ssl) && $::potato::potato(hasTLS)}]
+     } elseif { $optChar == $tOpt(EOR) } {
+       set will $world($w,telnet,prompts)
      } else {
        set will [expr { [info exists tOpt($optCharCode)] && $tOpt($optCharCode,will) }]
      }
