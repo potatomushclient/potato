@@ -2743,6 +2743,8 @@ proc ::potato::connect {c first} {
        return 0;
      }
 
+  skinStatus $c
+
   set connected 0
   foreach x $hostlist {
     foreach [list host port ssl] $x {break}
