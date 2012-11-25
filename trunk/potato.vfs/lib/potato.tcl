@@ -2856,9 +2856,13 @@ proc ::potato::connect {c first} {
                 fileevent $fid readable [list ::potato::connectSSLHandshake $c $fid]
                 # connectSSLHandshake sets ssl-handshake to "complete"; wait for it
                 vwait ::potato::conn($c,ssl-handshake)
-                if { ![info exists conn($c,ssl-handshake)] || $conn($c,ssl-handshake) eq "disconnect" } {
-                     # Connection has been disconnected or closed
+                if { ![info exists conn($c,ssl-handshake)] } {
+                     # Well, this shouldn't happen
                      catch {::potato::ioClose $fid}
+                     return;
+                   } elseif { $conn($c,ssl-handshake) eq "disconnect" } {
+                     # Connection has been disconnected by user
+                     outputSystem $c [T "Connection cancelled."]
                      return;
                    }
                 if { $conn($c,ssl-handshake) ne "complete" } {
