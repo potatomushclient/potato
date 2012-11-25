@@ -2834,11 +2834,53 @@ proc ::potato::connect {c first} {
          # more in-depth checks of the certificate, passing self-signed by default
          # (And fix the error message below to only give the 'make sure port is enabled' message if we
          # have an error, instead of a validation failure)
-         if { [catch {::tls::import $fid -command ::potato::connectVerifySSL -request 0 -cipher "ALL"} sslError] || [catch {::tls::handshake $fid} sslError] } {
+         if { [catch {::tls::import $fid -command ::potato::connectVerifySSL -request 0 -cipher "ALL"} import] || \
+              [catch {fconfigure $fid -blocking 0 -buffering none} fconfig] || \
+              [catch {::tls::handshake $fid} handshake] } {
+              set sslError "Unknown SSL Error";# do not translate
+              foreach errs [list import fconfig handshake] {
+                if { [info exists $errs] } {
+                     set sslError [set $errs]
+                   }
+              }
               # -cipher can probably be ALL:!LOW:!EXP:+SSLv2:@STRENGTH but I'd rather be less secure than risk some games not working
               outputSystem $c [T "Unable to negotiate SSL: %s. Please make sure the port is ssl-enabled." $sslError]
               disconnect $c 0
               continue;
+            } elseif { $handshake == 0 } {
+              # non-blocking connection, handshake not yet complete. Wait until it is.
+              while { $handshake == 0 } {
+                # So we can tell, programatically, that we're waiting for it
+                set conn($c,ssl-handshake) waiting
+                # When the socket becomes readable, the handshake is likely taking place
+                fileevent $fid readable [list ::potato::connectSSLHandshake $c $fid]
+                # connectSSLHandshake sets ssl-handshake to "complete"; wait for it
+                vwait ::potato::conn($c,ssl-handshake)
+                if { ![info exists conn($c,ssl-handshake)] || $conn($c,ssl-handshake) eq "disconnect" } {
+                     # Connection has been disconnected or closed
+                     catch {::potato::ioClose $fid}
+                     return;
+                   }
+                if { $conn($c,ssl-handshake) ne "complete" } {
+                     # Variable set by something other than our callback; error.
+                     outputSystem $c [T "Unable to negotiate SSL: %s." $conn($c,ssl-handshake)]
+                     disconnect $c 0
+                     return;
+                   } elseif { $fid ni [file channels] } {
+                     # Connection has disappeared; weird.
+                     set handshake_error "connection reset"
+                     break;
+                   } elseif { [catch {::tls::handshake $fid} handshake] } {
+                     set handshake_error $handshake
+                     break;
+                   }
+               }
+
+               if { [info exists handshake_error] } {
+                   outputSystem $c [T "Unable to negotiate SSL: %s" $handshake_error]
+                   disconnect $c 0
+                   continue;
+                 }
             }
        }
 
@@ -2865,6 +2907,19 @@ proc ::potato::connect {c first} {
   return 1;
 
 };# ::potato::connect
+
+#: proc ::potato::connectSSLHandshake
+#: arg c connection id
+#: arg fid file descriptor
+#: desc A callback used during an SSL connection to see if the SSL handshake has completed yet.
+#: desc Sets conn($c,ssl-handshake) to "complete", triggering a vwait, cancels the readable fileevent for $fid, then returns.
+#: return nothing
+proc ::potato::connectSSLHandshake {c fid} {
+
+  after 500 [list set ::potato::conn($c,ssl-handshake) "complete"]
+  catch {fileevent $fid readable {}}
+  return;
+};# ::potato::connectSSLHandshake
 
 #: proc ::potato::connectVerify
 #: arg fid file descriptor
@@ -3229,6 +3284,9 @@ proc ::potato::disconnect {{c ""} {prompt 1}} {
   catch {fileevent $conn($c,id) readable {}}
   uploadEnd $c 1;# cancel any in-progress file upload
   catch {::potato::ioClose $conn($c,id)}
+  if { [info exists conn($c,ssl-handshake)] } {
+       set conn($c,ssl-handshake) "disconnect"
+     }
   set conn($c,id) ""
   set prevState $conn($c,connected)
   if { $conn($c,connected) == 1 } {
