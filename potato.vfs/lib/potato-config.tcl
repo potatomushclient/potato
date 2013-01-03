@@ -508,7 +508,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [set sub [::ttk::frame $frame.mushType]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "MU* Type:"] -width 17 -justify left -anchor w] -side left -padx 3
   pack [::ttk::combobox $sub.cb -textvariable ::potato::worldconfig($w,type) \
-             -values [list Auto MUD MUSH] -width 20 -state readonly] -side left -padx 3
+             -values [list MUD MUSH] -width 20 -state readonly] -side left -padx 3
 
   if { $w != -1 } {
        # Character page

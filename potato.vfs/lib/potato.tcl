@@ -10787,9 +10787,9 @@ proc ::potato::customSlashCommand {c w cmd str} {
   if { [info exists masterVars($str)] } {
        return [list 1 $masterVars($str)];
      } elseif { $local && [info exists conn($c,uservar,$str)] } {
-       return [list 1 $conn($c,uservar,$str];
+       return [list 1 $conn($c,uservar,$str)];
      } elseif { $global && [info exists conn(0,uservar,$str)] } {
-       return [list 1 $conn(0,uservar,$str];
+       return [list 1 $conn(0,uservar,$str)];
      } else {
        return [list 0];
      }
