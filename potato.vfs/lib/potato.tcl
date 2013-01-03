@@ -5975,7 +5975,7 @@ proc ::potato::main {} {
   set potato(skinMinVersion) "1.4" ;# The minimum version of the skin spec this Potato supports.
                                    ;# All skins must be at least this to be usable.
 
-  set potato(skinCurrVersion) "1.4" ;# The current version of the skin spec. If changes made aren't
+  set potato(skinCurrVersion) "1.5" ;# The current version of the skin spec. If changes made aren't
                                     ;# incompatible, this may be higher than skinMinVersion
   cd $path(homedir)
 
@@ -8573,6 +8573,7 @@ proc ::potato::loadDefaultUserBindings {{clear 0}} {
     "toggleInputFocus" "Control-KeyPress-O" \
     "insertNewline" "Control-Return" \
     "resendLastCmd" "Control-Alt-R" \
+    "toggleSpawns" "Control-Alt-Tab" \
     ]
   foreach {task binding} $defaults {
     if { ![taskExists $task] } {
@@ -12187,6 +12188,9 @@ proc ::potato::tasksInit {} {
        resendLastCmd,name  [X "&Resend Last Command"] \
        resendLastCmd,cmd   [list ::potato::resendLastCmd] \
        resendLastCmd,state connected \
+       toggleSpawn,name    [X "Toggle Spawn Windows"] \
+       toggleSpawn,cmd     [list ::potato::toggleSpawns] \
+       toggleSpawn,state   {[llength [potato::connInfo $c spawns]]} \
 
 
   ]
@@ -12348,6 +12352,28 @@ proc ::potato::spellcheck {} {
      }
 
 };# ::potato::spellcheck
+
+#: proc ::potato::toggleSpawns
+#: arg c connection id
+#: desc Toggle through the spawns (and main window) for conn $c
+#: return nothing
+proc ::potato::toggleSpawns {{c ""}} {
+  variable conn;
+  variable potato;
+
+  if { $c eq "" } {
+       set c [up]
+     }
+
+  if { $c == 0 } {
+       return;
+     }
+
+  catch {::skin::$potato(skin)::nextSpawn $c}
+
+  return;
+
+};# ::potato::toggleSpawns
 
 #: proc ::potato::glob2Regexp
 #: arg pattern A glob pattern

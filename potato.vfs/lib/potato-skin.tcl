@@ -11,7 +11,7 @@ if { ![namespace exists ::skin] || [namespace exists ::skin::potato] } {
    }
 
 # Check to make sure the version of Potato running supports the same skin spec we do
-if { ![package vsatisfies "1.4" "$::potato::potato(skinMinVersion)-"] } {
+if { ![package vsatisfies "1.5" "$::potato::potato(skinMinVersion)-"] } {
      return "";
    }
 # Basic init of the skin
@@ -20,7 +20,7 @@ namespace eval ::skin::potato::img {}
 
 set ::skin::potato::skin(init) 0
 set ::skin::potato::skin(name) "Potato Default"
-set ::skin::potato::skin(version) 1.4
+set ::skin::potato::skin(version) 1.5
 
 set ::skin::potato::skin(dir) $::potato::path(skins)
 set ::skin::potato::skin(preffile) [file join $::skin::potato::skin(dir) skin.prefs]
@@ -1686,7 +1686,7 @@ proc ::skin::potato::loadPrefs {} {
 
 };# ::skin::potato::loadPrefs
 
-#: proc ::skin::tabbed::locale
+#: proc ::skin::potato::locale
 #: desc REQUIRED. Called when Potato changes locale, so the skin can update displayed text to the new locale
 #: return nothing
 proc ::skin::potato::locale {} {
@@ -1697,9 +1697,37 @@ proc ::skin::potato::locale {} {
 
 };# ::skin::potato::locale
 
+#: proc ::skin::potato::nextSpawn
+#: arg c conn id
+#: desc REQUIRED. Toggle to the next spawn window for connection $c
+#: return nothing
+proc ::skin::potato::nextSpawn {c} {
+  variable disp;
+  variable spawns;
 
+  set cspawns [::potato::connInfo $c spawns]
+  if { ![llength $cspawns] } {
+       return; # no spawns
+     }
+  set cspawns [lsort -dictionary -index 0 $cspawns]
+  if { ![info exists disp($c)] || $disp($c) eq "" } {
+  puts "No disp($c)"
+       set next [lindex $cspawns 0 0]
+     } else {
+       set curr [lsearch -index 0 -exact $cspawns $disp($c)]
+       set curr [expr {$curr + 1}]
+       puts "disp($c) is $disp($c), and curr is $curr"
+       if { $curr == [llength $cspawns] } {
+            set next "";# toggle back to main window
+          } else {
+            set next [lindex $cspawns $curr 0]
+          }
+     }
+  showSpawn $c $next
 
+  return;
 
+};# ::skin::potato::nextSpawn
 
 
 
