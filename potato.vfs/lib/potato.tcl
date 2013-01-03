@@ -1312,7 +1312,7 @@ proc ::potato::logWindow {{c ""}} {
   pack [::ttk::labelframe $frame.top.buffer -text [T "Include Buffer From: "] -padding 2] -side left -anchor nw -padx 6
   set spawns [list "No Buffer" "Main Window"]
   foreach x $conn($c,spawns) {
-    lappend spawns [lindex $x 1]
+    lappend spawns [lindex $x 0]
   }
   pack [::ttk::combobox $frame.top.buffer.cb -values $spawns \
              -textvariable potato::conn($c,logDialog,buffer) -state readonly] -side top -anchor nw
