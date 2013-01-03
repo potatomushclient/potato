@@ -919,8 +919,9 @@ proc ::skin::potato::spawnMenuPost {} {
 
   $menu add separator
 
-  foreach x [lsort -dictionary [::potato::connInfo $c spawns]] {
-    $menu add checkbutton -label $x -command [list ::skin::potato::showSpawn $c $x] -variable ::skin::potato::disp(spawnMenu) -onvalue $x
+  foreach x [lsort -dictionary -index 0 [::potato::connInfo $c spawns]] {
+    set name [lindex $x 0]
+    $menu add checkbutton -label $name -command [list ::skin::potato::showSpawn $c $name] -variable ::skin::potato::disp(spawnMenu) -onvalue $name
   }
 
   return;
