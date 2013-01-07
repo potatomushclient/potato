@@ -31,7 +31,7 @@
   * Control+Alt+R resends the last command you typed to the MUSH. Suggested by qa'toq.
   * New [SlashCommands /reload] command, which reloads the main Potato source file, and the [CustomFile potato.custom] file. Useful for people running from svn who want to update without rebooting Potato, and people who make custom code modifications. Suggested by spork.
   * The 'Clear Input History' command, triggered by the Escape key by default, will now always clear the input window, even if you aren't scrolling through the command history. Suggested by Paige.
-  * A Padlock icon is now displayed on the status bar, next to the connection status, when you're connected to a world via SSL. Suggested by Elm@M*U*S*H.
+  * A Padlock icon is now displayed on the status bar, next to the connection status, when you're connected to a world via SSL. Suggested by Elm@M`*`U`*`S`*`H.
   * Bug in [SlashCommands /setprefix] when replacing an existing prefix fixed. Reported by Merin.
   * [SlashCommandsLimit /limit] with no arguments now returns 1 or 0, indicating whether output text is currently limited or not. From TinyFugue.
   * The 'Omit from Activity' option for Events now prevents the World and Spawn toolbars from indicating activity, as well as preventing the taskbar icon from flashing. Patch by pramakers.

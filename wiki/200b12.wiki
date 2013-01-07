@@ -1,15 +1,21 @@
 #summary Version 2.0.0b12
 =Version 2.0.0b12=
-==Not Yet Released==
+==Released January 7th, 2013==
 
   * Fixed a bug in /reload where errors in a reloaded script weren't handled gracefully.
   * /reload is more verbose about which files it has reloaded.
   * Potato will no longer attempt Telnet negotiation if it doesn't happen in the first 90 seconds of the connection, to help prevent errors when non-Telnet aware connections send the Telnet escape character (typically a y-umlaut) as part of the text later.
-  * An insanely stupid bug in the Spell Checking code could destroy the main Potato menu. Reported by elm@M*U*S*H.
-  * Events using a "contains" match were broken. Reported by James@M*U*S*H.
+  * An insanely stupid bug in the Spell Checking code could destroy the main Potato menu. Reported by elm@M`*`U`*`S`*`H.
+  * Events using a "contains" match were broken. Reported by James@M`*`U`*`S`*`H.
   * A typo in the Telnet handling code could cause an error with prompts. Reported by spork.
   * The 'linflash' package, used for flashing the taskbar icon on Linux systems, could throw an error message in some cases when nothing was really wrong. Reported by mhoermann.
   * When checking for updates failed under certain circumstances, an unfriendly error message would be generated. Reported by Paige.
   * When the Debugging Log Window reports a Tcl script error - for instance, from the potato.custom file - it will now provide a full error trace, instead of a simple error message. Suggested by Paige.
   * Potato has always reported the window width via the Telnet NAWS option, but it previously lied about the window height, always claiming 24 lines. Now it reports it honestly. Because I was bugged by Reaver.
   * Potato can now do prompts using the telnet EOR (End of Record) negotiation, as well as using GA (Go Ahead).
+  * SSL handshakes happened in blocking mode which meant that, if you connected to a game with SSL enabled and it never sent anything, Potato would hang indefinately. Finally fixed. Reported by Paige.
+  * The /eval command no longer beeps to report an error if the Tcl code contains the 'return' command (ie, /eval return "foo").
+  * /get didn't work for retrieving variables set with /set.
+  * Finally remove "Auto" as an option for MU`*` Type - it should have gone a long time ago.
+  * Spawn-related bugs in the Logging Window and View menu fixed. Reported by Emi.
+  * Added new keyboard shortcut, Control-Alt-Tab, to cycle through spawn windows. Suggested by jgugelsen and srtussing. (Users who upgrade will need to add the shortcut via the Options → Customize Keyboard Shortcuts window.)

@@ -54,10 +54,10 @@ For all of these examples, "Enabled" is ticked and "Continue" is not. Nothing el
     * To: Use `channels` to spawn all channels into a single spawn window, or use `[/get 0]` to spawn each to its own, individual spawn window.
 
 ===Timestamp Channels===
-  * *Pattern*: `^<(.+?)> (.+)$`
+  * *Pattern*: `^(<.+?>) (.+)$`
   * *Type*: Regexp
   * *Replace?:* Ticked
-    * With: `[/get 0] [/time %T] [/get 1]`
+    * With: `[[/get 0] [/time %T] [/get 1]]`
 
 ===Spawn Pages===
   * *Pattern*: `^(From afar|Long distance to|\S.{1,20} pages|You paged .+? with).*$`
