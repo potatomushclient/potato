@@ -7703,7 +7703,7 @@ proc ::potato::checkForUpdates {{background 0}} {
 
   pack [set progress [::ttk::frame $frame.progress]] -side top -padx 10 -pady 10
   pack [::ttk::progressbar $progress.bar -orient horizontal -mode indeterminate -length 160]
-  $progress.bar start 1
+  $progress.bar start 5
 
   pack [set btns [::ttk::frame $frame.buttons]] -side top -padx 10 -pady 10
   pack [::ttk::button $btns.cancel -text [T "Cancel"] -command [list destroy $win]]
@@ -7797,9 +7797,9 @@ proc ::potato::checkForUpdatesSub {token {err ""}} {
        $update(btns).ok configure -text [T "No"]
        pack [::ttk::button $update(btns).yes -text [T "Yes"] \
                -command "[list ::potato::launchWebPage http://code.google.com/p/potatomushclient/wiki/Downloads?tm=2] ; [list destroy $update(win)]"] -side left -before $update(btns).ok -padx 8
+       update
+       center $update(win)
        if { $background } {
-            update
-            center $update(win)
             wm deiconify $update(win)
             bell -displayof $update(win)
           }
