@@ -1,0 +1,4 @@
+#!/bin/bash
+# Hacky script to compile to flash.so
+cd $(dirname $0)
+gcc -Wl,-soname,flash.so -Wl,--no-as-needed -lX11 -ltk -I/usr/include/tcl -I/usr/include/tk -O2 -fPIC -shared flash.c -o flash.so

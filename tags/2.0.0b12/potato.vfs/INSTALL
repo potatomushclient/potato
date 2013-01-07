@@ -1,0 +1,85 @@
+
+Installing Potato MU* Client
+-----------------------------------------------------------------------------
+
+ 1) Downloading Potato
+ 2) Installing Tcl/Tk
+    a) Windows
+    b) Linux
+    c) All platforms (Windows, Linux or MacOS X)
+ 3) Running Potato
+    a) Windows
+    b) Linux/MacOS X
+ 4) Contact
+
+1) Downloading Potato
+---------------------
+The latest release of Potato's source can be downloaded from 
+http://code.google.com/p/potatomushclient/
+You can also check out the source via SVN for the latest changes.
+
+2) Installing Tcl/Tk
+--------------------
+  a) Windows
+  ----------
+  On Windows, you can download TclKit, a single-file Tcl/Tk executable, from
+  http://tclkit.googlecode.com/files/tclkit-8.5.9-win32.upx.exe
+  Place this .exe in the "potato.vfs" directory where this INSTALL file is
+  located.
+
+  b) Linux
+  --------
+   On Linux, the easiest way to install Tcl/Tk is through your OS's package
+   management software. On debian based systems they are probably simply 
+   called tcl and tk. If you want ssl support, also install tcl-tls. To 
+   support window flashing, you'll also want tcl-dev and tk-dev:
+
+     apt-get install tcl tk
+     apt-get install tcl-tls
+     apt-get install tcl-dev tk-dev
+
+  On Gentoo they are called tcl and tk. For ssl support the package is 
+  dev-tcltk/tls:
+
+     emerge tcl tk
+     emerge dev-tcltk/tls
+  
+  c) c) All platforms (Windows, Linux or MacOS X)
+  -----------------------------------------------
+  You can also obtain ActiveTcl 8.5 for Windows, Linux or MacOS X from
+  ActiveState at http://www.activestate.com/activetcl/downloads
+  
+  ActiveTcl is a full Tcl and Tk installation.
+  
+  For SSL support, you will need to cd to the tcl/bin directory and run
+    teacup install tls
+  
+  On Windows, Start->Run, "cmd.exe", then
+    cd c:\tcl\bin
+    teacup install tls
+
+3) Running Potato
+-----------------
+  a) Windows
+  ---------
+  If you downloaded the TclKit, simply drag-and-drop "main.tcl" onto the
+  TclKit.exe to run.
+  If using ActiveTcl, you can just double-click "main.tcl".
+  
+  b) Linux/MacOS X
+  ----------------
+    cd potato.vfs
+    ./main.tcl
+    
+
+4) Contact
+----------
+If you have any problems installing or running Potato, please email me
+at talvo@talvo.com
+
+If you find a bug or would like to request a feature, please open a ticket
+on the issue tracker at http://code.google.com/p/potatomushclient/issues/list
+
+Thanks for downloading Potato, and I hope you find it useful
+
+-- Mike Griffiths (Talvo)
