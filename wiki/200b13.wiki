@@ -1,0 +1,6 @@
+#summary Version 2.0.0b13
+=Version 2.0.0b13=
+==Not Yet Released==
+
+  * The input window sizes haven't been saved for some time, but now will be again. Reported by qa'toq, among others.
+  
