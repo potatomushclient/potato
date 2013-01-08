@@ -1666,7 +1666,7 @@ proc ::skin::potato::savePrefs {} {
        tk_messageBox -title $skin(name) -message "Unable to save skin prefs to \"[file nativename [file normalize $skin(preffile)]]\": $fid" -icon error -type ok
        return;
      }
-  inputWindows 2
+  inputWindows [::potato::up] 2
   update
   set opts(input1height) [winfo height $widgets(pane,btm,pane,top)]
   set opts(input2height) [winfo height $widgets(pane,btm,pane,btm)]
