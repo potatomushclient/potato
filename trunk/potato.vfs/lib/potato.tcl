@@ -6590,6 +6590,7 @@ proc ::potato::tooltipShow {widget {text ""} {x ""} {y ""}} {
   catch {destroy $top}
   toplevel $top
   wm title $top $text
+  catch {wm attributes $top -type tooltip};# Tk 8.6 and higher
   $top configure -borderwidth 1 -background black
   wm overrideredirect $top 1
   pack [message $top.txt -aspect 10000 -background lightyellow \

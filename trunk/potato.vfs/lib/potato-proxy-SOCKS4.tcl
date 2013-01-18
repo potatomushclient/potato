@@ -67,7 +67,7 @@ proc ::potato::proxy::SOCKS4::callback {fid host port resvar} {
   variable state;
 
   if { [eof $fid] } {
-       unset state($fid)
+       unset -nocomplain state($fid)
        set $resvar [::potato::T "Connection closed by proxy server."]
        return;
      }
