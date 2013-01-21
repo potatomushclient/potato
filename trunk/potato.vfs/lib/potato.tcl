@@ -2425,7 +2425,7 @@ proc ::potato::connZero {} {
 
   $canvas bind clickable <Enter> "[list %W itemconfig current -fill red] ; [list %W configure -cursor hand2]"
   $canvas bind clickable <Leave> "[list %W itemconfig current -fill $linkcol] ; [list %W configure -cursor {}]"
-  $canvas bind clickable <Button-1> [list ::potato::connZeroClick %W]
+  $canvas bind clickable <ButtonRelease-1> [list ::potato::connZeroClick %W]
 
 
   connZeroAddText $canvas $x y 1 [T "Existing Worlds:"] [list Tahoma 14] [list existing] -justify left -anchor nw
@@ -5775,11 +5775,7 @@ proc ::potato::focusIn {win} {
           }
      }
 
-  if { $winico(loaded) && $winico(flashing) } {
-       winicoFlashOff
-     }
-
-  #abc might need to do a "linunflash ." here when using that package?
+  unflash
 
   return;
 
@@ -7245,37 +7241,45 @@ proc ::potato::setUpFlash {{skippackages 0}} {
   variable potato;
   variable path;
 
-  if { $skippackages } {
-       set taskbarCmd {wm deiconify .}
-       set sysTrayCmd {# nothing}
-     } elseif { $::tcl_platform(platform) eq "windows" } {
-       if { ![catch {package require potato-winflash} err errdict] } {
-            set taskbarCmd {winflash . -count 3 -appfocus 1}
-          } else {
-            errorLog "Unable to load potato-winflash package: $err" error [errorTrace $errdict]
-            set taskbarCmd {wm deiconify .}
-          }
-       if { $winico(loaded) } {
-            set sysTrayCmd {winicoFlashOn}
-          } else {
+  set taskbarCmd {wm deiconify .}
+  set sysTrayCmd {# nothing}
+  set unflash {# nothing}
+
+  if { !$skippackages } {
+       if { $::tcl_platform(platform) eq "windows" } {
+            if { ![catch {package require potato-winflash} err errdict] } {
+                 set taskbarCmd {winflash . -count 3 -appfocus 1}
+               } else {
+                 errorLog "Unable to load potato-winflash package: $err" error [errorTrace $errdict]
+                 set taskbarCmd {wm deiconify .}
+               }
+            if { $winico(loaded) } {
+                 set sysTrayCmd {winicoFlashOn}
+                 set unflash {winicoFlashOff}
+               } else {
+                 set sysTrayCmd {# nothing}
+               }
+          } elseif { ![catch {wm attributes . -notify}] } {
+            set taskbarCmd {wm attributes . -notify 1 -modified 1}
             set sysTrayCmd {# nothing}
-          }
-     } else {
-       if { [catch {package require potato-linflash}] } {
-            # Attempt to copy linflash out for the first time
-            catch {file mkdir $path(userlib)}
-            catch {file copy -force [file join $path(lib) app-potato linux linflash1.0] $path(userlib)}
-            catch {exec [file join $path(userlib) linflash1.0 compile]}
-          }
-       if { ![catch {package require potato-linflash} err errdict] } {
-            set taskbarCmd {::potato::linflashWrapper}
-            set sysTrayCmd {# nothing}
+            set unflash {wm attributes . -notify 0 -modified 0}
           } else {
-            errorLog "Unable to load potato-linflash package: $err" [errorTrace $errdict]
-            set taskbarCmd {wm deiconify .}
-            set sysTrayCmd {# nothing}
+            if { [catch {package require potato-linflash}] } {
+                 # Attempt to copy linflash out for the first time
+                 catch {file mkdir $path(userlib)}
+                 catch {file copy -force [file join $path(lib) app-potato linux linflash1.0] $path(userlib)}
+                 catch {exec [file join $path(userlib) linflash1.0 compile]}
+               }
+            if { ![catch {package require potato-linflash} err errdict] } {
+                 set taskbarCmd {::potato::linflashWrapper}
+                 set unflash {linunflash .}
+               } else {
+                 errorLog "Unable to load potato-linflash package: $err" [errorTrace $errdict]
+                 set taskbarCmd {wm deiconify .}
+               }
           }
      }
+
   proc ::potato::flash {w} [format {
    variable world;
    variable winico;
@@ -7287,6 +7291,11 @@ proc ::potato::setUpFlash {{skippackages 0}} {
       }
    return;
   } $taskbarCmd $sysTrayCmd];# ::potato::flash
+
+  proc ::potato::unflash {} [format {
+   catch {%s}
+  } $unflash];# ::potato::unflash
+
 
   return;
 
@@ -7907,6 +7916,8 @@ proc ::potato::setUpBindings {} {
   set ::tcl_wordchars {[a-zA-Z0-9' ]}
   set ::tcl_nonwordchars {[^a-zA-Z0-9']}
 
+  set has86 [package vsatisfies [package require Tk] 8.6-]
+
   bind . <FocusIn> [list after idle [list ::potato::focusIn %W]]
   bind . <Unmap> [list ::potato::minimizeToTray %W]
 
@@ -7973,15 +7984,21 @@ proc ::potato::setUpBindings {} {
      bind PotatoOutput <${x}Tab> [bind PotatoInput <${x}Tab>]
   }
 
-  foreach x [list PotatoInput PotatoOutput Text] {
-    foreach y [list MouseWheel 4 5] {
-      bind $x <$y> {}
-    }
-  }
-  catch {bind all <MouseWheel> [list ::potato::mouseWheel %W %D]}
-  # Some Linuxes use button 4/5 instead of <MouseWheel>. Some don't.
-  catch {bind all <4> [list ::potato::mouseWheel %W 120]}
-  catch {bind all <5> [list ::potato::mouseWheel %W -120]}
+  # Tk 8.6 provides better MouseWheel handling than 8.5, so only use
+  # our custom one if we have to.
+  if { !$has86 } {
+       foreach x [list PotatoInput PotatoOutput Text] {
+         foreach y [list MouseWheel 4 5] {
+           bind $x <$y> {}
+         }
+       }
+       catch {bind all <MouseWheel> [list ::potato::mouseWheel %W %D]}
+       # Some Linuxes use button 4/5 instead of <MouseWheel>. Some don't.
+       catch {bind all <4> [list ::potato::mouseWheel %W 120]}
+       catch {bind all <5> [list ::potato::mouseWheel %W -120]}
+     } else {
+       bind PotatoOutput <MouseWheel> [bind Text <MouseWheel>]
+     }
 
   # Make Control-BackSpace delete the previous word
   bind Text <Control-BackSpace> {set val [%W index insert]
@@ -7991,42 +8008,51 @@ proc ::potato::setUpBindings {} {
             if {$val != 1.0 } {set val [tk::TextPrevPos %W $val tcl_wordBreakBefore]}
             %W delete $val insert
            }
-  # These bindings copied from Tk 8.4, because I prefer them to the 8.5 ones,
-  # with regard to how they move around text with symbols and spaces.
-  bind Text <Control-Left> {set val [%W index insert]
-           while {$val != 1.0 && [%W get $val-1c $val] eq " "} {
-                  set val [%W index $val-1c]
-                 }
-            if {$val != 1.0 } {set val [tk::TextPrevPos %W $val tcl_wordBreakBefore]}
-            tk::TextSetCursor %W $val
-           }
-  bind Text <Control-Right> {set val [tk::TextNextPos %W insert tcl_wordBreakAfter]
-           set end [%W index end]
-           while {[%W index $val] != $end && [%W get $val $val+1c] eq " "} {
-                  set val [%W index $val+1c]
-                 }
-           tk::TextSetCursor %W $val
-          }
-  bind Text <Control-Shift-Left> {set val [%W index insert]
-           while {$val != 1.0 && [%W get $val-1c $val] eq " "} {
-                  set val [%W index $val-1c]
-                 }
-            if {$val != 1.0 } {set val [tk::TextPrevPos %W $val tcl_wordBreakBefore]}
-            tk::TextKeySelect %W $val
-           }
-  bind Text <Control-Shift-Right> {set val [tk::TextNextPos %W insert tcl_wordBreakAfter]
-           set end [%W index end]
-           while {[%W index $val] != $end && [%W get $val $val+1c] eq " "} {
-                  set val [%W index $val+1c]
-                 }
-           tk::TextKeySelect %W $val
-          }
 
-  # Use "Control+A" for "select all"
-  bind Text <Control-a> {%W tag add sel 1.0 end-1c; %W mark set insert end-1c; %W see insert; break}
+  if { !$has86 } {
+       # These bindings copied from Tk 8.4, because I prefer them to the 8.5 ones,
+       # with regard to how they move around text with symbols and spaces.
+       bind Text <Control-Left> {set val [%W index insert]
+                while {$val != 1.0 && [%W get $val-1c $val] eq " "} {
+                       set val [%W index $val-1c]
+                      }
+                 if {$val != 1.0 } {set val [tk::TextPrevPos %W $val tcl_wordBreakBefore]}
+                 tk::TextSetCursor %W $val
+                }
+       bind Text <Control-Right> {set val [tk::TextNextPos %W insert tcl_wordBreakAfter]
+                set end [%W index end]
+                while {[%W index $val] != $end && [%W get $val $val+1c] eq " "} {
+                       set val [%W index $val+1c]
+                      }
+                tk::TextSetCursor %W $val
+               }
+       bind Text <Control-Shift-Left> {set val [%W index insert]
+                while {$val != 1.0 && [%W get $val-1c $val] eq " "} {
+                       set val [%W index $val-1c]
+                      }
+                 if {$val != 1.0 } {set val [tk::TextPrevPos %W $val tcl_wordBreakBefore]}
+                 tk::TextKeySelect %W $val
+                }
+       bind Text <Control-Shift-Right> {set val [tk::TextNextPos %W insert tcl_wordBreakAfter]
+                set end [%W index end]
+                while {[%W index $val] != $end && [%W get $val $val+1c] eq " "} {
+                       set val [%W index $val+1c]
+                      }
+                tk::TextKeySelect %W $val
+               }
+     }
+
+  # Use "Control+A" for "select all". Also tweak it to move insert, not selected the "end" char, and see end
+  if { !$has86 } {
+       bind Text <Control-a> {%W tag add sel 1.0 end-1c; %W mark set insert end-1c; %W see insert; break}
+     } else {
+       bind Text <<SelectAll>> {%W tag add sel 1.0 end-1c; %W mark set insert end-1c; %W see insert; break}
+       catch {event add <<SelectAll>> <Control-a>}
+       catch {event add <<SelectAll>> <Control-A>}
+     }
 
   # stop Tile buttons taking focus when clicked
-  bind TButton <1> {%W instate !disabled { %W state pressed }}
+  option add *TButton.takeFocus 0
 
   # Make Tile buttons show they have the focus when tabbed into via keyboard.
   bind TButton <FocusIn> {%W instate !disabled {%W state [list active focus]}}
@@ -8042,9 +8068,13 @@ proc ::potato::setUpBindings {} {
                   Control-Down Control-Up Control-Right Control-Left Up Down Left Right \
                   Shift-Up Shift-Down Shift-Left Shift-Right Control-Button-1 ButtonRelease-1 B1-Enter B1-Leave \
                   Triple-Shift-Button-1 Double-Shift-Button-1 Shift-Button-1 Triple-Button-1 Double-Button-1 \
-                  B1-Motion Button-1 <Selection>] {
+                  B1-Motion Button-1 <Selection> <SelectNone> <SelectAll> <SelectLineEnd> <LineEnd> <SelectLineStart> \
+                  <LineStart> <SelectNextPara> <SelectPrevPara> <SelectNextWord> <SelectPrevWord> <NextPara> <PrevPara> \
+                  <NextWord> <PrevWord> <SelectNextLine> <SelectPrevLine> <SelectNextChar> <SelectPrevChar> <NextLine> \
+                  <PrevLine> <NextChar> <PrevChar>] {
      bind PotatoOutput <$x> [bind Text <$x>]
   }
+
   bind PotatoOutput <<Copy>> [list ::potato::textCopy %W]
   bind PotatoOutput <<Cut>> [list ::potato::textCopy %W]
   bind PotatoOutput <<Selection>> "+;[list ::potato::selectToCopy %W]"
@@ -8065,6 +8095,11 @@ proc ::potato::setUpBindings {} {
            }
      }
   }
+
+  if { $has86 && [string match TextScrollPages [bind Text <<Paste>>]] } {
+       # Woops. 8.6.0 has the wrong binding on MacOS X
+       bind Text <<Paste>> [list tk_textPaste %W]
+     }
 
   # Right-click while resizing a paned window to cancel
   bind Panedwindow <3> {catch {%W proxy forget} ; unset -nocomplain ::tk::Priv(sash) ::tk::Priv(dx) ::tk::Priv(dy)}
@@ -12621,15 +12656,15 @@ proc ::potato::loadSubFiles {dir} {
 proc ::potato::basic_reqs {} {
   variable potato;
 
-  if { [catch {package require Tk 8.5}] } {
-       if { [catch {package require Tk}] } {
+  if { [catch {package require Tk 8.5-}] } {
+       if { ![package present Tk] } {
             # No Tk -at all-
             puts "WARNING! Potato is a graphical client, and requires Tk version 8.5. Please"
             puts "install Tk before trying to run Potato, or download a binary of Potato from"
             puts "the website at $potato(webpage)"
           } else {
             # We have Tk, but not a good enough version
-            set msg "WARNING! Potato requires Tk 8.5 to run (you only have Tk [package version Tk]).\n"
+            set msg "WARNING! Potato requires Tk 8.5 or 8.6 to run (you only have Tk [package version Tk]).\n"
             append msg "Please install a newer version of Tk, or download a binary of Potato from\n"
             append msg "the website ($potato(webpage)) which includes everything you need."
             tk_messageBox -icon error -title "Potato" -message $msg -type ok
@@ -12637,10 +12672,11 @@ proc ::potato::basic_reqs {} {
         exit;
      }
 
-  if { [catch {package require Tcl 8.5}] } {
-       puts "WARNING! You need to be using at least Tcl 8.5 to run Potato (you only have [package version Tcl])."
-       puts "Please download a newer version of Tcl, or download a binary of Potato from"
-       puts "the website ($potato(webpage)) which includes everything you need."
+  if { [catch {package require Tcl 8.5-}] } {
+       puts "WARNING! You need to be using at least Tcl 8.5 to run Potato (you only have [package version Tcl]). "
+       puts "Please download a newer version of Tcl (www.activestate.com), "
+       puts "or download a binary of Potato from the website "
+       puts "($potato(webpage)) which includes everything you need."
        exit;
      }
 
