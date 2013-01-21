@@ -8009,37 +8009,18 @@ proc ::potato::setUpBindings {} {
             %W delete $val insert
            }
 
+  # These bindings copied from Tk 8.4, because I prefer them to the 8.5/8.6 ones,
+  # with regard to how they move around text with symbols and spaces.
+  set events [list PrevWord NextWord SelectPrevWord SelectNextWord]
+  set bindings [list Control-Left Control-Right Control-Shift-Left Control-Shift-Right]
   if { !$has86 } {
-       # These bindings copied from Tk 8.4, because I prefer them to the 8.5 ones,
-       # with regard to how they move around text with symbols and spaces.
-       bind Text <Control-Left> {set val [%W index insert]
-                while {$val != 1.0 && [%W get $val-1c $val] eq " "} {
-                       set val [%W index $val-1c]
-                      }
-                 if {$val != 1.0 } {set val [tk::TextPrevPos %W $val tcl_wordBreakBefore]}
-                 tk::TextSetCursor %W $val
-                }
-       bind Text <Control-Right> {set val [tk::TextNextPos %W insert tcl_wordBreakAfter]
-                set end [%W index end]
-                while {[%W index $val] != $end && [%W get $val $val+1c] eq " "} {
-                       set val [%W index $val+1c]
-                      }
-                tk::TextSetCursor %W $val
-               }
-       bind Text <Control-Shift-Left> {set val [%W index insert]
-                while {$val != 1.0 && [%W get $val-1c $val] eq " "} {
-                       set val [%W index $val-1c]
-                      }
-                 if {$val != 1.0 } {set val [tk::TextPrevPos %W $val tcl_wordBreakBefore]}
-                 tk::TextKeySelect %W $val
-                }
-       bind Text <Control-Shift-Right> {set val [tk::TextNextPos %W insert tcl_wordBreakAfter]
-                set end [%W index end]
-                while {[%W index $val] != $end && [%W get $val $val+1c] eq " "} {
-                       set val [%W index $val+1c]
-                      }
-                tk::TextKeySelect %W $val
-               }
+       foreach e $events b $bindings {
+         bind Text <$b> [list ::potato::$e %W]
+       }
+     } else {
+       foreach e $events {
+         bind Text <<$e>> [list ::potato::$e %W]
+       }
      }
 
   # Use "Control+A" for "select all". Also tweak it to move insert, not selected the "end" char, and see end
@@ -8108,6 +8089,75 @@ proc ::potato::setUpBindings {} {
   return;
 
 };# ::potato::setUpBindings
+
+#: proc ::potato::PrevWord
+#: arg win text widget path
+#: desc Move the insertion cursor in the text widget to the start of the previous word (Control-Left)
+#: return nothing
+proc ::potato::PrevWord {win} {
+
+  set val [$win index insert]
+  while { $val != 1.0 && [$win get $val-1c $val] eq " " } {
+    set val [$win index $val-1c]
+  }
+  if { $val != 1.0 } {
+       set val [tk::TextPrevPos $win $val tcl_wordBreakBefore]
+     }
+  tk::TextSetCursor $win $val
+
+  return;
+};# ::potato::PrevWord
+
+#: proc ::potato::NextWord
+#: arg win text widget path
+#: desc Move the insertion cursor in the text widget to the start of the next word (Control-Right)
+#: return nothing
+proc ::potato::NextWord {win} {
+
+  set val [tk::TextNextPos $win insert tcl_wordBreakAfter]
+  set end [$win index end]
+  while { [$win index $val] != $end && [$win get $val $val+1c] eq " " } {
+    set val [$win index $val+1c]
+  }
+
+  tk::TextSetCursor $win $val
+
+  return;
+};# ::potato::NextWord
+
+#: proc ::potato::SelectPrevWord
+#: arg win text widget path
+#: desc Include the previous word in the text widget's selection (Control-Shift-Left)
+#: return nothing
+proc ::potato::SelectPrevWord {win} {
+
+  set val [$win index insert]
+  while {$val != 1.0 && [$win get $val-1c $val] eq " "} {
+    set val [$win index $val-1c]
+  }
+  if { $val != 1.0 } {
+       set val [tk::TextPrevPos $win $val tcl_wordBreakBefore]
+     }
+  tk::TextKeySelect $win $val
+
+  return;
+};# ::potato::SelectPrevWord
+
+#: proc ::potato::SelectNextWord
+#: arg win text widget path
+#: desc Include the next word in the text widget's selection (Control-Shift-Right)
+#: return nothing
+proc ::potato::SelectNextWord {win} {
+
+  set val [tk::TextNextPos $win insert tcl_wordBreakAfter]
+  set end [$win index end]
+  while { [$win index $val] != $end && [$win get $val $val+1c] eq " " } {
+    set val [$win index $val+1c]
+  }
+  tk::TextKeySelect $win $val
+
+  return;
+};# ::potato::SelectNextWord
 
 #: proc ::potato::selectToCopy
 #: arg win window
@@ -12659,9 +12709,9 @@ proc ::potato::basic_reqs {} {
   if { [catch {package require Tk 8.5-}] } {
        if { ![package present Tk] } {
             # No Tk -at all-
-            puts "WARNING! Potato is a graphical client, and requires Tk version 8.5. Please"
-            puts "install Tk before trying to run Potato, or download a binary of Potato from"
-            puts "the website at $potato(webpage)"
+            puts "WARNING! Potato is a graphical client, and requires Tk version 8.5 or 8.6."
+            puts "Please install Tk before trying to run Potato, or download a binary of Potato"
+            puts "from the website at $potato(webpage)"
           } else {
             # We have Tk, but not a good enough version
             set msg "WARNING! Potato requires Tk 8.5 or 8.6 to run (you only have Tk [package version Tk]).\n"
