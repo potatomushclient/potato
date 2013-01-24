@@ -12797,7 +12797,7 @@ proc winover {} {
 # Run it!
 
 if { [info exists ::potato::running] && $potato::running } {
-     ::potato::setupFlash
+     ::potato::setUpFlash
      return;
    }
 
