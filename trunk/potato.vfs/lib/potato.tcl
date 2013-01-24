@@ -4098,14 +4098,14 @@ proc ::potato::downgradeXTERM {col bg} {
 proc ::potato::arraySubelem {_arrName prefix} {
   upvar 1 $_arrName arrName
 
-  set first [array names arrName -regexp "[regsub -all {[^[:alnum:]]} $prefix {\\&}],\[^,\]+$"]
+  set first [array names arrName -regexp "^[regsub -all {[^[:alnum:]]} $prefix {\\&}],\[^,\]+$"]
   if { [llength $first] } {
        return $first;
      }
   set ret [list]
   set len [string length $prefix]
   incr len
-  foreach x [array names arrName -regexp "[regsub -all {[^[:alnum:]]} $prefix {\\&}],\[^,\]+,.*$"] {
+  foreach x [array names arrName -regexp "^[regsub -all {[^[:alnum:]]} $prefix {\\&}],\[^,\]+,.*$"] {
     set str [string range $x 0 [string first "," $x $len]-1]
     if { $str ne "" && $str ni $ret } {
          lappend ret $str
@@ -8023,7 +8023,7 @@ proc ::potato::setUpBindings {} {
        }
      }
 
-  # Use "Control+A" for "select all". Also tweak it to move insert, not selected the "end" char, and see end
+  # Use "Control+A" for "select all". Also tweak it to move insert, not select the "end" char, and see end
   if { !$has86 } {
        bind Text <Control-a> {%W tag add sel 1.0 end-1c; %W mark set insert end-1c; %W see insert; break}
      } else {
@@ -8041,6 +8041,7 @@ proc ::potato::setUpBindings {} {
 
   # Copy some bindings from Text to PotatoOutput, so we can remove the 'Text' bindtags from it.
   # (safer to copy those we want than block those we don't, as more we don't want might be added later)
+  # Virtual events at the end are new in Tk 8.6 and replace some of the fixed bindings
   foreach x [list B2-Motion Button-2 Meta-Key-greater Meta-Key-less Meta-f Meta-b Control-t Control-p \
                   Control-n Control-f Control-e Control-b Control-a Escape Control-Key Alt-Key <Copy> \
                   Control-backslash Control-slash Shift-Select Control-Shift-End Control-End \
@@ -9651,7 +9652,7 @@ proc ::potato::slashConfig {{w ""}} {
   bind $slashConfig($w,win,top,tree) <Destroy> "[list ::potato::slashConfigClose $w] ; [list array unset ::potato::slashConfig $w,*]"
 
   # Propagate the list. We use the array elements, to include disabled slash commands
-  set count 0
+  set slashConfig($w,count) 0
   foreach x [lsort -dictionary [removePrefix [arraySubelem world $w,slashcmd] $w,slashcmd]] {
     set slashConfig($w,slashcmd,slash$count) $x
     set slashConfig($w,slashcmd,slash$count,pattern) $world($w,slashcmd,$x)
@@ -9659,9 +9660,8 @@ proc ::potato::slashConfig {{w ""}} {
     set slashConfig($w,slashcmd,slash$count,case) $world($w,slashcmd,$x,case)
     set slashConfig($w,slashcmd,slash$count,send) $world($w,slashcmd,$x,send)
     set slashConfig($w,slashcmd,slash$count,enabled) [expr {$x in $world($w,slashcmd)}]
-    incr count
+    incr slashConfig($w,count)
   }
-  set slashConfig($w,count) $count
 
   slashConfigUpdateTree $w
 
@@ -9876,7 +9876,7 @@ proc ::potato::slashConfigAdd {w} {
   }
 
   set slashConfig($w,name) ""
-  set slashConfig($w,enabled) 0
+  set slashConfig($w,enabled) 1
   set slashConfig($w,pattern) ""
   set slashConfig($w,patternType) "Regexp"
   set slashConfig($w,case) 0
