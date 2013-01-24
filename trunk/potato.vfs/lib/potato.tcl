@@ -5765,17 +5765,19 @@ proc ::potato::focusIn {win} {
        return;
      }
 
-  set focus [focus -displayof .]
-  set c [up]
+  catch {
+    set focus [focus -displayof .]
+    set c [up]
 
-  if { $c ne "" && $focus ne "" } {
-       set conn($c,idle) 0
-       if { $focus ni [list $conn($c,input1) $conn($c,input2)] } {
-            focus $conn($c,input1)
-          }
-     }
+    if { $c ne "" && $focus ne "" } {
+         set conn($c,idle) 0
+         if { $focus ni [list $conn($c,input1) $conn($c,input2)] } {
+              focus $conn($c,input1)
+            }
+       }
 
-  unflash
+    unflash
+  }
 
   return;
 
@@ -12795,6 +12797,7 @@ proc winover {} {
 # Run it!
 
 if { [info exists ::potato::running] && $potato::running } {
+     ::potato::setupFlash
      return;
    }
 
