@@ -5930,6 +5930,7 @@ proc ::potato::main {} {
   variable skins;
   variable misc;
   variable running;
+  variable overtype;
   global argc;
   global argv;
 
@@ -5952,6 +5953,8 @@ proc ::potato::main {} {
   set path(lib) [file join $path(vfsdir) lib]
   set path(help) [file join $path(lib) help]
   set path(i18n_int) [file join $path(lib) i18n]
+
+  set overtype 0;# are text widgets in overtype mode?
 
   # Number of connections made
   set potato(conns) 0
@@ -7943,6 +7946,12 @@ proc ::potato::setUpBindings {} {
   # it causes "bleed" of the selection tag if new text is inserted.
   bind Text <<Selection>> {%W tag remove sel end-1c end}
 
+  # Allow for Insert key to toggle overtype on/off in text widgets
+  bind all <KeyRelease-Insert> "[list ::potato::toggleOvertype];break"
+  bind Text <KeyRelease-Insert> "[list ::potato::toggleOvertype];break"
+  bind Text <Insert> ""
+  bind Text <Key> [list ::potato::TextInsert %W %A]
+
   # The help for the Listbox widget says that it will only take focus on click if -takefocus is true.
   # It's lying. Let's make it actually do that.
   bind Listbox <1> {    if {[winfo exists %W]} { tk::ListboxBeginSelect %W [%W index @%x,%y] [string is true [%W cget -takefocus]] }}
@@ -8092,6 +8101,56 @@ proc ::potato::setUpBindings {} {
   return;
 
 };# ::potato::setUpBindings
+
+#: proc ::potato::toggleOvertype
+#: desc Toggle the overtype function in (all) Text widgets globally
+#: return bool specifying new overtype state.
+proc ::potato::toggleOvertype {} {
+  variable overtype;
+
+  return [set overtype [lindex [list 1 0] $overtype]];
+
+};# ::potato::toggleOvertype
+
+#: proc ::potato::TextInsert
+#: arg win text widget
+#: arg char character/string to insert
+#: desc Called when a key is pressed in a text widget to insert the appropriate character.
+#: desc Based heavily on ::tk::TextInsert, with modifications to allow for overtyping.
+#: return nothing
+proc ::potato::TextInsert {win char} {
+  variable overtype;
+
+  if { $char eq "" || [$win cget -state] eq "disabled"} {
+       return;
+     }
+  set compound 0
+  if { [::tk::TextCursorInSelection $win] } {
+       set compound 1
+       set indices [list sel.first sel.last]
+     } elseif { $overtype } {
+       set compound 1
+       set indices [list insert]
+     }
+
+   if { $compound } {
+        set oldSeparator [$win cget -autoseparators]
+        if { $oldSeparator } {
+             $win configure -autoseparators 0
+             $win edit separator
+           }
+        $win delete {*}$indices
+      }
+   $win insert insert $char
+   $win see insert
+   if { $compound && $oldSeparator } {
+        $win edit separator
+        $win configure -autoseparators 1
+      }
+
+   return;
+
+};# ::potato::TextInsert
 
 #: proc ::potato::PrevWord
 #: arg win text widget path
