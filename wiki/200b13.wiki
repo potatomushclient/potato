@@ -3,4 +3,11 @@
 ==Not Yet Released==
 
   * The input window sizes haven't been saved for some time, but now will be again. Reported by qa'toq, among others.
+  * Fixed a potential bug in the SOCKS4 proxy code. Reported by Paige.
+  * An unanchored regexp in a utility function was causing a fun, hard-to-find bug in the Slash Command config window. Reported by KimikoMuffin.
+  * When you add a new /command, it will be enabled by default. Suggested by KimikoMuffin.
+  
+  * Potato binaries are now built using Tcl/Tk 8.6.0, and some tweaks have been made to take advantage of new features in 8.6. If you're running Potato from source, it's recommended you [www.activestate.com/activetcl update your Tcl install] - the features listed below rely on it.
+  * Support for connecting to IPv6 addresses.
+  * On MacOS X, Potato will now bounce the application dock icon when there's new activity.
   
