@@ -11,6 +11,6 @@ Below is an example of a `logroll` macro, which automatically starts logging to 
   * *Commands:*
 {{{
     /log -stop
-    /log -append 1 -leave 1 -- C:/Logs/log_$w-%Y-%m-%d.txt
+    /log -append 1 -leave 1 -- C:/Logs/log_[/get _w]-[/time %Y-%m-%d].txt
     /at tomorrow 00:00:01=/run logroll
 }}}
