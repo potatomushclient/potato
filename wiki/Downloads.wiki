@@ -4,7 +4,7 @@
 
 A binary .exe of Potato is available for MS Windows.
 
-You can also download a [RunFromSource source code archive, or checkout the latest copy from SVN]. Potato can be run from source (without compiling) on Windows and Linux, and probably on MacOS X too.
+You can also download a [RunFromSource source code archive, or checkout the latest copy from SVN]. Potato can be run from source (without compiling) on Windows, Linux, and MacOS X.
 
 ==Windows==
 
@@ -22,6 +22,7 @@ As of version 2.0.0b12, a *[http://code.google.com/p/potatomushclient/downloads/
 
 You can also run Potato on MacOS X, [RunFromSource from SVN, a Starkit or the source].
 
+As I don't have access to a Mac myself, Potato is less-tested on MacOS.
 ==Source==
 
 You can also download the [http://code.google.com/p/potatomushclient/downloads/list?can=3&q=Type%3ASource+&colspec=Filename+Summary+Uploaded+Size+DownloadCount+Type source code] for the latest version, or download a [http://code.google.com/p/potatomushclient/downloads/list?can=3&q=Type%3AStarkit&colspec=Filename+Summary+Uploaded+Size+DownloadCount+Type Starkit archive]. 
