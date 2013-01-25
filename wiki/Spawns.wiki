@@ -3,6 +3,6 @@
 
 Spawn Windows show filtered text from a connection. People commonly use Spawns to show pages or channel chatter in a separate window, to make sure that they're not missed.
 
-You can set up Spawning from the [Events] window. Make sure the "Spawn?" tickbox is checked, and enter a list of spawn window names (space-separated) in the "To:" field next to it.
+You can set up Spawning from the [Events] window. Make sure the "Spawn?" tickbox is checked, and enter a spawn window name in the "To:" field next to it.
 
 Spawn Windows can be accessed from the [ViewMenu View...] menu. If the Spawn Toolbar is enabled, they'll also be shown under the World Toolbar in the [GUI main window].
