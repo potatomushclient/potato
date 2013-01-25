@@ -18,7 +18,9 @@ Linux binaries are no longer provided, as they actually proved more troublesome 
 
 ==MacOS X==
 
-There are not currently any MacOS X binaries available. While Potato should run on MacOS without any problems, some people have reported issues (normally related to the program being slow), so binaries are not currently being built. If you'd like to try running Potato on MacOS X, however, you can [RunFromSource try running it from SVN, a Starkit or the source].
+As of version 2.0.0b12, a *[http://code.google.com/p/potatomushclient/downloads/list?can=2&q=OpSys%3AOSX+Featured MacOS X .dmg binary]* is available. These binaries are provided by Yuriko.
+
+You can also run Potato on MacOS X, [RunFromSource from SVN, a Starkit or the source].
 
 ==Source==
 
