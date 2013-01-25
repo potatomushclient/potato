@@ -9089,9 +9089,7 @@ proc ::potato::process_input {c txt} {
 proc ::potato::send_to {c txt {prefix ""} {echo 1}} {
 
   foreach x [process_input $c $txt] {
-    if { $x ne "" } {
-         send_to_real $c "$prefix$x" $echo
-       }
+    send_to_real $c "$prefix$x" $echo
   }
   return;
 };# ::potato::send_to
