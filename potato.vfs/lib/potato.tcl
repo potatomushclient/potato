@@ -5759,25 +5759,23 @@ proc ::potato::reverseColour {col} {
 #: return nothing
 proc ::potato::focusIn {win} {
   variable conn;
-  variable winico;
 
-  if { [winfo toplevel $win] ne "." || $win ne "." } {
+  if { [winfo toplevel $win] ne $win || $win ne "." } {
        return;
      }
 
-  catch {
-    set focus [focus -displayof .]
-    set c [up]
+  set focus [focus -displayof .]
+  set c [up]
 
-    if { $c ne "" && $focus ne "" } {
-         set conn($c,idle) 0
-         if { $focus ni [list $conn($c,input1) $conn($c,input2)] } {
-              focus $conn($c,input1)
-            }
-       }
+  if { $c ne "" && $focus ne "" } {
+       set conn($c,idle) 0
+       if { $focus ni [list $conn($c,input1) $conn($c,input2)] } {
+            focus $conn($c,input1)
+          }
+     }
 
-    unflash
-  }
+  catch {unflashTaskbar $win}
+  catch {unflashSystrayIcon}
 
   return;
 
@@ -5988,6 +5986,11 @@ proc ::potato::main {} {
   errorLogWindow;# create a window for displaying error log messages
 
   # Parse command-line options
+  # Ignore an initial -psn argument; this is sent on MacOS but we don't care about it.
+  if { [string match "-psn*" [lindex $argv 0]] } {
+       set argv [lrange $argv 1 end]
+       incr argc -1
+     }
   foreach x $argv {
     if { [string range $x 0 1] ne "--" } {
          break;
@@ -6029,7 +6032,6 @@ proc ::potato::main {} {
      }
   set dev [file join $path(homedir) potato.dev]
 
-
   # This MUST be after basic_reqs, as the [tk] command isn't available on
   # linux until that's called.
   set potato(windowingsystem) [tk windowingsystem]
@@ -6054,6 +6056,17 @@ proc ::potato::main {} {
   }
   catch {file mkdir $paths(world)}
   lappend ::auto_path $path(userlib)
+  if { $::tcl_platform(platform) eq "windows" } {
+       lappend ::auto_path [file join $path(lib) app-potato windows]
+     } elseif { $::tcl_platform(os) eq "Darwin" } {
+       lappend ::auto_path [file join $path(lib) app-potato macosx]
+     } else {
+       lappend ::auto_path [file join $path(lib) app-potato linux]
+     }
+
+  catch {package require potato-flash 1.0}
+  catch {package require potato-systray 1.0}
+
   ::tcl::tm::path add $path(userlib)
 
   # We need to set the prefs before we load anything...
@@ -6106,9 +6119,8 @@ proc ::potato::main {} {
   # We do this after newConnection, or the <FocusIn> binding comes up wrong
   setUpBindings
 
-  # setUpWinico must be run before setUpFlash
-  setUpWinico
   setUpFlash
+  setupSystray
 
   if { $::tcl_platform(platform) eq "windows" } {
        if { ![catch {package require dde 1.3} err errdict] } {
@@ -6591,7 +6603,9 @@ proc ::potato::tooltipShow {widget {text ""} {x ""} {y ""}} {
   catch {destroy $top}
   toplevel $top
   wm title $top $text
-  catch {wm attributes $top -type tooltip};# Tk 8.6 and higher
+  if { [tk windowingsystem] eq "X11" } {
+       catch {wm attributes $top -type tooltip};# Tk 8.6 and higher
+     }
   $top configure -borderwidth 1 -background black
   wm overrideredirect $top 1
   pack [message $top.txt -aspect 10000 -background lightyellow \
@@ -6799,198 +6813,71 @@ proc ::potato::multiscroll {widgets subcmd args} {
 
 };# ::potato::multiscroll
 
-#: proc ::potato::minimizeToTray {w} {
-#: desc If $w is a toplevel, and we can minimize to tray, and it's minimized, withdraw $w
+#: proc ::potato::minimizeToSystrayDefault
+#: arg win window
+#: desc If $win is a toplevel, and we can minimize to tray, and it's minimized, withdraw $w.
+#: desc This is a stub which will be replaced with a platform-specific proc.
 #: return nothing
-proc ::potato::minimizeToTray {w} {
-  variable winico;
-  variable misc;
-
-  if { $w ne [winfo toplevel $w] } {
-       return;
-     }
-
-  if { !$winico(loaded) || !$misc(showSysTray) || !$misc(minToTray) } {
-       return;
-     }
-
-  if { [wm state $w] ne "iconic" } {
-       return;
-     }
-
-  # Minimize to tray
-  wm withdraw $w
+proc ::potato::minimizeToSystrayDefault {win} {
 
   return;
 
-};# ::potato::minimizeToTray
+};# ::potato::minimizeToSystrayDefault
 
-#: proc ::potato::setUpWinico
-#: desc Set up the vars used by winico and, if winico is to be used, load the icons, etc. This setup needs doing even when winico isn't loaded (to set vars stating that fact).
+#: proc ::potato::showSystrayIconDefault
+
+#: proc ::potato::showSystrayIconDefault
+#: desc Noop called to show an icon in the System Tray.  Replaced with a platform-specific proc
+#: desc where support is available.
 #: return nothing
-proc ::potato::setUpWinico {} {
-  variable winico;
-  variable path;
+proc ::potato::showSystrayIconDefault {} {
+
+  return;
+
+};# ::potato::showSystrayIconDefault
+
+#: proc ::potato::hideSystrayIconDefault
+#: desc Noop called to hide the icon in the System Tray.  Replaced with a platform-specific proc
+#: desc where support is available.
+#: return nothing
+proc ::potato::hideSystrayIconDefault {} {
+
+  return;
+
+};# ::potato::hideSystrayIconDefault
+
+#: proc ::potato::setupSystray
+#: arg skippackages Skip platform-specific implementations and use the default noops?
+#: desc Set up the procs used for manipulating the System Tray icon, using defaults where
+#: desc no platform-specific variant has been implemented by extension packages.
+#: desc When complete, show the systray icon if so configured.
+#: return nothing
+proc ::potato::setupSystray {{skippackages 0}} {
   variable misc;
 
-  set winico(loaded) 0
-  set winico(mapped) 0
-  set winico(flashing) 0
-  if { $::tcl_platform(platform) ne "windows" } {
-       return;
-     }
+  foreach x [list minimizeToSystray flashSystrayIcon unflashSystrayIcon showSystrayIcon hideSystrayIcon] {
+    if { $skippackages || ![llength [info procs ::potato::$x]] } {
+         set args [list]
+         set defcmd ::potato::${x}Default
+         foreach y [info args $defcmd] {
+           if { [info default $defcmd $y defarg] } {
+                lappend args [list $y $defarg]
+              } else {
+                lappend args $y
+              }
+         }
+         proc ::potato::$x $args [info body $defcmd]
+       }
+  }
 
-  set dir [file join $path(vfsdir) lib app-potato windows]
-  set winico(mainico) [file join $dir stpotato.ico]
 
-  if { [catch {package require Winico 0.6} err errdict] } {
-       errorLog "Unable to load Winico: $err" warning [errorTrace $errdict]
-       return;
-     }
-
-  if { ![file exists $dir] || ![file isdirectory $dir] || ![file exists $winico(mainico)] || ![file isfile $winico(mainico)] } {
-       return;
-     }
-
-  if { [catch {set winico(main) [winico createfrom $winico(mainico)]}] } {
-       return;
-     }
-
-  set winico(menu) [menu .winico -tearoff 0]
-
-  $winico(menu) add command -label [T "Restore"] -command ::potato::winicoRestore
-  $winico(menu) add separator
-  $winico(menu) add command -label [T "Hide Icon"] -command ::potato::winicoHideIcon
-  $winico(menu) add separator
-  $winico(menu) add command -label [T "Exit"] -command ::potato::chk_exit
-
-  set winico(pos) 0
-  set winico(loaded) 1
   if { $misc(showSysTray) } {
-       winicoMap
-     }
-  return;
-
-
-};# ::potato::setUpWinico
-
-#: proc ::potato::winicoHideIcon
-#: desc Turn off the SysTrayIcon otion and hide the Winico icon in the system tray when "Hide" is selected from it's menu.
-#: return nothing
-proc ::potato::winicoHideIcon {} {
-  variable misc;
-
-  set misc(showSysTray) 0
-
-  winicoUnmap
-
-  return;
-
-};# ::potato::winicoHideIcon
-
-#: proc ::potato::winicoMap
-#: desc Show the sys tray icon on Windows using winico
-#: return nothing
-proc ::potato::winicoMap {} {
-  variable winico;
-  variable potato;
-
-  if { $winico(mapped) || !$winico(loaded) } {
-       return;
-     }
-
-  if { [catch {winico taskbar add $winico(main) -text $potato(name) -pos 0 \
-                        -callback [list ::potato::winicoCallback %m %x %y]}] } {
-       catch {destroy $winico(menu)}
-       catch {winico taskbar delete $winico(main)}
-       catch {winico delete $winico(main)}
-       set winico(loaded) 0
-       return;
-     }
-
-  set winico(mapped) 1
-
-  return;
-
-};# ::potato::winicoMap
-
-#: proc ::potato::winicoUnmap
-#: desc Remove the sys tray icon which winico placed on Windows
-#: return nothing
-proc ::potato::winicoUnmap {} {
-  variable winico;
-
-  catch {winicoFlashOff}
-  catch {winico taskbar delete $winico(main)}
-  set winico(mapped) 0
-
-  return;
-
-};# ::potato::winicoUnmap
-
-#: proc ::potato::winicoCallback
-#: arg event The event that triggered the callback
-#: arg x X coord of event
-#: arg y Y coord of event
-#: desc Handle an event on the winico taskbar icon (movement, button click, etc)
-#: return nothing
-proc ::potato::winicoCallback {event x y} {
-  variable winico;
-
-  $winico(menu) unpost
-  if { $event eq "WM_LBUTTONUP" } {
-       winicoRestore
-     } elseif { $event eq "WM_RBUTTONUP" } {
-       $winico(menu) post $x $y
-       $winico(menu) activate 0
+       showSystrayIcon
      }
 
   return;
 
-};# ::potato::winicoCallback
-
-#: proc ::potato::winicoRestore
-#: desc Restore the main window when 'Restore' is activated on the winico icon on the taskbar
-#: return nothing
-proc ::potato::winicoRestore {} {
-
-  wm deiconify .
-  raise .
-  focus .
-
-  return;
-
-};# ::potato::winicoRestore
-
-#: proc ::potato::winicoFlashOn
-#: desc Flash the winico icon on the taskbar by changing it to another icon and back
-#: return nothing
-proc ::potato::winicoFlashOn {} {
-  variable winico;
-  variable potato;
-
-  set newpos [lindex [list 1 0] $winico(pos)]
-  winico taskbar modify $winico(main) -pos $newpos -text $potato(name)
-  set winico(pos) $newpos
-  set winico(after) [after 750 {::potato::winicoFlashOn}]
-  set winico(flashing) 1
-  return;
-
-};# ::potato::winicoFlashOn
-
-#: proc ::potato::winicoFlashOff
-#: desc Stop the winico icon on the taskbar from flashing by resetting to the default icon and cancelling the flash
-#: return nothing
-proc ::potato::winicoFlashOff {} {
-  variable winico;
-  variable potato;
-
-  after cancel $winico(after)
-  set winico(pos) 0
-  set winico(flashing) 0
-  winico taskbar modify $winico(main) -pos 0 -text $potato(name)
-  return;
-};# ::potato::winicoFlashOff
+};# ::potato::setupSystray
 
 #: proc ::potato::loadSkins
 #: desc load all the skins available, adding them to the $::potato::skins list
@@ -7235,95 +7122,83 @@ proc ::potato::errorTrace {errdict} {
 
 };# ::potato::errorTrace
 
+proc ::potato::flash {w} {
+   variable world;
+   variable misc;
+
+   if { $world($w,act,flashTaskbar) } {
+        catch {flashTaskbar .}
+      }
+
+   if { $misc(showSysTray) && $world($w,act,flashSysTray) } {
+        catch {flashSystrayIcon}
+      }
+
+   return;
+
+};# ::potato::flash
+
+#: proc ::potato::flashTaskbarDefault
+#: arg win toplevel window
+#: desc Default code to flash the taskbar window for $win. Only used if a platform-specific version is not available.
+#: return nothing
+proc ::potato::flashTaskbarDefault {win} {
+
+  wm deiconify $win
+
+  return;
+
+};# ::potato::flashTaskbarDefault
+
+#: proc ::potato::unflashTaskbarDefault
+#: arg win toplevel window
+#: desc Default code to stop flashing the taskbar window for $win. Only used if a platform-specific version is not available.
+#: return nothing
+proc ::potato::unflashTaskbarDefault {win} {
+
+  return;
+
+};# ::potato::unflashTaskbarDefault
+
+proc ::potato::flashSystrayIconDefault {win} {
+
+  return;
+
+};# ::potato::flashSystrayIconDefault
+
+proc ::potato::unflashSystrayIconDefault {win} {
+
+  return;
+
+};# ::potato::unflashSystrayIconDefault
+
 #: proc ::potato::setUpFlash
 #: arg skippackages Skip the [wl]inflash packages and use the fallback?
-#: desc Set up the ::potato::flash proc, which flashes the taskbar icon and systray icon for the app.
-#: desc If we're on Windows, we try to load the potato-winflash package and use that. On Linux, we try potato-linflash.
-#: desc Else, we just "wm deiconify .". For Win we also try and flash the Winico systray icon if requested.
+#: desc Set up the ::potato::[un]flashTaskbar procs, for flashing the taskbar for a given window, from defaults
 #: return nothing
 proc ::potato::setUpFlash {{skippackages 0}} {
   variable winico;
   variable potato;
   variable path;
 
-  set taskbarCmd {wm deiconify .}
-  set sysTrayCmd {# nothing}
-  set unflash {# nothing}
-
-  if { !$skippackages } {
-       if { $::tcl_platform(platform) eq "windows" } {
-            if { ![catch {package require potato-winflash} err errdict] } {
-                 set taskbarCmd {winflash . -count 3 -appfocus 1}
-               } else {
-                 errorLog "Unable to load potato-winflash package: $err" error [errorTrace $errdict]
-                 set taskbarCmd {wm deiconify .}
-               }
-            if { $winico(loaded) } {
-                 set sysTrayCmd {winicoFlashOn}
-                 set unflash {winicoFlashOff}
-               } else {
-                 set sysTrayCmd {# nothing}
-               }
-          } elseif { ![catch {wm attributes . -notify}] } {
-            set taskbarCmd {wm attributes . -notify 1 -modified 1}
-            set sysTrayCmd {# nothing}
-            set unflash {wm attributes . -notify 0 -modified 0}
-          } else {
-            if { [catch {package require potato-linflash}] } {
-                 # Attempt to copy linflash out for the first time
-                 catch {file mkdir $path(userlib)}
-                 catch {file copy -force [file join $path(lib) app-potato linux linflash1.0] $path(userlib)}
-                 catch {exec [file join $path(userlib) linflash1.0 compile]}
-               }
-            if { ![catch {package require potato-linflash} err errdict] } {
-                 set taskbarCmd {::potato::linflashWrapper}
-                 set unflash {linunflash .}
-               } else {
-                 errorLog "Unable to load potato-linflash package: $err" [errorTrace $errdict]
-                 set taskbarCmd {wm deiconify .}
-               }
-          }
-     }
-
-  proc ::potato::flash {w} [format {
-   variable world;
-   variable winico;
-   if { $world($w,act,flashTaskbar) } {
-        catch {%s}
-      }
-   if { !$winico(flashing) && $world($w,act,flashSysTray) && $winico(mapped) } {
-        catch {%s}
-      }
-   return;
-  } $taskbarCmd $sysTrayCmd];# ::potato::flash
-
-  proc ::potato::unflash {} [format {
-   catch {%s}
-  } $unflash];# ::potato::unflash
-
+  foreach x [list flashTaskbar unflashTaskbar] {
+    if { $skippackages || ![llength [info procs ::potato::$x]] } {
+         set args [list]
+         set defcmd ::potato::${x}Default
+         foreach y [info args $defcmd] {
+           if { [info default $defcmd $y defarg] } {
+                lappend args [list $y $defarg]
+              } else {
+                lappend args $y
+              }
+         }
+         proc ::potato::$x $args [info body $defcmd]
+       }
+  }
 
   return;
 
 };# ::potato::setUpFlash
-
-#: proc ::potato::linflashWrapper
-#: desc A wrapper around [linflash] which catches errors and, if serious,
-#: desc reverts the [flash] command back to 'wm deiconify' after logging
-#: desc the error.
-#: return nothing
-proc ::potato::linflashWrapper {} {
-
-  if { ![catch {linflash .} err errdict] || $err eq "" } {
-       return;
-     } else {
-       errorLog "Error in linflash: $err. Falling back to 'wm deiconify' for flashing." [errorTrace $errdict]
-       setupFlash 1
-       flash .
-     }
-
-  return;
-
-};# ::potato::linflashWrapper
 
 #: proc ::potato::chk_exit
 #: arg prompt If 0, do not prompt. If 1, prompt. If -1, prompt only if there are open (meaning "not closed", as
@@ -7334,7 +7209,6 @@ proc ::potato::chk_exit {{prompt 0}} {
   variable potato;
   variable conn;
   variable misc;
-  variable winico;
   variable skins;
 
   set connected 0
@@ -7385,9 +7259,7 @@ proc ::potato::chk_exit {{prompt 0}} {
   # Save the cheerleader. Save the world(s).
   saveWorlds
 
-  if { $winico(loaded) } {
-       catch {winico taskbar delete $winico(main)}
-     }
+  hideSystrayIcon
 
   exit;
 
@@ -7924,7 +7796,7 @@ proc ::potato::setUpBindings {} {
   set has86 [package vsatisfies [package require Tk] 8.6-]
 
   bind . <FocusIn> [list after idle [list ::potato::focusIn %W]]
-  bind . <Unmap> [list ::potato::minimizeToTray %W]
+  bind . <Unmap> [list ::potato::minimizeToSystray %W]
 
   # bindtags:
   # PotatoOutput displays output from the MUSH, and replaces Text in the bindtags.
@@ -8089,7 +7961,7 @@ proc ::potato::setUpBindings {} {
      }
   }
 
-  if { $has86 && [string match TextScrollPages [bind Text <<Paste>>]] } {
+  if { $has86 && $::tcl_platform(os) eq "Darwin" } {
        # Woops. 8.6.0 has the wrong binding on MacOS X
        bind Text <<Paste>> [list tk_textPaste %W]
      }
@@ -12856,7 +12728,6 @@ proc winover {} {
 # Run it!
 
 if { [info exists ::potato::running] && $potato::running } {
-     ::potato::setUpFlash
      return;
    }
 
@@ -12891,13 +12762,8 @@ proc parray {a args} {
 
 if { $tcl_platform(platform) eq "windows" } {
      parray potato::world -regexp {^[0-9]+,name$}
-     if { !$::potato::potato(wrapped) && [info exists ::potato::winico(mainico)] && [file exists $::potato::winico(mainico)] } {
-          rename toplevel _realtoplevel
-          proc toplevel {t args} {
-            uplevel 1 _realtoplevel $t {*}$args
-            after idle [list catch [list wm iconbitmap $t $::potato::winico(mainico)]]
-            return $t;
-          }
-          wm iconbitmap . $::potato::winico(mainico)
+     if { !$::potato::potato(wrapped) && [info exists ::potato::systray(mainico)] && [file exists $::potato::systray(mainico)] } {
+          wm iconbitmap . -default $::potato::systray(mainico)
         }
+     catch {console eval [list wm iconbitmap . $::potato::systray(mainico)]}
    }
