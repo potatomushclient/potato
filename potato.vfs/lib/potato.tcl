@@ -11462,6 +11462,7 @@ proc ::potato::up {} {
 #: return nothing
 proc ::potato::about {} {
   variable potato;
+  global tcl_platform;
 
   set win .aboutPotato
   catch {destroy $win}
@@ -11473,6 +11474,7 @@ proc ::potato::about {} {
 
   pack [::ttk::frame $frame.top] -side top -padx 15 -pady 15
   pack [::ttk::frame $frame.btm] -side top -padx 15 -pady 12
+  set pkginfo [::ttk::frame $frame.pkginfo]
 
   set str [T "%s Version %s.\nA MU* Client written in Tcl/Tk by\nMike Griffiths (%s)" $potato(name) $potato(version) $potato(contact)]
 
@@ -11489,8 +11491,52 @@ proc ::potato::about {} {
   bind $frame.top.right.web <Leave> [list %W configure -foreground blue -cursor {}]
   bind $frame.top.right.web <ButtonRelease-1> [list ::potato::launchWebPage $potato(webpage)]
 
+  pack [::ttk::button $frame.btm.toggle -text [T "Toggle Package Info"] \
+             -command [list ::potato::aboutTogglePkg $pkginfo] -takefocus 1] -side left -padx 5
   pack [::ttk::button $frame.btm.close -text [T "Close"] -width 8 \
-             -command [list destroy $win] -default active] -side top
+             -command [list destroy $win] -default active -takefocus 1] -side left -padx 5
+
+  set t [text $pkginfo.t -wrap word -height 15 -width 45]
+  $t tag config bolded -font [dict replace [font actual [$t cget -font]] -weight bold]
+  $t tag config title -font [dict replace [font actual [$t cget -font]] -weight bold -slant italic]
+  $t tag config unavailable -foreground red
+  $t insert end "Potato:" bolded " $potato(version)\n"
+  $t insert end "Tcl:" bolded " [info patchlevel]\n"
+  $t insert end "Tk:" bolded " $::tk_patchLevel\n"
+
+  $t insert end "\n"
+  $t insert end "System Info:\n" title
+  $t insert end "Platform:" bolded " $tcl_platform(platform)\n"
+  $t insert end "OS:" bolded " $tcl_platform(os) ($tcl_platform(osVersion))\n"
+  $t insert end "Machine:" bolded " $tcl_platform(machine)\n"
+  $t insert end "Windowing System:" bolded " [tk windowingsystem]\n"
+
+  $t insert end "\n"
+  $t insert end "Additional Packages:\n" title
+
+  set windows [list Winico potato-winflash]
+  set linux [list potato-linflash linflash]
+  set mac [list tkdock]
+  set generic [list tls potato-flash]
+  foreach {var os} [list generic "All Platforms" windows Windows linux Linux mac "MacOS X"] {
+    $t insert end "$os:\n" title
+    foreach x [set $var] {
+      $t insert end "$x:" bolded " "
+      if { [catch {package present $x} vers] } {
+        $t insert end "Not Present" unavailable \n
+      } else {
+        $t insert end "$vers\n"
+      }
+    }
+    $t insert end "\n"
+  }
+
+  $t configure -state disabled
+
+  set x [ttk::scrollbar $pkginfo.x -orient horizontal -command [list $t xview]]
+  set y [ttk::scrollbar $pkginfo.y -orient vertical -command [list $t yview]]
+  $t configure -xscrollcommand [list $x set] -yscrollcommand [list $y set]
+  grid_with_scrollbars $t $x $y
 
   update
   center $win
@@ -11503,6 +11549,22 @@ proc ::potato::about {} {
   return;
 
 };# ::potato::about
+
+#: proc ::potato::aboutTogglePkg
+#: arg frame widget to toggle
+#: desc Toggle the "Package Info" in the About window, by packing $frame if it's not packed, or unpacking if it is
+#: return nothing
+proc ::potato::aboutTogglePkg {frame} {
+
+  if { [catch {pack info $frame}] } {
+       pack $frame -side top -padx 15 -pady 10
+     } else {
+       pack forget $frame
+     }
+
+  return;
+
+};# ::potato::aboutTogglePkg
 
 #: proc ::potato::ddeStart
 #: desc Start up a DDE server on Windows to listen for incoming telnet requests, which we'll receieve if we're the default telnet client
