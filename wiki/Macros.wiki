@@ -3,7 +3,7 @@
 
 A Macro is a user-defined command which sends text and/or runs [SlashCommands /commands] to a world. They are defined in the Macro Window, which can be opened from the [OptionsMenu Options...] menu, either for the current world or globally.
 
-Macros are executed using the `/runmacro` [SlashCommands /command]. They can be used anywhere that /commands are parsed (for instance, from an [ConfigureWorldsAutoSends Auto-Send].
+Macros are executed using the `/runmacro` [SlashCommands /command]. They can be used anywhere that /commands are parsed (for instance, from an [ConfigureWorldsAutoSends Auto-Send]).
 
 Below is an example of a `logroll` macro, which automatically starts logging to a file named `log_<world>-<year>-<month>-<day>.txt`, and changes to a new logfile at midnight.
 
@@ -14,4 +14,3 @@ Below is an example of a `logroll` macro, which automatically starts logging to 
     /log -append 1 -leave 1 -- C:/Logs/log_$w-%Y-%m-%d.txt
     /at tomorrow 00:00:01=/run logroll
 }}}
-
