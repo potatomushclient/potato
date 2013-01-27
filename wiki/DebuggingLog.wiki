@@ -1,0 +1,21 @@
+#summary Debugging Log Window
+
+=Debugging Log Window=
+
+The Debugging Log Window shows useful information about how Potato has loaded, as well as any errors which have occurred while Potato is running.
+
+Informational messages are shown in green, and provide generally-unimportant information, such as how many translation messages have been loaded.
+
+Warnings report non-critical errors, and are displayed in blue. These typically include the failure to load a component which is recommended, but not required.
+
+Errors are displayed in red; these should generally never occur, and should be [http://code.google.com/p/potatomushclient/ reported] so they can be fixed. 
+
+Depending on how it happened, an error may cause the Debugging Log Window to opened automatically to make sure you're aware of it. When this happens, you won't be able to continue using Potato until the window has been closed. If the error repeats continuously, causing the Debugging Window to re-open as soon as you close it, you can disable this behaviour for the current session by unticking the "Report Errors?" checkbutton in the bottom right corner.
+
+The [ShowPackages Show Packages] button opens another window which lists the packages loaded by Potato and their versions; this information is useful when reporting an error.
+
+The *Copy to Clipboard* button copies the entire Debugging Log to the clipboard.
+
+[http://potatomushclient.googlecode.com/svn/wiki/DebuggingLog.gif]
+
+In the example above, translations for several languages have been loaded, and a warning has been raised because the *tls* package, which is required for SSL connections, could not be found.

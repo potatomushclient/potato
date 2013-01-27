@@ -6,8 +6,14 @@
   * Fixed a potential bug in the SOCKS4 proxy code. Reported by Paige.
   * An unanchored regexp in a utility function was causing a fun, hard-to-find bug in the Slash Command config window. Reported by KimikoMuffin.
   * When you add a new /command, it will be enabled by default. Suggested by KimikoMuffin.
+  * Added support for Overtype mode in text frames, toggled on and off with the Insert key. When on, anything you type will replace the character after the cursor, instead of appearing before it. Requested by Emi.
+  * Pressing Return without typing anything will now send a blank line, instead of doing nothing. Useful for MUDs/MOOs/etc which ask you to press Return as a confirmation. Requested by Emi.
+  * On MacOS X, you can enable systray flashing to animate the dock icon on activity.
+  * The Help → About window now shows the version of Potato being used, as well as some information about the machine it's running on and the versions of Tcl and various loaded packages, for easier debugging. Suggested by Paige.
+  * Added a 'Connect to World' button in the Address Book.
   
   * Potato binaries are now built using Tcl/Tk 8.6.0, and some tweaks have been made to take advantage of new features in 8.6. If you're running Potato from source, it's recommended you [www.activestate.com/activetcl update your Tcl install] - the features listed below rely on it.
   * Support for connecting to IPv6 addresses.
   * On MacOS X, Potato will now bounce the application dock icon when there's new activity.
+  * Possibly-better-looking tooltips on X11.
   

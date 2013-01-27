@@ -4,8 +4,8 @@
 
 The following commands are available from the Help menu:
 
-  * *Show Helpfiles*
-  * Tcl Code Console
-  * [ErrorLog Error Log Window]
-  * *About Potato*
-  * [http://www.potatomushclient.com Visit Website]
+  * *Show Helpfiles* opens this helpfile
+  * *Tcl Code Console* launches a console where Tcl code can be entered directly. Not available on Linux.
+  * [DebuggingLog Debugging Log Window]
+  * *About Potato* opens a window with some basic info about Potato, and also allows you to view certain information about the current install useful for debugging.
+  * [http://code.google.com/p/potatomushclient/ Visit Potato Website]

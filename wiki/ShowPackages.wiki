@@ -1,0 +1,7 @@
+#summary Show Packages Window
+
+=Show Packages Window=
+
+The Show Packages Window, accessed from the About dialog or the [DebuggingLog Debugging Log window], shows some basic information about the system Potato is running on, as well as the version numbers of various packages which Potato loads for provide additional functionality. This information is useful when submitting an error report.
+
+[http://potatomushclient.googlecode.com/svn/wiki/ShowPackages.gif]
