@@ -190,6 +190,8 @@ proc ::potato::setPrefs {readfile} {
 
   set misc(checkForUpdates) 1
 
+  set misc(selectToCopy) 0
+
   # misc(locale) is the user's preferred locale. potato(locale), set in main/i18nPotato is
   # the locale that's actually currently being used
   set misc(locale) "en_us";# most people probably want this default
@@ -856,10 +858,6 @@ $sub.cb state disabled
   pack [::ttk::combobox $sub.cb -textvariable ::potato::worldconfig($w,beep,sound) \
              -values [list All Once None] -width 20 -state readonly] -side left -padx 3
 
-  pack [set sub [::ttk::frame $frame.selectToCopy]] -side top -pady 5 -anchor nw
-  pack [::ttk::label $sub.label -text [T "Select to Copy?"] -width 20 -justify left -anchor w] -side left
-  pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,selectToCopy) -onvalue 1 -offvalue 0] -side left
-
 
   # Timers
   set frame [configureFrame $canvas [T "Timers"]]
@@ -1069,6 +1067,13 @@ $sub.cb state disabled
        pack [::ttk::checkbutton $sub.c -variable ::potato::worldconfig(MISC,checkForUpdates) \
                           -onvalue 1 -offvalue 0] -side left
        set potato::worldconfig(MISC,checkForUpdates) $misc(checkForUpdates)
+
+       pack [set sub [::ttk::frame $frame.selectToCopy]] -side top -pady 5 -anchor nw
+       pack [::ttk::label $sub.l -text [T "Select to Copy?"] -width $lW -anchor w -justify left] -side left
+       pack [::ttk::checkbutton $sub.c -variable ::potato::worldconfig(MISC,selectToCopy) \
+                          -onvalue 1 -offvalue 0] -side left
+       set potato::worldconfig(MISC,selectToCopy) $misc(selectToCopy)
+
 
      }
 
