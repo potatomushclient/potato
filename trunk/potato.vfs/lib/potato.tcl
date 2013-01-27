@@ -5830,16 +5830,19 @@ proc ::potato::statsFormat {secs} {
 #: proc ::potato::errorLogWindow
 #: desc Create a window for displaying an Error Log of bugs/errors that occur while Potato
 #: desc is running (failure to load package, execute external commands, etc). If the window already exists, deiconify it.
-#: return nothing
+#: return path to toplevel
 proc ::potato::errorLogWindow {} {
 
   set win .errorLogWin
   if { [winfo exists $win] } {
        # These messages are reset because we create the window, initially, before translation files are loaded
        # (so we can report errors in doing so), so need to be translated later, when the window is displayed.
-       catch {wm title $win [T "Potato Debugging Log"] ; $win.frame.btm.close configure -text [T "Close"]}
+       catch {wm title $win [T "Potato Debugging Log"]}
+       catch {$win.frame.btm.close configure -text [T "Close"]}
+       catch {$win.frame.btm.opt.report configure -text [T "Report Errors"]}
        reshowWindow $win 0
-       return;
+       focus $win.frame.btm.buttons.close
+       return $win;
      }
 
   toplevel $win
@@ -5869,49 +5872,100 @@ proc ::potato::errorLogWindow {} {
 
   $text tag configure errorTraceHidden -elide 1
 
-  pack [set btns [::ttk::frame $frame.btm]] -side top -anchor nw -expand 0 -fill x
-  pack [::ttk::button $btns.close -text [T "Close"] -underline 0 -command [list wm withdraw $win]]
+  pack [set btm [::ttk::frame $frame.btm]] -side top -anchor nw -expand 0 -fill x -pady 10
+  pack [set btns [::ttk::frame $btm.buttons]] -side left -anchor n -expand 1 -fill x
+  pack [::ttk::button $btns.close -text [T "Close"] -underline 0 -default active \
+               -command "[list wm withdraw $win] ; [list set ::potato::bgError 0]"]
+  pack [set opt [::ttk::frame $btm.opt]] -side right -anchor e
+  pack [::ttk::checkbutton $opt.report -text [T "Report Errors"] \
+            -variable ::potato::potato(report_errors)] -padx 5
 
   $text configure -state disabled
 
-  wm protocol $win WM_DELETE_WINDOW [list wm withdraw $win];# don't destroy, just hide
+  wm protocol $win WM_DELETE_WINDOW [list $btm.close invoke];# don't destroy, just hide
 
-  return;
+  bind $win <1> [list ::potato::errorLogClick %W]
+
+  return $win;
 
 };# ::potato::errorLogWindow
+
+#: proc ::potato::errorLogClick
+#: arg win The window registering the click
+#: desc Used for when the Error Log Window has a [grab] enabled; if the click is outside the window, beep.
+#: return nothing
+proc ::potato::errorLogClick {win} {
+
+  set where [winfo containing {*}[winfo pointerxy $win]]
+  if { $where eq "" || [winfo toplevel $win] ne [winfo toplevel $where] } {
+       bell -displayof $win
+     }
+
+  return;
+};# ::potato::errorLogClick
 
 #: proc ::potato::errorLog
 #: arg msg Message to display
 #: arg level The priority level of the message. One of "error", "warning" or "message". Defaults to "error"
 #: arg trace If given, an error trace for the message, to be shown with a toggle button to hide/show
+#: arg report Should we report the error to the user? Defaults to 0.
 #: desc Print the given message to the Error Log window with the given priority level
 #: return nothing
-proc ::potato::errorLog {msg {level "error"} {trace ""}} {
+proc ::potato::errorLog {msg {level "error"} {trace ""} {report 0}} {
+  variable potato;
 
   set win .errorLogWin.frame.top.text
+
+  if { !$potato(report_errors) } {
+       set report 0
+     }
 
   $win configure -state normal
 
   if { $trace ne "" } {
-       $win image create end -image ::potato::img::expand -align center -padx 2 -pady 2
+       set tags [list $level errorTrace margin]
+       if { $report } {
+            set img ::potato::img::contract
+            # Close any previously-opened errors
+            foreach x [$win image names] {
+              set index [$win index $x]
+              if { "errorTraceHidden" ni [$win tag names $index] } {
+                   errorLogToggle $win $index
+                 }
+            }
+          } else {
+            set img ::potato::img::expand
+            lappend tags "errorTraceHidden"
+          }
+
+       $win image create end -image $img -align center -padx 2 -pady 2
        $win tag add toggleBtn end-2c end-1c
-       $win insert end $msg [list $level margin] " - \n$trace" [list $level errorTrace errorTraceHidden margin] \n
+       $win insert end $msg [list $level margin] \n "" " - $trace\n" $tags
      } else {
        $win insert end $msg [list $level margin] \n
      }
   $win see end
   $win configure -state disabled
 
+  if { $report } {
+       set win [errorLogWindow]
+       grab set $win
+       tkwait variable ::potato::bgError
+       grab release $win
+     }
+
   return;
+
 };# ::potato::errorLog
 
 #: ::potato::errorLogToggle
 #: arg win Text widget of the Error Log window
+#: arg index The index of the button to toggle; defaults to "current" to act where the mouse is
 #: desc Called when a + or - button in the Error Log is clicked, to show/hide an error trace
 #: return nothing
-proc ::potato::errorLogToggle {win} {
+proc ::potato::errorLogToggle {win {index current}} {
 
-  set image [$win index current]
+  set image [$win index $index]
   set tracerange [$win tag nextrange errorTrace $image]
   if { ![llength $tracerange] } {
        return;
@@ -5927,6 +5981,24 @@ proc ::potato::errorLogToggle {win} {
 
   return;
 };# ::potato::errorLogToggle
+
+#: proc ::potato::bgError
+#: arg msg User-readable error message
+#: arg errdict a [dict] of error information
+#: desc The background error for Potato, replacing [bgerror] via [interp bgerror]. Displays the message in Potato's Debugging Log Window
+#: return nothing
+proc ::potato::bgError {msg errdict} {
+
+  set tracelist [list]
+  dict for {key value} $errdict {
+    lappend tracelist "$key: $value"
+  }
+
+  errorLog $msg "error" [join $tracelist "\n"] 1
+
+  return;
+
+};# ::potato::bgError
 
 #: proc ::potato::main
 #: desc called when the program starts, to do some basic init
@@ -5962,6 +6034,8 @@ proc ::potato::main {} {
   set path(i18n_int) [file join $path(lib) i18n]
 
   set overtype 0;# are text widgets in overtype mode?
+
+  set potato(report_errors) 1;# Report bg errors.
 
   # Number of connections made
   set potato(conns) 0
@@ -6183,6 +6257,8 @@ proc ::potato::main {} {
 
   # Start ANSI-flashing
   after $misc(ansiFlashDelay,on) ::potato::flashANSI 1
+
+  interp bgerror {} ::potato::bgError
 
   return;
 
