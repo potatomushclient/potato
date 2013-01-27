@@ -5837,9 +5837,11 @@ proc ::potato::errorLogWindow {} {
   if { [winfo exists $win] } {
        # These messages are reset because we create the window, initially, before translation files are loaded
        # (so we can report errors in doing so), so need to be translated later, when the window is displayed.
-       catch {wm title $win [T "Potato Debugging Log"]}
-       catch {$win.frame.btm.close configure -text [T "Close"]}
-       catch {$win.frame.btm.opt.report configure -text [T "Report Errors"]}
+       wm title $win [T "Potato Debugging Log"]
+       $win.frame.btm.buttons.close configure -text [T "Close"]
+       $win.frame.btm.report configure -text [T "Report Errors?"]
+       $win.frame.btm.buttons.copy configure -text [T "Copy to Clipboard"]
+       $win.frame.btm.buttons.packages configure -text [T "Show Package Info"]
        reshowWindow $win 0
        focus $win.frame.btm.buttons.close
        return $win;
@@ -5852,7 +5854,7 @@ proc ::potato::errorLogWindow {} {
   pack [set frame [::ttk::frame $win.frame]] -side left -anchor nw -expand 1 -fill both
   pack [set cont [::ttk::frame $frame.top]] -side top -anchor nw -expand 1 -fill both
 
-  set text [text $cont.text -width 120 -height 35 -wrap word -undo 0]
+  set text [text $cont.text -width 100 -height 20 -wrap word -undo 0]
   set sbY [::ttk::scrollbar $cont.sbY -orient vertical -command [list $text yview]]
   set sbX [::ttk::scrollbar $cont.sbX -orient horizontal -command [list $text xview]]
   $text configure -yscrollcommand [list $sbY set] -xscrollcommand [list $sbX set]
@@ -5864,25 +5866,30 @@ proc ::potato::errorLogWindow {} {
 
   $text tag configure margin -lmargin1 15
 
-  $text tag configure toggleBtn -lmargin1 2
+  $text tag configure toggleBtn -lmargin1 2 -elide 0
   $text tag bind toggleBtn <ButtonRelease-1> [list ::potato::errorLogToggle $text]
   $text tag bind toggleBtn <Enter> [list $text configure -cursor arrow]
   $text tag bind toggleBtn <Leave> [list $text configure -cursor xterm]
   $text tag configure errorTrace -lmargin1 20 -lmargin2 25
 
   $text tag configure errorTraceHidden -elide 1
+  $text tag raise toggleBtn
 
-  pack [set btm [::ttk::frame $frame.btm]] -side top -anchor nw -expand 0 -fill x -pady 10
-  pack [set btns [::ttk::frame $btm.buttons]] -side left -anchor n -expand 1 -fill x
-  pack [::ttk::button $btns.close -text [T "Close"] -underline 0 -default active \
-               -command "[list wm withdraw $win] ; [list set ::potato::bgError 0]"]
-  pack [set opt [::ttk::frame $btm.opt]] -side right -anchor e
-  pack [::ttk::checkbutton $opt.report -text [T "Report Errors"] \
-            -variable ::potato::potato(report_errors)] -padx 5
+  pack [set btm [frame $frame.btm]] -side top -anchor nw -expand 0 -fill x -pady 10
+  pack [set btns [frame $btm.buttons]] -side top -anchor center
+  pack [::ttk::button $btns.close -text [T "Close"] -takefocus 1 -underline 0 -default active \
+               -command "[list wm withdraw $win] ; [list set ::potato::bgError 0]"] -side left -padx 7
+  pack [::ttk::button $btns.copy -text [T "Copy to Clipboard"] \
+       -command [list ::potato::copyAllTextToClipboard $text] -takefocus 1] -side left -padx 7
+  pack [::ttk::button $btns.packages -text [T "Show Package Info"] \
+             -command [list ::potato::showPackageInfo] -takefocus 1] -side left -padx 7
+
+  place [::ttk::checkbutton $btm.report -text [T "Report Errors?"] \
+            -variable ::potato::potato(report_errors)] -anchor e -rely 0.5 -relx 1 -x -10
 
   $text configure -state disabled
 
-  wm protocol $win WM_DELETE_WINDOW [list $btm.close invoke];# don't destroy, just hide
+  wm protocol $win WM_DELETE_WINDOW [list $btns.close invoke];# don't destroy, just hide
 
   bind $win <1> [list ::potato::errorLogClick %W]
 
@@ -5940,7 +5947,8 @@ proc ::potato::errorLog {msg {level "error"} {trace ""} {report 0}} {
 
        $win image create end -image $img -align center -padx 2 -pady 2
        $win tag add toggleBtn end-2c end-1c
-       $win insert end $msg [list $level margin] \n "" " - $trace\n" $tags
+       $win tag add errorTraceHidden end-2c end-1c
+       $win insert end $msg [list $level margin] \n "" "   $trace\n" $tags
      } else {
        $win insert end $msg [list $level margin] \n
      }
@@ -5989,12 +5997,7 @@ proc ::potato::errorLogToggle {win {index current}} {
 #: return nothing
 proc ::potato::bgError {msg errdict} {
 
-  set tracelist [list]
-  dict for {key value} $errdict {
-    lappend tracelist "$key: $value"
-  }
-
-  errorLog $msg "error" [join $tracelist "\n"] 1
+  errorLog $msg "error" [errorTrace $errdict] 1
 
   return;
 
@@ -6066,7 +6069,7 @@ proc ::potato::main {} {
 
   basic_reqs
 
-  errorLogWindow;# create a window for displaying error log messages
+  after idle [list ::potato::center [errorLogWindow]];# create a window for displaying error log messages
 
   # Parse command-line options
   # Ignore an initial -psn argument; this is sent on MacOS but we don't care about it.
@@ -11577,8 +11580,8 @@ proc ::potato::about {} {
 
   pack [::ttk::button $frame.btm.close -text [T "Close"] -width 8 \
              -command [list destroy $win] -default active -takefocus 1] -side left -padx 5
-  pack [::ttk::button $frame.btm.toggle -text [T "Show Package Info"] \
-             -command [list ::potato::aboutPackages $win] -takefocus 1] -side left -padx 5
+  pack [::ttk::button $frame.btm.packages -text [T "Show Package Info"] \
+             -command [list ::potato::showPackageInfo] -takefocus 1] -side left -padx 5
 
   update
   center $win
@@ -11592,15 +11595,14 @@ proc ::potato::about {} {
 
 };# ::potato::about
 
-#: proc ::potato::aboutPackages
-#: arg about toplevel About widget
-#: desc Show the "Package Info" from the About window in a transient window
+#: proc ::potato::showPackageInfo
+#: desc Show info on the packages loaded and their versions
 #: return nothing
-proc ::potato::aboutPackages {about} {
+proc ::potato::showPackageInfo {} {
   variable potato;
   global tcl_platform;
 
-  set win $about-packages
+  set win .pkgInfo
 
   if { [winfo exists $win] } {
        reshowWindow $win
@@ -11610,7 +11612,6 @@ proc ::potato::aboutPackages {about} {
   toplevel $win
   wm withdraw $win
   wm title $win [T "Package Info"]
-  wm transient $win $about
 
   pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both
 
@@ -11660,9 +11661,7 @@ proc ::potato::aboutPackages {about} {
 
   pack [set btm [::ttk::frame $frame.btm]] -expand 0 -fill y -padx 10 -pady 10
   pack [::ttk::button $btm.close -text [T "Close"] -command [list destroy $win] -default active -takefocus 1] -side left -padx 8
-  pack [::ttk::button $btm.copy -text [T "Copy to Clipboard"] -command [list ::potato::aboutPackagesCopy $t] -takefocus 1] -side left -padx 8
-
-  bind $about <Destroy> [list destroy $win]
+  pack [::ttk::button $btm.copy -text [T "Copy to Clipboard"] -command [list ::potato::copyAllTextToClipboard $t] -takefocus 1] -side left -padx 8
 
   center $win
   wm deiconify $win
@@ -11670,19 +11669,19 @@ proc ::potato::aboutPackages {about} {
 
   return;
 
-};# ::potato::aboutPackages
+};# ::potato::showPackageInfo
 
-#: proc ::potato::aboutPackagesCopy
+#: proc ::potato::copyAllTextToClipboard
 #: arg t text widget
-#: desc Copy the Package Info from the text widget $t to the clipboard
+#: desc Copy all text from the text widget $t to the clipboard
 #: return nothing
-proc ::potato::aboutPackagesCopy {t} {
+proc ::potato::copyAllTextToClipboard {t} {
 
   clipboard clear -displayof $t
   clipboard append -displayof $t [$t get 1.0 end-1char]
   return;
 
-};# ::potato::aboutPackagesCopy
+};# ::potato::copyAllTextToClipboard
 
 #: proc ::potato::ddeStart
 #: desc Start up a DDE server on Windows to listen for incoming telnet requests, which we'll receieve if we're the default telnet client
