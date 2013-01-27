@@ -44,15 +44,25 @@ proc ::potato::loadWorlds {} {
 #: arg w world id
 #: arg version The version of the world file, or an empty string if none was present (ie, the world file pre-dates versions)
 #: desc World $w was loaded from a version $version world file; make any changes necessary to bring it up to date with a current world file.
+#: desc Only old worlds (without a world($w,version) var) need to check $version.
 #: return nothing
 proc ::potato::manageWorldVersion {w version} {
   variable world;
 
   array set wf [worldFlags];# array of all current world flags
 
+  if { [info exists world($w,version)] } {
+       # World uses the new incrementing version variable, instead of
+       # bitwise flags.
+       manageWorldVersionNew $w
+       return;
+     }
+
   if { ![string is integer -strict $version] } {
        set version 0
      }
+
+  set world($w,version) 0
 
   if { ! ($version & $wf(verbose_mu_type)) } {
        set world($w,type) [lindex [list MUD MUSH] $world($w,type)]
@@ -136,9 +146,37 @@ proc ::potato::manageWorldVersion {w version} {
   #      set world($w,new_features_var) foobar
   #    }
 
+  manageWorldVersionNew $w
+
   return;
 
 };# potato::manageWorldVersion
+
+#: proc ::potato::manageWorldVersionNew
+#: arg w world id
+#: desc Manage changes to the world options file for world $w, updating settings as needed to reflect changes made between the current version and the one it was saved under.
+#: return nothing
+proc ::potato::manageWorldVersionNew {w} {
+  variable world;
+  variable potato;
+
+  if { [info exists world($w,version)] } {
+       set version $world($w,version)
+     } else {
+       set version 0
+     }
+
+  if { $version < 1 } {
+       # In version 1, this is a global option
+       unset -nocomplain world($w,selectToCopy)
+     }
+
+  # This should always be last.
+  set world($w,version) $potato(worldVersion)
+
+  return;
+
+};# ::potato::manageWorldVersionNew
 
 #: proc ::potato::loadWorldDefaults
 #: arg w world id
@@ -147,6 +185,7 @@ proc ::potato::manageWorldVersion {w version} {
 #: return nothing
 proc ::potato::loadWorldDefaults {w override} {
   variable world;
+  variable potato;
 
   # Options we don't copy. This is a list of option name wildcard patterns.
   set nocopyPatterns [list *,font,created id *,fcmd,* events events,* timer timer,* groups slashcmd slashcmd,* macro,*]
@@ -192,6 +231,8 @@ proc ::potato::loadWorldDefaults {w override} {
          }
        }
      }
+
+  set world($w,version) $potato(worldVersion)
 
   return;
 
@@ -304,6 +345,7 @@ proc ::potato::worldFlags {{total 0}} {
   set f(fixed_obfusticate) 256    ;# Password obfustication was broken. Like, really broken.
   set f(prefixes_list)     512    ;# Prefixes are stored in a single list, instead of an array
   set f(new_slash_cmds)   1024    ;# new, nestable /commands, and events using [/get 0] instead of %0
+  set f(better_version)   2048    ;# Versions are now stored in $world($w,version) instead, replacing the bitwise system.
   if { !$total } {
        return [array get f];
      } else {
@@ -6040,6 +6082,11 @@ proc ::potato::main {} {
 
   set potato(report_errors) 1;# Report bg errors.
 
+  # The version of the world files.
+  # This is an incrementing integer, not a bit flag.
+  # See ::potato::manageWorldVersionNew
+  set potato(worldVersion) 1
+
   # Number of connections made
   set potato(conns) 0
   # Number of saved worlds
@@ -8186,13 +8233,9 @@ proc ::potato::SelectNextWord {win} {
 #: desc If Select to Copy is configured for the currently-displayed connection, perform a copy in the given window
 #: return nothing
 proc ::potato::selectToCopy {win} {
-  variable world;
-  variable conn;
+  variable misc;
 
-  set c [up]
-  set w $conn($c,world)
-
-  if { !$world($w,selectToCopy) } {
+  if { !$misc(selectToCopy) } {
        return;
      }
 
