@@ -1,6 +1,6 @@
 #!/usr/bin/tclsh
 # This script builds a new Translation Template for Potato.
-set VERSION "1.2"
+set VERSION "1.3"
 
 proc main {} {
 
@@ -30,9 +30,25 @@ proc main {} {
   pack [::ttk::button $frame.go -text "Go!" -command buildNewTemplate] -side left
 
   set files [glob -nocomplain -dir $::initialdir *.tcl]
-  if { $files ne "" } {
+  if { [llength $files] } {
        addFiles $text $files
      }
+  set appdir [file join $::initialdir app-potato]
+  foreach x [list windows linux macosx] {
+    recursiveSearch [file join $appdir $x] $text
+  }
+}
+
+proc recursiveSearch {dir text} {
+
+  set files [glob -nocomplain -dir $dir *.tcl]
+  if { [llength $files] } {
+       addFiles $text $files
+     }
+
+  foreach x [glob -nocomplain -dir $dir -type d *] {
+    recursiveSearch $x $text
+  }
 }
 
 proc setOutputFile {{file ""}} {

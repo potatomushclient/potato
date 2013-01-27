@@ -1,6 +1,6 @@
 #!/usr/bin/tclsh
 # Attempt to merge a Potato translation template with an older translation file
-set VERSION "1.2"
+set VERSION "1.3"
 
 proc main {} {
 
@@ -176,7 +176,7 @@ proc setFile {type existing} {
   if { $existing } {
        set file [tk_getOpenFile {*}$initial -title "Choose $type file"]
      } else {
-       set file [tk_getSaveFile {*}$initial -title "Choose $type file"]
+       set file [tk_getSaveFile {*}$initial -title "Choose $type file" -defaultextension .ptf]
      }
   if { $file eq "" } {
        return;
