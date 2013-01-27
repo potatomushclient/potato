@@ -11483,7 +11483,6 @@ proc ::potato::about {} {
 
   pack [::ttk::frame $frame.top] -side top -padx 15 -pady 15
   pack [::ttk::frame $frame.btm] -side top -padx 15 -pady 12
-  set pkginfo [::ttk::frame $frame.pkginfo]
 
   set str [T "%s Version %s.\nA MU* Client written in Tcl/Tk by\nMike Griffiths (%s)" $potato(name) $potato(version) $potato(contact)]
 
@@ -11500,12 +11499,48 @@ proc ::potato::about {} {
   bind $frame.top.right.web <Leave> [list %W configure -foreground blue -cursor {}]
   bind $frame.top.right.web <ButtonRelease-1> [list ::potato::launchWebPage $potato(webpage)]
 
-  pack [::ttk::button $frame.btm.toggle -text [T "Toggle Package Info"] \
-             -command [list ::potato::aboutTogglePkg $pkginfo] -takefocus 1] -side left -padx 5
   pack [::ttk::button $frame.btm.close -text [T "Close"] -width 8 \
              -command [list destroy $win] -default active -takefocus 1] -side left -padx 5
+  pack [::ttk::button $frame.btm.toggle -text [T "Show Package Info"] \
+             -command [list ::potato::aboutPackages $win] -takefocus 1] -side left -padx 5
 
-  set t [text $pkginfo.t -wrap word -height 15 -width 45]
+  update
+  center $win
+  wm resizable $win 0 0
+  wm deiconify $win
+  wm transient $win .
+  focus $frame.btm.close
+  bind $win <Escape> [list $frame.btm.close invoke]
+
+  return;
+
+};# ::potato::about
+
+#: proc ::potato::aboutPackages
+#: arg about toplevel About widget
+#: desc Show the "Package Info" from the About window in a transient window
+#: return nothing
+proc ::potato::aboutPackages {about} {
+  variable potato;
+  global tcl_platform;
+
+  set win $about-packages
+
+  if { [winfo exists $win] } {
+       reshowWindow $win
+       return;
+     }
+
+  toplevel $win
+  wm withdraw $win
+  wm title $win [T "Package Info"]
+  wm transient $win $about
+
+  pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both
+
+  pack [set top [::ttk::frame $frame.top]] -expand 1 -fill both
+
+  set t [text $top.t -wrap word -height 15 -width 45]
   $t tag config bolded -font [dict replace [font actual [$t cget -font]] -weight bold]
   $t tag config title -font [dict replace [font actual [$t cget -font]] -weight bold -slant italic]
   $t tag config unavailable -foreground red
@@ -11542,38 +11577,36 @@ proc ::potato::about {} {
 
   $t configure -state disabled
 
-  set x [ttk::scrollbar $pkginfo.x -orient horizontal -command [list $t xview]]
-  set y [ttk::scrollbar $pkginfo.y -orient vertical -command [list $t yview]]
+  set x [ttk::scrollbar $top.x -orient horizontal -command [list $t xview]]
+  set y [ttk::scrollbar $top.y -orient vertical -command [list $t yview]]
   $t configure -xscrollcommand [list $x set] -yscrollcommand [list $y set]
   grid_with_scrollbars $t $x $y
 
-  update
+  pack [set btm [::ttk::frame $frame.btm]] -expand 0 -fill y -padx 10 -pady 10
+  pack [::ttk::button $btm.close -text [T "Close"] -command [list destroy $win] -default active -takefocus 1] -side left -padx 8
+  pack [::ttk::button $btm.copy -text [T "Copy to Clipboard"] -command [list ::potato::aboutPackagesCopy $t] -takefocus 1] -side left -padx 8
+
+  bind $about <Destroy> [list destroy $win]
+
   center $win
-  wm resizable $win 0 0
   wm deiconify $win
-  wm transient $win .
-  focus $frame.btm.close
-  bind $win <Escape> [list $frame.btm.close invoke]
+  focus $btm.close
 
   return;
 
-};# ::potato::about
+};# ::potato::aboutPackages
 
-#: proc ::potato::aboutTogglePkg
-#: arg frame widget to toggle
-#: desc Toggle the "Package Info" in the About window, by packing $frame if it's not packed, or unpacking if it is
+#: proc ::potato::aboutPackagesCopy
+#: arg t text widget
+#: desc Copy the Package Info from the text widget $t to the clipboard
 #: return nothing
-proc ::potato::aboutTogglePkg {frame} {
+proc ::potato::aboutPackagesCopy {t} {
 
-  if { [catch {pack info $frame}] } {
-       pack $frame -side top -padx 15 -pady 10
-     } else {
-       pack forget $frame
-     }
-
+  clipboard clear -displayof $t
+  clipboard append -displayof $t [$t get 1.0 end-1char]
   return;
 
-};# ::potato::aboutTogglePkg
+};# ::potato::aboutPackagesCopy
 
 #: proc ::potato::ddeStart
 #: desc Start up a DDE server on Windows to listen for incoming telnet requests, which we'll receieve if we're the default telnet client
