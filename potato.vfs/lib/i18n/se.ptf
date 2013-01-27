@@ -1,3 +1,43 @@
+
+# Untranslated strings:
+
+%s reloaded successfully.
+-
+
+Connect To World
+-
+
+Connection cancelled.
+-
+
+No
+-
+
+Package Info
+-
+
+Persist Prompts?
+-
+
+Send null-byte keepalives?
+-
+
+Show Package Info
+-
+
+Toggle Spawn Windows
+-
+
+Unable to negotiate SSL: %s
+Kan ej genomföra SSL-förhandling: %s
+
+# Obsolete strings:
+
+All words are spelled correctly.
+Alla ord är korrekt stavade.
+
+# Existing translations:
+
  bytes
  byte
 
@@ -285,9 +325,6 @@ Efter uppkoppling, vänta
 
 All words are now spelled correctly.
 Alla ord är nu korrekt stavade.
-
-All words are spelled correctly.
-Alla ord är korrekt stavade.
 
 All Worlds
 Alla världar
@@ -886,8 +923,8 @@ Gå till webbsidan: %s
 h
 t
 
-Handle GA Prompts?
-Hantera GA-prompter?
+Handle GA/EOR Prompts?
+Hantera GA/EOR-prompter?
 
 Help
 Hjälp
@@ -1717,7 +1754,7 @@ Världsnamn
 World Name:
 Världsnamn:
 
-Would you like to use the settings for \[%s. %s\], rather than quick-connected?
+Would you like to use the settings for \[%s. %s\], rather than quick-connecting?
 Vill du använda inställningarna för \[%s. %s\], istället för snabbuppkopplingen?
 
 Wrap Lines?

@@ -2869,7 +2869,7 @@ proc ::potato::connect {c first} {
                    }
                 if { $conn($c,ssl-handshake) ne "complete" } {
                      # Variable set by something other than our callback; error.
-                     outputSystem $c [T "Unable to negotiate SSL: %s." $conn($c,ssl-handshake)]
+                     outputSystem $c [T "Unable to negotiate SSL: %s" $conn($c,ssl-handshake)]
                      disconnect $c 0
                      return;
                    } elseif { $fid ni [file channels] } {
@@ -11689,7 +11689,7 @@ proc ::potato::handleOutsideRequest {src addr {isWorld 0}} {
 
   if { $conn2World > -1 && $misc(outsideRequestMethod) == 2 } {
        set ans [tk_messageBox -title $potato(name) -type yesno -message \
-           [T "Would you like to use the settings for \[%s. %s\], rather than quick-connected?" $conn2World $world($conn2World,name)]]
+           [T "Would you like to use the settings for \[%s. %s\], rather than quick-connecting?" $conn2World $world($conn2World,name)]]
        if { $ans ne "yes" } {
             set conn2World -1
           }

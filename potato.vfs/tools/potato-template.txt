@@ -22,6 +22,10 @@
 %s - Help
 -
 
+# potato.tcl (::potato::customSlashCommand)
+%s reloaded successfully.
+-
+
 # potato.tcl (::potato::setAppTitle)
 %s Version %s
 -
@@ -382,10 +386,6 @@ After connecting, wait
 All words are now spelled correctly.
 -
 
-# potato-spell.tcl (::potato::spellcheck::spellcheck)
-All words are spelled correctly.
--
-
 # potato.tcl (::potato::manageWorldsUpdateGroups)
 All Worlds
 -
@@ -638,7 +638,7 @@ Click a misspelled word to begin
 Clock Format:
 -
 
-# potato-skin.tcl (::skin::potato::init), potato.tcl (::potato::manageWorlds), potato.tcl (::potato::errorLogWindow), potato.tcl (::potato::about)
+# potato-skin.tcl (::skin::potato::init), potato.tcl (::potato::manageWorlds), potato.tcl (::potato::errorLogWindow), potato.tcl (::potato::about), potato.tcl (::potato::aboutPackages)
 Close
 -
 
@@ -690,6 +690,10 @@ Configure Program &Settings
 Confirm Exit?
 -
 
+# potato.tcl (::potato::manageWorlds)
+Connect To World
+-
+
 # potato.tcl (::potato::connectComplete)
 Connected - %s - %s
 -
@@ -716,6 +720,10 @@ Connecting...
 
 # potato-config.tcl (::potato::configureWorld)
 Connection
+-
+
+# potato.tcl (::potato::connect)
+Connection cancelled.
 -
 
 # potato-proxy-SOCKS4.tcl (::potato::proxy::SOCKS4::callback)
@@ -770,7 +778,7 @@ Copy
 Copy &Hyperlink
 -
 
-# potato.tcl (::potato::history)
+# potato.tcl (::potato::history), potato.tcl (::potato::aboutPackages)
 Copy to Clipboard
 -
 
@@ -1014,11 +1022,11 @@ Enter the connection information\nfor the new world below.
 Enter the name for the new Group, and click Add.
 -
 
-# potato.tcl (::potato::customSlashCommand), potato.tcl (::potato::customSlashCommand), potato.tcl (::potato::customSlashCommand)
+# potato.tcl (::potato::customSlashCommand)
 Error (%d): %s
 -
 
-# potato.tcl (::potato::process_slash_cmd)
+# potato.tcl (::potato::checkForUpdatesSub), potato.tcl (::potato::process_slash_cmd)
 Error: %s
 -
 
@@ -1042,7 +1050,7 @@ Exactly
 Existing Worlds:
 -
 
-# potato.tcl (::potato::setUpWinico)
+# app-potato\windows\winico\potato-systray.tcl (line 23)
 Exit
 -
 
@@ -1183,7 +1191,7 @@ h
 -
 
 # potato-config.tcl (::potato::configureWorld)
-Handle GA Prompts?
+Handle GA/EOR Prompts?
 -
 
 # potato-skin.tcl (::skin::potato::init)
@@ -1194,7 +1202,7 @@ Help
 Hide
 -
 
-# potato.tcl (::potato::setUpWinico)
+# app-potato\windows\winico\potato-systray.tcl (line 21)
 Hide Icon
 -
 
@@ -1530,6 +1538,10 @@ Next
 Next History Command
 -
 
+# potato.tcl (::potato::checkForUpdatesSub)
+No
+-
+
 # potato.tcl (::potato::showStats)
 No of Connections
 -
@@ -1610,6 +1622,10 @@ Other Options
 Output
 -
 
+# potato.tcl (::potato::aboutPackages)
+Package Info
+-
+
 # potato.tcl (::potato::debug_packet)
 Packet Debugger for \[%d. %s\]
 -
@@ -1628,6 +1644,10 @@ Pattern Type:
 
 # potato-events.tcl (::potato::eventConfig)
 Pattern:
+-
+
+# potato-config.tcl (::potato::configureWorld)
+Persist Prompts?
 -
 
 # potato.tcl (::potato::textEditor)
@@ -1750,7 +1770,7 @@ Replace?
 Replacement:
 -
 
-# potato.tcl (::potato::setUpWinico)
+# app-potato\windows\winico\potato-systray.tcl (line 19)
 Restore
 -
 
@@ -1890,6 +1910,10 @@ Send Login Details after (seconds):
 Send Mail - \[%d. %s\]
 -
 
+# potato-config.tcl (::potato::configureWorld)
+Send null-byte keepalives?
+-
+
 # potato.tcl (::potato::textEditor)
 Send to &World
 -
@@ -1944,6 +1968,10 @@ Show Beeps?
 
 # potato.tcl (::potato::tasksInit)
 Show Input &History Window
+-
+
+# potato.tcl (::potato::about)
+Show Package Info
 -
 
 # potato-skin.tcl (::skin::potato::viewMenuPost)
@@ -2014,7 +2042,7 @@ Spawn To:
 Spawn?
 -
 
-# potato-spell.tcl (::potato::spellcheck::replaceWord)
+# potato-spell.tcl (::potato::spellcheck::spellcheck), potato-spell.tcl (::potato::spellcheck::replaceWord)
 Spellcheck
 -
 
@@ -2110,6 +2138,10 @@ TinyURL Provider:
 Toggle &Input Windows
 -
 
+# potato.tcl (::potato::tasksInit)
+Toggle Spawn Windows
+-
+
 # potato-config.tcl (::potato::configureWorld)
 Toggle to Main Window?
 -
@@ -2160,6 +2192,10 @@ Unable to create TinyURL: %s
 
 # potato.tcl (::potato::customSlashCommand)
 Unable to launch TinyURL at \"%s\": %s
+-
+
+# potato.tcl (::potato::connect), potato.tcl (::potato::connect)
+Unable to negotiate SSL: %s
 -
 
 # potato.tcl (::potato::connect)
@@ -2291,7 +2327,7 @@ World Name:
 -
 
 # potato.tcl (::potato::handleOutsideRequest)
-Would you like to use the settings for \[%s. %s\], rather than quick-connected?
+Would you like to use the settings for \[%s. %s\], rather than quick-connecting?
 -
 
 # potato.tcl (::potato::logWindow)

@@ -10,6 +10,9 @@
 %s - Help
 -
 
+%s reloaded successfully.
+-
+
 %s Version %s
 -
 
@@ -119,9 +122,6 @@ A Macro with that name already exists. Override?
 -
 
 Add /command
--
-
-All words are spelled correctly.
 -
 
 All Worlds
@@ -250,10 +250,16 @@ Configure &Prefixes/Auto-Say
 Configure Program &Settings
 -
 
+Connect To World
+-
+
 Connecting to %s proxy at %s:%s...
 -
 
 Connecting to %s:%d...
+-
+
+Connection cancelled.
 -
 
 Convert &Returns to %r
@@ -526,6 +532,9 @@ Negotiate NAWS?
 Next History Command
 -
 
+No
+-
+
 No such macro \"%s\".
 -
 
@@ -547,10 +556,16 @@ OK
 Open &Mail Window
 -
 
+Package Info
+-
+
 Packet Debugger for \[%d. %s\]
 -
 
 Pattern Type:
+-
+
+Persist Prompts?
 -
 
 Place in &Bottom Input Window
@@ -640,6 +655,9 @@ Send Client Name As:
 Send Login Details after (seconds):
 -
 
+Send null-byte keepalives?
+-
+
 Send upon first connect, before Login info:
 -
 
@@ -665,6 +683,9 @@ Show Beeps?
 -
 
 Show Input &History Window
+-
+
+Show Package Info
 -
 
 Show Spawn Toolbar?
@@ -736,6 +757,9 @@ TinyURL Provider:
 Toggle &Input Windows
 -
 
+Toggle Spawn Windows
+-
+
 Toggle to Main Window?
 -
 
@@ -758,6 +782,9 @@ Unable to create TinyURL: %s
 -
 
 Unable to launch TinyURL at \"%s\": %s
+-
+
+Unable to negotiate SSL: %s
 -
 
 Unable to negotiate SSL: %s. Please make sure the port is ssl-enabled.
@@ -1340,8 +1367,8 @@ Ir a Conexión
 h
 h
 
-Handle GA Prompts?
-¿Manejar peticiones GA?
+Handle GA/EOR Prompts?
+¿Manejar peticiones GA/EOR?
 
 Help
 Ayuda
@@ -1748,7 +1775,7 @@ Nombre de Mundo
 World Name:
 Nombre de Mundo
 
-Would you like to use the settings for \[%s. %s\], rather than quick-connected?
+Would you like to use the settings for \[%s. %s\], rather than quick-connecting?
 ¿Desea utilizar las configuraciones para \[%s. %s\], en vez de hacer una conexión rápida?
 
 Yes

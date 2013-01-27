@@ -1,7 +1,40 @@
 
 # Untranslated strings:
 
+%s reloaded successfully.
+-
+
+Connect To World
+-
+
+Connection cancelled.
+-
+
+No
+-
+
+Package Info
+-
+
+Persist Prompts?
+-
+
+Send null-byte keepalives?
+-
+
+Show Package Info
+-
+
+Toggle Spawn Windows
+-
+
+Unable to negotiate SSL: %s
+Ne mogu dogovoriti SSL: %s
+
 # Obsolete strings:
+
+All words are spelled correctly.
+Sve riječi su ispravno napisane.
 
 # Existing translations:
 
@@ -292,9 +325,6 @@ Nakon spajanja, čekaj
 
 All words are now spelled correctly.
 Sve riječi su sada ispravno napisane.
-
-All words are spelled correctly.
-Sve riječi su ispravno napisane.
 
 All Worlds
 Svi Svjetovi
@@ -893,8 +923,8 @@ Idi na internet stranicu: %s
 h
 h
 
-Handle GA Prompts?
-Tretiraj GA Promptove?
+Handle GA/EOR Prompts?
+Tretiraj GA/EOR Promptove?
 
 Help
 Pomoć
@@ -1724,7 +1754,7 @@ Ime Svijeta
 World Name:
 Ime Svijeta:
 
-Would you like to use the settings for \[%s. %s\], rather than quick-connected?
+Would you like to use the settings for \[%s. %s\], rather than quick-connecting?
 Želiš li koristiti postavke za \[%s. %s\] umjesto onih za brzo spajanje?
 
 Wrap Lines?
