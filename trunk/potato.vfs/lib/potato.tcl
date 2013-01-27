@@ -4744,11 +4744,14 @@ proc ::potato::manageWorlds {} {
            -command [list ::potato::manageWorldsBtn "copyworld"]]] -side left -padx 5
   pack [set edit [::ttk::button $btnFrame.edit -text [T "Edit World"] \
            -command [list ::potato::manageWorldsBtn "editworld"]]] -side left -padx 5
+  pack [set connect [::ttk::button $btnFrame.connect -text [T "Connect To World"] \
+           -command [list ::potato::manageWorldsBtn "connect"]]] -side left -padx 5
   pack [set del [::ttk::button $btnFrame.del -text [T "Delete World"] \
            -command [list ::potato::manageWorldsBtn "delworld"]]] -side left -padx 5
   set manageWorlds(copyBtn) $copy
   set manageWorlds(editBtn) $edit
   set manageWorlds(delBtn) $del
+  set manageWorlds(connectBtn) $connect
 
   pack [set btnFrame2 [::ttk::frame $btm.btns2]] -side top -anchor n -expand 0 -fill none -pady 10 -padx 10
   pack [set newGroup [::ttk::button $btnFrame2.new -text [T "New Group"] \
@@ -4989,6 +4992,10 @@ proc ::potato::manageWorldsBtn {type} {
        foreach w [$manageWorlds(wTree) selection] {
           configureWorld $w
        }
+     } elseif { $type eq "connect" } {
+       foreach w [$manageWorlds(wTree) selection] {
+          newConnectionDefault $w
+       }
      } elseif { $type eq "delworld" } {
        foreach w [$manageWorlds(wTree) selection] {
           if { $world($w,temp) } {
@@ -5042,11 +5049,13 @@ proc ::potato::manageWorldsSelectWorld {} {
        # No selection, deactivate buttons
        $manageWorlds(copyBtn) state disabled
        $manageWorlds(editBtn) state disabled
+       $manageWorlds(connectBtn) state disabled
        $manageWorlds(delBtn) state disabled
        $manageWorlds(delBtn) configure -text [T "Delete"]
      } else {
        $manageWorlds(copyBtn) state !disabled
        $manageWorlds(editBtn) state !disabled
+       $manageWorlds(connectBtn) state !disabled
        $manageWorlds(delBtn) state !disabled
        set text [T "Undelete"]
        foreach w $sel {
