@@ -159,6 +159,7 @@ proc ::potato::manageWorldVersion {w version} {
 proc ::potato::manageWorldVersionNew {w} {
   variable world;
   variable potato;
+  variable misc;
 
   if { [info exists world($w,version)] } {
        set version $world($w,version)
@@ -168,6 +169,9 @@ proc ::potato::manageWorldVersionNew {w} {
 
   if { $version < 1 } {
        # In version 1, this is a global option
+       if { $w == -1 && [info exists world(-1,selectToCopy)] } {
+            set misc(selectToCopy) $world(-1,selectToCopy)
+          }
        unset -nocomplain world($w,selectToCopy)
      }
 
