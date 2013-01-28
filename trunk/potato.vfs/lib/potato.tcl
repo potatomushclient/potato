@@ -1127,7 +1127,7 @@ proc ::potato::uploadWindowInvoke {c win} {
   set conn($c,upload,fileSize) [file size $conn($c,upload,file)]
   set conn($c,upload,fid) $fid
   uploadBegin $c
-  uploadProgressWindow $c
+  catch {uploadProgressWindow $c}
 
   return;
 
