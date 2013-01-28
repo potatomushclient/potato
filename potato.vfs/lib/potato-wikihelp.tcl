@@ -124,8 +124,26 @@ proc ::wikihelp::help {{topic ""}} {
         showTopic $info(TOC)
      }
 
+  bind $info(win) <Destroy> [list ::wikihelp::cleanupImages %W]
+
   return;
 };# ::wikihelp::help
+
+#: proc ::wikihelp::cleanupImages
+#: arg win window that triggered the event
+#: desc If $win == $info(win), destroy all the wikihelp images
+#: return nothing
+proc ::wikihelp::cleanupImages {win} {
+  variable info;
+
+  if { $info(win) ne $win } {
+       return;
+     }
+
+  catch {image delete {*}[lsearch -all -inline [image names] ::wikihelp::images::*]}
+
+  return;
+};# ::wikihelp::cleanupImages
 
 #: proc ::wikihelp::linkHover
 #: arg widget widget path
@@ -369,7 +387,7 @@ proc ::wikihelp::parse {input} {
               set link [parseLink $buffer]
               if { [lindex $link 0] eq "link" } {
                    regsub -all {(^|\s|[^A-Za-z0-9!_-])!(\S+)} [lindex $link 2] "\\1\\2" linkdisp
-                   lappend values $linkDisp [parseTags [concat $marginTag [lindex $link 3]] $bold $italic $noparse]
+                   lappend values $linkdisp [parseTags [concat $marginTag [lindex $link 3]] $bold $italic $noparse]
                  } elseif { [lindex $link 0] eq "image" } {
                    lappend values [list "<<IMAGE>>"] [list [lindex $link 2]]
                  } elseif { [lindex $link 0] eq "plain" } {
