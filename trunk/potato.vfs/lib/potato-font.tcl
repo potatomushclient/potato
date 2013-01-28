@@ -224,7 +224,7 @@ proc ::font::tracer {win var1 var2 op} {
          # unless in the font size list
          set n [lsearch -glob $S(${var}s,lcase) "$value*"]
          set bad 1
-         if {$var ne "size" || ! [string is double -strict $value]} {
+         if {$var ne "size" || ![string is double -strict $value]} {
               set nstate disabled
             }
        }

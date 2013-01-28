@@ -12924,23 +12924,30 @@ proc ::potato::basic_reqs {} {
   # OK, that's Tcl and Tk sorted. Now let's load in the other parts of Potato from separate
   # files. These really shouldn't be an issue....
 
-  if { [catch {
-               package require potato-telnet 1.1 ;
-               package require potato-proxy 1.2 ;
-               package require potato-wikihelp ;
-               package require potato-font ;
-               package require potato-spell ;
-               package require potato-encoding ;
-               package require potato-subfiles ;
-              } err] } {
-        set msg "WARNING! Your Potato installation appears to be corrupt or incomplete -\n"
-        append msg "you are missing part of the Potato code. Please re-download Potato from\n"
-        append msg "the website ($potato(webpage)), and contact the author if you have\n"
-        append msg "any further problems."
-        tk_messageBox -icon error -title "Potato" -type ok -message $msg
-        tk_messageBox -icon error -title "Potato" -type ok -message "Error: $err"
-        exit;
+  set packages \
+    [list \
+      [list potato-telnet 1.1] \
+      [list potato-proxy 1.2] \
+      [list potato-wikihelp] \
+      [list potato-spell] \
+      [list potato-encoding] \
+      [list potato-subfiles] \
+    ]
+  if { ![package vsatisfies [package present Tk] 8.6-] } {
+       lappend packages [list potato-font]
      }
+  foreach x $packages {
+    if { [catch {package require {*}$x} err] } {
+         set msg "WARNING! Your Potato installation appears to be corrupt or incomplete -\n"
+         append msg "you are missing part of the Potato code ([lindex $x 0]).\n"
+         append msg "Please re-download Potato from the website\n"
+         append msg "($potato(webpage)), and contact the author if you\n"
+         append msg "have any further problems."
+         tk_messageBox -icon error -title "Potato" -type ok -message $msg
+         tk_messageBox -icon error -title "Potato" -type ok -message "Error: $err"
+         exit;
+       }
+  }
 
   # Hooray, all good.
 

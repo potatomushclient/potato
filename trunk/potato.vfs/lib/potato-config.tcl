@@ -1736,15 +1736,45 @@ proc ::potato::configureFont {w parent text where} {
             set title [T "Choose Input Font for %s" $world($w,name)]
           }
      }
-  set new [::font::choose $parent ${parent}_subToplevel_font-$where [$text cget -font] $title]
-  if { $new eq "" } {
-       return;
-     }
-  set worldconfig($w,$where,font) $new
-  # caught so we don't throw an error when the font-chooser is closed b/c the Configure window was cancelled
-  catch {$text configure -font $new}
+  if { ![package vsatisfies [package present Tk] 8.6-] } {
+       set new [::font::choose $parent ${parent}_subToplevel_font-$where [$text cget -font] $title]
+       if { $new eq "" } {
+            return;
+          }
+       set worldconfig($w,$where,font) $new
+       # caught so we don't throw an error when the font-chooser is closed b/c the Configure window was cancelled
+       catch {$text configure -font $new}
+     } else {
+       if { [tk fontchooser configure -visible] } {
+            # Font chooser already open for something else
+            bell -displayof $parent
+            return;
+          }
+       # Updating the font is handled via a callback.
+       tk fontchooser configure -parent $parent -title $title \
+         -font [$text cget -font] -command [list ::potato::configureFontUpdate $text]
+       tk fontchooser show
+    }
+
+  return;
 
 };# ::potato::configureFont
+
+#: proc ::potato::configureFontUpdate
+#: arg t text widget to update the font of
+#: arg font Font to use
+#: arg args Not used
+#: desc Wrapper for the -command option to [tk fontchooser] to update the font when specified.
+#: return nothing
+proc ::potato::configureFontUpdate {t font args} {
+
+  if { [winfo exists $t] && ![catch {font actual $font} act] } {
+       $t configure -font $act
+     }
+
+  return;
+
+};# ::potato::configureFontUpdate
 
 #: proc ::potato::configureText
 #: arg w world id
