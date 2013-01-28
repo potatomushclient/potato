@@ -444,7 +444,7 @@ proc ::wikihelp::parseLink {str} {
      }
   if { $name eq $linkto } {
        set name ""
-     } elseif { [string index $name 0] eq "!" } {
+     }
   if { [string index $linkto 0] eq "#" } {
        # An anchor on the current page - abort!
        if { $name eq "" } {
