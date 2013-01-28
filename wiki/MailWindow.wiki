@@ -1,0 +1,23 @@
+#summary Mail Window
+
+=Mail Window=
+
+Potato provides a graphical Mail Window, where you can compose in-game mail without taking up an input window. The mail window knows about a number of common MU`*` mail system formats, including:
+
+  * *MUSH @mail* - @mail %to%=%subject%/%body%
+  * *MUX @mail* - @mail %to%=%subject% ;; -%body% ;; --
+  * *Multi-Command +mail* - +mail %to%=%subject% ;; -%body% ;; --
+  * *MUSE +mail* - +mail %to%=%body%
+  * *Myrddin's BB System* - +bbpost %to%/%subject%=%body%
+  
+You can also use a Custom mail format. The following keywords are replaced automatically with fields from the mail window:
+
+  * %to%
+  * %cc%
+  * %bcc*
+  * %subject*
+  * %body%
+  
+The string ";;" (two semi-colons) separates commands.
+
+[http://potatomushclient.googlecode.com/svn/wiki/MailWindow.gif]

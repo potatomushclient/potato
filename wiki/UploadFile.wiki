@@ -1,0 +1,11 @@
+#summary Upload a File
+
+=Upload a File=
+
+You can upload a file from your harddrive directly to a world. This is useful for storing large amounts of code, @decompiles of code, or other MU`*` commands. The contents of the file will be sent to the MU`*`, one line at a time.
+
+You can choose whether or not the commands are added to your Input History. Files can also be MPP Formatted (MPP stands for MUSHcode Pretty Printer), and Potato can automatically unformat them while uploading.
+
+When uploading a large file, it's recommended you set a small time delay between lines, to avoid lagging the MU`*`.
+
+[http://potatomushclient.googlecode.com/svn/wiki/UploadFile.gif]
