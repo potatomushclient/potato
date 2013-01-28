@@ -17,7 +17,7 @@ namespace eval ::wikihelp {
 namespace eval ::wikihelp::images {
   variable wikiImages;
   variable wikiImagesLen;
-  
+
   # Path that Wiki images are stored in
   set wikiImages "http://potatomushclient.googlecode.com/svn/wiki/"
   set wikiImagesLen [string length $wikiImages]
@@ -176,7 +176,7 @@ proc ::wikihelp::webLink {widget} {
      } else {
        set link [$widget get {*}[$widget tag prevrange weblink "current + 1 char"]]
      }
-  
+
   ::potato::launchWebPage $link
   return;
 
@@ -287,7 +287,7 @@ proc ::wikihelp::parse {input} {
   set past_pragma 0
 
   set html_entity_names [list lt gt copy nbsp amp]
-  set html_entity_chars [list "<" ">" [format %c 169] " " "&"];# <-- this uses a regular space for &nbsp; since we don't squish anyway 
+  set html_entity_chars [list "<" ">" [format %c 169] " " "&"];# <-- this uses a regular space for &nbsp; since we don't squish anyway
 
   foreach line [split $input "\n"] {
      set marginTag "margins"
@@ -353,6 +353,7 @@ proc ::wikihelp::parse {input} {
                  append buffer $easy
                } else {
                  # insert everything up to our special char
+                 regsub -all {(^|\s|[^A-Za-z0-9!_-])!(\S+)} $easy "\\1\\2" easy
                  lappend values $easy [parseTags [list $marginTag] $bold $italic $noparse]
                }
           }
@@ -367,12 +368,14 @@ proc ::wikihelp::parse {input} {
           \] {set linkparse 0
               set link [parseLink $buffer]
               if { [lindex $link 0] eq "link" } {
-                   lappend values [lindex $link 2] [parseTags [concat $marginTag [lindex $link 3]] $bold $italic $noparse]
+                   regsub -all {(^|\s|[^A-Za-z0-9!_-])!(\S+)} [lindex $link 2] "\\1\\2" linkdisp
+                   lappend values $linkDisp [parseTags [concat $marginTag [lindex $link 3]] $bold $italic $noparse]
                  } elseif { [lindex $link 0] eq "image" } {
                    lappend values [list "<<IMAGE>>"] [list [lindex $link 2]]
                  } elseif { [lindex $link 0] eq "plain" } {
                    # Was probably an anchor which we don't support, but are good enough to ignore gracefully
-                   lappend values [lindex $link 1] [parseTags $marginTag $bold $italic $noparse]
+                   regsub -all {(^|\s|[^A-Za-z0-9!_-])!(\S+)} [lindex $link 1] "\\1\\2" linkdisp
+                   lappend values $linkdisp [parseTags $marginTag $bold $italic $noparse]
                  }
               set buffer ""
              }
@@ -441,19 +444,23 @@ proc ::wikihelp::parseLink {str} {
      }
   if { $name eq $linkto } {
        set name ""
-     }
+     } elseif { [string index $name 0] eq "!" } {
   if { [string index $linkto 0] eq "#" } {
        # An anchor on the current page - abort!
        if { $name eq "" } {
             set name [string range $linkto 1 end]
           }
        return [list "plain" $name];
-     }       
+     }
   # Check for a Wiki Image
   if { [string equal -length $::wikihelp::images::wikiImagesLen $::wikihelp::images::wikiImages $linkto] } {
        # Looks like we have one.
        set imagename [file tail $linkto]
-       if { [file extension $imagename] eq ".gif" && [file exists [file join $info(filepath) $imagename]] } {
+       set exts [list ".gif"]
+       if { [package vsatisfies [package present Tk] 8.6-] } {
+            lappend exts ".png"
+          }
+       if { [file extension $imagename] in $exts && [file exists [file join $info(filepath) $imagename]] } {
             if { "::wikihelp::images::$imagename" ni [image names] } {
                  image create photo ::wikihelp::images::$imagename -file [file join $info(filepath) $imagename]
                }
@@ -583,7 +590,7 @@ proc ::wikihelp::populateTOC {} {
           }
      }
 
-  
+
   # If we get here, we can't find the TOC file, so we'll just list every page we have.
   foreach x [lsort -dictionary [array names index filename,]] {
     set last [$tree insert {} end -text $index($x) -tags [list link "linkTo:[string range $x 9 end]"]]
