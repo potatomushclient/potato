@@ -6579,8 +6579,10 @@ proc ::potato::treeviewHack {} {
      bind Treeview <$x> [format {if { ![%%W instate disabled] } { %s }} [bind Treeview <$x>]]
   }
 
-  # Clear MouseWheel binding in favour of our own binding on "all"
-  bind Treeview <MouseWheel> {}
+  if { ![package vsatisfies [package present Tk] 8.6-] } {
+       # Clear MouseWheel binding in favour of our own binding on "all"
+       bind Treeview <MouseWheel> {}
+     }
 
   return;
 
