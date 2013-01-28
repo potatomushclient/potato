@@ -9251,10 +9251,11 @@ proc ::potato::process_input {c txt} {
 #: desc Parse a block of text for /commands, possibly append a prefix to each resulting line, and send to the MUSH
 #: return nothing
 proc ::potato::send_to {c txt {prefix ""} {echo 1}} {
-puts "Called with: $txt"
+
   foreach x [process_input $c $txt] {
     send_to_real $c "$prefix$x" $echo
   }
+
   return;
 };# ::potato::send_to
 
@@ -10208,8 +10209,6 @@ proc ::potato::process_slash_cmd {c _str mode {_vars ""}} {
             if { [llength $ret] > 1 && [string length [lindex $ret 1]] } {
                  outputSystem $c [T "Error: %s" [lindex $ret 1]]
                }
-          } else {
-            puts "Error: [lindex $ret 1]"
           }
      } elseif { $c != 0 && [llength $ret] > 1 && [string length [lindex $ret 1]]} {
        outputSystem $c [lindex $ret 1]
