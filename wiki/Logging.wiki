@@ -1,4 +1,5 @@
 #summary Logging to a file
+
 =Logging=
 
 Potato allows you to log the text received from a MU`*` to a file. The log can include output already received, and can be left open for messages received in the future.

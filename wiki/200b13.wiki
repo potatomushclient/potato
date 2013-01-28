@@ -1,4 +1,5 @@
 #summary Version 2.0.0b13
+
 =Version 2.0.0b13=
 ==Not Yet Released==
 
@@ -11,6 +12,8 @@
   * On MacOS X, you can enable systray flashing to animate the dock icon on activity.
   * The Help → About window now shows the version of Potato being used, as well as some information about the machine it's running on and the versions of Tcl and various loaded packages, for easier debugging. Suggested by Paige.
   * Added a 'Connect to World' button in the Address Book.
+  * Select to Copy is now a global option, not per-world, as it should have been all along. Suggested by spork.
+  * When worlds are saved, the files now have more user-friendly names, based on the name of the world (MyMUSH-123.wld instead of just world123.wld).
   
   * Potato binaries are now built using Tcl/Tk 8.6.0, and some tweaks have been made to take advantage of new features in 8.6. If you're running Potato from source, it's recommended you [www.activestate.com/activetcl update your Tcl install] - the features listed below rely on it.
   * Support for connecting to IPv6 addresses.

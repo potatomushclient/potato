@@ -1,4 +1,5 @@
 #summary /commands
+
 =/commands=
 
 A "/command" is a special command you can type into the input box (or anywhere else that sends text to the MU`*`, like [ConfigureWorldsAutoSends Auto-Sends]), as well as a few other places like [Events Event fields]. Rather than being sent to the MU`*`, the command will be executed by Potato. (If you want to send something to the game beginning with a /, use two, like "//foo".) 

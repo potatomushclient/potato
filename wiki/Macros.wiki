@@ -1,4 +1,5 @@
 #summary Macros
+
 =Macros=
 
 A Macro is a user-defined command which sends text and/or runs [SlashCommands /commands] to a world. They are defined in the Macro Window, which can be opened from the [OptionsMenu Options...] menu, either for the current world or globally.
