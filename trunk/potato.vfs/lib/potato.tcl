@@ -44,19 +44,11 @@ proc ::potato::loadWorlds {} {
 #: arg w world id
 #: arg version The version of the world file, or an empty string if none was present (ie, the world file pre-dates versions)
 #: desc World $w was loaded from a version $version world file; make any changes necessary to bring it up to date with a current world file.
-#: desc Only old worlds (without a world($w,version) var) need to check $version.
 #: return nothing
 proc ::potato::manageWorldVersion {w version} {
   variable world;
 
   array set wf [worldFlags];# array of all current world flags
-
-  if { [info exists world($w,version)] } {
-       # World uses the new incrementing version variable, instead of
-       # bitwise flags.
-       manageWorldVersionNew $w
-       return;
-     }
 
   if { ![string is integer -strict $version] } {
        set version 0
@@ -141,11 +133,8 @@ proc ::potato::manageWorldVersion {w version} {
        }
      }
 
-  # Example:
-  # if { ! ($version & $wf(some_new_feature)) } {
-  #      set world($w,new_features_var) foobar
-  #    }
 
+  # Manage newer features which use the new version number
   manageWorldVersionNew $w
 
   return;
