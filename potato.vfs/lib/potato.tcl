@@ -242,6 +242,24 @@ proc ::potato::loadWorldDefaults {w override} {
 
 };# ::potato::loadWorldDefaults
 
+#: proc ::potato::sanitizeWorldName
+#: arg name World name
+#: desc Return a sanitized world name, with all characters likely to be invalid in a filename stripped or replaced
+#: return modified name
+proc ::potato::sanitizeWorldName {name} {
+
+  # Convert spaces to underscores
+  set name [string map [list " " "_"] [string trim $name]]
+
+  # Remove all potentially-bad characters
+  regsub -all {[^A-Za-z0-9_-]} $name {} name
+
+  # Max name length
+  set name [string range $name 0 15]
+
+  return $name;
+};# ::potato::sanitizeWorldName
+
 #: proc ::potato::saveWorlds
 #: desc save all the stored worlds to disk
 #: return 1 on success, 0 on failure
@@ -276,12 +294,26 @@ proc ::potato::saveWorlds {} {
      if { $world($w,temp) } {
           continue;
         }
-     if { [catch {open [file join $path(world) [format "world%02d.wld" $i]] w+} fid] } {
-           tk_messageBox -icon error -parent . -type ok -title $potato(name) \
-                  -message [T "Unable to save world '%s': %s" $world($w,name) $fid]
-           continue;
+     set san [sanitizeWorldName $world($w,name)]
+     set num [format %03d $i]
+     if { $san ne "" } {
+          set fnames [list "$san-$num.wld" "world$num.wld"]
+        } else {
+          set fnames [list "world$num.wld"]
         }
-     puts $fid "# $world($w,name) - $world($w,host):$world($w,port)\n"
+     foreach fname $fnames {
+       set err [catch {open [file join $path(world) $fname] w+} fid]
+       if { !$err } {
+            break;
+          }
+     }
+     if { $err } {
+          tk_messageBox -icon error -parent . -type ok -title $potato(name) \
+                  -message [T "Unable to save world '%s': %s" $world($w,name) $fid]
+          continue;
+        }
+     puts $fid "# $world($w,name) - $world($w,host):$world($w,port)"
+     puts $fid "# Saved from Potato $potato(version)\n"
      foreach y [lsort -dictionary [array names world $w,*]] {
         scan $y $w,%s opt
         if { $opt eq "top,font,created" || $opt eq "bottom,font,created" || \
