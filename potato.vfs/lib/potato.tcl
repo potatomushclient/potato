@@ -1118,7 +1118,6 @@ proc ::potato::uploadWindowInvoke {c win} {
   set int 0
   set fraction 0
   scan $conn($c,upload,delay) %d.%d int fraction
-  set delay $int.$fraction
   unregisterWindow $c $win
   destroy $win
 
@@ -6310,7 +6309,14 @@ proc ::potato::main {} {
      } elseif { [catch {open $path(startupCmds) r} fid errdict] } {
        errorLog "Unable to open Startup Commands file \"[file nativename [file normalize $path(startupCmds)]]\": $fid" [errorTrace $errdict]
      } else {
-       send_to "" [read $fid] "" 0
+       set startup [split [read $fid] "\n"]
+       if { [llength $startup] > 1 && [lindex $startup end] eq "" } {
+            set startup [join [lrange $startup 0 end-1] \n]
+          } else {
+            set startup [join $startup \n]
+          }
+       catch {close $fid}
+       send_to "" $startup "" 0
      }
 
   # Attempt to parse out connection paramaters
@@ -9245,7 +9251,7 @@ proc ::potato::process_input {c txt} {
 #: desc Parse a block of text for /commands, possibly append a prefix to each resulting line, and send to the MUSH
 #: return nothing
 proc ::potato::send_to {c txt {prefix ""} {echo 1}} {
-
+puts "Called with: $txt"
   foreach x [process_input $c $txt] {
     send_to_real $c "$prefix$x" $echo
   }
@@ -10094,7 +10100,11 @@ proc ::potato::process_slash_cmd {c _str mode {_vars ""}} {
        upvar 1 $_vars vars;
      }
 
-  if { ![info exists conn($c,id)] } {
+  if { $c eq "" } {
+       set c [up]
+     }
+
+  if { $c != 0 && ![info exists conn($c,id)] } {
        return; # Running a /command for a closed connection - maybe on a timer that didn't cancel?
      }
 
@@ -10198,6 +10208,8 @@ proc ::potato::process_slash_cmd {c _str mode {_vars ""}} {
             if { [llength $ret] > 1 && [string length [lindex $ret 1]] } {
                  outputSystem $c [T "Error: %s" [lindex $ret 1]]
                }
+          } else {
+            puts "Error: [lindex $ret 1]"
           }
      } elseif { $c != 0 && [llength $ret] > 1 && [string length [lindex $ret 1]]} {
        outputSystem $c [lindex $ret 1]
