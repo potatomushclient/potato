@@ -787,7 +787,7 @@ proc ::skin::potato::toolbarLabels {} {
 proc ::skin::potato::doWorldBarButton {c} {
   variable widgets;
 
-  set widgets(worldbar,$c) [ttk::button $widgets(worldbar).button-$c -style Toolbutton -command [list ::skin::potato::worldBarButtonClick $c] -compound left]
+  set widgets(worldbar,$c) [ttk::button $widgets(worldbar).button-$c -style Toolbutton -command [list ::skin::potato::worldBarButtonClick $c] -compound left -takefocus 0]
   bind $widgets(worldbar,$c) <Button-3> [list ::skin::potato::worldBarButtonMenu %W $c %X %Y]
 
   # BG Colours previously used by the Worldbar buttons to show status, for reference.
@@ -1535,7 +1535,7 @@ proc ::skin::potato::spawnBar {{c ""}} {
   foreach x [lsort -dictionary -index 0 [::potato::connInfo $c spawns]] {
      set name [lindex $x 0]
      set btn $widgets(spawnbar).spawn_$name
-     ttk::button $btn -text $name -command [list ::skin::potato::showSpawn $c $name] -style Toolbutton -compound left
+     ttk::button $btn -text $name -command [list ::skin::potato::showSpawn $c $name] -style Toolbutton -compound left -takefocus 0
      if { [info exists disp($c)] && $disp($c) eq $name } {
           $btn configure -image ::skin::potato::img::spawnbarUp
         } elseif { [info exists spawns($c,$name)] } {

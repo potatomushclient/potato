@@ -1752,7 +1752,7 @@ proc ::potato::configureFont {w parent text where} {
           }
        # Updating the font is handled via a callback.
        tk fontchooser configure -parent $parent -title $title \
-         -font [$text cget -font] -command [list ::potato::configureFontUpdate $text]
+         -font [$text cget -font] -command [list ::potato::configureFontUpdate $w $where $text]
        tk fontchooser show
     }
 
@@ -1761,15 +1761,19 @@ proc ::potato::configureFont {w parent text where} {
 };# ::potato::configureFont
 
 #: proc ::potato::configureFontUpdate
+#: arg w world id
+#: arg where "top" or "bottom"
 #: arg t text widget to update the font of
 #: arg font Font to use
 #: arg args Not used
 #: desc Wrapper for the -command option to [tk fontchooser] to update the font when specified.
 #: return nothing
-proc ::potato::configureFontUpdate {t font args} {
+proc ::potato::configureFontUpdate {w where t font args} {
+  variable worldconfig;
 
   if { [winfo exists $t] && ![catch {font actual $font} act] } {
        $t configure -font $act
+       set worldconfig($w,$where,font) $act
      }
 
   return;

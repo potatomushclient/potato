@@ -8084,7 +8084,8 @@ proc ::potato::setUpBindings {} {
      }
 
   # stop Tile buttons taking focus when clicked
-  option add *TButton.takeFocus 0
+  # Actually, let them - it's only toolbar buttons that shouldn't.
+  #option add *TButton.takeFocus 0
 
   # Make Tile buttons show they have the focus when tabbed into via keyboard.
   bind TButton <FocusIn> {%W instate !disabled {%W state [list active focus]}}
@@ -12934,6 +12935,8 @@ proc ::potato::basic_reqs {} {
       [list potato-subfiles] \
     ]
   if { ![package vsatisfies [package present Tk] 8.6-] } {
+       # On Tk 8.6, we use [tk fontchooser]. Before that, we need the
+       # potato-font package to provide our own dialog.
        lappend packages [list potato-font]
      }
   foreach x $packages {
