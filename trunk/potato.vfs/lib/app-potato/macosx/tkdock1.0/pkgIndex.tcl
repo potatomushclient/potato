@@ -1,6 +1,11 @@
 #
 # Tcl package index file
 #
+
+if { $::tcl_platform(os) ne "Darwin" } {
+     return;
+   }
+
 package ifneeded tkdock 1.0 "
     package require Tk 8.5-
     if {\"AppKit\" ni \[winfo server .\]} {error {TkAqua Cocoa required}}

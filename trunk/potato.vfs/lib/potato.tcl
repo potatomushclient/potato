@@ -7345,7 +7345,6 @@ proc ::potato::unflashSystrayIconDefault {win} {
 #: desc Set up the ::potato::[un]flashTaskbar procs, for flashing the taskbar for a given window, from defaults
 #: return nothing
 proc ::potato::setUpFlash {{skippackages 0}} {
-  variable winico;
   variable potato;
   variable path;
 

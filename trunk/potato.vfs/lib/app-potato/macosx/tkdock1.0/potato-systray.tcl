@@ -15,7 +15,7 @@ if { ![file exists $::potato::systray(flashicon)] } {
 
 
 #: proc ::potato::flashSystrayIcon
-#: desc Flash the winico icon on the taskbar by changing it to another icon and back
+#: desc Flash the dock icon by changing it to another icon and back
 #: return nothing
 proc ::potato::flashSystrayIcon {{recurse 0}} {
   variable systray;
@@ -42,7 +42,7 @@ proc ::potato::flashSystrayIcon {{recurse 0}} {
 };# ::potato::flashSystrayIcon
 
 #: proc ::potato::unflashSystrayIcon
-#: desc Stop the winico icon on the taskbar from flashing by resetting to the default icon and cancelling the flash
+#: desc Stop the dock icon from flashing by resetting to the default icon and cancelling the flash
 #: return nothing
 proc ::potato::unflashSystrayIcon {} {
   variable systray;
