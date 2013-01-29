@@ -2,9 +2,9 @@
 
 = Downloading Tcl =
 
-Potato is written in [http://www.tcl.tk Tcl/Tk], an interpreted language available for many platforms. The [Downloads binary downloads] of Potato include a Tcl interpreter, so you don't need to install one. However, if you're [RunFromSource running Potato from SVN or the source], you'll need a copy of Tcl, too. Potato uses Tcl/Tk 8.5.
+Potato is written in [http://www.tcl.tk Tcl/Tk], an interpreted language available for many platforms. The [Downloads binary downloads] of Potato include a Tcl interpreter, so you don't need to install one. However, if you're [RunFromSource running Potato from SVN or the source], you'll need a copy of Tcl, too. Potato runs best on Tcl/Tk 8.6, but will also work on Tcl/Tk 8.5.
 
-If you're running Windows and don't already have Tcl 8.5 installed on your system, we recommend you download a Tclkit. !TclKits are single-file Tcl interpreters. They can be downloaded from the [http://code.google.com/p/tclkit/ TclKit Google Code page], and from [http://www.equi4.com/tclkit/download.html Equi4.com] (!TclKits for different platforms are available from each site). Make sure you download version 8.5.X, and that you get !Tclkit (which includes Tk, the GUI library for Tcl), not !TclkitSH (which is command-line only).
+If you're running Windows or MacOS X and don't already have Tcl installed on your system, we recommend you install [http://www.activestate.com ActiveTcl], a full Tcl/Tk install from ActiveState. This includes everything you need to start using Potato.
 
 When running on Linux, it's generally easier install Tcl and Tk through the OS's package management system. On debian based systems they are probably simply called tcl and tk. If you want ssl support, also install tcl-tls. To support window flashing, you'll also want tcl-dev and tk-dev.
 
