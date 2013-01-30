@@ -11293,6 +11293,12 @@ proc ::potato::customSlashCommand {c w cmd str} {
 
 };# /connect
 
+#: proc ::potato::parseConnectRequest
+#: arg str world name
+#: desc $str is the (possibly partial) name of a world; check for matches and connect if we have only one,
+#: desc or if we're configured to connect to the first partial. Used for /connect and the command line
+#: desc potato.exe -world $str option
+#: return 1 if we're connecting, 0 if no matches, -1 if ambiguous
 proc ::potato::parseConnectRequest {str} {
   variable world;
   variable misc;
@@ -11300,24 +11306,28 @@ proc ::potato::parseConnectRequest {str} {
   set str [string trim $str]
   set len [string length $str]
 
+  if { $len == 0 } {
+       return 0;
+     }
+
   set partial [list]
   foreach w [worldIDs] {
      if { [string equal -nocase $world($w,name) $str] } {
           set exact $w
           break;
         } elseif { [string equal -nocase -length $len $world($w,name) $str] } {
-          lappend partial $w
+          lappend partial [list $w $world($w,name)]
         }
   }
 
-  set partial [lsort -dictionary $partial]
+  set partial [lsort -dictionary -index 1 $partial]
   if { [info exists exact] } {
        newConnectionDefault $exact
        return 1;
      } elseif { [llength $partial] == 0 } {
        return 0;
      } elseif { [llength $partial] == 1 || $misc(partialWorldMatch) } {
-       newConnectionDefault [lindex $partial 0]
+       newConnectionDefault [lindex $partial 0 0]
        return 1;
      } else {
        return -1;
