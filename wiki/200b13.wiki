@@ -16,6 +16,11 @@
   * When worlds are saved, the files now have more user-friendly names, based on the name of the world (MyMUSH-123.wld instead of just world123.wld).
   * The Upload File window could give an error when uploading extremely small files.
   * The potato.startup file was no longer working. Reported by Paige.
+  * A potentially nasty bug when cancelling an attempted connection through a proxy has been fixed. Reported by Paige.
+  * Potato is now extra-super-duper careful about not leaving dead connections (particularly to proxies) open.
+  * When you cancel a connection attempt before the connection is established, Potato now tells you, instead of leaving it looking like it's trying to connect forever.
+  * When picking an ambiguous world name, /connect always picks the one that comes first alphabetically.
+  * Added the TLS package for Mac OS X to the source, to ensure SSL connections are always available.
   
   * Potato binaries are now built using Tcl/Tk 8.6.0, and some tweaks have been made to take advantage of new features in 8.6. If you're running Potato from source, it's recommended you [www.activestate.com/activetcl update your Tcl install] - the features listed below rely on it.
   * Support for connecting to IPv6 addresses.
@@ -23,3 +28,4 @@
   * Possibly-better-looking tooltips on X11.
   * New font selection dialogs, using the native dialogs on Windows and MacOS X.
   
+Many thanks to Yuriko and Minion for help testing the MacOS changes, and to Yuriko for building the Mac-specific extensions and Potato binary.
