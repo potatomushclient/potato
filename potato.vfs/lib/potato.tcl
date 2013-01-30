@@ -2909,7 +2909,7 @@ proc ::potato::connect {c first} {
          # (And fix the error message below to only give the 'make sure port is enabled' message if we
          # have an error, instead of a validation failure)
          if { [catch {::tls::import $fid -command ::potato::connectVerifySSL -request 0 -cipher "ALL"} import] || \
-              ([package vsatisfies [package present tls] 1.6-] && [catch {fconfigure $fid -blocking 0 -buffering none} fconfig]) || \
+              ($potato(hasTLS1.6) && [catch {fconfigure $fid -blocking 0 -buffering none} fconfig]) || \
               [catch {::tls::handshake $fid} handshake] } {
               set sslError "Unknown SSL Error";# do not translate
               foreach errs [list import fconfig handshake] {
@@ -6247,10 +6247,16 @@ proc ::potato::main {} {
   # Load TLS if available, for SSL connections
   if { [catch {package require tls 1.5-} reqtls errdict] } {
        set potato(hasTLS) 0
+       set potato(hasTLS1.6)
        errorLog "Unable to load TLS for SSL connecions: $reqtls" warning [errorTrace $errdict]
      } else {
        set potato(hasTLS) 1
-       if { ![package vsatisfies $reqtls 1.6-] } {
+       # For some reason, some TLS 1.5.0s in Linux apparantly report themselves as
+       # TLS 1.50. Lying bastards.
+       if { [package vsatisfies $reqtls 1.6-] && ![package vsatisfies $reqtls 1.50-1.59] } {
+            set potato(hasTLS1.6) 1
+          } else {
+            set potato(hasTLS1.6) 0
             errorLog "TLS 1.6 or higher is recommended, but you only have TLS $reqtls. Consider upgrading." warning
           }
      }
