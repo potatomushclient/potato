@@ -3369,9 +3369,9 @@ proc ::potato::disconnect {{c ""} {prompt 1}} {
   set conn($c,id) ""
   set prevState $conn($c,connected)
   if { $conn($c,connected) == 1 } {
-       # Only print message if we were fully connected, otherwise the "failed to connect" message is sufficient, and
-       # we don't need to spam.
        outputSystem $c [T "Disconnected from host. - %s" [timestamp]]
+     } else {
+       outputSystem $c [T "Connection attempt cancelled. - %s" [timestamp]]
      }
   set conn($c,connected) 0
   set conn($c,address) [list]
