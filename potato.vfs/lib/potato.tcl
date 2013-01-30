@@ -2821,13 +2821,14 @@ proc ::potato::connect {c first} {
     if { $has_proxy } {
          set proxy $world($w,proxy)
          outputSystem $c [set conn($c,address,disp) [T "Connecting to %s proxy at %s:%s..." $proxy $world($w,proxy,host) $world($w,proxy,port)]]
-         if { [catch {::potato::ioOpen $world($w,proxy,host) $world($w,proxy,port)} fid] } {
+         if { [catch {ioOpen $world($w,proxy,host) $world($w,proxy,port)} fid] } {
               outputSystem $c $fid
               disconnect $c 0
               boot_reconnect $c
               skinStatus $c
               return 0;
             }
+          set conn($c,id) $fid
           set waitfor "[namespace which -variable conn]($c,fid,success)"
           fileevent $fid writable [list ::potato::connectVerify $fid $waitfor]
           vwait $waitfor
@@ -2839,7 +2840,7 @@ proc ::potato::connect {c first} {
           unset -nocomplain conn($c,fid,success)
           switch -exact $res {
             -1 {
-                catch {close $fid}
+                catch {ioClose $fid}
                 disconnect $c 0;
                 return 0;
                }
@@ -2862,6 +2863,7 @@ proc ::potato::connect {c first} {
          if { [catch {::potato::proxy::${proxy}::connect $fid [lindex $x 0] [lindex $x 1]} msg] } {
               outputSystem $c $msg
               catch {ioClose $fid}
+              set conn($c,id) ""
               continue;
             }
           # Successful proxy connection! Huzzah!
@@ -2870,6 +2872,7 @@ proc ::potato::connect {c first} {
               outputSystem $c [T "Unable to connect to host %s:%d: %s" $host $port $fid]
               continue;
             }
+          set conn($c,id) $fid
           set waitfor "[namespace which -variable conn]($c,fid,success)"
           fileevent $fid writable [list ::potato::connectVerify $fid $waitfor]
           vwait $waitfor
@@ -2881,7 +2884,8 @@ proc ::potato::connect {c first} {
           unset -nocomplain conn($c,fid,success)
           switch $res {
             -1 {
-                catch {close $fid}
+                catch {ioClose $fid}
+                set conn($c,id) ""
                 return 0;
                 # Cancelled
                }
@@ -2890,6 +2894,8 @@ proc ::potato::connect {c first} {
                }
              default {# Error.
                       outputSystem $c [T "Unable to connect to host %s:%d: %s" $host $port $res]
+                      catch {ioClose $fid}
+                      set conn($c,id) ""
                       continue;
                      }
           }
@@ -2926,11 +2932,13 @@ proc ::potato::connect {c first} {
                 vwait ::potato::conn($c,ssl-handshake)
                 if { ![info exists conn($c,ssl-handshake)] } {
                      # Well, this shouldn't happen
-                     catch {::potato::ioClose $fid}
+                     catch {ioClose $fid}
+                     set conn($c,fid) ""
                      return;
                    } elseif { $conn($c,ssl-handshake) eq "disconnect" } {
                      # Connection has been disconnected by user
                      outputSystem $c [T "Connection cancelled."]
+                     set conn($c,id) "";# just to be safe
                      return;
                    }
                 if { $conn($c,ssl-handshake) ne "complete" } {
@@ -2938,7 +2946,7 @@ proc ::potato::connect {c first} {
                      outputSystem $c [T "Unable to negotiate SSL: %s" $conn($c,ssl-handshake)]
                      disconnect $c 0
                      return;
-                   } elseif { $fid ni [file channels] } {
+                   } elseif { $fid ni [chan names] } {
                      # Connection has disappeared; weird.
                      set handshake_error "connection reset"
                      break;
@@ -2969,7 +2977,6 @@ proc ::potato::connect {c first} {
        return 0;
      }
 
-  set conn($c,id) $fid
   if { $ssl } {
        addProtocol $c ssl
      }
