@@ -2000,15 +2000,15 @@ proc ::potato::configureWorldCommit {w win} {
          set misc([string range $x 5 end]) $MISC($x)
        }
        if { $showSysTray && !$misc(showSysTray) } {
-            winicoUnmap
+            hideSystrayIcon
           } elseif { !$showSysTray && $misc(showSysTray) } {
-            winicoMap
+            showSystrayIcon
           }
        if { $tileTheme ne $misc(tileTheme) } {
             setTheme
           }
        if { [wm state .] == "withdrawn" && (!$misc(minToTray) || !$misc(showSysTray)) } {
-            wm deiconify .
+            wm iconify .
           }
      }
 
