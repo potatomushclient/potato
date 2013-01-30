@@ -2909,7 +2909,7 @@ proc ::potato::connect {c first} {
          # (And fix the error message below to only give the 'make sure port is enabled' message if we
          # have an error, instead of a validation failure)
          if { [catch {::tls::import $fid -command ::potato::connectVerifySSL -request 0 -cipher "ALL"} import] || \
-              [catch {fconfigure $fid -blocking 0 -buffering none} fconfig] || \
+              ([package vsatisfies [package present tls] 1.6-] && [catch {fconfigure $fid -blocking 0 -buffering none} fconfig]) || \
               [catch {::tls::handshake $fid} handshake] } {
               set sslError "Unknown SSL Error";# do not translate
               foreach errs [list import fconfig handshake] {
@@ -6245,11 +6245,14 @@ proc ::potato::main {} {
   tasksInit
 
   # Load TLS if available, for SSL connections
-  if { [catch {package require tls} err errdict] } {
+  if { [catch {package require tls 1.5-} reqtls errdict] } {
        set potato(hasTLS) 0
-       errorLog "Unable to load TLS for SSL connecions: $err" warning [errorTrace $errdict]
+       errorLog "Unable to load TLS for SSL connecions: $reqtls" warning [errorTrace $errdict]
      } else {
        set potato(hasTLS) 1
+       if { ![package vsatisfies $reqtls 1.6-] } {
+            errorLog "TLS 1.6 or higher is recommended, but you only have TLS $reqtls. Consider upgrading." warning
+          }
      }
 
   # Set the ttk theme to use
