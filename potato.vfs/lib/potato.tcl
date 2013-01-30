@@ -2761,8 +2761,7 @@ proc ::potato::ioWrite {args} {
 #: arg c the connection to connect
 #: arg first is this the first time we've tried to connect here? Affects messages, etc.
 #: desc start connecting to a world. This doesn't handle the full connection, as we connect -async and wait for a response.
-#: desc This connection may be to a proxy server, not the actual game. $hostlist contains a list telling us whether to attempt
-#: desc to connect to the primary host ("host"), the secondary host ("host2"), or both ("").
+#: desc This connection may be to a proxy server, not the actual game.
 #: return 1 on successful connect, 0 otherwise
 proc ::potato::connect {c first} {
   variable conn;
@@ -2846,6 +2845,7 @@ proc ::potato::connect {c first} {
                }
              1 {
                 # Success
+
                }
              default {# Error.
                       outputSystem $c [T "Unable to connect to proxy: %s" $res]
@@ -3278,7 +3278,7 @@ proc ::potato::timersStop {c} {
   foreach x [array names conn $c,timer,*,after] {
     after cancel $conn($x)
   }
-  array unset conn$c,timer,*
+  array unset conn $c,timer,*
 
   return;
 
