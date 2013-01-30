@@ -25,4 +25,4 @@ You can also run Potato on MacOS X, [RunFromSource from SVN, a Starkit or the so
 As I don't have access to a Mac myself, Potato is less-tested on MacOS.
 ==Source==
 
-You can also download the [http://code.google.com/p/potatomushclient/downloads/list?can=3&q=Type%3ASource+&colspec=Filename+Summary+Uploaded+Size+DownloadCount+Type source code] for the latest version, or download a [http://code.google.com/p/potatomushclient/downloads/list?can=3&q=Type%3AStarkit&colspec=Filename+Summary+Uploaded+Size+DownloadCount+Type Starkit archive]. 
+You can also download the [http://code.google.com/p/potatomushclient/downloads/list?can=3&q=Type%3ASource+&colspec=Filename+Summary+Uploaded+Size+DownloadCount+Type source code] for the latest version, or download a [http://code.google.com/p/potatomushclient/downloads/list?can=3&q=Type%3AStarkit&colspec=Filename+Summary+Uploaded+Size+DownloadCount+Type Starkit archive]. To run from source, you'll need to have [GettingTcl Tcl/Tk] installed on your computer.
