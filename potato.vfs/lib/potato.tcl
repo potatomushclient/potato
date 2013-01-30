@@ -4807,13 +4807,13 @@ proc ::potato::manageWorlds {} {
   pack [set btnFrame [::ttk::frame $btm.btns]] -side top -anchor n -expand 0 -fill none -pady 10 -padx 10
   pack [::ttk::button $btnFrame.add -text [T "New World"] -command [list ::potato::newWorld 0]] -side left -padx 5
   pack [set copy [::ttk::button $btnFrame.copy -text [T "Copy World"] \
-           -command [list ::potato::manageWorldsBtn "copyworld"]]] -side left -padx 5
+           -command [list ::potato::manageWorldsBtn "copyworld" $win]]] -side left -padx 5
   pack [set edit [::ttk::button $btnFrame.edit -text [T "Edit World"] \
-           -command [list ::potato::manageWorldsBtn "editworld"]]] -side left -padx 5
+           -command [list ::potato::manageWorldsBtn "editworld" $win]]] -side left -padx 5
   pack [set connect [::ttk::button $btnFrame.connect -text [T "Connect To World"] \
-           -command [list ::potato::manageWorldsBtn "connect"]]] -side left -padx 5
+           -command [list ::potato::manageWorldsBtn "connect" $win]]] -side left -padx 5
   pack [set del [::ttk::button $btnFrame.del -text [T "Delete World"] \
-           -command [list ::potato::manageWorldsBtn "delworld"]]] -side left -padx 5
+           -command [list ::potato::manageWorldsBtn "delworld" $win]]] -side left -padx 5
   set manageWorlds(copyBtn) $copy
   set manageWorlds(editBtn) $edit
   set manageWorlds(delBtn) $del
@@ -4821,9 +4821,9 @@ proc ::potato::manageWorlds {} {
 
   pack [set btnFrame2 [::ttk::frame $btm.btns2]] -side top -anchor n -expand 0 -fill none -pady 10 -padx 10
   pack [set newGroup [::ttk::button $btnFrame2.new -text [T "New Group"] \
-           -command [list ::potato::manageWorldsNewGroup]]] -side left -padx 5
+           -command [list ::potato::manageWorldsNewGroup $win]]] -side left -padx 5
   pack [set delGroup [::ttk::button $btnFrame2.del -text [T "Delete Group"] \
-           -command [list ::potato::manageWorldsBtn "delgroup"]]] -side left -padx 5
+           -command [list ::potato::manageWorldsBtn "delgroup" $win]]] -side left -padx 5
   set manageWorlds(delGroupBtn) $delGroup
   pack [set close [::ttk::button $btnFrame2.close -text [T "Close"] -width 8 \
            -command [list destroy $win]]] -side left -padx 5
@@ -4907,9 +4907,10 @@ proc ::potato::manageWorldsRightClickWorldToggle {w group menu} {
 };# ::potato::manageWorldsRightClickWorldToggle
 
 #: proc ::potato::manageWorldsNewGroup
+#: arg parent The main Manage Worlds window
 #: desc Show a pop-up window allowing the user to enter a name for a new World Group
 #: return nothing
-proc ::potato::manageWorldsNewGroup {} {
+proc ::potato::manageWorldsNewGroup {parent} {
   variable world;
   variable manageWorlds;
 
@@ -4949,7 +4950,7 @@ proc ::potato::manageWorldsNewGroup {} {
   bind $win <Escape> [list $btns.cancel invoke]
   bind $win <Return> [list $btns.add invoke]
 
-  update idletasks
+  wm transient $win $parent
   center $win
   wm deiconify $win
   reshowWindow $win 0
@@ -5040,9 +5041,10 @@ proc ::potato::manageWorldsSelectGroup {} {
 
 #: proc ::potato::manageWorldsBtn
 #: arg type The type of button pressed
+#: arg win toplevel Manage Worlds window
 #: desc Handle the click of a button in the Manage Worlds window.
 #: return nothing
-proc ::potato::manageWorldsBtn {type} {
+proc ::potato::manageWorldsBtn {type win} {
   variable world;
   variable manageWorlds;
 
@@ -5062,6 +5064,7 @@ proc ::potato::manageWorldsBtn {type} {
        foreach w [$manageWorlds(wTree) selection] {
           newConnectionDefault $w
        }
+       destroy $win
      } elseif { $type eq "delworld" } {
        foreach w [$manageWorlds(wTree) selection] {
           if { $world($w,temp) } {
