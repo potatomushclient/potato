@@ -417,7 +417,7 @@ proc ::potato::prefixWindow {{w ""}} {
   pack [label $frame.l -text $message] -side top -anchor n -pady 8
 
   pack [set sub [::ttk::frame $frame.treeframe]] -expand 1 -fill both -padx 10 -pady 8
-  set tree [::ttk::treeview $sub.tree -columns [list Window Prefix] -show [list tree headings] -selectmode browse]
+  set tree [::ttk::treeview $sub.tree -columns [list Window Prefix] -show [list tree headings] -selectmode browse -takefocus 0]
   set sbX [::ttk::scrollbar $sub.sbX -orient horizontal -command [list $tree xview]]
   set sbY [::ttk::scrollbar $sub.sbY -orient vertical -command [list $tree yview]]
   grid_with_scrollbars $tree $sbX $sbY
@@ -4849,6 +4849,7 @@ proc ::potato::manageWorlds {} {
   center $win
   wm deiconify $win
   reshowWindow $win 0
+  focus $wTree
 
   return;
 
@@ -6609,9 +6610,152 @@ proc ::potato::treeviewHack {} {
        bind Treeview <MouseWheel> {}
      }
 
+  bind Treeview <KeyPress> [list ::potato::treeviewKeyPress %W %A %K]
+  bind Treeview <KeyRelease> [list ::potato::treeviewKeyPressReset %A]
+  bind Treeview <FocusIn> [list ::potato::treeviewKeyPressReset ""]
+  bind Treeview <FocusOut> [list ::potato::treeviewKeyPressReset ""]
+
+  treeviewKeyPressReset
+
   return;
 
 };# ::potato::treeviewHack
+
+#: proc ::potato::treeviewKeyPress
+#: arg tree Treeview widget
+#: arg char The character typed; may be empty
+#: arg keysym The keysym for the key pressed
+#: desc Handle a keypress in a Treeview to allow typing to select an entry
+#: return nothing
+proc ::potato::treeviewKeyPress {tree char keysym} {
+  variable tvkp;
+
+  if { $char in [list "" " " "\t" "\n"] || $keysym eq "space"} {
+       treeviewKeyPressReset;
+       return;
+     }
+
+  catch {after cancel $tvkp(afterid)}
+
+  if { $tvkp(error) } {
+       bell -displayof $tree
+     } elseif { $tvkp(reset) } {
+       # set everything up
+       set tvkp(reset) 0
+       set sel [$tree selection]
+       if { ![llength $sel] } {
+            set tvkp(startid) ""
+          } else {
+            set tvkp(startid) [lindex $sel 0]
+          }
+       set tvkp(str) $char
+       set tvkp(ids) [treeviewRecursiveListIDs $tree ""]
+       if { ![llength $tvkp(ids)] } {
+            set tvkp(error) 1
+            bell -displayof $tree
+          }
+       set inc 0
+     } else {
+       append tvkp(str) $char
+       set inc 1
+     }
+
+  $tree selection set [list]
+  $tree focus {}
+  if { !$tvkp(error) } {
+       set len [string length $tvkp(str)]
+       if { $tvkp(startid) eq "" } {
+            set index 0
+          } else {
+            set index [lsearch -exact $tvkp(ids) $tvkp(startid)]
+            if { !$inc } {
+                 incr index
+                 if { $index == [llength $tvkp(ids)] } {
+                      set index 0
+                    }
+               }
+          }
+       set ids [concat [lrange $tvkp(ids) $index end] [lrange $tvkp(ids) 0 $index-1]]
+       set match ""
+       foreach x $ids {
+         if { [set text [$tree item $x -text]] eq "" } {
+              set text [lsearch -inline -glob [$tree item $x -values] "?*"]
+            }
+         if { $text eq "" } {
+              continue;
+            }
+         if { [string equal -nocase -length $len $tvkp(str) $text] } {
+              set match $x
+              break;
+            }
+       }
+       if { $match ne "" } {
+            $tree sel set [list $x]
+            $tree focus $x
+            $tree see $x
+            set tvkp(startid) $x
+          } else {
+            set tvkp(error) 1
+            bell -displayof $tree
+          }
+     }
+
+  after $tvkp(aftertime) [list ::potato::treeviewKeyPressReset]
+
+  return;
+
+
+};# ::potato::treeviewKeyPress
+
+#: proc ::potato::treeviewKeyPressReset
+#: arg char Character generated if this was triggered by a key release; only reset for non-printable keys ($char eq "")
+#: desc Reset the $tvkp array used to hold state data for treeview keypresses
+#: return nothing
+proc ::potato::treeviewKeyPressReset {{char ""}} {
+  variable tvkp;
+
+  if { $char ne "" } {
+       return;
+     }
+
+  set tvkp(str) ""
+  set tvkp(startid) ""
+  set tvkp(ids) [list]
+  set tvkp(reset) 1
+  set tvkp(error) 0
+  if { [info exists tvkp(afterid)] } {
+       catch {after cancel $tvkp(afterid)}
+     }
+  set tvkp(afterid) ""
+  set tvkp(aftertime) 1300
+
+  return;
+
+};# ::potato::treeviewKeyPressReset
+
+#: proc ::potato::treeviewRecursiveListIDs
+#: arg tree Tree widget
+#: arg id parent id
+#: desc Return a list of $id and all its children in the tree widget $tree. Used
+#: desc recursively for building a list of all IDs in order
+#: return list of ids
+proc ::potato::treeviewRecursiveListIDs {tree id} {
+
+  if { ![winfo exists $tree] || ![$tree exists $id] } {
+       return;
+     }
+
+  set res [list]
+  if { $id ne "" } {
+       lappend res $id
+     }
+  foreach x [$tree children $id] {
+    lappend res {*}[treeviewRecursiveListIDs $tree $x]
+  }
+
+  return $res;
+
+};# ::potato::treeviewRecursiveListIDs
 
 #: proc ::potato::setTheme
 #: desc Set the ttk/tile theme
@@ -9114,7 +9258,8 @@ proc ::potato::autoConnect {} {
 #: proc ::potato::mouseWheel
 #: arg widget the widget with focus when the mousewheel was scrolled (%W)
 #: arg delta the amount the mousewheel was scrolled (%D)
-#: desc scroll the window the mouse is over, if possible, otherwise try to scroll $widget
+#: desc scroll the window the mouse is over, if possible, otherwise try to scroll $widget.
+#: desc Used in Tk 8.5; Tk 8.6 does this automatically
 #: return nothing
 proc ::potato::mouseWheel {widget delta} {
 
@@ -9131,6 +9276,11 @@ proc ::potato::mouseWheel {widget delta} {
 
 };# ::potato::mouseWheel
 
+#: proc ::potato::mouseWheelScroll
+#: arg widget Widget to scroll
+#: arg delta Amount to scroll
+#: desc Utility function used by [mouseWheel] - scroll the specified widget by the specified amount
+#: return 1 on successful scroll, 0 if unable to scroll
 proc ::potato::mouseWheelScroll {widget delta} {
 
   if { $widget eq "" || ![winfo exists $widget] } {
