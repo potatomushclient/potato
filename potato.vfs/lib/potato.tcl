@@ -5189,8 +5189,10 @@ proc ::potato::manageWorldsUpdateWorlds {{keepSel 1}} {
   if { $keepSel && $wSel ne "" && [$wTree exists $wSel] } {
        $wTree selection set $wSel
      } else {
-       $wTree selection set [lindex [$wTree children {}] 0]
+       $wTree selection set [set wSel [lindex [$wTree children {}] 0]]
      }
+  $wTree focus $wSel
+  $wTree see $wSel
   manageWorldsSelectWorld
 
   return;
