@@ -4841,6 +4841,10 @@ proc ::potato::manageWorlds {} {
   bind $wTree <<TreeviewSelect>> [list ::potato::manageWorldsSelectWorld]
   bind $wTree <ButtonPress-3> "[bind Treeview <ButtonPress-1>] ; [list ::potato::manageWorldsRightClickWorld %X %Y]"
 
+  bind $wTree <ButtonPress-1> [list ::potato::manageWorldsDragStart %x %y %X %Y]
+  bind $wTree <B1-Motion> [list ::potato::manageWorldsDrag %x %y %X %Y]
+  bind $wTree <ButtonRelease-1> [list ::potato::manageWorldsDragDrop]
+
   bind $gTree <Destroy> [list array unset ::potato::manageWorlds]
 
   manageWorldsUpdateGroups
@@ -4854,6 +4858,165 @@ proc ::potato::manageWorlds {} {
   return;
 
 };# ::potato::manageWorlds
+
+#: proc ::potato::manageWorldsDragStart
+#: arg x The x-coord relative to the Manage Worlds tree
+#: arg y The y-coord relative to the Manage Worlds tree
+#: arg gx X-coord relative to the screen
+#: arg gy Y-coord relative to the screen
+#: desc Start dragging a world from the Worlds list in the Manage Worlds window, to add to a Group
+#: return nothing
+proc ::potato::manageWorldsDragStart {x y gx gy} {
+  variable manageWorlds;
+
+  set manageWorlds(wTree,drag,x) $gx
+  set manageWorlds(wTree,drag,y) $gy
+  set manageWorlds(wTree,drag,popup) ""
+  set manageWorlds(wTree,drag,id) [$manageWorlds(wTree) identify item $x $y]
+  set manageWorlds(wTree,drag,target) ""
+
+  return;
+}
+
+#: proc ::potato::manageWorldsDrag
+#: arg x The x-coord relative to the Manage Worlds tree
+#: arg y The y-coord relative to the Manage Worlds tree
+#: arg gx X-coord relative to the screen
+#: arg gy Y-coord relative to the screen
+#: desc Update the DND window for Manage Worlds based on where the cursor has been moved to
+#: return nothing
+proc ::potato::manageWorldsDrag {x y gx gy} {
+  variable manageWorlds;
+
+  if { $manageWorlds(wTree,drag,id) eq "" } {
+       return;
+     }
+
+  set win .manageWorldsDrag
+  if { $manageWorlds(wTree,drag,popup) eq "" } {
+       set min_offset 5
+       set diff [expr {abs($manageWorlds(wTree,drag,x) - $gx) + abs($manageWorlds(wTree,drag,y) - $gy)}]
+       if { $diff < $min_offset } {
+            return;
+          }
+       toplevel $win
+       wm withdraw $win
+       wm title $win [T "Manage Worlds"]
+       wm overrideredirect $win 1
+       if { [tk windowingsystem] eq "x11" } {
+            catch {wm attributes $win -type dnd}
+          }
+       wm attributes $win -alpha 0.7
+       set transcol #ff69b4 ;# thanks, Walker.
+       if { ![catch {wm attributes $win -transparentcolor $transcol}] && [wm attributes $win -transparentcolor] ne "" } {
+            $win configure -background $transcol
+            set label [label $win.l -background $transcol]
+          } else {
+            # Since we don't have the option of making it transparent, let's try and make it look good
+            set label [::ttk::label $win.l]
+          }
+       $label configure -text " [lindex [$manageWorlds(wTree) item $manageWorlds(wTree,drag,id) -values] 0]" \
+         -image ::potato::img::globe -compound left
+       pack $label
+
+       set manageWorlds(wTree,drag,popup) $win
+       set posx [expr {$gx - 15}]
+       set posy [expr {$gy - ([winfo reqheight $win.l]/2)}]
+       set bbox [$manageWorlds(wTree) bbox $manageWorlds(wTree,drag,id)]
+       if { 0 && [llength $bbox] } {
+            foreach {bbox_x bbox_y bbox_w bbox_h} $bbox {break}
+            incr bbox_x [expr {$gx - $x}]
+            incr bbox_y [expr {$gy - $y}]
+            set pointx [winfo pointerx $manageWorlds(wTree)]
+            set pointy [winfo pointery $manageWorlds(wTree)]
+            if { $pointx > ($bbox_x - $min_offset) && $pointx < ($bbox_x + $bbox_w + $min_offset) &&
+                 $pointy > ($bbox_y - $min_offset) && $pointy < ($bbox_y + $bbox_h + $min_offset) } {
+                 # Center the new window on the bbox position
+                 set posx [expr {$bbox_x + ($gx - $manageWorlds(wTree,drag,x))}]
+                 set posy [expr {$bbox_y + ($gy - $manageWorlds(wTree,drag,y))}]
+               }
+          }
+       wm geometry $win "+$posx+$posy"
+       set manageWorlds(wTree,drag,startx) $posx
+       set manageWorlds(wTree,drag,starty) $posy
+       wm deiconify $win
+    } else {
+      wm geometry $win "+[expr {$manageWorlds(wTree,drag,startx) + ($gx - $manageWorlds(wTree,drag,x))}]+[expr {$manageWorlds(wTree,drag,starty) + ($gy - $manageWorlds(wTree,drag,y))}]"
+      set groups $manageWorlds(gTree)
+      set groupsx [list [winfo rootx $groups] [expr {[winfo rootx $groups] + [winfo width $groups]}]]
+      set groupsy [list [winfo rooty $groups] [expr {[winfo rooty $groups] + [winfo height $groups]}]]
+      set px [winfo pointerx $groups]
+      set py [winfo pointery $groups]
+      # We don't use [winfo containing] because it will usually be the popup
+      if { $px < [lindex $groupsx 0] || $px > [lindex $groupsx 1] || $py < [lindex $groupsy 0] || $py > [lindex $groupsy 1] } {
+           set manageWorlds(wTree,drag,target) ""
+           set worlds $manageWorlds(wTree)
+           set worldsx [list [winfo rootx $worlds] [expr {[winfo rootx $worlds] + [winfo width $worlds]}]]
+           set worldsy [list [winfo rooty $worlds] [expr {[winfo rooty $worlds] + [winfo height $worlds]}]]
+           if { $px >= [lindex $worldsx 0] && $px <= [lindex $worldsx 1] && $py >= [lindex $worldsy 0] && $py <= [lindex $worldsy 1] } {
+                $manageWorlds(wTree,drag,popup).l config -image ::potato::img::globe
+              } else {
+                $manageWorlds(wTree,drag,popup).l config -image ::potato::img::delete
+              }
+           return;
+         }
+
+      set groupsx [expr {$gx - [winfo rootx $groups]}]
+      set groupsy [expr {$gy - [winfo rooty $groups]}]
+      set groupid [$groups identify item $groupsx $groupsy]
+      if { $groupid eq "" || $groupid eq "INT:Ungrouped" } {
+           set manageWorlds(wTree,drag,target) ""
+           $manageWorlds(wTree,drag,popup).l config -image ::potato::img::delete
+         } else {
+           set manageWorlds(wTree,drag,target) $groupid
+           $manageWorlds(wTree,drag,popup).l config -image ::potato::img::add
+         }
+    }
+
+  return;
+
+};# ::potato::manageWorldsDrag
+
+#: proc ::potato::manageWorldsDragDrop
+#: desc Handle the drop from the Manage Worlds drag-and-drop, possibly altering groups for the world being dragged.
+#: return nothing
+proc ::potato::manageWorldsDragDrop {} {
+  variable manageWorlds;
+  variable world;
+
+  if { $manageWorlds(wTree,drag,id) eq "" } {
+       return;
+     }
+
+  catch {destroy $manageWorlds(wTree,drag,popup)}
+  set currgroup [lindex [$manageWorlds(gTree) selection] 0]
+  if { $currgroup eq "" } {
+       return;
+     }
+
+  set new $manageWorlds(wTree,drag,target)
+
+  set w $manageWorlds(wTree,drag,id)
+
+  if { $new eq "" } {
+       if {  [string match "INT:*" $currgroup] } {
+             return;
+          }
+       # Delete from the current group
+       set pos [lsearch -exact $world($w,groups) $currgroup]
+       if { $pos != -1 } {
+            set world($w,groups) [lreplace $world($w,groups) $pos $pos]
+          }
+       manageWorldsUpdateWorlds
+     } else {
+       if { $new ni $world($w,groups) } {
+            lappend world($w,groups) $new
+          }
+     }
+
+  return;
+
+};# ::potato::manageWorldsDragDrop
 
 #: proc ::potato::manageWorldsRightClickWorld
 #: arg xcoord x coordinate to post menu at
@@ -5036,7 +5199,13 @@ proc ::potato::manageWorldsSelectGroup {} {
 
   set tree $manageWorlds(gTree);
   set sel [lindex [$tree sel] 0]
-  if { [string match "INT:*" $sel] || $sel eq "" } {
+  if { $sel eq "" } {
+       $tree selection set [list "INT:All"]
+       $tree focus INT:All
+       manageWorldsUpdateWorlds 0
+       return;
+     }
+  if { [string match "INT:*" $sel] } {
        $manageWorlds(delGroupBtn) state disabled
      } else {
        $manageWorlds(delGroupBtn) state !disabled
@@ -5186,11 +5355,10 @@ proc ::potato::manageWorldsUpdateWorlds {{keepSel 1}} {
        }
   }
 
-  if { $keepSel && $wSel ne "" && [$wTree exists $wSel] } {
-       $wTree selection set $wSel
-     } else {
-       $wTree selection set [set wSel [lindex [$wTree children {}] 0]]
+  if { !$keepSel || $wSel eq "" || ![$wTree exists $wSel] } {
+       set wSel [lindex [$wTree children {}] 0]
      }
+  $wTree selection set $wSel
   $wTree focus $wSel
   $wTree see $wSel
   manageWorldsSelectWorld
@@ -6702,7 +6870,7 @@ proc ::potato::treeviewKeyPress {tree char keysym} {
           }
      }
 
-  after $tvkp(aftertime) [list ::potato::treeviewKeyPressReset]
+  set tvkp(afterid) [after $tvkp(aftertime) [list ::potato::treeviewKeyPressReset]]
 
   return;
 
