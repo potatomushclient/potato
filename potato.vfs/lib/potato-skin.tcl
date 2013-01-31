@@ -1009,7 +1009,7 @@ proc ::skin::potato::status {c} {
                  set idle(ids) [lsort $idle(ids)]
                  set tmplist [list]
                  foreach x $idle(ids) {
-                    lappend tmplist "$x. [::potato::connInfo $x name]"
+                    lappend tmplist "$x. [::potato::connInfo $x connname]"
                  }
                  set idle(list) $tmplist
                }
@@ -1033,9 +1033,8 @@ proc ::skin::potato::status {c} {
 
   worldBarButtonNames
   if { [set pos [lsearch $idle(ids) $c]] != -1 } {
-       set idle(list) [lreplace $idle(list) $pos $pos "$c. [::potato::connInfo $c name]"]
+       set idle(list) [lreplace $idle(list) $pos $pos "$c. [::potato::connInfo $c connname]"]
      }
-
 
   return;
 
@@ -1169,7 +1168,7 @@ proc ::skin::potato::show {c} {
        $widgets(statusbar,connstatus,sub,msg) configure -text [::potato::T "Not Connected"] -image {}
        $widgets(statusbar,worldname,label,prompt) configure -textvariable ""
     } else {
-       $widgets(statusbar,worldname,label) configure -text "$c. [potato::connInfo $c name]"
+       $widgets(statusbar,worldname,label) configure -text "$c. [potato::connInfo $c connname]"
        $widgets(statusbar,hostinfo,label) configure -text "[potato::connInfo $c host]:[potato::connInfo $c port]"
        $widgets(statusbar,worldname,label,prompt) configure -textvariable ::potato::conn($c,prompt)
     }
