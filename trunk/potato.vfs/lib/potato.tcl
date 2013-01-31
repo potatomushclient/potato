@@ -4776,7 +4776,7 @@ proc ::potato::manageWorlds {} {
 
   toplevel $win
   wm withdraw $win
-  wm title $win [T "Manage Worlds"]
+  wm title $win [T "Address Book"]
   set manageWorlds(toplevel) $win
 
   pack [set frame [::ttk::frame $win.f]] -side left -expand 1 -fill both
@@ -4901,7 +4901,7 @@ proc ::potato::manageWorldsDrag {x y gx gy} {
           }
        toplevel $win
        wm withdraw $win
-       wm title $win [T "Manage Worlds"]
+       wm title $win [T "Address Book"]
        wm overrideredirect $win 1
        if { [tk windowingsystem] eq "x11" } {
             catch {wm attributes $win -type dnd}
