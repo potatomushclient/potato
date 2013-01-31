@@ -409,7 +409,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [::ttk::panedwindow $inner.top -orient horizontal] -side top -expand 1 -fill both -padx 3 -pady 3
   $inner.top add [::ttk::frame $inner.top.left]
   set tree [::ttk::treeview $inner.top.left.tree -yscrollcommand [list $inner.top.left.sby set] \
-             -xscrollcommand [list $inner.top.left.sbx set] -show tree -selectmode browse]
+             -xscrollcommand [list $inner.top.left.sbx set] -show tree -selectmode browse -takefocus 0]
   set OPTIONTREE $tree
   ::ttk::scrollbar $inner.top.left.sby -orient vertical -command [list $inner.top.left.tree yview]
   ::ttk::scrollbar $inner.top.left.sbx -orient horizontal -command [list $inner.top.left.tree xview]
@@ -875,7 +875,7 @@ $sub.cb state disabled
   set worldconfig($w,timer,delete) $tDel
 
   ::ttk::treeview $mc.tree -columns [list Every Commands Frequency] -show [list tree headings] \
-              -selectmode browse -xscrollcommand [list $mc.sbx set] -yscrollcommand [list $mc.sby set]
+              -selectmode browse -xscrollcommand [list $mc.sbx set] -yscrollcommand [list $mc.sby set] -takefocus 0
   ::ttk::scrollbar $mc.sbx -command [list $mc.tree xview] -orient horizontal
   ::ttk::scrollbar $mc.sby -command [list $mc.tree yview] -orient vertical
   grid_with_scrollbars $mc.tree $mc.sbx $mc.sby

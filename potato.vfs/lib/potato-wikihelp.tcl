@@ -63,8 +63,10 @@ proc ::wikihelp::help {{topic ""}} {
   $path(pane) add [set left [::ttk::frame $path(pane).left -relief ridge]]
   $path(pane) add [set right [::ttk::frame $path(pane).right -relief ridge -borderwidth 2]]
 
-  set tree [::ttk::treeview $left.tree -padding [list 0 0 0 0] -selectmode browse -yscrollcommand [list $left.sb set] -show [list tree]]
-  bind $tree <MouseWheel> "[bind Treeview <MouseWheel>];break"
+  set tree [::ttk::treeview $left.tree -padding [list 0 0 0 0] -selectmode browse -yscrollcommand [list $left.sb set] -show [list tree] -takefocus 0]
+  if { ![package vsatisfies [package present Tk] 8.6-] } {
+       bind $tree <MouseWheel> "[bind Treeview <MouseWheel>];break"
+     }
   $tree tag configure link -foreground black
   $tree tag configure badlink -foreground red
   $tree tag configure wikilink;# used for internal links
