@@ -2491,7 +2491,7 @@ proc ::potato::connZero {} {
 
   $canvas bind clickable <Enter> "[list %W itemconfig current -fill red] ; [list %W configure -cursor hand2]"
   $canvas bind clickable <Leave> "[list %W itemconfig current -fill $linkcol] ; [list %W configure -cursor {}]"
-  $canvas bind clickable <ButtonRelease-1> [list ::potato::connZeroClick %W]
+  $canvas bind clickable <ButtonRelease-1> [list ::potato::connZeroClick %W %x %y]
 
 
   connZeroAddText $canvas $x y 1 [T "Existing Worlds:"] [list Tahoma 14] [list existing] -justify left -anchor nw
@@ -2630,13 +2630,18 @@ proc ::potato::connZeroFact {} {
 
 #: proc ::potato::connZeroClick
 #: arg win Canvas widget
+#: arg x x-coord, relative to canvas
+#: arg y y-coord, relative to canvas
 #: desc Handle a click on a link in the connZero canvas $win, either to connect to a world, open the address book or add a new world
 #: return nothing
-proc ::potato::connZeroClick {win} {
+proc ::potato::connZeroClick {win x y} {
 
   set index [$win find withtag current]
   if { [llength $index] != 1 } {
        return;
+     }
+  if { [lindex [$win find overlapping $x $y $x $y] 0] ne $index } {
+       return; # mouse moved out before releasing button
      }
   set tags [$win itemcget $index -tags]
   set tags [lsearch -all -inline -not $tags clickable]
