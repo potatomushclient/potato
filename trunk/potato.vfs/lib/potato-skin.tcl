@@ -1152,6 +1152,12 @@ proc ::skin::potato::show {c} {
   set btm(bg) [::potato::connInfo $c bottom,bg]
   set btm(insert) [::potato::reverseColour $btm(bg)]
 
+  if { $c == 0 && !$::potato::misc(connZeroInputWindows) } {
+       $widgets(pane) paneconfigure $widgets(pane,btm) -hide 1
+     } else {
+       $widgets(pane) paneconfigure $widgets(pane,btm) -hide 0
+     }
+
   if { [info exists widgets(conn,$c,withInput)] } {
        focus $widgets(conn,$c,withInput)
      } else {
