@@ -4785,6 +4785,20 @@ proc ::potato::manageWorlds {} {
   pack [set left [::ttk::frame $top.left]] -side left -expand 0 -fill both
   set gTree [::ttk::treeview $left.gtree -columns Group -show tree -selectmode browse]
   set manageWorlds(gTree) $gTree
+  $gTree tag configure "flashed" -image ::potato::img::add
+  if { ![catch {ttk::style map Treeview} selcols] } {
+       foreach {opt vals} $selcols {
+         if { $opt in [list -background -foreground] } {
+              foreach {when what} $vals {
+                if { $when eq "selected" } {
+                     $gTree tag configure "flashed" $opt $what
+                   }
+              }
+            }
+       }
+     }
+  $gTree tag configure internal -image ::potato::img::globe
+  $gTree tag configure user -image ::potato::img::folder
   set sbX [::ttk::scrollbar $left.sbX -orient horizontal -command [list $gTree xview]]
   set sbY [::ttk::scrollbar $left.sbY -orient vertical -command [list $gTree yview]]
   grid_with_scrollbars $gTree $sbX $sbY
@@ -5000,6 +5014,7 @@ proc ::potato::manageWorldsDragDrop {} {
 
   if { $new eq "" } {
        if {  [string match "INT:*" $currgroup] } {
+             bell -displayof $manageWorlds(wTree)
              return;
           }
        # Delete from the current group
@@ -5014,9 +5029,50 @@ proc ::potato::manageWorldsDragDrop {} {
           }
      }
 
+  if { [info exists manageWorlds(wTree,drag,after)] } {
+       catch {after cancel $manageWorlds(wTree,drag,after)}
+     }
+
+  $manageWorlds(gTree) tag remove "flashed"
+  if { $new ne "" && [$manageWorlds(gTree) exists $new] } {
+       manageWorldsTwiddleGroup $manageWorlds(gTree) $new
+     }
+
   return;
 
 };# ::potato::manageWorldsDragDrop
+
+#: proc ::potato::manageWorldsTwiddleGroup
+#: arg groups The Groups tree
+#: arg groupid ID of group to twiddle
+#: arg count Number of times this has been called recursively, defaults to 0
+#: desc Twiddle the "flashed" tag on and off in the Address Book Group tree, to show activity.
+#: desc Calls itself recursively to flash on and off several times.
+#: return nothing
+proc ::potato::manageWorldsTwiddleGroup {groups groupid {count 0}} {
+  variable manageWorlds;
+
+  if { ![winfo exists $groups] || ![$groups exists $groupid] } {
+       return;
+     }
+
+  if { $count % 2 } {
+       $groups tag remove "flashed" [list $groupid]
+     } else {
+       $groups tag add "flashed" [list $groupid]
+     }
+
+  # A nop to force the treeview to be redrawn with the tag
+  $groups configure -cursor [$groups cget -cursor]
+
+  if { $count < 5 } {
+       incr count
+       set manageWorlds(wTree,drag,after) [after 250 [list ::potato::manageWorldsTwiddleGroup $groups $groupid $count]]
+     }
+
+  return;
+
+};# ::potato::manageWorldsTwiddleGroup
 
 #: proc ::potato::manageWorldsRightClickWorld
 #: arg xcoord x coordinate to post menu at
@@ -5171,13 +5227,13 @@ proc ::potato::manageWorldsUpdateGroups {} {
 
   set gTree $manageWorlds(gTree);
   $gTree delete [$gTree children {}]
-  set gTreeAll [$gTree insert {} end -id INT:All -image ::potato::img::globe -values [list [T "All Worlds"]] -open true]
+  set gTreeAll [$gTree insert {} end -id INT:All -tags [list internal] -values [list [T "All Worlds"]] -open true]
 
   foreach x $world(-1,groups) {
-    $gTree insert $gTreeAll end -id $x -image ::potato::img::folder -values [list $x] -open true
+    $gTree insert $gTreeAll end -id $x -tags [list user] -values [list $x] -open true
   }
-  $gTree insert $gTreeAll end -id INT:Ungrouped -image ::potato::img::globe -values [list [T "Ungrouped"]] -open true
-  $gTree insert $gTreeAll end -id INT:Temp -image ::potato::img::globe -values [list [T "Temp/Deleted"]] -open true
+  $gTree insert $gTreeAll end -id INT:Ungrouped -tags [list internal] -values [list [T "Ungrouped"]] -open true
+  $gTree insert $gTreeAll end -id INT:Temp -tags [list internal] -values [list [T "Temp/Deleted"]] -open true
 
   $gTree selection set INT:All
   manageWorldsSelectGroup
@@ -6909,7 +6965,7 @@ proc ::potato::treeviewKeyPressReset {{char ""}} {
 #: desc Return a list of $id and all its children in the tree widget $tree. Used
 #: desc recursively for building a list of all IDs in order
 #: return list of ids
-proc ::potato::treeviewRecursiveListIDs {tree id} {
+proc ::potato::treeviewRecursiveListIDs {tree {id ""}} {
 
   if { ![winfo exists $tree] || ![$tree exists $id] } {
        return;
@@ -7212,7 +7268,7 @@ proc ::potato::showMSSP {} {
 
   # Build list
   foreach x [lsort -dictionary -index 0 $conn($c,telnet,mssp)] {
-     $tree insert {} end -values $x
+     $tree insert {} end -values [list $x]
   }
 
   return;
