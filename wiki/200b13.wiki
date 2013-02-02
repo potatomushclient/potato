@@ -9,7 +9,6 @@
   * When you add a new /command, it will be enabled by default. Suggested by KimikoMuffin.
   * Added support for Overtype mode in text frames, toggled on and off with the Insert key. When on, anything you type will replace the character after the cursor, instead of appearing before it. Requested by Emi.
   * Pressing Return without typing anything will now send a blank line, instead of doing nothing. Useful for MUDs/MOOs/etc which ask you to press Return as a confirmation. Requested by Emi.
-  * On MacOS X, you can enable systray flashing to animate the dock icon on activity.
   * The Help → About window now shows the version of Potato being used, as well as some information about the machine it's running on and the versions of Tcl and various loaded packages, for easier debugging. Suggested by Paige.
   * Added a 'Connect to World' button in the Address Book.
   * Select to Copy is now a global option, not per-world, as it should have been all along. Suggested by spork.
@@ -19,8 +18,13 @@
   * A potentially nasty bug when cancelling an attempted connection through a proxy has been fixed. Reported by Paige.
   * Potato is now extra-super-duper careful about not leaving dead connections (particularly to proxies) open.
   * When you cancel a connection attempt before the connection is established, Potato now tells you, instead of leaving it looking like it's trying to connect forever.
-  * When picking an ambiguous world name, /connect always picks the one that comes first alphabetically.
-  * Added the TLS package for Mac OS X to the source, to ensure SSL connections are always available.
+  * When picking an ambiguous world name, /connect now always picks the one that comes first alphabetically, as it was always supposed to.
+  * Added the TLS package for Mac OS X to the source download, to ensure SSL connections are always available.
+  * SSL support was broken when using TLS 1.5. Despite the fact it's insanely old, some Linux package managers still provide it instead of TLS 1.6, so since I'm nice (and since Cheetah bugged me) we try to accomodate it.
+  * You can now drag-and-drop worlds in the Address Book to add them to groups.
+  * The Activity Window, next to the input windows, now shows the world name including character name. Suggested by SmackedFerret.
+  * Added an option to hide the input windows on the main screen; useful for small screen sizes. Suggested by Paige.
+  * Fixed a couple of bugs related to connection stats, and improved the appearance of the Stats window.
   
   * Potato binaries are now built using Tcl/Tk 8.6.0, and some tweaks have been made to take advantage of new features in 8.6. If you're running Potato from source, it's recommended you [www.activestate.com/activetcl update your Tcl install] - the features listed below rely on it.
   * Support for connecting to IPv6 addresses.
