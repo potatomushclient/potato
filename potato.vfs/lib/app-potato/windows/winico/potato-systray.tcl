@@ -95,7 +95,9 @@ proc ::potato::unflashSystrayIcon {} {
   variable systray;
   variable potato;
 
-  catch {after cancel $systray(after)}
+  if { [info exists systray(after)] } {
+       catch {after cancel $systray(after)}
+     }
   set systray(pos) 0
   set systray(flashing) 0
   winico taskbar modify $systray(main) -pos 0 -text $potato(name)
