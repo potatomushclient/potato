@@ -3386,7 +3386,7 @@ proc ::potato::disconnect {{c ""} {prompt 1}} {
   set conn($c,telnet,afterPrompt) 0
   setPrompt $c ""
 
-  if { $conn($c,stats,connAt) != -1 } {
+  if { $conn($c,stats,connAt) > 0 } {
        incr conn($c,stats,prev) [expr {[clock seconds] - $conn($c,stats,connAt)}]
      }
   set conn($c,stats,connAt) -1
@@ -4623,7 +4623,7 @@ proc ::potato::closeConn {{c ""} {autoDisconnect 0} {prompt 1}} {
           }
      }
 
-  if { [info exists conn($c,stats,prev)] && [string is integer -strict $conn($c,stats,prev)] } {
+  if { [info exists conn($c,stats,prev)] && [string is integer -strict $conn($c,stats,prev)] && $conn($c,stats,prev) > 0 } {
        incr world($w,stats,time) $conn($c,stats,prev)
      }
 
@@ -5613,12 +5613,12 @@ proc ::potato::copyWorld {w} {
   }
 
   # Reset stats...
-  set world($w,stats,conns) 0
-  set world($w,stats,time) 0
-  set world($w,stats,added) [clock seconds]
+  set world($new,stats,conns) 0
+  set world($new,stats,time) 0
+  set world($new,stats,added) [clock seconds]
 
   # Make sure it's not set temp...
-  set world($w,temp) 0
+  set world($new,temp) 0
 
   # And now fix the name...
   # Possible formats:
@@ -7283,18 +7283,16 @@ proc ::potato::showStats {} {
   variable conn;
 
   foreach w [worldIDs] {
-     set stats($w,name) $world($w,name)
-     set stats($w,conns) $world($w,stats,conns)
-     set stats($w,time) $world($w,stats,time)
+     set times($w) $world($w,stats,time)
   }
 
   foreach c [connIDs] {
      set w $conn($c,world)
-     if { [info exists conn($c,stats,prev)] && [string is integer -strict $conn($c,stats,prev)] } {
-          incr stats($w,time) $conn($c,stats,prev)
+     if { [info exists conn($c,stats,prev)] && [string is integer -strict $conn($c,stats,prev)] && $conn($c,stats,prev) > 0 } {
+          incr times($w) $conn($c,stats,prev)
         }
-     if { $conn($c,stats,connAt) != -1 } {
-          incr stats($w,time) [expr {[clock seconds] - $conn($c,stats,connAt)}]
+     if { $conn($c,stats,connAt) > 0 } {
+          incr times($w) [expr {[clock seconds] - $conn($c,stats,connAt)}]
         }
   }
 
@@ -7305,34 +7303,65 @@ proc ::potato::showStats {} {
   wm title $win [T "Connection Statistics"]
   wm withdraw $win
 
-  set sb $win.ysb
-  foreach x [list name conns time] y [list [T "MU* Name"] \
-                                           [T "No of Connections"] \
-                                           [T "Total Connection Time"]] {
-     set lb [listbox $win.lb_$x -yscrollcommand [list $sb set] -activestyle none]
-     lappend listboxes $lb
-     $lb insert end $y
-     $lb itemconfigure end -background [$lb cget -foreground] -foreground [$lb cget -background]
-     foreach this [lsort -dictionary [array names stats *,$x]] {
-        if { $x eq "time" } {
-             $lb insert end [timeFmt $stats($this) 0]
-           } else {
-             $lb insert end $stats($this)
-           }
+  if { [catch {::ttk::style lookup Treeview -font} font] } {
+       set font TkDefaultFont
      }
-     bindtags $lb [list $win all]
-  }
-  scrollbar $sb -orient vertical -command [list ::potato::multiscroll $listboxes yview]
 
-  pack {*}$listboxes -side left -anchor nw -fill both -expand 1
-  pack $sb -side left -anchor nw -fill y
+  pack [set frame [::ttk::frame $win.f]] -side left -expand 1 -fill both
+
+  pack [set top [::ttk::frame $frame.top]] -side top -expand 1 -fill both -anchor nw -padx 0 -pady 3
+
+  set columns [list [X "MU* Name"] \
+                    [X "No of Connections"] \
+                    [X "Total Connection Time"] \
+              ]
+
+  set tree [::ttk::treeview $top.tree \
+    -xscrollcommand [list $top.x set] \
+    -yscrollcommand [list $top.y set] \
+    -columns $columns \
+    -selectmode browse -show [list headings] \
+  ]
+
+  foreach x $columns y [list "" "" "TIME:"] {
+    $tree heading $x -text [T $x] -anchor e \
+      -image ::treeviewUtils::arrowBlank \
+      -command [list ::treeviewUtils::SortBy $tree $x 0 $y]
+    $tree column $x -anchor e -stretch 0
+  }
+  $tree heading [lindex $columns 0] -anchor w
+  $tree column [lindex $columns 0] -anchor w -stretch 1
+
+  set xs [::ttk::scrollbar $top.x -orient horizontal -command [list $tree xview]]
+  set ys [::ttk::scrollbar $top.y -orient vertical -command [list $tree yview]]
+
+  set col0 150
+  set col1 115
+  set col2 125
+
+  foreach w [worldIDs] {
+    set vals [list $world($w,name) $world($w,stats,conns) [timeFmt $times($w) 0]]
+    $tree insert {} end -values $vals -tags [list TIME:$times($w)]
+    foreach col {col0 col1 col2} x $vals {
+      set $col [expr {max([set $col], [font measure $font -displayof $tree $x])}]
+    }
+  }
+
+  foreach x {0 1 2} {
+    $tree column [lindex $columns $x] -width [set col$x] -minwidth [set col $x]
+  }
+
+  grid_with_scrollbars $tree $xs $ys
+
+  pack [::ttk::frame $frame.btm] -side top -expand 0 -fill none -anchor center -pady 10
+  pack [::ttk::button $frame.btm.close -text [T "Close"] -command [list destroy $win]]
 
   bind $win <Escape> [list destroy $win]
-  update idletasks
   center $win
   wm deiconify $win
   raise $win
   focus $win
+
   return;
 
 };# ::potato::showStats
@@ -13337,6 +13366,7 @@ proc ::potato::basic_reqs {} {
       [list potato-spell] \
       [list potato-encoding] \
       [list potato-subfiles] \
+      [list treeviewUtils] \
     ]
   if { ![package vsatisfies [package present Tk] 8.6-] } {
        # On Tk 8.6, we use [tk fontchooser]. Before that, we need the
