@@ -186,6 +186,8 @@ proc ::potato::setPrefs {readfile} {
   set misc(toggleShowMainWindow) 0;# when moving to a conn, show it's main window, even if we last saw a spawn?
   set misc(tinyurlProvider) "TinyURL"
 
+  set misc(connZeroInputWindows) 1
+
   set misc(autoConnect) 1 ;# should we run autoconnects?
 
   set misc(checkForUpdates) 1
@@ -1074,6 +1076,11 @@ $sub.cb state disabled
                           -onvalue 1 -offvalue 0] -side left
        set potato::worldconfig(MISC,selectToCopy) $misc(selectToCopy)
 
+       pack [set sub [::ttk::frame $frame.connZeroInputWindows]] -side top -pady 5 -anchor nw
+       pack [::ttk::label $sub.l -text [T "Show Input Wins on Startup?"] -width $lW -anchor w -justify left] -side left
+       pack [::ttk::checkbutton $sub.c -variable ::potato::worldconfig(MISC,connZeroInputWindows) \
+                          -onvalue 1 -offvalue 0] -side left
+       set potato::worldconfig(MISC,connZeroInputWindows) $misc(connZeroInputWindows)
 
      }
 
