@@ -11215,7 +11215,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
               # Copy to new spawn window
               puts "Copying $line"
               set dump [$t dump -text -tag $i.0 "$i.0 lineend+1char"]
-              set tags [list]
+              set tags [$t tag names $i.0]
               foreach {type data pos} $dump {
                 switch -exact $type {
                   tagon  { if { $data ni $tags } { lappend tags $data }}
