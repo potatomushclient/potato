@@ -12727,7 +12727,7 @@ proc ::potato::rebuildConnectMenuSub {w name m} {
        $sub add command {*}[menu_label [T "&Default Character (%s)" $def]] -command [list ::potato::newConnectionDefault $w]
        $sub add command {*}[menu_label [T "&No Character"]] -command [list ::potato::newConnection $w]
        $sub add separator
-       foreach x $world($w,charList) {
+       foreach x [lsort -dictionary -index 0 $world($w,charList)] {
          set char [lindex $x 0]
          $sub add command -label $char -command [list ::potato::newConnection $w $char]
        }
