@@ -11140,14 +11140,21 @@ proc ::potato::customSlashCommand {c w cmd str} {
 
   set invert 0
   set matchType "glob"
+  set case 1
 
   set list [split $str " "]
+  set len [llength $list]
 
   # Parse off args
-  set done 0
-  set case 1
-  foreach x $list {
-    if { $done || ![string match "-*" $x] } {
+  set cont 0
+  set i 0
+  for {set i 0} {$i < $len} {incr i} {
+    if { $cont } {
+         set cont 0
+         continue;
+       }
+    set x [lindex $list $i]
+    if { ![string match "-*" $x] } {
          break; # not an "-option"
        }
     switch -nocase -exact -- $x {
@@ -11161,18 +11168,38 @@ proc ::potato::customSlashCommand {c w cmd str} {
        -mregexp -
        -regexp {set matchType regexp}
        -nocase {set case 0}
-       -- {set done 1}
+       -spawn {incr i ; set spawn [lindex $list $i]}
+       -- {incr i ; break;}
        default {return [list 0 [T "Invalid option \"%s\" to /limit" $x]];}
     }
-    set list [lrange $list 1 end]
   }
 
-  set str [join $list " "]
+  set str [join [lrange $list $i end] " "]
   if { $str eq "" } {
        return [list 1];
      }
 
+  if { [info exists spawn] } {
+       # Spawn matching text to a new window
+      if { [set spawn [validSpawnName $spawn 1]] eq "" } {
+           return [list 0 [T "Invalid Spawn Name"]];
+         } elseif { [set find [findSpawn $c $spawn]] != -1 } {
+           return [list 0 [T "Spawn already exists."]];
+         } else {
+           # Create the spawn window
+           set sinfo [createSpawnWindow $c $spawn]
+           set sout [lindex $sinfo 1]
+           set invert [expr {!$invert}]
+         }
+    }
+
   set case [lindex [list -nocase] $case]
+
+  switch -exact -- $matchType {
+    regexp  {set command [list regexp]}
+    literal {set command [list string equal]}
+    glob    {set command [list string match]}
+  }
 
   # OK, do limiting.
   for { set i [$t count -lines 1.0 end]} {$i > 0} {incr i -1} {
@@ -11180,20 +11207,31 @@ proc ::potato::customSlashCommand {c w cmd str} {
          continue;
        }
     set line [$t get -displaychars $i.0 "$i.0 lineend"]
-    switch -exact -- $matchType {
-      regexp {set caught [catch {regexp {*}$case $str $line} match]}
-      literal {set caught [catch {string equal {*}$case $str $line} match]}
-      glob {set caught [catch {string match {*}$case $str $line} match]}
-    }
-    if { $caught } {
-         return [T "Invalid %s pattern \"%s\": %s" $matchType $str $match];
+    if { [catch {{*}$command {*}$case $str $line} match] } {
+         return [list 0 [T "Invalid %s pattern \"%s\": %s" $matchType $str $match]];
        }
     if { ($invert ? $match : !$match) } {
-         $t tag add limited $i.0 "$i.0 lineend+1char"
+         if { [info exists sout] } {
+              # Copy to new spawn window
+              puts "Copying $line"
+              set dump [$t dump -text -tag $i.0 "$i.0 lineend+1char"]
+              set tags [list]
+              foreach {type data pos} $dump {
+                switch -exact $type {
+                  tagon  { if { $data ni $tags } { lappend tags $data }}
+                  tagoff { set tags [lreplace $tags [set ind [lsearch -exact $tags $data]] $ind] }
+                  text   { $sout insert 1.0 $data $tags}
+                }
+              }
+            } else {
+              $t tag add limited $i.0 "$i.0 lineend+1char"
+            }
        }
   }
 
-  set conn($c,limited) [list $matchType $invert $case $str]
+  if { ![info exists sout] } {
+       set conn($c,limited) [list $matchType $invert $case $str]
+     }
 
   return [list 1];
 
