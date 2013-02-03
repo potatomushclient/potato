@@ -1527,7 +1527,11 @@ proc ::potato::doLog {c file append buffer leave timestamps html echo} {
        outputSystem $c "Unable to log to \"$file\": $fid"
        return;
      }
-  fconfigure $fid -encoding utf-8
+  fconfigure $fid -encoding $conn($c,id,encoding)
+  set enc $conn($c,id,encoding)
+  if { [string match -nocase {iso[0-9]*} $enc] } {
+       set enc [string replace $enc 0 2 iso-]
+     }
 
   if { $html } {
        set leave 0;# not currently supported
@@ -1539,7 +1543,7 @@ proc ::potato::doLog {c file append buffer leave timestamps html echo} {
        puts $fid {<head>}
        puts $fid "\t<title>[htmlEscape $header]</title>"
        puts -nonewline $fid "\t"
-       puts $fid {<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />}
+       puts $fid [format {<meta http-equiv="Content-Type" content="text/html;charset=%s" />} $enc]
        puts $fid "\t<meta name=\"description\" content=\"[htmlEscape "$header. $subheader"]\"  />"
        puts $fid [format {%s<meta name="author" content="%s Version %s" />} \t $potato(name) $potato(version)]
        if { $t eq "" } {
