@@ -1369,6 +1369,7 @@ proc ::potato::logWindow {{c ""}} {
   set conn($c,logDialog,timestamps) 0
   set conn($c,logDialog,html) 0
   set conn($c,logDialog,file) ""
+  set conn($c,logDialog,echo) 0
 
   set bindings [list]
 
@@ -1396,6 +1397,9 @@ proc ::potato::logWindow {{c ""}} {
   pack [::ttk::checkbutton $frame.top.options.html -variable potato::conn($c,logDialog,html) \
              -onvalue 1 -offvalue 0 -text [T "Log as HTML?"] -underline 7] -side top -anchor w
   lappend bindings h $frame.top.options.html
+  pack [::ttk::checkbutton $frame.top.options.echo -variable potato::conn($c,logDialog,echo) \
+             -onvalue 1 -offvalue 0 -text [T "Log input?"] -underline 4] -side top -anchor w
+  lappend bindings i $frame.top.options.echo
 
   #pack [::ttk::checkbutton $frame.top.options.wrap -variable potato::conn($c,logDialog,wrap) \
   #           -onvalue 1 -offvalue 0 -text [T "Wrap Lines?"] -underline 0] -side top -anchor w
@@ -1453,7 +1457,10 @@ proc ::potato::logWindowInvoke {c win} {
        return; # no file selected, or told not to log anything
      }
 
-  doLog $c $conn($c,logDialog,file) $conn($c,logDialog,append) $conn($c,logDialog,buffer) $conn($c,logDialog,future) $conn($c,logDialog,timestamps) $conn($c,logDialog,html)
+  doLog $c $conn($c,logDialog,file) $conn($c,logDialog,append) \
+    $conn($c,logDialog,buffer) $conn($c,logDialog,future) \
+    $conn($c,logDialog,timestamps) $conn($c,logDialog,html) \
+    $conn($c,logDialog,echo)
   unregisterWindow $c $win
   destroy $win
   array unset conn $c,logDialog,*
@@ -1469,10 +1476,11 @@ proc ::potato::logWindowInvoke {c win} {
 #: arg leave leave the logfile open for future output?
 #: arg timestamps Include timestamps for each logged line?
 #: arg html Log as HTML instead of plain text?
+#: arg echo Log echo'd input?
 #: desc Create a log file for connection $c, writing to file $file (and appending, if $append is true and the file exists). If $buffer != "_none"/"No Buffer",
 #: desc include output from one of the windows. If $leave, don't close the file, leave it open to log incoming text to, possibly causing us to close an already-open log file.
 #: return nothing
-proc ::potato::doLog {c file append buffer leave timestamps html} {
+proc ::potato::doLog {c file append buffer leave timestamps html echo} {
   variable conn;
   variable world;
   variable misc;
@@ -1571,7 +1579,10 @@ proc ::potato::doLog {c file append buffer leave timestamps html} {
                  }
             }
           }
-       lappend styles system echo
+       lappend styles system
+       if { $echo } {
+            lappend styles echo
+          }
        foreach x $styles {
          set this ""
          if { [set col [$thtml tag cget $x -foreground]] ne "" } {
@@ -1606,6 +1617,9 @@ proc ::potato::doLog {c file append buffer leave timestamps html} {
          set omit 0
          set opentags [list]
          if { "nobacklog" in [set tags [$t tag names $i.0]] } {
+              continue;
+            }
+         if { "echo" in $tags && !$echo } {
               continue;
             }
          if { $html } {
@@ -1674,6 +1688,7 @@ proc ::potato::doLog {c file append buffer leave timestamps html} {
        outputSystem $c [T "Now logging to \"%s\"." $file]
        set conn($c,log,$fid) [file nativename [file normalize $file]]
        set conn($c,log,$fid,timestamps) $timestamps
+       set conn($c,log,$fid,echo) $echo
      } else {
        if { $html } {
             puts $fid "</body>\n</html>"
@@ -1775,9 +1790,10 @@ proc ::potato::stopLog {{c ""} {file ""} {verboseReturn 0}} {
 #: proc ::potato::log
 #: arg c connection id
 #: arg str String to log
-#: desc Actually log $str to $c's open log files
+#: arg style Empty string or "echo"
+#: desc Actually log $str to $c's open log files. If $style is "echo", only log if we were told to log echoed input
 #: return nothing
-proc ::potato::log {c str} {
+proc ::potato::log {c str {style ""}} {
   variable conn;
   variable misc;
 
@@ -1786,8 +1802,12 @@ proc ::potato::log {c str} {
      }
 
   set logs [arraySubelem conn $c,log]
+  set echo [expr {$style eq "echo"}]
   if { [llength $logs] } {
        foreach x [removePrefix $logs $c,log] {
+         if { $echo && !$conn($c,log,$x,echo) } {
+              continue;
+            }
          if { $conn($c,log,$x,timestamps) } {
               if { ![info exists timestamp] } {
                    set timestamp "\[[clock format [clock seconds] -format $misc(clockFormat)]]\]"
@@ -9648,8 +9668,10 @@ proc ::potato::send_to_real {c string {echo 1}} {
   if { $world($conn($c,world),echo) } {
        if { $echo eq "1" } {
             outputSystem $c $string [list "echo"]
+            log $c $string "echo"
           } elseif { $echo ne "0" } {
             outputSystem $c $echo [list "echo"]
+            log $c $echo "echo"
           }
      }
 
@@ -11529,7 +11551,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
      }
 
   # Try and parse out options...
-  array set options [list -buffer "_main" -append 1 -leave 1 -timestamps 0 -html 0]
+  array set options [list -buffer "_main" -append 1 -leave 1 -timestamps 0 -html 0 -input 0]
   set error ""
   set finished 0
   set file [list]
@@ -11568,7 +11590,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
                   }
               } else {
                 # Looking for a value to the option $match
-                if { $match in [list "-append" "-leave" "-timestamps" "-html"] } {
+                if { $match in [list "-append" "-leave" "-timestamps" "-html" "-input"] } {
                      if { [string is boolean -strict $x] } {
                           set options($match) [string is true -strict $x]
                         } else {
@@ -11594,7 +11616,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
        return [list 1];
      }
 
-  doLog $c $file $options(-append) $options(-buffer) $options(-leave) $options(-timestamps) $options(-html)
+  doLog $c $file $options(-append) $options(-buffer) $options(-leave) $options(-timestamps) $options(-html) $options(-input)
   return [list 1];
 
 };# /log
