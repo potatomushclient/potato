@@ -4927,7 +4927,7 @@ proc ::potato::manageWorldsDragStart {x y gx gy} {
      } else {
        set manageWorlds(wTree,drag,id) ""
      }
-  set manageWorlds(wTree,drag,target) ""
+  set manageWorlds(wTree,drag,target) "INT:wTree"
 
   return;
 }
@@ -5009,6 +5009,7 @@ proc ::potato::manageWorldsDrag {x y gx gy} {
            set worldsy [list [winfo rooty $worlds] [expr {[winfo rooty $worlds] + [winfo height $worlds]}]]
            if { $px >= [lindex $worldsx 0] && $px <= [lindex $worldsx 1] && $py >= [lindex $worldsy 0] && $py <= [lindex $worldsy 1] } {
                 $manageWorlds(wTree,drag,popup).l config -image ::potato::img::globe
+                set manageWorlds(wTree,drag,target) "INT:wTree"
               } else {
                 $manageWorlds(wTree,drag,popup).l config -image ::potato::img::delete
               }
@@ -5049,9 +5050,11 @@ proc ::potato::manageWorldsDragDrop {} {
      }
 
   set new $manageWorlds(wTree,drag,target)
+  if { $new eq "INT:wTree" } {
+       return;
+     }
 
   set w $manageWorlds(wTree,drag,id)
-
   if { $new eq "" } {
        if {  [string match "INT:*" $currgroup] } {
              bell -displayof $manageWorlds(wTree)
@@ -5063,6 +5066,10 @@ proc ::potato::manageWorldsDragDrop {} {
             set world($w,groups) [lreplace $world($w,groups) $pos $pos]
           }
        manageWorldsUpdateWorlds
+     } elseif { $new eq "INT:Temp" } {
+       if { ![manageWorldsBtn "delworld" $manageWorlds(toplevel)] } {
+            return;
+          }
      } else {
        if { $new ni $world($w,groups) } {
             lappend world($w,groups) $new
@@ -5316,15 +5323,16 @@ proc ::potato::manageWorldsSelectGroup {} {
 #: arg type The type of button pressed
 #: arg win toplevel Manage Worlds window
 #: desc Handle the click of a button in the Manage Worlds window.
-#: return nothing
+#: return 1 if button action succeeded, 0 if it failed/was cancelled
 proc ::potato::manageWorldsBtn {type win} {
   variable world;
   variable manageWorlds;
 
   if { ![info exists manageWorlds(toplevel)] } {
-       return;
+       return 0;
      }
 
+  set succ 1
   if { $type eq "copyworld" } {
        foreach w [$manageWorlds(wTree) selection] {
           copyWorld $w
@@ -5347,29 +5355,33 @@ proc ::potato::manageWorldsBtn {type win} {
                            -icon question -type yesno -message [T "Do you really want to delete \"%s\"?" $world($w,name)]]
                if { $ans eq "yes" } {
                     set world($w,temp) 1
+                  } else {
+                    set succ 0
                   }
              }
        }
-    } elseif { $type eq "delgroup" } {
-      set sel [lindex [$manageWorlds(gTree) sel] 0]
-      set ans [tk_messageBox -parent $manageWorlds(toplevel) -title [T "Delete Group?"] \
-            -icon question -type yesno -message [T "Do you really want to delete the group \"%s\"?" $sel]]
-      if { $ans eq "yes" } {
-           # This must also match -1,groups, hence the "-?"
-           foreach x [array names world -regexp {^-?[0-9]+,groups}] {
-              set index [lsearch -exact $world($x) $sel]
-              if { $index > -1 } {
-                   set world($x) [lreplace $world($x) $index $index]
-                 }
-           }
-           manageWorldsUpdateGroups
-         }
-    }
+     } elseif { $type eq "delgroup" } {
+       set sel [lindex [$manageWorlds(gTree) sel] 0]
+       set ans [tk_messageBox -parent $manageWorlds(toplevel) -title [T "Delete Group?"] \
+             -icon question -type yesno -message [T "Do you really want to delete the group \"%s\"?" $sel]]
+       if { $ans eq "yes" } {
+            # This must also match -1,groups, hence the "-?"
+            foreach x [array names world -regexp {^-?[0-9]+,groups}] {
+               set index [lsearch -exact $world($x) $sel]
+               if { $index > -1 } {
+                    set world($x) [lreplace $world($x) $index $index]
+                  }
+            } else {
+              set succ 0
+            }
+            manageWorldsUpdateGroups
+          }
+     }
 
   manageWorldsUpdateWorlds
   manageWorldsSelectWorld
 
-  return;
+  return $succ;
 
 };# ::potato::manageWorldsBtn
 
