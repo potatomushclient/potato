@@ -23,6 +23,7 @@ Valid options are:
   * `-mglob`  -  Alias for `-glob`
   * `-mregexp`  -  Alias for `-regexp`
   * `-wildcard`  -  Alias for `glob`
+  * `-spawn <spawn>` - Instead of filtering the output, copy all matching lines to a new spawn window, `<spawn>`. The spawn window must not already exist, and currently `<spawn>` cannot contain spaces. (Note that this will not spawn text received later which matches the `<pattern>`; if you wish to do that, you must add an [Events event].
   * `--`  -  Marks the end of the options. Only necessary if `<pattern>` starts with a `-`.
   
 For extra compatability with TinyFugue, the `-a` option will be ignored.
@@ -43,4 +44,9 @@ Hide all output which mentions 'foo', 'bar' or 'baz':
 
 {{{
 /limit -v -regexp -- foo|bar|baz
+}}}
+
+Copy everything in backscroll from <Public> to a spawn window to read later:
+{{{
+/limit -glob -spawn forlater -- <Public> *
 }}}

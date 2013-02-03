@@ -25,6 +25,11 @@
   * The Activity Window, next to the input windows, now shows the world name including character name. Suggested by SmackedFerret.
   * Added an option to hide the input windows on the main screen; useful for small screen sizes. Suggested by Paige.
   * Fixed a couple of bugs related to connection stats, and improved the appearance of the Stats window.
+  * Added a new option to [SlashCommandsLimit /command], `-spawn <spawn>`, which copies the matching output to a new spawn window instead of filtering it in the main window. Suggested by Paige.
+  * Fixed a minor bug in /limit.
+  * Character names in the [FileMenu File] → *Connect To...* menu are now in alphabetical order. Suggested by ffivfan.
+  * Added a new option in the Log Window to log echoed input. (You must still have 'Echo Sent Commands?' enabled in the [ConfigureWorldsDisplayMisc World Configuration].) Suggested by Emi.
+  * Logfiles were always created using utf-8, rather than the correct charset for that connection.
   
   * Potato binaries are now built using Tcl/Tk 8.6.0, and some tweaks have been made to take advantage of new features in 8.6. If you're running Potato from source, it's recommended you [www.activestate.com/activetcl update your Tcl install] - the features listed below rely on it.
   * Support for connecting to IPv6 addresses.
