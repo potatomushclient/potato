@@ -4819,9 +4819,16 @@ proc ::potato::manageWorlds {} {
   set manageWorlds(wTree) $wTree
   set sbX [::ttk::scrollbar $right.sbX -orient horizontal -command [list $wTree xview]]
   set sbY [::ttk::scrollbar $right.sbY -orient vertical -command [list $wTree yview]]
-  $wTree heading "World Name" -text [T "World Name"]
-  $wTree heading "Address" -text [T "Address"]
-  $wTree heading "Char" -text [T "Char"]
+  $wTree heading "World Name" -text [T "World Name"] \
+    -image ::treeviewUtils::HeaderSort::arrow(0) \
+    -command [list ::treeviewUtils::HeaderSort::SortBy $wTree "World Name" 1]
+  $wTree heading "Address" -text [T "Address"] \
+    -image ::treeviewUtils::HeaderSort::arrowBlank \
+    -command [list ::treeviewUtils::HeaderSort::SortBy $wTree "Address" 0]
+  $wTree heading "Char" -text [T "Char"] \
+    -image ::treeviewUtils::HeaderSort::arrowBlank \
+    -command [list ::treeviewUtils::HeaderSort::SortBy $wTree "Char" 0]
+
   $wTree column "World Name" -stretch 1 -width 170
   $wTree column "Address" -stretch 1 -width 160
   $wTree column "Char" -stretch 0 -width 75
@@ -4891,7 +4898,11 @@ proc ::potato::manageWorldsDragStart {x y gx gy} {
   set manageWorlds(wTree,drag,x) $gx
   set manageWorlds(wTree,drag,y) $gy
   set manageWorlds(wTree,drag,popup) ""
-  set manageWorlds(wTree,drag,id) [$manageWorlds(wTree) identify item $x $y]
+  if { [$manageWorlds(wTree) identify region $x $y] eq "cell" } {
+       set manageWorlds(wTree,drag,id) [$manageWorlds(wTree) identify item $x $y]
+     } else {
+       set manageWorlds(wTree,drag,id) ""
+     }
   set manageWorlds(wTree,drag,target) ""
 
   return;
@@ -6841,152 +6852,9 @@ proc ::potato::treeviewHack {} {
        bind Treeview <MouseWheel> {}
      }
 
-  bind Treeview <KeyPress> [list ::potato::treeviewKeyPress %W %A %K]
-  bind Treeview <KeyRelease> [list ::potato::treeviewKeyPressReset %A]
-  bind Treeview <FocusIn> [list ::potato::treeviewKeyPressReset ""]
-  bind Treeview <FocusOut> [list ::potato::treeviewKeyPressReset ""]
-
-  treeviewKeyPressReset
-
   return;
 
 };# ::potato::treeviewHack
-
-#: proc ::potato::treeviewKeyPress
-#: arg tree Treeview widget
-#: arg char The character typed; may be empty
-#: arg keysym The keysym for the key pressed
-#: desc Handle a keypress in a Treeview to allow typing to select an entry
-#: return nothing
-proc ::potato::treeviewKeyPress {tree char keysym} {
-  variable tvkp;
-
-  if { $char in [list "" " " "\t" "\n"] || $keysym eq "space"} {
-       treeviewKeyPressReset;
-       return;
-     }
-
-  catch {after cancel $tvkp(afterid)}
-
-  if { $tvkp(error) } {
-       bell -displayof $tree
-     } elseif { $tvkp(reset) } {
-       # set everything up
-       set tvkp(reset) 0
-       set sel [$tree selection]
-       if { ![llength $sel] } {
-            set tvkp(startid) ""
-          } else {
-            set tvkp(startid) [lindex $sel 0]
-          }
-       set tvkp(str) $char
-       set tvkp(ids) [treeviewRecursiveListIDs $tree ""]
-       if { ![llength $tvkp(ids)] } {
-            set tvkp(error) 1
-            bell -displayof $tree
-          }
-       set inc 0
-     } else {
-       append tvkp(str) $char
-       set inc 1
-     }
-
-  $tree selection set [list]
-  $tree focus {}
-  if { !$tvkp(error) } {
-       set len [string length $tvkp(str)]
-       if { $tvkp(startid) eq "" } {
-            set index 0
-          } else {
-            set index [lsearch -exact $tvkp(ids) $tvkp(startid)]
-            if { !$inc } {
-                 incr index
-                 if { $index == [llength $tvkp(ids)] } {
-                      set index 0
-                    }
-               }
-          }
-       set ids [concat [lrange $tvkp(ids) $index end] [lrange $tvkp(ids) 0 $index-1]]
-       set match ""
-       foreach x $ids {
-         if { [set text [$tree item $x -text]] eq "" } {
-              set text [lsearch -inline -glob [$tree item $x -values] "?*"]
-            }
-         if { $text eq "" } {
-              continue;
-            }
-         if { [string equal -nocase -length $len $tvkp(str) $text] } {
-              set match $x
-              break;
-            }
-       }
-       if { $match ne "" } {
-            $tree sel set [list $x]
-            $tree focus $x
-            $tree see $x
-            set tvkp(startid) $x
-          } else {
-            set tvkp(error) 1
-            bell -displayof $tree
-          }
-     }
-
-  set tvkp(afterid) [after $tvkp(aftertime) [list ::potato::treeviewKeyPressReset]]
-
-  return;
-
-
-};# ::potato::treeviewKeyPress
-
-#: proc ::potato::treeviewKeyPressReset
-#: arg char Character generated if this was triggered by a key release; only reset for non-printable keys ($char eq "")
-#: desc Reset the $tvkp array used to hold state data for treeview keypresses
-#: return nothing
-proc ::potato::treeviewKeyPressReset {{char ""}} {
-  variable tvkp;
-
-  if { $char ne "" } {
-       return;
-     }
-
-  set tvkp(str) ""
-  set tvkp(startid) ""
-  set tvkp(ids) [list]
-  set tvkp(reset) 1
-  set tvkp(error) 0
-  if { [info exists tvkp(afterid)] } {
-       catch {after cancel $tvkp(afterid)}
-     }
-  set tvkp(afterid) ""
-  set tvkp(aftertime) 1300
-
-  return;
-
-};# ::potato::treeviewKeyPressReset
-
-#: proc ::potato::treeviewRecursiveListIDs
-#: arg tree Tree widget
-#: arg id parent id
-#: desc Return a list of $id and all its children in the tree widget $tree. Used
-#: desc recursively for building a list of all IDs in order
-#: return list of ids
-proc ::potato::treeviewRecursiveListIDs {tree {id ""}} {
-
-  if { ![winfo exists $tree] || ![$tree exists $id] } {
-       return;
-     }
-
-  set res [list]
-  if { $id ne "" } {
-       lappend res $id
-     }
-  foreach x [$tree children $id] {
-    lappend res {*}[treeviewRecursiveListIDs $tree $x]
-  }
-
-  return $res;
-
-};# ::potato::treeviewRecursiveListIDs
 
 #: proc ::potato::setTheme
 #: desc Set the ttk/tile theme
@@ -7328,14 +7196,18 @@ proc ::potato::showStats {} {
     -selectmode browse -show [list headings] \
   ]
 
-  foreach x $columns y [list "" "" "TIME:"] {
+  set x [lindex $columns 0]
+  $tree heading $x -text [T $x] -anchor w \
+    -image ::treeviewUtils::HeaderSort::arrow(0) \
+    -command [list ::treeviewUtils::HeaderSort::SortBy $tree $x 1 ""]
+  $tree column $x -anchor w -stretch 1
+
+  foreach x [lrange $columns 1 end] y [list "" "TIME:"] {
     $tree heading $x -text [T $x] -anchor e \
-      -image ::treeviewUtils::arrowBlank \
-      -command [list ::treeviewUtils::SortBy $tree $x 0 $y]
+      -image ::treeviewUtils::HeaderSort::arrowBlank \
+      -command [list ::treeviewUtils::HeaderSort::SortBy $tree $x 0 $y]
     $tree column $x -anchor e -stretch 0
   }
-  $tree heading [lindex $columns 0] -anchor w
-  $tree column [lindex $columns 0] -anchor w -stretch 1
 
   set xs [::ttk::scrollbar $top.x -orient horizontal -command [list $tree xview]]
   set ys [::ttk::scrollbar $top.y -orient vertical -command [list $tree yview]]
@@ -9307,6 +9179,8 @@ proc ::potato::autoConnectWindow {} {
   autoConnectWindowSel yTree
 
   bind $win <Destroy> [list unset -nocomplain ::potato::autoConnectWindow]
+
+  bind $win <Escape> [list destroy $win]
 
   update idletasks
   center $win
