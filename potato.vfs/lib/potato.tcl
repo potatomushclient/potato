@@ -225,6 +225,14 @@ proc ::potato::loadWorldDefaults {w override} {
        }
      }
 
+  if { $w != -1 } {
+       foreach x $world($w,groups) {
+         if { $x ni $world(-1,groups) } {
+              lappend world(-1,groups) $x
+            }
+       }
+     }
+
   set world($w,version) $potato(worldVersion)
 
   return;
@@ -5371,15 +5379,14 @@ proc ::potato::manageWorldsBtn {type win} {
                if { $index > -1 } {
                     set world($x) [lreplace $world($x) $index $index]
                   }
-            } else {
-              set succ 0
             }
             manageWorldsUpdateGroups
+          } else {
+            set succ 0
           }
      }
 
   manageWorldsUpdateWorlds
-  manageWorldsSelectWorld
 
   return $succ;
 
