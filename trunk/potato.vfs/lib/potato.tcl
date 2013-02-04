@@ -4834,7 +4834,7 @@ proc ::potato::manageWorlds {} {
             }
        }
      }
-  $gTree tag configure internal -image ::potato::img::globe
+  $gTree tag configure internal -image [getImage world]
   $gTree tag configure user -image ::potato::img::folder
   set sbX [::ttk::scrollbar $left.sbX -orient horizontal -command [list $gTree xview]]
   set sbY [::ttk::scrollbar $left.sbY -orient vertical -command [list $gTree yview]]
