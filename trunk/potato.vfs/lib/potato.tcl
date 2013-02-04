@@ -5081,6 +5081,11 @@ proc ::potato::manageWorldsDragDrop {} {
      } else {
        if { $new ni $world($w,groups) } {
             lappend world($w,groups) $new
+            if { $currgroup eq "INT:Ungrouped" } {
+                 # This is the only group whose view changes because
+                 # you added the world to another group
+                 manageWorldsUpdateWorlds
+               }
           }
      }
 
