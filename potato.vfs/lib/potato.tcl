@@ -4902,6 +4902,7 @@ proc ::potato::manageWorlds {} {
   bind $wTree <ButtonPress-1> [list ::potato::manageWorldsDragStart %x %y %X %Y]
   bind $wTree <B1-Motion> [list ::potato::manageWorldsDrag %x %y %X %Y]
   bind $wTree <ButtonRelease-1> [list ::potato::manageWorldsDragDrop]
+  bind $wTree <Escape> [list ::potato::manageWorldsDragDrop 1]
 
   bind $gTree <Destroy> [list array unset ::potato::manageWorlds]
 
@@ -4978,7 +4979,7 @@ proc ::potato::manageWorldsDrag {x y gx gy} {
             set label [::ttk::label $win.l]
           }
        $label configure -text " [lindex [$manageWorlds(wTree) item $manageWorlds(wTree,drag,id) -values] 0]" \
-         -image ::potato::img::globe -compound left
+         -image [getImage world] -compound left
        pack $label
 
        set manageWorlds(wTree,drag,popup) $win
@@ -5016,10 +5017,10 @@ proc ::potato::manageWorldsDrag {x y gx gy} {
            set worldsx [list [winfo rootx $worlds] [expr {[winfo rootx $worlds] + [winfo width $worlds]}]]
            set worldsy [list [winfo rooty $worlds] [expr {[winfo rooty $worlds] + [winfo height $worlds]}]]
            if { $px >= [lindex $worldsx 0] && $px <= [lindex $worldsx 1] && $py >= [lindex $worldsy 0] && $py <= [lindex $worldsy 1] } {
-                $manageWorlds(wTree,drag,popup).l config -image ::potato::img::globe
+                $manageWorlds(wTree,drag,popup).l config -image [getImage world]
                 set manageWorlds(wTree,drag,target) "INT:wTree"
               } else {
-                $manageWorlds(wTree,drag,popup).l config -image ::potato::img::delete
+                $manageWorlds(wTree,drag,popup).l config -image [getImage exclamation]
               }
            return;
          }
@@ -5027,12 +5028,20 @@ proc ::potato::manageWorldsDrag {x y gx gy} {
       set groupsx [expr {$gx - [winfo rootx $groups]}]
       set groupsy [expr {$gy - [winfo rooty $groups]}]
       set groupid [$groups identify item $groupsx $groupsy]
-      if { $groupid eq "" || $groupid eq "INT:Ungrouped" } {
-           set manageWorlds(wTree,drag,target) ""
-           $manageWorlds(wTree,drag,popup).l config -image ::potato::img::delete
+      if { $groupid eq "INT:Ungrouped" || $groupid eq ""} {
+           if { [string match "INT:*" [lindex [$manageWorlds(gTree) selection] 0]] } {
+                set manageWorlds(wTree,drag,target) ""
+                $manageWorlds(wTree,drag,popup).l config -image [getImage exclamation]
+              } else {
+                set manageWorlds(wTree,drag,target) "INT:Ungrouped"
+                $manageWorlds(wTree,drag,popup).l config -image [getImage world_delete]
+              }
+         } elseif { $groupid eq "INT:Temp" } {
+           set manageWorlds(wTree,drag,target) $groupid
+           $manageWorlds(wTree,drag,popup).l config -image [getImage cross]
          } else {
            set manageWorlds(wTree,drag,target) $groupid
-           $manageWorlds(wTree,drag,popup).l config -image ::potato::img::add
+           $manageWorlds(wTree,drag,popup).l config -image [getImage world_add]
          }
     }
 
@@ -5043,15 +5052,17 @@ proc ::potato::manageWorldsDrag {x y gx gy} {
 #: proc ::potato::manageWorldsDragDrop
 #: desc Handle the drop from the Manage Worlds drag-and-drop, possibly altering groups for the world being dragged.
 #: return nothing
-proc ::potato::manageWorldsDragDrop {} {
+proc ::potato::manageWorldsDragDrop {{cancel 0}} {
   variable manageWorlds;
   variable world;
 
-  if { $manageWorlds(wTree,drag,id) eq "" } {
+  catch {destroy $manageWorlds(wTree,drag,popup)}
+
+  if { $manageWorlds(wTree,drag,id) eq "" || $cancel } {
+       set manageWorlds(wTree,drag,id) ""
        return;
      }
 
-  catch {destroy $manageWorlds(wTree,drag,popup)}
   set currgroup [lindex [$manageWorlds(gTree) selection] 0]
   if { $currgroup eq "" } {
        return;
@@ -5064,6 +5075,10 @@ proc ::potato::manageWorldsDragDrop {} {
 
   set w $manageWorlds(wTree,drag,id)
   if { $new eq "" } {
+       return;
+     }
+
+  if { $new eq "INT:Ungrouped" } {
        if {  [string match "INT:*" $currgroup] } {
              bell -displayof $manageWorlds(wTree)
              return;
@@ -5081,13 +5096,10 @@ proc ::potato::manageWorldsDragDrop {} {
      } else {
        if { $new ni $world($w,groups) } {
             lappend world($w,groups) $new
-            if { $currgroup eq "INT:Ungrouped" } {
-                 # This is the only group whose view changes because
-                 # you added the world to another group
-                 manageWorldsUpdateWorlds
-               }
           }
      }
+
+  manageWorldsUpdateWorlds
 
   if { [info exists manageWorlds(wTree,drag,after)] } {
        catch {after cancel $manageWorlds(wTree,drag,after)}
@@ -7609,6 +7621,10 @@ proc ::potato::historySub {c top lb key} {
 proc ::potato::createImages {} {
   variable path;
 
+  namespace eval ::potato::img {}
+  namespace eval ::potato::img::16 {}
+  namespace eval ::potato::img::32 {}
+
   set imgPath [file join $path(lib) images]
 
   foreach x [glob -dir $imgPath -tails *.gif] {
@@ -7618,6 +7634,43 @@ proc ::potato::createImages {} {
   return;
 
 };# ::potato::createImages
+
+#: proc ::potato::getImage
+#: arg name Image name
+#: arg size Size of image, either 16 or 32
+#: desc If it doesn't already exist, create the given image from a file in the requested size.
+#: return name of created [image]
+proc ::potato::getImage {name {size 16}} {
+  variable path;
+
+  if { $size ni [list 16 32] } {
+       return "";
+     }
+
+  set targetImg "::potato::img::${size}::$name"
+  if { $targetImg in [image names] } {
+       return $targetImg;
+     }
+
+  if { [package vsatisfies [package present Tk] 8.6-] } {
+       set ext [list .png .gif]
+     } else {
+       # No PNG support in Tk 8.5
+       set ext [list .gif]
+     }
+
+  set dir [file join $path(lib) images "${size}x$size"]
+  foreach x $ext {
+    if { [file exists [set file [file join $dir $name$x]]] } {
+         return [image create photo $targetImg -file $file];
+       } else {
+       puts "No $file"
+       }
+  }
+
+  return "";
+
+};# ::potato::getImage
 
 #: proc ::potato:errorTrace
 #: arg errdict The error dict set by [catch $cmd $msg errdict]
