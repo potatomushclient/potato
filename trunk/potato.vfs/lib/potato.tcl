@@ -6314,7 +6314,9 @@ proc ::potato::errorLog {msg {level "error"} {trace ""} {report 0}} {
 
        $win image create end -image $img -align center -padx 2 -pady 2
        $win tag add toggleBtn end-2c end-1c
-       $win tag add errorTraceHidden end-2c end-1c
+       if { "errorTraceHidden" in $tags } {
+            $win tag add errorTraceHidden end-2c end-1c
+          }
        $win insert end $msg [list $level margin] \n "" "   $trace\n" $tags
      } else {
        $win insert end $msg [list $level margin] \n
@@ -6346,11 +6348,12 @@ proc ::potato::errorLogToggle {win {index current}} {
        return;
      }
   foreach {start end} $tracerange {break}
-  if { "errorTraceHidden" in [$win tag names $start] } {
-       $win tag remove "errorTraceHidden" $start $end
+  if { "errorTraceHidden" in [$win tag names $index] } {
+       $win tag remove "errorTraceHidden" $start $end $index
+
        $win image configure $image -image ::potato::img::contract
      } else {
-       $win tag add "errorTraceHidden" $start $end
+       $win tag add "errorTraceHidden" $start $end $index
        $win image configure $image -image ::potato::img::expand
      }
 
