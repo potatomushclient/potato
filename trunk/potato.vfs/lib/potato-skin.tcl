@@ -554,7 +554,6 @@ proc ::skin::potato::init {} {
 
   # Set up the toolbar
   set widgets(toolbar,connect) [toolbarButton 1 connectMenu "" open]
-  $widgets(toolbar,connect) configure -command [list ::skin::potato::connectMenu]
   set widgets(toolbar,reconnect) [toolbarButton 1 reconnect "" reconnect]
   set widgets(toolbar,disconnect) [toolbarButton 1 disconnect "" disconnect]
   set widgets(toolbar,close) [toolbarButton 1 close [::potato::T "Close"] close]
@@ -733,17 +732,26 @@ proc ::skin::potato::uninit {} {
 proc ::skin::potato::toolbarButton {istask details short image} {
   variable widgets;
 
+  set widget ::ttk::button
+  set extras [list]
   if { $istask } {
        set long [::potato::taskLabel $details]
-       set cmd [list ::potato::taskRun $details]
+       set extras [list -command [list ::potato::taskRun $details]]
+       if { $details eq "connectMenu" } {
+            # This should be handled better instead of being hard-coded
+            set widget ::ttk::menubutton
+            set extras [list -menu $::potato::menu(connect,path)]
+          }
      } else {
        foreach {long cmd} $details {break;}
+       set extas [list -command $cmd]
      }
-  if { $short == "" } {
+  if { $short eq "" } {
        set short $long
      }
-  set btn [::ttk::button "$widgets(toolbar).btn[llength [array names widgets toolbar,*]]" \
-                   -text $short -command $cmd -style Toolbutton -takefocus 0]
+
+  set btn [$widget "$widgets(toolbar).btn[llength [array names widgets toolbar,*]]" \
+                   -text $short -style Toolbutton -takefocus 0 {*}$extras]
   if { $image != "" } {
        $btn configure -image "::skin::potato::img::$image" ;#-height 19 -width 19
      }
@@ -1483,21 +1491,6 @@ proc ::skin::potato::toggleMenu {} {
   return;
 
 };# ::skin::potato::toggleMenu
-
-#: proc ::skin::potato::connectMenu
-#: desc Calculate where to show the "Connect To..." menu, then call the "connectMenu" task with those coordinates
-#: return nothing
-proc ::skin::potato::connectMenu {} {
-  variable widgets;
-
-  set atX [winfo rootx $widgets(toolbar,connect)]
-  set atY [expr [winfo rooty $widgets(toolbar,connect)]+[winfo height $widgets(toolbar,connect)]]
-
-  ::potato::taskRun connectMenu "" $atX $atY
-
-  return;
-
-};# ::skin::potato::connectMenu
 
 #: proc ::skin::potato::addSpawn
 #: arg c connection id
