@@ -480,6 +480,8 @@ proc ::potato::prefixWindow {{w ""}} {
 
   bind $win <Destroy> [list array unset ::potato::prefixWindow $w,*]
 
+  focus $win
+
   return;
 
 };# ::potato::prefixWindow
@@ -836,6 +838,7 @@ proc ::potato::mailWindow {{c ""}} {
 
   center $win
   reshowWindow $win 0
+  focus $to.e
 
   return;
 
@@ -1445,6 +1448,7 @@ proc ::potato::logWindow {{c ""}} {
   update idletasks
   center $win
   wm deiconify $win
+  focus $frame.file.sel
 
   return;
 
@@ -7296,13 +7300,13 @@ proc ::potato::showStats {} {
   grid_with_scrollbars $tree $xs $ys
 
   pack [::ttk::frame $frame.btm] -side top -expand 0 -fill none -anchor center -pady 10
-  pack [::ttk::button $frame.btm.close -text [T "Close"] -command [list destroy $win]]
+  pack [::ttk::button $frame.btm.close -text [T "Close"] -command [list destroy $win] -default active]
 
   bind $win <Escape> [list destroy $win]
   center $win
   wm deiconify $win
   raise $win
-  focus $win
+  focus $frame.btm.close
 
   return;
 
@@ -7540,6 +7544,7 @@ proc ::potato::history {{c ""}} {
   after 25 [list $tree yview moveto 1.0]
 
   bind $win <Destroy> [list ::potato::unregisterWindow $c $win]
+  focus $tree
 
   return;
 
@@ -8162,7 +8167,7 @@ proc ::potato::checkForUpdates {{background 0}} {
   $progress.bar start 5
 
   pack [set btns [::ttk::frame $frame.buttons]] -side top -padx 10 -pady 10
-  pack [::ttk::button $btns.cancel -text [T "Cancel"] -command [list destroy $win]]
+  pack [::ttk::button $btns.cancel -text [T "Cancel"] -command [list destroy $win] -default active]
 
   set update(win) $win
   set update(main) $progress
@@ -8171,8 +8176,8 @@ proc ::potato::checkForUpdates {{background 0}} {
   set update(waiting) 1
 
   set url {http://potatomushclient.googlecode.com/svn/trunk/potato.vfs/lib/potato-version.tcl}
-  if { [catch {set token [::http::geturl $url -command [list ::potato::checkForUpdatesSub]]} err] } {
-       ::potato::checkForUpdatesSub {} $err
+  if { [catch {set token [::http::geturl $url -command [list ::potato::checkForUpdatesSub $background]]} err] } {
+       ::potato::checkForUpdatesSub $background {} $err
        return;
      }
 
@@ -8182,6 +8187,7 @@ proc ::potato::checkForUpdates {{background 0}} {
        update
        center $win
        wm deiconify $win
+       focus $btns.cancel
      }
 
   return;
@@ -8194,7 +8200,7 @@ proc ::potato::checkForUpdates {{background 0}} {
 #: desc Callback function called by http::geturl when we've downloaded the latest version number for Potato (or failed to).
 #: desc Updates the UI to show the result.
 #: return nothing
-proc ::potato::checkForUpdatesSub {token {err ""}} {
+proc ::potato::checkForUpdatesSub {background token {err ""}} {
   variable update;
   variable potato;
 
@@ -8205,14 +8211,14 @@ proc ::potato::checkForUpdatesSub {token {err ""}} {
        return;
      }
 
-  set background [expr {[wm state $update(win)] eq "withdrawn"}]
+  #set background [expr {[wm state $update(win)] eq "withdrawn"}]
 
   # Destroy the progressbar to free up the UI for the result
   destroy {*}[winfo children $update(main)]
   destroy {*}[winfo children $update(btns)]
 
   set font $update(labelfont)
-  pack [::ttk::button $update(btns).ok -text [T "OK"] -command [list destroy $update(win)]] -side left -padx 8
+  pack [set ok [::ttk::button $update(btns).ok -text [T "OK"] -command [list destroy $update(win)] -default active]] -side left -padx 8
 
   set errorText [T "Sorry, we were unable to check for a new version at this time. Please try again later.\n\nIf the problem persists, please let us know."]
   if { $token eq "" || [::http::status $token] ne "ok" } {
@@ -8226,6 +8232,7 @@ proc ::potato::checkForUpdatesSub {token {err ""}} {
             pack [::ttk::label $update(main).error -text $errorText -font $font]
             update
             center $update(win)
+            focus $ok
           }
        catch {::http::cleanup $token;}
        return;
@@ -8242,6 +8249,7 @@ proc ::potato::checkForUpdatesSub {token {err ""}} {
             pack [::ttk::label $update(main).error -text $errorText -font $font]
             update
             center $update(win)
+            focus $ok
           }
        return;
      }
@@ -8250,8 +8258,8 @@ proc ::potato::checkForUpdatesSub {token {err ""}} {
        # New version available!
        pack [::ttk::label $update(main).new -font $font \
               -text [T "There is a newer version of Potato (%s) available.\nYou can download it from Potato's Google Code site.\nWould you like to do so now?" $vers]]
-       $update(btns).ok configure -text [T "No"]
-       pack [::ttk::button $update(btns).yes -text [T "Yes"] \
+       $update(btns).ok configure -text [T "No"] -default normal
+       pack [::ttk::button $update(btns).yes -text [T "Yes"] -default active \
                -command "[list ::potato::launchWebPage http://code.google.com/p/potatomushclient/wiki/Downloads?tm=2] ; [list destroy $update(win)]"] -side left -before $update(btns).ok -padx 8
        update
        center $update(win)
@@ -8259,6 +8267,7 @@ proc ::potato::checkForUpdatesSub {token {err ""}} {
             wm deiconify $update(win)
             bell -displayof $update(win)
           }
+       focus $update(btns).yes
      } else {
        if { $background } {
             destroy $update(win)
@@ -8266,6 +8275,7 @@ proc ::potato::checkForUpdatesSub {token {err ""}} {
             pack [::ttk::label $update(main).uptodate -text [T "You are already using the latest version of Potato."] -font $font]
             update
             center $update(win)
+            focus $ok
           }
      }
 
@@ -10160,7 +10170,7 @@ proc ::potato::slashConfig {{w ""}} {
   bind $slashConfig($w,win,top,tree) <Destroy> "[list ::potato::slashConfigClose $w] ; [list array unset ::potato::slashConfig $w,*]"
 
   # Propagate the list. We use the array elements, to include disabled slash commands
-  set slashConfig($w,count) 0
+  set count 0
   foreach x [lsort -dictionary [removePrefix [arraySubelem world $w,slashcmd] $w,slashcmd]] {
     set slashConfig($w,slashcmd,slash$count) $x
     set slashConfig($w,slashcmd,slash$count,pattern) $world($w,slashcmd,$x)
@@ -10168,11 +10178,12 @@ proc ::potato::slashConfig {{w ""}} {
     set slashConfig($w,slashcmd,slash$count,case) $world($w,slashcmd,$x,case)
     set slashConfig($w,slashcmd,slash$count,send) $world($w,slashcmd,$x,send)
     set slashConfig($w,slashcmd,slash$count,enabled) [expr {$x in $world($w,slashcmd)}]
-    incr slashConfig($w,count)
+    incr count
   }
+  set slashConfig($w,count) $count
 
   slashConfigUpdateTree $w
-
+  center $win
   reshowWindow $win 0
   return;
 
@@ -12124,7 +12135,6 @@ proc ::potato::about {} {
   pack [::ttk::button $frame.btm.packages -text [T "Show Package Info"] \
              -command [list ::potato::showPackageInfo] -takefocus 1] -side left -padx 5
 
-  update
   center $win
   wm resizable $win 0 0
   wm deiconify $win

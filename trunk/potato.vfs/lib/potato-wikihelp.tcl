@@ -128,6 +128,8 @@ proc ::wikihelp::help {{topic ""}} {
 
   bind $info(win) <Destroy> [list ::wikihelp::cleanupImages %W]
 
+  focus $info(win)
+
   return;
 };# ::wikihelp::help
 

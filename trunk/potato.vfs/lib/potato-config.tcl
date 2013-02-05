@@ -2152,7 +2152,7 @@ proc ::potato::pickLocale {} {
   }
 
   pack [::ttk::frame $frame.btns] -fill x -pady 5 -anchor nw
-  set save [::ttk::button $frame.btns.save -text [T "Save"] -command [list ::potato::saveLocale $win]]
+  set save [::ttk::button $frame.btns.save -text [T "Save"] -command [list ::potato::saveLocale $win] -default active]
   set cancel [::ttk::button $frame.btns.cancel -text [T "Cancel"] -command [list destroy $win]]
   grid $save $cancel -padx 5
   grid configure $save -sticky e
@@ -2164,6 +2164,8 @@ proc ::potato::pickLocale {} {
   update
   center $win
   wm deiconify $win
+
+  focus $frame.btns.save
 
   bind $win <Escape> [list destroy $win]
   bind $win <Destroy> [list array unset ::potato::locales conf,*]
