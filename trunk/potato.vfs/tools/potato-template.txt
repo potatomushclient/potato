@@ -286,7 +286,7 @@
 /command Name:
 -
 
-# potato.tcl (::potato::parseConnectRequest), potato.tcl (::potato::parseConnectRequest)
+# potato.tcl (::potato::parseConnectRequest)
 /history: Invalid position
 -
 
@@ -322,7 +322,7 @@ About %s
 Accept
 -
 
-# potato-config.tcl (::potato::configureWorld), potato-config.tcl (::potato::configureWorld)
+# potato-config.tcl (::potato::configureWorld)
 Activity Settings
 -
 
@@ -358,7 +358,7 @@ Add Macro
 Add New Group
 -
 
-# potato.tcl (::potato::connZero), potato.tcl (::potato::connZero), potato.tcl (::potato::newWorld)
+# potato.tcl (::potato::connZero), potato.tcl (::potato::newWorld)
 Add New World
 -
 
@@ -378,12 +378,20 @@ Add to History?
 Address
 -
 
+# potato.tcl (::potato::manageWorlds), potato.tcl (::potato::manageWorldsDrag)
+Address Book
+-
+
 # potato-config.tcl (::potato::configureTimerAddEdit)
 After connecting, wait
 -
 
 # potato-spell.tcl (::potato::spellcheck::replaceWord)
 All words are now spelled correctly.
+-
+
+# potato-spell.tcl (::potato::spellcheck::spellcheck)
+All words are spelled correctly.
 -
 
 # potato.tcl (::potato::manageWorldsUpdateGroups)
@@ -410,7 +418,7 @@ Allow Auto-Connects?
 Allow Partial Names?
 -
 
-# potato.tcl (::potato::process_slash_cmd), potato.tcl (::potato::process_slash_cmd)
+# potato.tcl (::potato::process_slash_cmd)
 Ambiguous /command \"%s\".
 -
 
@@ -430,7 +438,7 @@ Ambiguous world name \"%s\".
 And repeat every
 -
 
-# potato-config.tcl (::potato::configureWorld), potato-config.tcl (::potato::configureWorld)
+# potato-config.tcl (::potato::configureWorld)
 ANSI, Colours and Fonts
 -
 
@@ -474,7 +482,7 @@ Auto-reconnect cancelled.
 Auto-reconnect in %s...
 -
 
-# potato-config.tcl (::potato::configureWorld), potato-config.tcl (::potato::configureWorld)
+# potato-config.tcl (::potato::configureWorld)
 Auto-Sends
 -
 
@@ -514,7 +522,7 @@ C&lose Window
 C&ut
 -
 
-# potato-config.tcl (::potato::configureWorld), potato-config.tcl (::potato::configureWorld), potato-config.tcl (::potato::configureTimerAddEdit), potato-config.tcl (::potato::pickLocale), potato-font.tcl (::font::choose), potato-spell.tcl (::potato::spellcheck::spellcheck), potato.tcl (::potato::prefixWindow), potato.tcl (::potato::mailWindow), potato.tcl (::potato::uploadWindowStart), potato.tcl (::potato::uploadProgressWindow), potato.tcl (::potato::logWindow), potato.tcl (::potato::manageWorldsNewGroup), potato.tcl (::potato::newWorld), potato.tcl (::potato::macroWindow), potato.tcl (::potato::checkForUpdates), potato.tcl (::potato::keyboardShortcutWin), potato.tcl (::potato::keyboardShortcutInput), potato.tcl (::potato::autoConnectWindow), potato.tcl (::potato::findDialog)
+# potato-config.tcl (::potato::configureWorld), potato-config.tcl (::potato::configureTimerAddEdit), potato-config.tcl (::potato::pickLocale), potato-font.tcl (::font::choose), potato-spell.tcl (::potato::spellcheck::spellcheck), potato.tcl (::potato::prefixWindow), potato.tcl (::potato::mailWindow), potato.tcl (::potato::uploadWindowStart), potato.tcl (::potato::uploadProgressWindow), potato.tcl (::potato::logWindow), potato.tcl (::potato::manageWorldsNewGroup), potato.tcl (::potato::newWorld), potato.tcl (::potato::macroWindow), potato.tcl (::potato::checkForUpdates), potato.tcl (::potato::keyboardShortcutWin), potato.tcl (::potato::keyboardShortcutInput), potato.tcl (::potato::autoConnectWindow), potato.tcl (::potato::findDialog)
 Cancel
 -
 
@@ -566,7 +574,7 @@ Character Name:
 Character:
 -
 
-# potato-config.tcl (::potato::configureWorld), potato-config.tcl (::potato::configureWorld)
+# potato-config.tcl (::potato::configureWorld)
 Characters
 -
 
@@ -638,7 +646,7 @@ Click a misspelled word to begin
 Clock Format:
 -
 
-# potato-skin.tcl (::skin::potato::init), potato.tcl (::potato::manageWorlds), potato.tcl (::potato::errorLogWindow), potato.tcl (::potato::about), potato.tcl (::potato::aboutPackages)
+# potato-skin.tcl (::skin::potato::init), potato.tcl (::potato::manageWorlds), potato.tcl (::potato::errorLogWindow), potato.tcl (::potato::showStats), potato.tcl (::potato::history), potato.tcl (::potato::about), potato.tcl (::potato::showPackageInfo)
 Close
 -
 
@@ -722,6 +730,10 @@ Connecting...
 Connection
 -
 
+# potato.tcl (::potato::disconnect)
+Connection attempt cancelled. - %s
+-
+
 # potato.tcl (::potato::connect)
 Connection cancelled.
 -
@@ -778,7 +790,7 @@ Copy
 Copy &Hyperlink
 -
 
-# potato.tcl (::potato::history), potato.tcl (::potato::aboutPackages)
+# potato.tcl (::potato::errorLogWindow), potato.tcl (::potato::history), potato.tcl (::potato::showPackageInfo)
 Copy to Clipboard
 -
 
@@ -834,7 +846,7 @@ Default World Settings
 Delay (seconds):
 -
 
-# potato.tcl (::potato::manageWorldsSelectWorld), potato.tcl (::potato::manageWorldsSelectWorld)
+# potato.tcl (::potato::manageWorldsSelectWorld)
 Delete
 -
 
@@ -1058,7 +1070,7 @@ Exit
 External Requests:
 -
 
-# potato-config.tcl (::potato::configureWorld), potato-config.tcl (::potato::configureWorld)
+# potato-config.tcl (::potato::configureWorld)
 F-Commands
 -
 
@@ -1286,7 +1298,7 @@ Invalid /at ID.
 Invalid connection id/character name
 -
 
-# potato.tcl (::potato::textEditor), potato.tcl (::potato::textEditor)
+# potato.tcl (::potato::textEditor)
 Invalid editor name '%s'.
 -
 
@@ -1306,7 +1318,7 @@ Invalid option \"%s\" to /limit
 Invalid setting \"%s\" for \"%s\"
 -
 
-# potato.tcl (::potato::createSpawnWindow)
+# potato.tcl (::potato::createSpawnWindow), potato.tcl (::potato::customSlashCommand)
 Invalid Spawn Name
 -
 
@@ -1326,7 +1338,7 @@ Invalid var string
 Invalid window name.
 -
 
-# potato.tcl (::potato::keyboardShortcutWin), potato.tcl (::potato::keyboardShortcutClear), potato.tcl (::potato::keyboardShortcutSave), potato.tcl (::potato::keyboardShortcutSave)
+# potato.tcl (::potato::keyboardShortcutWin), potato.tcl (::potato::keyboardShortcutClear), potato.tcl (::potato::keyboardShortcutSave)
 Keyboard Shortcut
 -
 
@@ -1358,7 +1370,7 @@ Limit Output Lines?
 Limit Spawn Lines?
 -
 
-# potato-config.tcl (::potato::configureWorld), potato-config.tcl (::potato::configureWorld), potato-config.tcl (::potato::configureWorld)
+# potato-config.tcl (::potato::configureWorld)
 Limit To:
 -
 
@@ -1386,6 +1398,10 @@ Log file \"%s\" not found.
 Log from \[%d. %s\]
 -
 
+# potato.tcl (::potato::logWindow)
+Log input?
+-
+
 # potato.tcl (::potato::doLog)
 Log opened %s
 -
@@ -1406,7 +1422,7 @@ Logged to \"%s\".
 Logging to %d logfiles stopped.
 -
 
-# potato.tcl (::potato::stopLog), potato.tcl (::potato::stopLog)
+# potato.tcl (::potato::stopLog)
 Logging to \"%s\" stopped.
 -
 
@@ -1442,10 +1458,6 @@ Main Window
 Manage &Auto-Connects
 -
 
-# potato.tcl (::potato::manageWorlds)
-Manage Worlds
--
-
 # potato-events.tcl (::potato::eventConfig)
 Match All?
 -
@@ -1462,11 +1474,11 @@ minute
 minutes
 -
 
-# potato-config.tcl (::potato::configureWorld), potato-config.tcl (::potato::configureWorld)
+# potato-config.tcl (::potato::configureWorld)
 Misc Settings
 -
 
-# potato-config.tcl (::potato::configureWorld), potato-config.tcl (::potato::configureWorld)
+# potato-config.tcl (::potato::configureWorld)
 Miscellaneous
 -
 
@@ -1510,7 +1522,7 @@ Name
 Name:
 -
 
-# potato-config.tcl (::potato::configureWorld), potato-config.tcl (::potato::configureWorld)
+# potato-config.tcl (::potato::configureWorld)
 Negotiate Encoding?
 -
 
@@ -1566,7 +1578,7 @@ None
 Normal Colours
 -
 
-# potato-skin.tcl (::skin::potato::status), potato-skin.tcl (::skin::potato::status), potato-skin.tcl (::skin::potato::status), potato-skin.tcl (::skin::potato::show), potato-skin.tcl (::skin::potato::show), potato.tcl (::potato::newConnection), potato.tcl (::potato::disconnect)
+# potato-skin.tcl (::skin::potato::status), potato-skin.tcl (::skin::potato::show), potato.tcl (::potato::newConnection), potato.tcl (::potato::disconnect)
 Not Connected
 -
 
@@ -1582,7 +1594,7 @@ Not connected.
 Note: Shortcut in use by '%s'.
 -
 
-# potato-config.tcl (::potato::configureWorld), potato-config.tcl (::potato::configureWorld), potato-config.tcl (::potato::configureWorld)
+# potato-config.tcl (::potato::configureWorld)
 Notes
 -
 
@@ -1622,7 +1634,7 @@ Other Options
 Output
 -
 
-# potato.tcl (::potato::aboutPackages)
+# potato.tcl (::potato::showPackageInfo)
 Package Info
 -
 
@@ -1678,7 +1690,7 @@ Port:
 Potato Auto-Connects
 -
 
-# potato.tcl (::potato::errorLogWindow), potato.tcl (::potato::errorLogWindow)
+# potato.tcl (::potato::errorLogWindow)
 Potato Debugging Log
 -
 
@@ -1686,7 +1698,7 @@ Potato Debugging Log
 Prefix
 -
 
-# potato.tcl (::potato::prefixWindowSave), potato.tcl (::potato::prefixWindowSave)
+# potato.tcl (::potato::prefixWindowSave)
 Prefixes
 -
 
@@ -1770,6 +1782,10 @@ Replace?
 Replacement:
 -
 
+# potato.tcl (::potato::errorLogWindow)
+Report Errors?
+-
+
 # app-potato\windows\winico\potato-systray.tcl (line 19)
 Restore
 -
@@ -1846,7 +1862,7 @@ Sample
 Save
 -
 
-# potato-config.tcl (::potato::configureWorldCharsFinish), potato-config.tcl (::potato::configureWorldCharsFinish), potato-config.tcl (::potato::configureWorldCharsFinish)
+# potato-config.tcl (::potato::configureWorldCharsFinish)
 Save Character
 -
 
@@ -1862,7 +1878,7 @@ Save to Input History
 second
 -
 
-# potato-config.tcl (::potato::configureTimerAddEdit), potato-config.tcl (::potato::configureTimerAddEdit), potato.tcl (::potato::timeFmt)
+# potato-config.tcl (::potato::configureTimerAddEdit), potato.tcl (::potato::timeFmt)
 seconds
 -
 
@@ -1970,7 +1986,11 @@ Show Beeps?
 Show Input &History Window
 -
 
-# potato.tcl (::potato::about)
+# potato-config.tcl (::potato::configureWorld)
+Show Input Wins on Startup?
+-
+
+# potato.tcl (::potato::errorLogWindow), potato.tcl (::potato::about)
 Show Package Info
 -
 
@@ -2030,6 +2050,10 @@ Sorry, we were unable to check for a new version at this time. Please try again 
 Spaces to %&b
 -
 
+# potato.tcl (::potato::customSlashCommand)
+Spawn already exists.
+-
+
 # potato-config.tcl (::potato::configureWorld)
 Spawn Sys Messages?
 -
@@ -2058,7 +2082,7 @@ Split Input Cmds?
 Start Maximized?
 -
 
-# potato-config.tcl (::potato::configureWorld), potato-config.tcl (::potato::configureWorld)
+# potato-config.tcl (::potato::configureWorld)
 Starting Encoding:
 -
 
@@ -2082,7 +2106,7 @@ System, Echo and Link Colours
 Tcl Code &Console
 -
 
-# potato-config.tcl (::potato::configureWorld), potato-config.tcl (::potato::configureWorld)
+# potato-config.tcl (::potato::configureWorld)
 Telnet Options
 -
 
@@ -2122,7 +2146,7 @@ There is already a character with that name. Overwrite?
 There is already a prefix for \"%s\". Override?
 -
 
-# potato-config.tcl (::potato::configureWorld), potato-config.tcl (::potato::configureWorld)
+# potato-config.tcl (::potato::configureWorld)
 Timers
 -
 
@@ -2174,7 +2198,7 @@ Type:
 Unable to connect to %s:%d - SSL not available.
 -
 
-# potato.tcl (::potato::connect), potato.tcl (::potato::connect)
+# potato.tcl (::potato::connect)
 Unable to connect to host %s:%d: %s
 -
 
@@ -2186,7 +2210,7 @@ Unable to connect to proxy: %s
 Unable to create new spawn window \"%s\": %s
 -
 
-# potato.tcl (::potato::TinyURL), potato.tcl (::potato::TinyURL), potato.tcl (::potato::TinyURL)
+# potato.tcl (::potato::TinyURL)
 Unable to create TinyURL: %s
 -
 
@@ -2194,12 +2218,16 @@ Unable to create TinyURL: %s
 Unable to launch TinyURL at \"%s\": %s
 -
 
-# potato.tcl (::potato::connect), potato.tcl (::potato::connect)
+# potato.tcl (::potato::connect)
 Unable to negotiate SSL: %s
 -
 
 # potato.tcl (::potato::connect)
 Unable to negotiate SSL: %s. Please make sure the port is ssl-enabled.
+-
+
+# potato.tcl (::potato::textEditorOpen)
+Unable to open \"%s\": %s
 -
 
 # potato.tcl (::potato::uploadWindowInvoke)
@@ -2212,6 +2240,10 @@ Unable to read file \"%s\".
 
 # potato-config.tcl (::potato::savePrefs)
 Unable to save preferences: %s
+-
+
+# potato.tcl (::potato::textEditorSave)
+Unable to save to \"%s\": %s
 -
 
 # potato.tcl (::potato::saveWorlds)
@@ -2270,7 +2302,7 @@ Uploading file \"%s\"...
 Use NOP Keepalive?
 -
 
-# potato-config.tcl (::potato::configureWorld), potato-config.tcl (::potato::configureWorld)
+# potato-config.tcl (::potato::configureWorld)
 Use SSL?:
 -
 

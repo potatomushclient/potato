@@ -4,10 +4,19 @@
 %s reloaded successfully.
 -
 
+Address Book
+-
+
 Connect To World
 -
 
+Connection attempt cancelled. - %s
+-
+
 Connection cancelled.
+-
+
+Log input?
 -
 
 No
@@ -19,22 +28,34 @@ Package Info
 Persist Prompts?
 -
 
+Report Errors?
+-
+
 Send null-byte keepalives?
+-
+
+Show Input Wins on Startup?
 -
 
 Show Package Info
 -
 
+Spawn already exists.
+-
+
 Toggle Spawn Windows
 -
 
-Unable to negotiate SSL: %s
-Kan ej genomföra SSL-förhandling: %s
+Unable to open \"%s\": %s
+-
+
+Unable to save to \"%s\": %s
+-
 
 # Obsolete strings:
 
-All words are spelled correctly.
-Alla ord är korrekt stavade.
+Manage Worlds
+Hantera världar
 
 # Existing translations:
 
@@ -325,6 +346,9 @@ Efter uppkoppling, vänta
 
 All words are now spelled correctly.
 Alla ord är nu korrekt stavade.
+
+All words are spelled correctly.
+Alla ord är korrekt stavade.
 
 All Worlds
 Alla världar
@@ -1112,9 +1136,6 @@ Huvudfönster
 Manage &Auto-Connects
 Hantera &autouppkopplingar
 
-Manage Worlds
-Hantera världar
-
 Match All?
 Matcha alla?
 
@@ -1657,6 +1678,9 @@ Kan ej skapa TinyURL: %s
 
 Unable to launch TinyURL at \"%s\": %s
 Kan ej öppna TinyURL \"%s\": %s
+
+Unable to negotiate SSL: %s
+Kan ej genomföra SSL-förhandling: %s
 
 Unable to negotiate SSL: %s. Please make sure the port is ssl-enabled.
 Kan ej genomföra SSL-förhandling: %s. Kontrollera att porten är SSL-aktiverad.

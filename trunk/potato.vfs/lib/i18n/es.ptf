@@ -124,6 +124,12 @@ A Macro with that name already exists. Override?
 Add /command
 -
 
+Address Book
+-
+
+All words are spelled correctly.
+-
+
 All Worlds
 -
 
@@ -257,6 +263,9 @@ Connecting to %s proxy at %s:%s...
 -
 
 Connecting to %s:%d...
+-
+
+Connection attempt cancelled. - %s
 -
 
 Connection cancelled.
@@ -478,6 +487,9 @@ Log file \"%s\" not found.
 Log from \[%d. %s\]
 -
 
+Log input?
+-
+
 Log opened %s
 -
 
@@ -616,6 +628,9 @@ Regexp Match?
 Replacement:
 -
 
+Report Errors?
+-
+
 Return (%d): %s
 -
 
@@ -685,6 +700,9 @@ Show Beeps?
 Show Input &History Window
 -
 
+Show Input Wins on Startup?
+-
+
 Show Package Info
 -
 
@@ -716,6 +734,9 @@ Sorry, we were unable to check for a new version at this time. Please try again 
 -
 
 Spaces to %&b
+-
+
+Spawn already exists.
 -
 
 Spawn Sys Messages?
@@ -790,10 +811,16 @@ Unable to negotiate SSL: %s
 Unable to negotiate SSL: %s. Please make sure the port is ssl-enabled.
 -
 
+Unable to open \"%s\": %s
+-
+
 Unable to open file \"%s\": %s
 -
 
 Unable to read file \"%s\".
+-
+
+Unable to save to \"%s\": %s
 -
 
 Unable to spell-check text: %s
@@ -857,6 +884,9 @@ You must select a file.
 -
 
 # Obsolete strings:
+
+Manage Worlds
+Administrar Mundos
 
 Potato Error Log
 Bitácora de Errores de Potato
@@ -1447,9 +1477,6 @@ Ventana de Mensaje
 
 Main Window
 Ventana Principal
-
-Manage Worlds
-Administrar Mundos
 
 Minimize to SysTray?
 Minimizar a SysTray

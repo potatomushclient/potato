@@ -1,6 +1,6 @@
 #!/usr/bin/tclsh
 # Attempt to merge a Potato translation template with an older translation file
-set VERSION "1.3"
+set VERSION "1.3.1"
 
 proc main {} {
 
@@ -39,9 +39,7 @@ proc mergeFiles {} {
 
   set fid(template) [open $files(template) r]
   set fid(translation) [open $files(translation) r]
-  set fid(output) [open $files(output) w]
   fconfigure $fid(translation) -encoding utf-8
-  fconfigure $fid(output) -encoding utf-8 -translation lf
 
   unset -nocomplain templateStrings;
   unset -nocomplain translationStrings;
@@ -64,6 +62,8 @@ proc mergeFiles {} {
      }
 
   set done [list]
+  set fid(output) [open $files(output) w]
+  fconfigure $fid(output) -encoding utf-8 -translation lf
 
   puts $fid(output) "\n# Untranslated strings:"
   set untranslated 0
