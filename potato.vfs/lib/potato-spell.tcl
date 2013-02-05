@@ -131,7 +131,8 @@ proc ::potato::spellcheck::spellcheck {string} {
   }
   $input configure -state disabled
   if { $total == 0 } {
-       tk_messageBox -title [T "Spellcheck"] -icon info -parent $top -message [T "All words are spelled correctly."]
+       tk_messageBox -title [T "Spellcheck"] -icon info -parent $top \
+         -message [T "All words are spelled correctly."]
        destroy $win;
        return [list 0 $spellcheck(string)];
      } elseif { $total > 0 } {

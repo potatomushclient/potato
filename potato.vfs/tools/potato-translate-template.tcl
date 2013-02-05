@@ -1,6 +1,6 @@
 #!/usr/bin/tclsh
 # This script builds a new Translation Template for Potato.
-set VERSION "1.3"
+set VERSION "1.3.1"
 
 proc main {} {
 
@@ -159,7 +159,12 @@ proc buildNewTemplate {} {
 
   foreach x [lsort -dictionary [array names potatoMessages]] {
     set c "#"
+    set done [list]
     foreach {fname proc lineNum} $potatoMessages($x) {
+      if { $proc ne "" && [list $fname $proc] in $done } {
+           continue;
+         }
+      lappend done [list $fname $proc]
       #puts -nonewline $fout "$c [stripDirs $fname $stripby], line $lineNum [expr {($proc ne "" ? " ($proc)" : "")}]"
       puts -nonewline $fout "$c [stripDirs $fname $stripby] [expr {($proc ne "" ? "($proc)" : "(line $lineNum)")}]"
       set c ","

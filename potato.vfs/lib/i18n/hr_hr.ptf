@@ -4,10 +4,19 @@
 %s reloaded successfully.
 -
 
+Address Book
+-
+
 Connect To World
 -
 
+Connection attempt cancelled. - %s
+-
+
 Connection cancelled.
+-
+
+Log input?
 -
 
 No
@@ -19,22 +28,34 @@ Package Info
 Persist Prompts?
 -
 
+Report Errors?
+-
+
 Send null-byte keepalives?
+-
+
+Show Input Wins on Startup?
 -
 
 Show Package Info
 -
 
+Spawn already exists.
+-
+
 Toggle Spawn Windows
 -
 
-Unable to negotiate SSL: %s
-Ne mogu dogovoriti SSL: %s
+Unable to open \"%s\": %s
+-
+
+Unable to save to \"%s\": %s
+-
 
 # Obsolete strings:
 
-All words are spelled correctly.
-Sve riječi su ispravno napisane.
+Manage Worlds
+Podesi Svjetove
 
 # Existing translations:
 
@@ -325,6 +346,9 @@ Nakon spajanja, čekaj
 
 All words are now spelled correctly.
 Sve riječi su sada ispravno napisane.
+
+All words are spelled correctly.
+Sve riječi su ispravno napisane.
 
 All Worlds
 Svi Svjetovi
@@ -1112,9 +1136,6 @@ Glavni Prozor
 Manage &Auto-Connects
 Podesi &Automatsko Spajanje
 
-Manage Worlds
-Podesi Svjetove
-
 Match All?
 Sva Podudaranja?
 
@@ -1657,6 +1678,9 @@ Ne mogu stvoriti TinyURL: %s
 
 Unable to launch TinyURL at \"%s\": %s
 Ne mogu pokrenuti TinyURL na \"%s\": %s
+
+Unable to negotiate SSL: %s
+Ne mogu dogovoriti SSL: %s
 
 Unable to negotiate SSL: %s. Please make sure the port is ssl-enabled.
 Ne mogu dogovoriti SSL: %s. Molim, provjeriti je li ssl omogućen na portu.

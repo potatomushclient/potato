@@ -1728,6 +1728,7 @@ proc ::potato::htmlColor {color} {
 proc ::potato::htmlEscape {str} {
 
   set map [list "&" "&amp;" "<" "&lt;" ">" "&gt;" {"} "&quot;" " " "&nbsp;" "\u00a0" "&nbsp;"]
+  # This comment contains a single " to avoid throwing off syntax highlighting
   return [string map $map $str];
 
 };# ::potato::htmlEscape
@@ -5852,7 +5853,8 @@ proc ::potato::macroWindowFinish {w save} {
        set name [$macroWindow($w,path,name) get]
        set commands [$macroWindow($w,path,commands) get 1.0 end-1c]
        if { ![regexp {^[a-zA-Z0-9!._-]{1,49}$} $name] } {
-            tk_messageBox -message [T "Invalid name."] -icon error -title [T "Macros"] \
+            tk_messageBox -message [T "Invalid name."] -icon error \
+                          -title [T "Macros"] \
                           -type ok -parent $macroWindow($w,path,commands)
             return;
           }
@@ -7512,7 +7514,8 @@ proc ::potato::history {{c ""}} {
                 -command [list ::potato::historySub $c $win $tree $x]]] -side top -anchor center
   }
   pack [::ttk::frame $frame.btns2] -side top -anchor nw -expand 0 -fill x -pady 3
-  foreach {x y z} [list 4 copy [T "Copy to Clipboard"] 5 close [T "Close"]] {
+  foreach {x y z} [list 4 copy [T "Copy to Clipboard"] \
+                        5 close [T "Close"]] {
       pack [::ttk::frame $frame.btns2.$y] -side left -expand 1 -fill x -anchor n
       pack [set btn($y) [::ttk::button $frame.btns2.$y.btn -text $z \
                 -command [list ::potato::historySub $c $win $tree $x]]] -side top -anchor center
@@ -12514,7 +12517,8 @@ proc ::potato::textEditorOpen {text} {
        return;
      }
   if { [catch {open $file r} fid] } {
-       tk_messageBox -icon error -title [T "Open File"] -type ok -parent $text -message [T "Unable to open \"%s\": %s" $file $fid]
+       tk_messageBox -icon error -title [T "Open File"] -type ok -parent $text \
+         -message [T "Unable to open \"%s\": %s" $file $fid]
        return;
      }
   $text replace 1.0 end [read $fid]
@@ -12540,7 +12544,8 @@ proc ::potato::textEditorSave {text} {
        return;
      }
   if { [catch {open $file w} fid] } {
-       tk_messageBox -icon error -title [T "Save File"] -type ok -parent $text -message [T "Unable to save to \"%s\": %s" $file $fid]
+       tk_messageBox -icon error -title [T "Save File"] -type ok -parent $text \
+         -message [T "Unable to save to \"%s\": %s" $file $fid]
        return;
      }
   puts -nonewline $fid [$text get 1.0 end-1char]
