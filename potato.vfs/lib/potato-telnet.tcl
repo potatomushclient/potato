@@ -515,4 +515,3 @@ proc ::potato::telnet::send_keepalive {c} {
 
 ::potato::telnet::init
 
-package provide potato-telnet 1.1

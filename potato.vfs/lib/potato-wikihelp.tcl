@@ -654,5 +654,3 @@ proc ::wikihelp::index {} {
 
 };# ::wikihelp::index
 
-package provide potato-wikihelp 2.0.0
-

@@ -97,4 +97,3 @@ proc ::potato::proxy::SOCKS4::callback {fid host port resvar} {
 
 };# ::potato::proxy::SOCKS4::callback
 
-package provide potato-proxy-SOCKS4 1.2

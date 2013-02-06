@@ -7423,7 +7423,8 @@ proc ::potato::loadSkins {} {
        set skins(display) [list]
      }
 
-  package require potato-skin
+  #package require potato-skin
+  source [file join [file dirname [info script]] potato-skin.tcl]
   registerSkin potato
 
   set files [glob -nocomplain -type d -directory $path(skins) *.skn]
@@ -13338,31 +13339,6 @@ namespace eval ::potato {
   namespace export X
 }
 
-#: proc ::potato::loadSubFiles
-#: arg dir directory to load from
-#: desc Because Cheetah won't quit bugging me about tidying up the source,
-#: desc load bits of Potato from other files in $dir
-proc ::potato::loadSubFiles {dir} {
-
-  foreach x [list events config] {
-    if { [catch {source [file join $dir "potato-$x.tcl"]} err errdict] } {
-         set file [file nativename [file normalize [file join $dir "potato-$x.tcl"]]]
-         set msg "Unable to load required file $file:\n$err\n";
-         set trace [errorTrace $errdict]
-         if { $trace ne "" } {
-              append msg "$trace\n"
-            }
-         append msg "Please make sure your Potato installation is complete, and feel free \n"
-         append msg "to blame Cheetah, who bugged me to split potato.tcl into more files."
-         tk_messageBox -icon error -title Potato -message $msg
-         exit;
-       }
-  }
-
-  package provide potato-subfiles 1.0
-
-};# ::potato::loadSubFiles
-
 #: proc ::potato::basic_reqs
 #: desc Load the basic requirements for Potato - ensure we have a sufficient Tcl and Tk version, required packages, etc
 #: return nothing
@@ -13396,25 +13372,35 @@ proc ::potato::basic_reqs {} {
   # OK, that's Tcl and Tk sorted. Now let's load in the other parts of Potato from separate
   # files. These really shouldn't be an issue....
 
+  set files [list telnet proxy wikihelp spell encoding config events]
+
   set packages \
     [list \
-      [list potato-telnet 1.1] \
-      [list potato-proxy 1.2] \
-      [list potato-wikihelp] \
-      [list potato-spell] \
-      [list potato-encoding] \
-      [list potato-subfiles] \
       [list treeviewUtils] \
     ]
+
   if { ![package vsatisfies [package present Tk] 8.6-] } {
        # On Tk 8.6, we use [tk fontchooser]. Before that, we need the
        # potato-font package to provide our own dialog.
-       lappend packages [list potato-font]
+       lappend files font
      }
+  set dir [file dirname [info script]]
+  foreach x $files {
+    if { [catch {source [file join $dir "potato-$x.tcl"]} err] } {
+         set msg "WARNING! Your Potato installation appears to be corrupt or incomplete -\n"
+         append msg "you are missing part of the Potato code (potato-$x.tcl).\n"
+         append msg "Please re-download Potato from the website\n"
+         append msg "($potato(webpage)), and contact the author if you\n"
+         append msg "have any further problems."
+         tk_messageBox -icon error -title "Potato" -type ok -message $msg
+         tk_messageBox -icon error -title "Potato" -type ok -message "Error: $err"
+         exit;
+       }
+  }
+
   foreach x $packages {
     if { [catch {package require {*}$x} err] } {
-         set msg "WARNING! Your Potato installation appears to be corrupt or incomplete -\n"
-         append msg "you are missing part of the Potato code ([lindex $x 0]).\n"
+         set msg "Required package [lindex $x 0] is missing.\n"
          append msg "Please re-download Potato from the website\n"
          append msg "($potato(webpage)), and contact the author if you\n"
          append msg "have any further problems."
