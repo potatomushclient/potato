@@ -744,7 +744,7 @@ proc ::skin::potato::toolbarButton {istask details short image} {
           }
      } else {
        foreach {long cmd} $details {break;}
-       set extas [list -command $cmd]
+       set extras [list -command $cmd]
      }
   if { $short eq "" } {
        set short $long
