@@ -1737,7 +1737,7 @@ proc ::skin::potato::nextSpawn {c} {
 
 
 
-package provide potato-skin 2.0.0
+
 return "potato";
 
 

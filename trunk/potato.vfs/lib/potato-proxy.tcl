@@ -1,11 +1,7 @@
 
 namespace eval ::potato::proxy {}
 
-package provide potato-proxy 1.2
-
-package require potato-proxy-SOCKS4 1.2
-#package require potato-proxy-SOCKS5 1.2
-#package require potato-proxy-HTTP 1.2
+catch {source [file join [file dirname [info script]] potato-proxy-SOCKS4.tcl]}
 
 
 # Each defined proxy must define the following procedures (where $p is the proxy type):

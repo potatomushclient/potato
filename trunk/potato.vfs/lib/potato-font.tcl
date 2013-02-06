@@ -265,4 +265,3 @@ proc ::font::show {win} {
 
 };# ::font::show
 
-package provide potato-font 1.0

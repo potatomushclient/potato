@@ -265,4 +265,3 @@ proc ::potato::unicode-to-latin1_init {} {
 };# ::potato::unicode-to-latin_init
 
 ::potato::unicode-to-latin1_init
-package provide potato-encoding 1.0

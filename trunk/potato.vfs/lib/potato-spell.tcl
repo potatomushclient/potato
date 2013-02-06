@@ -5,9 +5,11 @@ namespace eval ::potato::spellcheck {
   set options(aspell) "c:/progra~1/aspell/bin/aspell.exe -a"
   set options(aspell) "%s -a";# command format for aspell command. The %s is replaced with the cmd to run, via [format] (so literal %'s must be escaped)
   set options(grab) 1
+
+  namespace import ::potato::T
+
 }
 
-namespace import ::potato::T
 
 proc ::potato::spellcheck::spellcheck {string} {
   variable spellcheck;
@@ -337,4 +339,3 @@ proc ::potato::spellcheck::checkSpellingSub {pipe} {
 
 };# ::potato::spellcheck::checkSpellingSub
 
-package provide potato-spell 0.1

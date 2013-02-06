@@ -495,8 +495,9 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
 
   pack [set sub [::ttk::frame $frame.proxyType]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "Proxy Type:"] -width 17 -justify left -anchor w] -side left -padx 3
+set proxytypes [removePrefix [namespace children ::potato::proxy] ::potato::proxy:]
   pack [::ttk::combobox $sub.cb -textvariable ::potato::worldconfig($w,proxy) \
-             -values [list None SOCKS4] -width 20 -state readonly] -side left -padx 3
+             -values [concat [list None] $proxytypes] -width 20 -state readonly] -side left -padx 3
 #             -values [list None HTTP SOCKS4 SOCKS5] -width 20 -state readonly] -side left -padx 3
 
   pack [set sub [::ttk::frame $frame.phost]] -side top -pady 5 -anchor nw
