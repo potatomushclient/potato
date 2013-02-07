@@ -19,10 +19,10 @@ proc ::potato::eventsMatch {c _tagged _lineNoansi _eventInfo} {
   set focus [focus -displayof .]
   set strL [string tolower $str]
 
-  if { $w == -1 } {
-       set worlds [list -1]
+  if { $w == 0 } {
+       set worlds [list 0]
      } else {
-       set worlds [list $w -1]
+       set worlds [list $w 0]
      }
 
   set eventInfo(matched) 0
@@ -245,7 +245,7 @@ proc ::potato::eventConfig {{w ""}} {
 
   toplevel $win
   wm withdraw $win
-  if { $w == -1 } {
+  if { $w == 0 } {
        wm title $win [T "Global Event Configuration"]
      } else {
        wm title $win [T "%s - Event Configuration" $world($w,name)]

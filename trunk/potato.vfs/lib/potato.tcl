@@ -4,6 +4,18 @@ namespace eval ::potato {}
 namespace eval ::potato::img {}
 namespace eval ::skin {}
 
+if { [info exists ::potato::running] && $::potato::running } {
+     # Being loaded via /reload; check we can.
+     if { ![info exists ::potato::potato(loadedPrefVersion)] || \
+          $::potato::potato(loadedPrefVersion) < 2 } {
+          set errmsg "Due to incompatible changes in the way world "
+          append errmsg "configuration is handled, you cannot use "
+          append errmsg "/reload at this time. Please restart Potato "
+          append errmsg "fully when convenient to update."
+          error $errmsg;
+        }
+   }
+
 #: proc ::potato::loadWorlds
 #: desc load all the stored world info from the files
 #: return number of worlds loaded
@@ -19,8 +31,12 @@ proc ::potato::loadWorlds {} {
        foreach x [lsort -dictionary $files] {
          unset -nocomplain newWorld
          if { ![catch {source $x} return errdict] && [lrange [split $return " "] 0 2] eq [list World Loaded Successfully] } {
-              set w $potato(worlds)
-              incr potato(worlds)
+
+              if { [info exists newWorld(isDefaultWorld)] } {
+                   set w 0
+                 } else {
+                   set w [incr potato(worlds)]
+                 }
               foreach opt [array names newWorld] {
                  set world($w,$opt) $newWorld($opt)
               }
@@ -33,7 +49,11 @@ proc ::potato::loadWorlds {} {
        }
      }
 
-  foreach w [concat -1 [worldIDs]] {
+  set worlds [worldIDs 1]
+  if { "0" ni $worlds } {
+       lappend worlds "0"
+     }
+  foreach w $worlds {
     loadWorldDefaults $w 0
   }
   return $potato(worlds);
@@ -158,8 +178,8 @@ proc ::potato::manageWorldVersionNew {w} {
 
   if { $version < 1 } {
        # In version 1, this is a global option
-       if { $w == -1 && [info exists world(-1,selectToCopy)] } {
-            set misc(selectToCopy) $world(-1,selectToCopy)
+       if { $w == 0 && [info exists world(0,selectToCopy)] } {
+            set misc(selectToCopy) $world(0,selectToCopy)
           }
        unset -nocomplain world($w,selectToCopy)
      }
@@ -181,17 +201,17 @@ proc ::potato::loadWorldDefaults {w override} {
   variable potato;
 
   # Options we don't copy. This is a list of option name wildcard patterns.
-  set nocopyPatterns [list *,font,created id *,fcmd,* events events,* timer timer,* groups slashcmd slashcmd,* macro,*]
+  set nocopyPatterns [list isDefaultWorld *,font,created,* id fcmd,* events events,* timer timer,* groups slashcmd slashcmd,* macro,*]
 
-  # Load preset defaults for these, don't copy from world -1. This is a list of optionName optionDefault pairs.
+#xxx CHANGE THIS
+  # Load preset defaults for these, don't copy from the default. This is a list of optionName optionDefault pairs.
   # All of these should also be matched by nocopyPatterns above.
   set standardDefaults [list fcmd,2 {} fcmd,3 {} fcmd,4 {} fcmd,5 {} fcmd,6 {} fcmd,7 {} fcmd,8 {} \
                              fcmd,9 {} fcmd,10 {} fcmd,11 {} fcmd,12 {} \
                              events {} groups [list] slashcmd [list]]
 
-  if { $w != -1 } {
-       foreach optFromArr [array names world -1,*] {
-         set opt [string range $optFromArr 3 end]
+  if { $w != 0 } {
+       foreach opt [removePrefix [array names world 0,*] 0] {
          set copy 1
          if { !$override && [info exists world($w,$opt)] } {
               continue;
@@ -205,7 +225,7 @@ proc ::potato::loadWorldDefaults {w override} {
          if { !$copy } {
               continue;
             }
-         set world($w,$opt) $world(-1,$opt)
+         set world($w,$opt) $world(0,$opt)
        }
      }
 
@@ -225,10 +245,10 @@ proc ::potato::loadWorldDefaults {w override} {
        }
      }
 
-  if { $w != -1 } {
+  if { $w != 0 } {
        foreach x $world($w,groups) {
-         if { $x ni $world(-1,groups) } {
-              lappend world(-1,groups) $x
+         if { $x ni $world(0,groups) } {
+              lappend world(0,groups) $x
             }
        }
      }
@@ -277,7 +297,7 @@ proc ::potato::saveWorlds {} {
   }
 
   # Generate sorted list of world ids.
-  foreach w [worldIDs] {
+  foreach w [worldIDs 1] {
      lappend temp [list $w $world($w,name)]
   }
   if { ![info exists temp] } {
@@ -285,14 +305,19 @@ proc ::potato::saveWorlds {} {
      }
   set temp [lsort -index 1 -dictionary $temp]
 
-  set i 0
+  set i 1
   foreach x $temp {
      set w [lindex $x 0]
-     if { $world($w,temp) } {
+     if { $w != 0 && $world($w,temp) } {
           continue;
         }
-     set san [sanitizeWorldName $world($w,name)]
-     set num [format %03d $i]
+     if { $w == 0 } {
+          set num "000"
+          set san "DefaultWorld"
+        } else {
+          set san [sanitizeWorldName $world($w,name)]
+          set num [format %03d $i]
+        }
      if { $san ne "" } {
           set fnames [list "$san-$num.wld" "world$num.wld"]
         } else {
@@ -311,6 +336,10 @@ proc ::potato::saveWorlds {} {
         }
      puts $fid "# $world($w,name) - $world($w,host):$world($w,port)"
      puts $fid "# Saved from Potato $potato(version)\n"
+     if { $w == 0 } {
+          puts $fid [list set newWorld(isDefaultWorld) 1]
+          puts $fid ""
+        }
      foreach y [lsort -dictionary [array names world $w,*]] {
         scan $y $w,%s opt
         if { $opt eq "top,font,created" || $opt eq "bottom,font,created" || \
@@ -410,7 +439,7 @@ proc ::potato::prefixWindow {{w ""}} {
        return;
      }
 
-  if { $w == -1 } {
+  if { $w == 0 } {
        set title [T "Global Prefixes"]
        set message [T "Set auto-prefixes to apply for all worlds below."]
      } else {
@@ -1949,7 +1978,7 @@ proc ::potato::newConnection {w {character ""}} {
   variable conn;
   variable world;
 
-  if { $w == -1 } {
+  if { $w == 0 } {
        # Set up the "not connected" connection
        set c 0
      } else {
@@ -2025,7 +2054,7 @@ proc ::potato::newConnection {w {character ""}} {
 
   foreach [list conn($c,textWidget) conn($c,input1) conn($c,input2)] [makeTextFrames $c] {break};
 
-  if { $w == -1 } {
+  if { $w == 0 } {
        connZero
      }
 
@@ -2033,7 +2062,7 @@ proc ::potato::newConnection {w {character ""}} {
 
   showConn $c
 
-  if { $w != -1 } {
+  if { $w != 0 } {
        connect $c 1
      }
 
@@ -2420,11 +2449,11 @@ proc ::potato::connZero {} {
 
   set canvas $conn(0,textWidget)
 
-  $canvas configure -background $world(-1,top,bg)
+  $canvas configure -background $world(0,top,bg)
 
   $canvas delete all
 
-  set fgcol $world(-1,ansi,fg)
+  set fgcol $world(0,ansi,fg)
 
   set logo ::potato::img::logoSmall
 
@@ -2473,7 +2502,7 @@ proc ::potato::connZero {} {
   set font(world) [list -family Tahoma -size 10 -underline 1]
   set font(dot) [list -family Tahoma -size 7]
 
-  set linkcol $world(-1,ansi,link)
+  set linkcol $world(0,ansi,link)
 
   set backup_y $y
   set addressbook [connZeroAddText $canvas 0 y 1 [T "Open Address Book"] $font(link) [list clickable addressbook]]
@@ -2534,7 +2563,7 @@ proc ::potato::connZero {} {
   connZeroAddText $canvas $x y 1 [T "Existing Worlds:"] [list Tahoma 14] [list existing] -justify left -anchor nw
 
   if { $potato(worlds) > 0 } {
-       set worldList [potato::worldList]
+       set worldList [worldList]
        set worldList [lsort -dictionary -index 1 $worldList]
        set first 1
        set height 0
@@ -3234,7 +3263,7 @@ proc ::potato::timersStart {c} {
 
   timersStop $c; # cancel any already-running timers
 
-  foreach w [list -1 $conn($c,world)] {
+  foreach w [list 0 $conn($c,world)] {
     foreach timerStr [array names world -regexp "^$w,timer,\[^,\]+,cmds\$"] {
       scan $timerStr %*d,timer,%d,cmds timerId
       timersStartOne $c $w $timerId
@@ -3275,7 +3304,7 @@ proc ::potato::timersStartOne {c w timer} {
 #: arg w world id
 #: arg timerId timer id
 #: arg first Is this the first time this timer has been queued?
-#: desc Queue timer $timer from world $w (which is either $c's world or -1 for a global timer) to run for
+#: desc Queue timer $timer from world $w (which is either $c's world or 0 for a global timer) to run for
 #: desc connection $c. If $first, use the timer's delay interval as the [after] time, otherwise use it's every interval.
 #: return nothing
 proc ::potato::timerQueue {c w timerId first} {
@@ -3291,7 +3320,7 @@ proc ::potato::timerQueue {c w timerId first} {
 
 #: proc ::potato::timerRun
 #: arg c connection id
-#: arg w world id that timer belongs to (world of connection or -1  for global timers)
+#: arg w world id that timer belongs to (world of connection or 0  for global timers)
 #: arg timer timer id
 #: desc Send the output associated with a particular timer and, if it hasn't run the max number of times, retrigger it
 #: return nothing
@@ -4354,7 +4383,7 @@ proc ::potato::verbose {c msg} {
   variable world;
   variable conn;
 
-  if { $c == -1 || !$world($conn($c,world),verbose) } {
+  if { $c < 1 || !$world($conn($c,world),verbose) } {
        return 0;
      }
 
@@ -4458,8 +4487,8 @@ proc ::potato::showConn {c {main 1}} {
   if { $misc(toggleShowMainWindow) && $main } {
        showSpawn $c _main
      }
-  if { $c == -1 } {
-       update
+  if { $c < 1 } {
+       connZero
      }
   ::skin::$potato(skin)::inputWindows $c [expr {$conn($c,twoInputWindows) + 1}]
 
@@ -4785,7 +4814,7 @@ proc ::potato::connList {} {
 
 #: proc ::potato::worldList
 #: desc returns a list, where each element is a sublist of world id and world name. The list is not sorted in any particular order.
-#: desc Does not include world "-1", which is internal and used for "connection 0", the welcome screen.
+#: desc Does not include world "0", which is internal and used for "connection 0", the welcome screen.
 #: return [list] of world [list]s
 proc ::potato::worldList {} {
   variable world;
@@ -5173,7 +5202,7 @@ proc ::potato::manageWorldsRightClickWorld {xcoord ycoord} {
        menu $manageWorlds(wTree).menu -tearoff 0
      }
   set i 0
-  foreach x $world(-1,groups) {
+  foreach x $world(0,groups) {
      set manageWorlds(popupMenuGroups,$i) [expr {$x in $world($sel,groups)}]
      $menu add checkbutton -variable ::potato::manageWorlds(popupMenuGroups,$i) -label $x \
          -command [list ::potato::manageWorldsRightClickWorldToggle $sel $x  $menu]
@@ -5232,9 +5261,9 @@ proc ::potato::manageWorldsNewGroup {parent} {
   pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both
   pack [::ttk::label $frame.l -text [T "Enter the name for the new Group, and click Add."]] -side top -padx 3 -pady 5
   set name [T "New Group"]
-  if { $name in $world(-1,groups) } {
+  if { $name in $world(0,groups) } {
        set num 1
-       while { "$name ($num)" in $world(-1,groups) && $num < 1000 } {
+       while { "$name ($num)" in $world(0,groups) && $num < 1000 } {
                incr num
              }
        if { $num < 1000 } {
@@ -5278,9 +5307,9 @@ proc ::potato::manageWorldsNewGroupAdd {} {
        return 0;
      }
 
-  if { $group ni $world(-1,groups) } {
-       lappend world(-1,groups) $group
-       set world(-1,groups) [lsort -dictionary $world(-1,groups)]
+  if { $group ni $world(0,groups) } {
+       lappend world(0,groups) $group
+       set world(0,groups) [lsort -dictionary $world(0,groups)]
      }
 
   destroy $manageWorlds(newGroupWin)
@@ -5306,7 +5335,7 @@ proc ::potato::manageWorldsUpdateGroups {} {
   $gTree delete [$gTree children {}]
   set gTreeAll [$gTree insert {} end -id INT:All -tags [list internal] -values [list [T "All Worlds"]] -open true]
 
-  foreach x $world(-1,groups) {
+  foreach x $world(0,groups) {
     $gTree insert $gTreeAll end -id $x -tags [list user] -values [list $x] -open true
   }
   $gTree insert $gTreeAll end -id INT:Ungrouped -tags [list internal] -values [list [T "Ungrouped"]] -open true
@@ -5395,8 +5424,7 @@ proc ::potato::manageWorldsBtn {type win} {
        set ans [tk_messageBox -parent $manageWorlds(toplevel) -title [T "Delete Group?"] \
              -icon question -type yesno -message [T "Do you really want to delete the group \"%s\"?" $sel]]
        if { $ans eq "yes" } {
-            # This must also match -1,groups, hence the "-?"
-            foreach x [array names world -regexp {^-?[0-9]+,groups}] {
+            foreach x [array names world -regexp {^[0-9]+,groups}] {
                set index [lsearch -exact $world($x) $sel]
                if { $index > -1 } {
                     set world($x) [lreplace $world($x) $index $index]
@@ -5624,8 +5652,7 @@ proc ::potato::addNewWorld {name host port temp} {
   variable potato;
   variable world;
 
-  set w $potato(worlds)
-  incr potato(worlds)
+  set w [incr potato(worlds)]
 
   loadWorldDefaults $w 0
 
@@ -5686,8 +5713,7 @@ proc ::potato::copyWorld {w} {
   variable world;
   variable potato;
 
-  set new $potato(worlds)
-  incr potato(worlds)
+  set new [incr potato(worlds)]
 
   foreach x [removePrefix [array names world $w,*] $w] {
     set world($new,$x) $world($w,$x)
@@ -5759,7 +5785,7 @@ proc ::potato::macroWindow {{w ""}} {
        return;
      }
 
-  if { $w == -1 } {
+  if { $w == 0 } {
        set title [T "Global Macros"]
      } else {
        set title [T "Macros for %s" $world($w,name)]
@@ -6411,6 +6437,8 @@ proc ::potato::main {} {
   set potato(contact) "talvo@talvo.com"
   set potato(webpage) "http://code.google.com/p/potatomushclient/"
 
+  set potato(appPrefVersion) 2
+
   if { [info exists ::starkit::mode] && $::starkit::mode eq "starpack" } {
        set path(homedir) [file dirname [info nameofexecutable]]
        set path(vfsdir) [info nameofexecutable]
@@ -6437,7 +6465,6 @@ proc ::potato::main {} {
   set potato(conns) 0
   # Number of saved worlds
   set potato(worlds) 0
-  set potato(nextWorld) 1
   # The current skin on display
   set potato(skin) ""
   # The current connection on display
@@ -6550,6 +6577,9 @@ proc ::potato::main {} {
 
   # We need to set the prefs before we load anything...
   setPrefs 1
+  if { ![info exists potato(loadedPrefVersion)] } {
+       set potato(loadedPrefVersion) $potato(appPrefVersion)
+     }
 
   # Now set up translation stuff
   i18nPotato
@@ -6603,7 +6633,7 @@ proc ::potato::main {} {
 
   set running 1;# so potato.tcl can be re-sourced without re-running this proc
 
-  newConnection -1
+  newConnection 0
   # We do this after newConnection, or the <FocusIn> binding comes up wrong
   setUpBindings
 
@@ -7140,16 +7170,16 @@ proc ::potato::tooltipShow {widget {text ""} {x ""} {y ""}} {
 };# ::potato::tooltipShow
 
 #: proc ::potato::worldIDs
-#: arg includeDefault Include the "default" world, -1? Defaults to 0
-#: desc Return a list of all currently defined world's ids, possibly including -1
+#: arg includeDefault Include the "default" world, 0? Defaults to 0
+#: desc Return a list of all currently defined world's ids, possibly including 0
 #: return list of world ids
 proc ::potato::worldIDs {{includeDefault 0}} {
   variable world;
 
   if { $includeDefault } {
-       set pattern {^-?[0-9]+,id$}
-     } else {
        set pattern {^[0-9]+,id$}
+     } else {
+       set pattern {^[1-9][0-9]*,id$}
      }
   set ids [array names world -regexp $pattern]
 
@@ -9601,10 +9631,10 @@ proc ::potato::send_mushage {window saveonly} {
      } else {
        set windows [list $windowName _all]
      }
-  if { $w == -1 } {
-       set worlds [list -1]
+  if { $w == 0 } {
+       set worlds [list 0]
      } else {
-       set worlds [list $w -1]
+       set worlds [list $w 0]
      }
   foreach w $worlds {
     if { [info exists prefix] } {
@@ -10054,7 +10084,7 @@ proc ::potato::slashConfig {{w ""}} {
        reshowWindow $win
        return;
      }
-  if { $w == -1 } {
+  if { $w == 0 } {
        set title [T "Global Custom /commands"]
      } else {
        set title [T "Custom /commands for %s" $world($w,name)]
@@ -10535,8 +10565,8 @@ proc ::potato::process_slash_cmd {c _str mode {_vars ""}} {
 
   # This while loop is a crude go-to to avoid the need for repeating
   # the checks for $recursing
-  while { ![info exists running] } {
-    set running 1
+  while { ![info exists working] } {
+    set working 1
 
     set parsed [parse_slash_cmd $c str $mode vars]
     set wascmd [lindex $parsed 0]
@@ -10562,8 +10592,8 @@ proc ::potato::process_slash_cmd {c _str mode {_vars ""}} {
           } elseif { [info exists world($w,slashcmd)] && [lsearch -exact -nocase $world($w,slashcmd) $cmd] > -1 } {
             set exact $cmd
             set custom $w
-          } elseif { $w != -1 && [info exists world(-1,slashcmd)] && \
-                     [lsearch -exact -nocase $world(-1,slashcmd) $cmd] > -1 } {
+          } elseif { $w != 0 && [info exists world(0,slashcmd)] && \
+                     [lsearch -exact -nocase $world(0,slashcmd) $cmd] > -1 } {
             set exact $cmd
             set custom -1
           } elseif { [string equal -nocase -length $len ::potato::slash_cmd_$cmd $x] } {
@@ -10592,8 +10622,8 @@ proc ::potato::process_slash_cmd {c _str mode {_vars ""}} {
                     }
               }
             }
-         if { $w != -1 && [info exists world(-1,slashcmd)] } {
-              foreach x $world(-1,slashcmd) {
+         if { $w != 0 && [info exists world(0,slashcmd)] } {
+              foreach x $world(0,slashcmd) {
                  if { [string equal -nocase -length [string length $cmd] $cmd $x] } {
                       lappend partial $x
                       set custom -1
@@ -10786,7 +10816,7 @@ proc ::potato::alias_slash_cmd {orig new} {
 #: arg cmd /command name
 #: arg str args to /command
 #: desc Try and run the custom slash command $cmd, defined in world $w, for connection $c, using args $str. We pass
-#: desc $w rather than checking $c's world b/c the command might be defined in -1
+#: desc $w rather than checking $c's world b/c the command might be defined in 0
 #: return nothing
 proc ::potato::customSlashCommand {c w cmd str} {
   variable conn;
@@ -11056,8 +11086,8 @@ proc ::potato::customSlashCommand {c w cmd str} {
 
   if { [info exists world($w,macro,$macro)] } {
        set do $w,macro,$macro
-     } elseif { [info exists world(-1,macro,$macro)] } {
-       set do -1,macro,$macro
+     } elseif { [info exists world(0,macro,$macro)] } {
+       set do 0,macro,$macro
      } else {
        return [list 0 [T "No such macro \"%s\"." $str]];
      }
@@ -11357,11 +11387,11 @@ proc ::potato::customSlashCommand {c w cmd str} {
   }
   set return [T "Available slash commands: %s" [itemize [lsort -dictionary $list]]]
   set w [connInfo $c world]
-  if { $w != -1 && [llength $world($w,slashcmd)] } {
+  if { $w != 0 && [llength $world($w,slashcmd)] } {
        append return "\n" [T "User-defined commands for this world: %s" [itemize [lsort -dictionary $world($w,slashcmd)]]]
      }
-  if { [llength $world(-1,slashcmd)] } {
-       append return "\n" [T "Global User-defined commands: %s" [itemize [lsort -dictionary $world(-1,slashcmd)]]]
+  if { [llength $world(0,slashcmd)] } {
+       append return "\n" [T "Global User-defined commands: %s" [itemize [lsort -dictionary $world(0,slashcmd)]]]
      }
 
   return [list 1 $return];
@@ -11408,7 +11438,7 @@ proc ::potato::customSlashCommand {c w cmd str} {
      } else {
        array set masterVars [list _u [up] \
                                   _c 0 \
-                                  _w -1 \
+                                  _w 0 \
                                   _name "Potato" \
                                   _host "unknown" \
                                   _port 0 \
@@ -11868,7 +11898,7 @@ proc ::potato::parseConnectRequest {str} {
 #: Toggle the shown connection forward/backwards one connection
 ::potato::define_slash_cmd toggle {
 
-  if { $str eq "down" || $str == -1 } {
+  if { $str in [list "down" "-1"] } {
        taskRun prevConn
      } else {
        taskRun nextConn
@@ -12297,7 +12327,7 @@ proc ::potato::handleOutsideRequest {src addr {isWorld 0}} {
 
   foreach {host port} $hostAndPort {break}
 
-  set conn2World -1
+  set conn2World 0
   if { $misc(outsideRequestMethod) == 0 } {
        # We do a quick-connect, even if a world exists with this host/port, so don't bother checking
      } else {
@@ -12314,15 +12344,15 @@ proc ::potato::handleOutsideRequest {src addr {isWorld 0}} {
        }
      }
 
-  if { $conn2World > -1 && $misc(outsideRequestMethod) == 2 } {
+  if { $conn2World > 0 && $misc(outsideRequestMethod) == 2 } {
        set ans [tk_messageBox -title $potato(name) -type yesno -message \
            [T "Would you like to use the settings for \[%s. %s\], rather than quick-connecting?" $conn2World $world($conn2World,name)]]
        if { $ans ne "yes" } {
-            set conn2World -1
+            set conn2World 0
           }
      }
 
-  if { $conn2World == -1 } {
+  if { $conn2World == 0 } {
        # Do a quick-connect
        newConnection [addNewWorld $host:$port $host $port 1]
      } else {
@@ -12749,8 +12779,8 @@ proc ::potato::fcmd {num {c ""}} {
   set w $conn($c,world)
   if { [set cmd $world($w,fcmd,$num)] ne "" } {
        # continue, this world has an
-     } elseif { $w != -1 && [string trim [set cmd $world(-1,fcmd,$num)]] ne "" } {
-       # continue, use -1's command
+     } elseif { $w != 0 && [string trim [set cmd $world(0,fcmd,$num)]] ne "" } {
+       # continue, use 0's command
      } else {
        return; # no command
      }
@@ -12810,19 +12840,19 @@ proc ::potato::tasksInit {} {
        config,cmd          "::potato::configureWorld" \
        config,state        notZero \
        programConfig,name  [X "Configure Program &Settings"] \
-       programConfig,cmd   [list ::potato::configureWorld -1] \
+       programConfig,cmd   [list ::potato::configureWorld 0] \
        programConfig,state always \
        events,name         [X "Configure &Events"] \
        events,cmd          "::potato::eventConfig" \
        events,state        notZero \
        globalEvents,name   [X "&Global Events"] \
-       globalEvents,cmd    [list ::potato::eventConfig -1] \
+       globalEvents,cmd    [list ::potato::eventConfig 0] \
        globalEvents,state  always \
        slashCmds,name      [X "Customise &Slash Commands"] \
        slashCmds,cmd       "::potato::slashConfig" \
        slashCmds,state     notZero \
        globalSlashCmds,name [X "Global S&lash Commands"] \
-       globalSlashCmds,cmd [list ::potato::slashConfig -1] \
+       globalSlashCmds,cmd [list ::potato::slashConfig 0] \
        globalSlashCmds,state always \
        log,name            [X "Show &Log Window"] \
        log,cmd             "::potato::logWindow" \
@@ -12912,7 +12942,7 @@ proc ::potato::tasksInit {} {
        macroWindow,cmd     "::potato::macroWindow" \
        macroWindow,state   notZero \
        globalMacros,name   [X "Global &Macro Window"] \
-       globalMacros,cmd    "::potato::macroWindow -1" \
+       globalMacros,cmd    "::potato::macroWindow 0" \
        globalMacros,state  always \
        convertNewlines,name [X "Convert &Returns to %r"] \
        convertNewlines,cmd  [list ::potato::escapeChars "" 0 1 0] \
