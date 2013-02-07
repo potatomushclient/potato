@@ -6968,6 +6968,12 @@ proc ::potato::setTheme {} {
   ttk::style configure error.TLabel -foreground red
   ttk::style layout Plain.TNotebook.Tab null
 
+  treeviewHack
+
+  foreach x [namespace children ::skin] {
+    catch {${x}::setTheme $misc(tileTheme)}
+  }
+
   return;
 
 };# ::potato::setTheme
