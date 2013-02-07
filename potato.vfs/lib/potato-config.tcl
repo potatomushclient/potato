@@ -15,155 +15,155 @@ proc ::potato::setPrefs {readfile} {
 
   # START DEFAULT WORLD SETTINGS
   # default ansi colors
-  set world(-1,ansi,fgh) #dfdfdf
-  set world(-1,ansi,fg)  #aeaeae
-  set world(-1,ansi,rh)  #ff0000
-  set world(-1,ansi,r)   #800000
-  set world(-1,ansi,gh)  #00ff00
-  set world(-1,ansi,g)   #008000
-  set world(-1,ansi,bh)  #0000ff
-  set world(-1,ansi,b)   #000080
-  set world(-1,ansi,yh)  #ffff00
-  set world(-1,ansi,y)   #808000
-  set world(-1,ansi,mh)  #ff00ff
-  set world(-1,ansi,m)   #800080
-  set world(-1,ansi,ch)  #00ffff
-  set world(-1,ansi,c)   #008080
-  set world(-1,ansi,wh)  #ffffff
-  set world(-1,ansi,w)   #c0c0c0
-  set world(-1,ansi,xh)  #808080
-  set world(-1,ansi,x)   #222222
-  set world(-1,ansi,system) #ffff00
-  set world(-1,ansi,echo) #0000ffff8800
-  set world(-1,ansi,link) #4848ff
+  set world(0,ansi,fgh) #dfdfdf
+  set world(0,ansi,fg)  #aeaeae
+  set world(0,ansi,rh)  #ff0000
+  set world(0,ansi,r)   #800000
+  set world(0,ansi,gh)  #00ff00
+  set world(0,ansi,g)   #008000
+  set world(0,ansi,bh)  #0000ff
+  set world(0,ansi,b)   #000080
+  set world(0,ansi,yh)  #ffff00
+  set world(0,ansi,y)   #808000
+  set world(0,ansi,mh)  #ff00ff
+  set world(0,ansi,m)   #800080
+  set world(0,ansi,ch)  #00ffff
+  set world(0,ansi,c)   #008080
+  set world(0,ansi,wh)  #ffffff
+  set world(0,ansi,w)   #c0c0c0
+  set world(0,ansi,xh)  #808080
+  set world(0,ansi,x)   #222222
+  set world(0,ansi,system) #ffff00
+  set world(0,ansi,echo) #0000ffff8800
+  set world(0,ansi,link) #4848ff
 
   # which kinds of ansi are allowed by default
-  set world(-1,ansi,flash) 0
-  set world(-1,ansi,underline) 1
-  set world(-1,ansi,colours) 1
-  set world(-1,ansi,force-normal) 0
-  set world(-1,ansi,xterm) 1
+  set world(0,ansi,flash) 0
+  set world(0,ansi,underline) 1
+  set world(0,ansi,colours) 1
+  set world(0,ansi,force-normal) 0
+  set world(0,ansi,xterm) 1
 
   # Defaults about the world
-  set world(-1,name) [T "New World"]
-  set world(-1,id) -1
-  set world(-1,host) ""
-  set world(-1,port) "4201"
-  set world(-1,ssl) 0
-  set world(-1,host2) ""
-  set world(-1,port2) "4201"
-  set world(-1,ssl2) 0
-  set world(-1,charList) [list]
-  set world(-1,charDefault) ""
-  set world(-1,description) ""
-  set world(-1,loginStr) {connect %s %s}
-  set world(-1,loginDelay) 1.5
-  set world(-1,type) "MUSH"
-  set world(-1,telnet) 1
-  set world(-1,telnet,ssl) 0
-  set world(-1,telnet,naws) 1
-  set world(-1,telnet,term) 1
-  set world(-1,telnet,term,as) ""
-  set world(-1,telnet,keepalive) 0
-  set world(-1,telnet,prompts) 1
-  set world(-1,telnet,promptsPersist) 1
-  set world(-1,telnet,prompt,ignoreNewline) 1
-  set world(-1,encoding,start) iso8859-1
-  set world(-1,encoding,negotiate) 1
-  set world(-1,groups) [list]
-  set world(-1,prefixes) [list]
-  set world(-1,nbka) 0
+  set world(0,name) [T "New World"]
+  set world(0,id) 0
+  set world(0,host) ""
+  set world(0,port) "4201"
+  set world(0,ssl) 0
+  set world(0,host2) ""
+  set world(0,port2) "4201"
+  set world(0,ssl2) 0
+  set world(0,charList) [list]
+  set world(0,charDefault) ""
+  set world(0,description) ""
+  set world(0,loginStr) {connect %s %s}
+  set world(0,loginDelay) 1.5
+  set world(0,type) "MUSH"
+  set world(0,telnet) 1
+  set world(0,telnet,ssl) 0
+  set world(0,telnet,naws) 1
+  set world(0,telnet,term) 1
+  set world(0,telnet,term,as) ""
+  set world(0,telnet,keepalive) 0
+  set world(0,telnet,prompts) 1
+  set world(0,telnet,promptsPersist) 1
+  set world(0,telnet,prompt,ignoreNewline) 1
+  set world(0,encoding,start) iso88590
+  set world(0,encoding,negotiate) 1
+  set world(0,groups) [list]
+  set world(0,prefixes) [list]
+  set world(0,nbka) 0
 
-  set world(-1,proxy) "None"
-  set world(-1,proxy,host) ""
-  set world(-1,proxy,port) ""
+  set world(0,proxy) "None"
+  set world(0,proxy,host) ""
+  set world(0,proxy,port) ""
 
-  set world(-1,echo) 0
-  set world(-1,echo,timers) 0
-  set world(-1,ignoreEmpty) 0
+  set world(0,echo) 0
+  set world(0,echo,timers) 0
+  set world(0,ignoreEmpty) 0
 
-  set world(-1,outputLimit,on) 0
-  set world(-1,outputLimit,to) 500
-  set world(-1,spawnLimit,on) 1
-  set world(-1,spawnLimit,to) 250
-  set world(-1,inputLimit,on) 1
-  set world(-1,inputLimit,to) 250
-  set world(-1,splitInputCmds) 0
+  set world(0,outputLimit,on) 0
+  set world(0,outputLimit,to) 500
+  set world(0,spawnLimit,on) 1
+  set world(0,spawnLimit,to) 250
+  set world(0,inputLimit,on) 1
+  set world(0,inputLimit,to) 250
+  set world(0,splitInputCmds) 0
 
-  set world(-1,beep,show) 1
-  set world(-1,beep,sound) "Once" ;# All, Once or None
+  set world(0,beep,show) 1
+  set world(0,beep,sound) "Once" ;# All, Once or None
 
-  set world(-1,temp) 0
-  set world(-1,autoconnect) -1
+  set world(0,temp) 0
+  set world(0,autoconnect) 0
 
-  set world(-1,top,font) TkFixedFont
-  set world(-1,top,bg) #000000
-  set world(-1,bottom,font) TkFixedFont
-  set world(-1,bottom,bg) #000000
-  set world(-1,bottom,fg) #ffffff
+  set world(0,top,font) TkFixedFont
+  set world(0,top,bg) #000000
+  set world(0,bottom,font) TkFixedFont
+  set world(0,bottom,bg) #000000
+  set world(0,bottom,fg) #ffffff
 
 
-  set world(-1,wrap,at) 78
-  set world(-1,wrap,indent) 2
+  set world(0,wrap,at) 78
+  set world(0,wrap,indent) 2
 
-  set world(-1,convertNonBreakingSpaces) 1
-  set world(-1,selectToCopy) 0
+  set world(0,convertNonBreakingSpaces) 1
+  set world(0,selectToCopy) 0
 
-  set world(-1,spawnSystem) 1
+  set world(0,spawnSystem) 1
 
-  set world(-1,autoreconnect) 1
-  set world(-1,autoreconnect,time) 330
+  set world(0,autoreconnect) 1
+  set world(0,autoreconnect,time) 330
 
-  set world(-1,stats,conns) 0
-  set world(-1,stats,time) 0
-  set world(-1,stats,added) 1167682020
+  set world(0,stats,conns) 0
+  set world(0,stats,time) 0
+  set world(0,stats,added) 1167682020
 
-  set world(-1,notes) ""
-  set world(-1,mailFormat) "MUSH @mail"
-  set world(-1,mailFormat,custom) "writeto %to% %cc% %bcc% about %subject% ;; write %body% ;; send"
-  set world(-1,mailConvertReturns) 1
-  set world(-1,mailConvertReturns,to) "%r"
+  set world(0,notes) ""
+  set world(0,mailFormat) "MUSH @mail"
+  set world(0,mailFormat,custom) "writeto %to% %cc% %bcc% about %subject% ;; write %body% ;; send"
+  set world(0,mailConvertReturns) 1
+  set world(0,mailConvertReturns,to) "%r"
 
-  set world(-1,events) [list]
+  set world(0,events) [list]
 
-  set world(-1,verbose) 0;# show extra system messages when things happen?
+  set world(0,verbose) 0;# show extra system messages when things happen?
 
-  set world(-1,slashcmd) [list]
+  set world(0,slashcmd) [list]
 
-  set world(-1,fcmd,2) ""
-  set world(-1,fcmd,3) ""
-  set world(-1,fcmd,4) ""
-  set world(-1,fcmd,5) ""
-  set world(-1,fcmd,6) ""
-  set world(-1,fcmd,7) ""
-  set world(-1,fcmd,8) ""
-  set world(-1,fcmd,9) ""
-  set world(-1,fcmd,10) ""
-  set world(-1,fcmd,11) ""
-  set world(-1,fcmd,12) ""
+  set world(0,fcmd,2) ""
+  set world(0,fcmd,3) ""
+  set world(0,fcmd,4) ""
+  set world(0,fcmd,5) ""
+  set world(0,fcmd,6) ""
+  set world(0,fcmd,7) ""
+  set world(0,fcmd,8) ""
+  set world(0,fcmd,9) ""
+  set world(0,fcmd,10) ""
+  set world(0,fcmd,11) ""
+  set world(0,fcmd,12) ""
 
-  set world(-1,autosend,connect) ""
-  set world(-1,autosend,firstconnect) ""
-  set world(-1,autosend,login) ""
+  set world(0,autosend,connect) ""
+  set world(0,autosend,firstconnect) ""
+  set world(0,autosend,login) ""
 
-  set world(-1,act,flashTaskbar) 1
-  set world(-1,act,flashSysTray) 0
-  set world(-1,act,actInWorldNotice) 0
-  set world(-1,act,newActNotice) 1
-  set world(-1,act,clearOldNewActNotices) 0
+  set world(0,act,flashTaskbar) 1
+  set world(0,act,flashSysTray) 0
+  set world(0,act,actInWorldNotice) 0
+  set world(0,act,newActNotice) 1
+  set world(0,act,clearOldNewActNotices) 0
   # These Activity settings used to be program-wide (misc($opt) not world($w,act,$opt)),
   # so for upgraders, we'll use this to import the previous setting
   foreach x [list flashTaskbar flashSysTray actInWorldNotice newActNotice clearOldNewActNotices] {
     if { [info exists misc($x)] } {
-         set world(-1,act,$x) $misc($x)
+         set world(0,act,$x) $misc($x)
          unset misc($x)
        }
   }
 
-  set world(-1,twoInputWindows) 1
+  set world(0,twoInputWindows) 1
   # used to be per-program. Copy default.
   if { [info exists misc(twoInputWindows)] } {
-       set world(-1,twoInputWindows) $misc(twoInputWindows)
+       set world(0,twoInputWindows) $misc(twoInputWindows)
        unset misc(twoInputWindows)
      }
 
@@ -238,8 +238,7 @@ proc ::potato::setPrefs {readfile} {
        array set prefFlags [prefFlags]
        if { ![catch {source $path(preffile)} retval] } {
             set retval [split $retval .]
-            managePrefVersion [lindex $retval 0]
-            manageWorldVersion -1 [lindex $retval 1]
+            managePrefVersion [lindex $retval 0] [lindex $retval 1]
           } else {
             errorLog "Unable to load prefs from \"[file nativename [file normalize $path(preffile)]]\": $retval" error
           }
@@ -254,13 +253,6 @@ proc ::potato::setPrefs {readfile} {
           } else {
             set misc(tileTheme) [lindex $styles 0];# default to the first available theme, let user configure later
           }
-     }
-
-  if { ![info exists world(-1,top,font,created)] } {
-       set world(-1,top,font,created) [font create {*}[font actual $world(-1,top,font)]]
-     }
-  if { ![info exists world(-1,bottom,font,created)] } {
-       set world(-1,bottom,font,created) [font create {*}[font actual $world(-1,bottom,font)]]
      }
 
   if { $misc(aspell) eq "" } {
@@ -294,15 +286,6 @@ proc ::potato::savePrefs {} {
   puts $fid "# Saved at [clock seconds] from $potato(name) Version $potato(version)"
   puts $fid "# Do not edit this file.\n\n"
 
-  puts $fid "# Default world settings"
-  foreach x [lsort -dictionary [array names world -1,*]] {
-     if { $x eq "-1,top,font,created" || $x eq "-1,bottom,font,created" || \
-          [string match "nosave,*" $x] } {
-          continue;
-        }
-     puts $fid [list set ::potato::world($x) $world($x)]
-  }
-
   # Save the current window size, in case we don't start maximized
   if { [wm state .] eq "zoomed" } {
        set misc(windowSize) "zoomed"
@@ -320,49 +303,40 @@ proc ::potato::savePrefs {} {
   }
 
   puts $fid "\n"
-  puts $fid [list return "[prefFlags 1].[worldFlags 1]"]
+  puts $fid [list return "$potato(appPrefVersion).[worldFlags 1]"]
   close $fid
 
 };# ::potato::savePrefs
 
-#: proc ::potato::prefFlags
-#: arg total Return a total of the flags, instead of a list of name/value pairs? Defaults to 0
-#: desc Return a list (suitable for [array set]) of name/value pairs of Potato preference file flags. If $total is true, return the total of all flags instead.
-#: return list of name/value pairs, or total of all flags
-proc ::potato::prefFlags {{total 0}} {
-
-  set f(has_pref_flags) 1    ;# pref file uses flags
-
-  if { !$total } {
-       return [array get f]
-     } else {
-       set num 0
-       foreach x [array names f] {
-         set num [expr {$num | $f($x)}]
-       }
-       return $num;
-     }
-
-};# ::potato::prefFlags
-
 #: proc ::potato::managePrefVersion
 #: arg version The version of the pref file, or an empty string if none was present (ie, the pref file pre-dates versions)
+#: arg worldversion The version of the default world, if it was present
 #: desc Prefs were loaded from a version $version pref  file; make any changes necessary to bring it up to date with a
 #: desc current pref file. NOTE: Does not manage "world -1", the default world settings, as they're generally identical to normal world settings
 #: return nothing
-proc ::potato::managePrefVersion {version} {
+proc ::potato::managePrefVersion {version worldversion} {
   variable misc;
-
-  array set pf [prefFlags];# array of all current pref flags
+  variable potato;
+  variable world;
 
   if { ![string is integer -strict $version] } {
        set version 0
      }
 
-  # Example:
-  # if { !($version & $pf(foo_removed)) } {
-  #      unset misc(foo_var)
-  #    }
+  if { $version < 2 } {
+       foreach x [removePrefix [array names world -1,*] -1] {
+         set world(0,$x) $world(-1,$x)
+       }
+       array unset world -1,*
+       manageWorldVersion 0 $worldversion
+       if { ![info exists world(0,top,font,created)] } {
+            set world(0,top,font,created) [font create {*}[font actual $world(0,top,font)]]
+          }
+       if { ![info exists world(0,bottom,font,created)] } {
+            set world(0,bottom,font,created) [font create {*}[font actual $world(0,bottom,font)]]
+          }
+     }
+
 
   return;
 
@@ -400,7 +374,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
        return;
      }
   toplevel $win
-  if { $w == -1 } {
+  if { $w == 0 } {
        wm title $win [T "Program Configuration for %s" $potato(name)];
      } else {
        wm title $win [T "Configuration Options for '%s'" $world($w,name)]
@@ -476,7 +450,7 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   #pack [::ttk::label $sub.label -text [T "Character Name:"] -width 17 -justify left -anchor w] -side left -padx 3
   #pack [::ttk::entry $sub.entry -textvariable ::potato::worldconfig($w,charName) -width 50] -side left -padx 3
 
-  if { $w != -1 } {
+  if { $w != 0 } {
        pack [set sub [::ttk::frame $frame.charDefault]] -side top -pady 5 -anchor nw
        pack [::ttk::label $sub.label -text [T "Default Char:"] -width 17 -justify left -anchor w] -side left -padx 3
        pack [::ttk::combobox $sub.cb -textvariable ::potato::worldconfig($w,charDefault) \
@@ -515,7 +489,7 @@ set proxytypes [removePrefix [namespace children ::potato::proxy] ::potato::prox
   pack [::ttk::combobox $sub.cb -textvariable ::potato::worldconfig($w,type) \
              -values [list MUD MUSH] -width 20 -state readonly] -side left -padx 3
 
-  if { $w != -1 } {
+  if { $w != 0 } {
        # Character page
        set frame [configureFrame $canvas [T "Characters"]]
        set confChar [lindex $frame 0]
@@ -932,7 +906,7 @@ $sub.cb state disabled
   }
 
   # Auto-Sends
-  if { $w != -1 } {
+  if { $w != 0 } {
        set frame [configureFrame $canvas [T "Auto-Sends"]]
        set confAutoSends [lindex $frame 0]
        set frame [lindex $frame 1]
@@ -969,7 +943,7 @@ $sub.cb state disabled
      }
 
   # Program settings (Non-World)
-  if { $w == -1 } {
+  if { $w == 0 } {
 
        # Misc Program Settings
        set frame [configureFrame $canvas [T "Misc Settings"]]
@@ -1086,14 +1060,14 @@ $sub.cb state disabled
      }
 
   set tree $OPTIONTREE
-  if { $w == -1 } {
+  if { $w == 0 } {
        set root [$tree insert {} end -text [T "Default World Settings"]]
      } else {
        set root {}
      }
 
   set treeBasics [$tree insert $root end -text [T "Basics"] -tags $confBasics]
-  if { $w != -1 } {
+  if { $w != 0 } {
        set treeChar [$tree insert $root end -text [T "Characters"] -tags $confChar]
      }
   set treeConn [$tree insert $root end -text [T "Connection"] -tags $confConn]
@@ -1105,7 +1079,7 @@ $sub.cb state disabled
   set treeMisc [$tree insert $root end -text [T "Miscellaneous"] -tags $confMisc]
   set treeFcmds [$tree insert $root end -text [T "F-Commands"] -tags $confFcmds]
 
-  if { $w == -1  } {
+  if { $w == 0  } {
        set treeNotes [$tree insert $root end -text [T "Notes"] -tags $confNotes]
        set root [$tree insert {} end -text [T "Program Settings"]]
        set treeProgMisc [$tree insert $root end -text [T "Misc Settings"] -tags $confProgMisc]
@@ -1126,7 +1100,7 @@ $sub.cb state disabled
                      $confFcmds fcmds \
                 ]
   set helplist2 [list]
-  if { $w == -1 } {
+  if { $w == 0 } {
        lappend helplist2 $confProgMisc misc $confTimers timers
      } else {
        lappend helplist $confTimers timers $confAutoSends autosends
@@ -1461,7 +1435,7 @@ proc ::potato::configureTimerAddEdit {w add win} {
   toplevel $win
   wm withdraw $win
   if { $add } {
-       if { $w == -1 } {
+       if { $w == 0 } {
             wm title $win [T "Add Global Timer"]
           } else {
             wm title $win [T "Add Timer for %s" $world($w,name)]
@@ -1475,7 +1449,7 @@ proc ::potato::configureTimerAddEdit {w add win} {
        set worldconfig($w,timer,ae,continuous) 1
      } else {
        set timerId $worldconfig($w,timer,active)
-       if { $w == -1 } {
+       if { $w == 0 } {
             wm title $win [T "Edit Global Timer"]
           } else {
             wm title $win [T "Edit Timer for %s" $world($w,name)]
@@ -1688,7 +1662,7 @@ proc ::potato::configureTimerShowRow {w timer} {
 #: proc ::potato::configureHelp
 #: arg canvas The canvas widget in the help dialog
 #: arg helplist A list of frames and matching helpfile topics
-#: arg helplist2 A list of frames and helpfile topics for non-world configs (ie, program options for 'world -1')
+#: arg helplist2 A list of frames and helpfile topics for non-world configs (ie, program options for 'world 0')
 #: desc Display the related helpfile for the configure frame currently on display in $canvas
 #: return nothing
 proc ::potato::configureHelp {canvas helplist helplist2} {
@@ -1731,7 +1705,7 @@ proc ::potato::configureFont {w parent text where} {
      } else {
        set where2 [T "Input"]
      }
-  if { $w == -1 } {
+  if { $w == 0 } {
        if { $where eq "top" } {
             set title [T "Choose Default Output Font"]
           } else {
@@ -1869,7 +1843,7 @@ proc ::potato::configureWorldCommit {w win} {
 
   array set fonts [array get worldconfig $w,*,font]
   set notes [$worldconfig($w,CONFIG,notes) get 1.0 end-1char]
-  if { $w != -1 } {
+  if { $w != 0 } {
        set autosend(firstconnect) [$worldconfig($w,CONFIG,autosend,firstconnect) get 1.0 end-1char]
        set autosend(connect) [$worldconfig($w,CONFIG,autosend,connect) get 1.0 end-1char]
        set autosend(login) [$worldconfig($w,CONFIG,autosend,login) get 1.0 end-1char]
@@ -1929,7 +1903,7 @@ proc ::potato::configureWorldCommit {w win} {
   array set world [array get worldconfig $w,*]
   set world($w,notes) $notes
   array unset worldconfig $w,*
-  if { $w == -1 } {
+  if { $w == 0 } {
        array set MISC [array get worldconfig MISC,*]
        array unset worldconfig MISC,*
      } else {
@@ -1991,7 +1965,7 @@ proc ::potato::configureWorldCommit {w win} {
              }
           ::skin::$potato(skin)::status $c
         }
-     if { $conn($c,world) == $w || $w == -1 } {
+     if { $conn($c,world) == $w || $w == 0 } {
           foreach timerId $newTimers {
             timersStartOne $c $w $timerId
           }
@@ -2000,7 +1974,7 @@ proc ::potato::configureWorldCommit {w win} {
 
 
   # For global settings, update the misc (non-world) settings
-  if { $w == -1 } {
+  if { $w == 0 } {
        set showSysTray $misc(showSysTray)
        set tileTheme $misc(tileTheme)
        set MISC(MISC,outsideRequestMethod) [lsearch -exact [list "Quick Connect" "Use World Settings" "Prompt"] $MISC(MISC,outsideRequestMethod)]
