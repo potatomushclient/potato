@@ -45,9 +45,6 @@ proc ::skin::potato::init {} {
      }
 
   loadPrefs
-  if { $::potato::misc(tileTheme) eq "xpnative" } {
-       ::ttk::style configure Toolbutton -padding 3
-     }
 
   image create photo ::skin::potato::img::upload -data {
      R0lGODlhEAAQAOYAANnZ2aCowJCowJCgsJCYsP/////4//D4//Dw/+Dw/+Do
@@ -600,27 +597,14 @@ proc ::skin::potato::init {} {
 
   pack [::ttk::frame [set widgets(toolbar,searchfield) $widgets(toolbar).searchFrameHolder]] \
                -side right -anchor e -pady 2 -padx 10 -expand 0 -fill none
-  if { $::potato::misc(tileTheme) eq "aqua" } {
-       ttk::style element create Searchfield image \
-                [list ::skin::potato::img::searchImg1 focus ::skin::potato::img::searchImg2] \
-                -border {22 4 14} -sticky ew
-       ttk::style layout Searchfield "Searchfield -sticky nsew -border 1 -children \
-                                  {Entry.padding -sticky nswe -children \
-                                   {Entry.textarea -sticky nsew}}"
-       set widgets(toolbar,searchfield,e) [::ttk::entry $widgets(toolbar,searchfield).e \
-                   -style Searchfield -textvariable ::skin::potato::searchStr]
-       pack $widgets(toolbar,searchfield,e) -side right -padx 5 -pady 4 -anchor e
-       bind $widgets(toolbar,searchfield,e) <Return> "::potato::findIn {} \$::skin::potato::searchStr 1 0 0"
-     } else {
-       set widgets(toolbar,searchfield,e) [::ttk::entry $widgets(toolbar,searchfield).e \
-                        -textvariable ::skin::potato::searchStr]
-       set widgets(toolbar,searchfield,btn) [::ttk::button $widgets(toolbar,searchfield).b \
-                -image ::skin::potato::img::searchGlass \
-                -command "::potato::findIn {} \$::skin::potato::searchStr 1 0 0"]
-       pack $widgets(toolbar,searchfield,e) -side left -padx 3 -anchor w
-       pack $widgets(toolbar,searchfield,btn) -side left -anchor w -expand 0 -fill none
-       bind $widgets(toolbar,searchfield,e) <Return> [list $widgets(toolbar,searchfield,btn) invoke]
-     }
+  set widgets(toolbar,searchfield,e) [::ttk::entry $widgets(toolbar,searchfield).e \
+                   -textvariable ::skin::potato::searchStr]
+  set widgets(toolbar,searchfield,btn) [::ttk::button $widgets(toolbar,searchfield).b \
+           -image ::skin::potato::img::searchGlass \
+           -command "::potato::findIn {} \$::skin::potato::searchStr 1 0 0"]
+  pack $widgets(toolbar,searchfield,e) -side left -padx 3 -anchor w
+  pack $widgets(toolbar,searchfield,btn) -side left -anchor w -expand 0 -fill none
+  bind $widgets(toolbar,searchfield,e) <Return> [list $widgets(toolbar,searchfield,btn) invoke]
 
   set ::skin::potato::searchStr ""
   toolbarLabels
@@ -658,10 +642,40 @@ proc ::skin::potato::init {} {
 
   set skin(init) 1
 
+  setTheme ""
+
   return;
 
 };# ::skin::potato::init
 
+proc ::skin::potato::setTheme {{theme ""}} {
+  variable widgets;
+
+  if { $theme eq "" } {
+       set theme $::potato::misc(tileTheme)
+     }
+
+  if { $theme eq "xpnative" } {
+       ::ttk::style configure Toolbutton -padding 3
+     }
+
+  if { $theme eq "aqua" } {
+       catch {ttk::style element create skinPotatoSearchfield image \
+                [list ::skin::potato::img::searchImg1 focus ::skin::potato::img::searchImg2] \
+                -border {22 4 14} -sticky ew}
+       ttk::style layout Searchfield.Entry "skinPotatoSearchfield -sticky nsew -border 1 -children \
+                                  {Entry.padding -sticky nswe -children \
+                                   {Entry.textarea -sticky nsew}}"
+       catch {$widgets(toolbar,searchfield,e) configure -style Searchfield.Entry}
+       catch {pack forget $widgets(toolbar,searchfield,btn)}
+     } else {
+       catch {$widgets(toolbar,searchfield,e) configure -style {}}
+       catch {pack $widgets(toolbar,searchfield,btn) -side left -anchor w -expand 0 -fill none}
+     }
+
+  return;
+
+};# ::skin::potato::setTheme
 #: proc ::skin::potato::showStatusBar
 #: desc Show or hide the status bar, depending on $opts(statusbar)
 #: return nothing
