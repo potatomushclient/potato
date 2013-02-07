@@ -6212,7 +6212,7 @@ proc ::potato::setClock {} {
 
   after 1000 potato::setClock
   set potato(clock) [clock format [set secs [clock seconds]] -format $misc(clockFormat)]
-  foreach x [array names conn -regexp {^[0-9]+,stats,formatted$}] {
+  foreach x [array names conn -regexp {^[1-9][0-9]*,stats,formatted$}] {
      scan $x %d,stats,formatted c
      if { $conn($c,stats,connAt) != -1 } {
           set conn($c,stats,formatted) [statsFormat [expr {$secs - $conn($c,stats,connAt)}]]
@@ -13517,7 +13517,7 @@ proc parray {a args} {
 }
 
 if { $tcl_platform(platform) eq "windows" } {
-     parray potato::world -regexp {^[0-9]+,name$}
+     parray potato::world -regexp {^[1-9][0-9]*,name$}
      if { !$::potato::potato(wrapped) && [info exists ::potato::systray(mainico)] && [file exists $::potato::systray(mainico)] } {
           wm iconbitmap . -default $::potato::systray(mainico)
         }
