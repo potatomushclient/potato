@@ -235,7 +235,6 @@ proc ::potato::setPrefs {readfile} {
   set gameMail(Myrddin's\ BB) "+bbpost %to%/%subject%=%body%"
 
   if { $readfile } {
-       array set prefFlags [prefFlags]
        if { ![catch {source $path(preffile)} retval] } {
             set retval [split $retval .]
             managePrefVersion [lindex $retval 0] [lindex $retval 1]
