@@ -216,15 +216,19 @@ proc ::potato::setPrefs {readfile} {
   set defaultTheme $misc(tileTheme)
 
   # These are static, but this is still probably the best place to set them
-  set tinyurl(TinyURL,post) "url"
-  set tinyurl(TinyURL,address) "http://tinyurl.com/create.php"
-  set tinyurl(TinyURL,regexp) {<blockquote><b>(\S+?)</b>}
+  set tinyurl(TinyURL,method) "get"
+  set tinyurl(TinyURL,field) "url"
+  set tinyurl(TinyURL,address) "http://tinyurl.com/api-create.php"
+  set tinyurl(TinyURL,mime) "text/plain"
+  set tinyurl(TinyURL,regexp) {^(.+)$}
 
-  set tinyurl(AltURL,post) "longurl"
+  set tinyurl(AltURL,method) "post"
+  set tinyurl(AltURL,field) "longurl"
   set tinyurl(AltURL,address) "http://alturl.com/make_url.php"
   set tinyurl(AltURL,regexp) {<input .*?id="txtfld".*?\s+value *= *"(.+?)">}
 
-  set tinyurl(NotLong,post) "url"
+  set tinyurl(NotLong,method) "post"
+  set tinyurl(NotLong,field) "url"
   set tinyurl(NotLong,address) "http://notlong.com/"
   set tinyurl(NotLong,regexp) {<blockquote>\s*<a href="(.+?)">\1</a>}
 
@@ -468,10 +472,9 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
 
   pack [set sub [::ttk::frame $frame.proxyType]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "Proxy Type:"] -width 17 -justify left -anchor w] -side left -padx 3
-set proxytypes [removePrefix [namespace children ::potato::proxy] ::potato::proxy:]
+  set proxytypes [removePrefix [namespace children ::potato::proxy] ::potato::proxy:]
   pack [::ttk::combobox $sub.cb -textvariable ::potato::worldconfig($w,proxy) \
              -values [concat [list None] $proxytypes] -width 20 -state readonly] -side left -padx 3
-#             -values [list None HTTP SOCKS4 SOCKS5] -width 20 -state readonly] -side left -padx 3
 
   pack [set sub [::ttk::frame $frame.phost]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "Proxy Host:"] -width 17 -justify left -anchor w] -side left -padx 3
@@ -1010,9 +1013,10 @@ $sub.cb state disabled
        set potato::worldconfig(MISC,outsideRequestMethod) \
               [lindex [list "Quick Connect" "Use World Settings" "Prompt"] $misc(outsideRequestMethod)]
 
-       set temp [array names tinyurl *,post]
+       set temp [array names tinyurl *,field]
+       set tinyurls [list]
        foreach x $temp {
-         lappend tinyurls [string range $x 0 end-5]
+         lappend tinyurls [string range $x 0 end-6]
        }
        unset temp x
        pack [set sub [::ttk::frame $frame.tinyurl]] -side top -pady 5 -anchor nw

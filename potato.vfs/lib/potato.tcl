@@ -12025,7 +12025,7 @@ proc ::potato::TinyURL {url} {
 
   set type $misc(tinyurlProvider)
 
-  if { ![info exists tinyurl($type,post)] } {
+  if { ![info exists tinyurl($type,field)] } {
        set type "TinyURL"
      }
 
@@ -12033,19 +12033,34 @@ proc ::potato::TinyURL {url} {
        return -code error [T "Unable to create TinyURL: %s" [T "http package not available"]]
      }
 
-  set post $tinyurl($type,post)
+  set field $tinyurl($type,field)
   set address $tinyurl($type,address)
   set regexp $tinyurl($type,regexp)
 
-  set token [::http::geturl $address -query [::http::formatQuery $post $url]]
+  if { $tinyurl($type,method) eq "post" } {
+       set token [::http::geturl $address -query [::http::formatQuery $field $url]]
+     } else {
+       append address "?[::http::formatQuery $field $url]"
+       set token [http::geturl $address]
+     }
+
   if { [::http::ncode $token] != 200 } {
+       set errmsg [T "Unable to create TinyURL: %s" [::http::error $token]]
        catch {::http::cleanup $token}
-       return -code error [T "Unable to create TinyURL: %s" [::http::data $token]];
+       return -code error $errmsg;
      }
   if { ![regexp $regexp [::http::data $token] -> turl] } {
        catch {::http::cleanup $token}
        return -code error [T "Unable to create TinyURL: %s" [T "Unable to parse results."]];
     }
+  if { [info exists tinyurl($type,mime)] } {
+       upvar #0 $token state;
+       if { $state(type) ne $tinyurl($type,mime) } {
+            catch {::http::cleanup $token}
+            return -code error [T "Unable to create TinyURL: %s" [T "Unable to parse results."]];
+          }
+     }
+
   ::http::cleanup $token
 
   if { [string length $url] <= [string length $turl] } {
