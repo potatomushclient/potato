@@ -10601,7 +10601,7 @@ proc ::potato::process_slash_cmd {c _str mode {_vars ""}} {
           } elseif { $w != 0 && [info exists world(0,slashcmd)] && \
                      [lsearch -exact -nocase $world(0,slashcmd) $cmd] > -1 } {
             set exact $cmd
-            set custom -1
+            set custom 0
           } elseif { [string equal -nocase -length $len ::potato::slash_cmd_$cmd $x] } {
             lappend partial $x
           }
