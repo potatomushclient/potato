@@ -2460,6 +2460,16 @@ proc ::potato::connZero {} {
   set x 25
   set y 25
 
+  set linkcol $world(0,ansi,link)
+
+  $canvas itemconfigure hoverTag -fill red
+  $canvas bind clickable <Enter> "[list %W addtag hoverTag withtag current] ; [list %W itemconfig hoverTag -fill red] ; [list %W configure -cursor hand2]"
+  set leave "[list %W itemconfig hoverTag -fill $linkcol] ; [list %W dtag hoverTag] ; [list %W configure -cursor {}]"
+  $canvas bind hoverTag <Leave> $leave
+  bind $canvas <MouseWheel> "[list ::potato::mouseWheel %W %D] ; $leave"
+  catch {bind $canvas <4> "[list ::potato::mouseWheel %W 120] ; $leave"}
+  catch {bind $canvas <5> "[list ::potato::mouseWheel %W -120 ; $leave"}
+  $canvas bind clickable <ButtonRelease-1> [list ::potato::connZeroClick %W %x %y]
 
   $canvas create image $x $y -anchor nw -image $logo -tags [list logo]
   set textpos [expr {($x * 2) + [image width $logo]}]
@@ -2501,8 +2511,6 @@ proc ::potato::connZero {} {
   set font(normal) [list -family Tahoma -size 12]
   set font(world) [list -family Tahoma -size 10 -underline 1]
   set font(dot) [list -family Tahoma -size 7]
-
-  set linkcol $world(0,ansi,link)
 
   set backup_y $y
   set addressbook [connZeroAddText $canvas 0 y 1 [T "Open Address Book"] $font(link) [list clickable addressbook]]
@@ -2554,11 +2562,6 @@ proc ::potato::connZero {} {
      }
 
   set y [expr {[lindex [$canvas bbox $quickconnect] 3] + 25}]
-
-  $canvas bind clickable <Enter> "[list %W itemconfig current -fill red] ; [list %W configure -cursor hand2]"
-  $canvas bind clickable <Leave> "[list %W itemconfig current -fill $linkcol] ; [list %W configure -cursor {}]"
-  $canvas bind clickable <ButtonRelease-1> [list ::potato::connZeroClick %W %x %y]
-
 
   connZeroAddText $canvas $x y 1 [T "Existing Worlds:"] [list Tahoma 14] [list existing] -justify left -anchor nw
 
@@ -2702,16 +2705,13 @@ proc ::potato::connZeroFact {} {
 #: return nothing
 proc ::potato::connZeroClick {win x y} {
 
-  set index [$win find withtag current]
+  set index [$win find withtag hoverTag]
   if { [llength $index] != 1 } {
        return;
      }
-  if { [lindex [$win find overlapping $x $y $x $y] 0] ne $index } {
-       return; # mouse moved out before releasing button
-     }
+
   set tags [$win itemcget $index -tags]
-  set tags [lsearch -all -inline -not $tags clickable]
-  set tags [lsearch -all -inline -not $tags current]
+  set tags [lsearch -all -inline -regexp $tags {^(quickconnect|addnewworld|addressbook|world.*)$}]
   if { [llength $tags] != 1 } {
        return;
      }
@@ -2726,6 +2726,8 @@ proc ::potato::connZeroClick {win x y} {
        set id [string range $tag 5 end]
        if { [string is integer -strict $id] } {
             potato::newConnectionDefault $id
+            $win dtag hoverTag
+            $win config -cursor {}
             return;
           }
      }
@@ -6965,8 +6967,8 @@ proc ::potato::setTheme {} {
        errorLog "Unable to set style: $err1 // $err2" error
      }
 
-  ttk::style configure error.TLabel -foreground red
-  ttk::style layout Plain.TNotebook.Tab null
+  ::ttk::style configure error.TLabel -foreground red
+  ::ttk::style layout Plain.TNotebook.Tab null
 
   treeviewHack
 
