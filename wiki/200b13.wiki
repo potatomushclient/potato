@@ -30,6 +30,9 @@
   * Character names in the [FileMenu File] → *Connect To...* menu are now in alphabetical order. Suggested by ffivfan.
   * Added a new option in the Log Window to log echoed input. (You must still have 'Echo Sent Commands?' enabled in the [ConfigureWorldsDisplayMisc World Configuration].) Suggested by Emi.
   * Logfiles were always created using utf-8, rather than the correct charset for that connection.
+  * Custom /commands can now have single-character names. Requested by Kimiko.
+  * Scrolling on the home screen was broken - it didn't always scroll with the mousewheel, and clicking a link when you were scrolled down did nothing.
+  * The TinyURL code is now slightly simpler, and more in line with TinyURL's API Terms of Use.
   
   * Potato binaries are now built using Tcl/Tk 8.6.0, and some tweaks have been made to take advantage of new features in 8.6. If you're running Potato from source, it's recommended you [www.activestate.com/activetcl update your Tcl install] - the features listed below rely on it.
   * Support for connecting to IPv6 addresses.

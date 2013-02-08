@@ -26,7 +26,7 @@
   * Spawn windows didn't have mouse-over timestamps like the main output window. Reported by Damian Karver.
   * Events no longer add strings they send to the MUSH to the Input History. Suggested by analoghuman.
   * You can now [Logging log] the output buffer as HTML, to keep ANSI colours, etc.
-  * When the 'Activity in <World>' notifications were turned on, it was possible for stray timestamps to be left dotted throughout the output window, causing anything that used the timestamps (like hovering over a line, or logging) to throw an error. Reported by anony858.
+  * When the 'Activity in `<`World`>`' notifications were turned on, it was possible for stray timestamps to be left dotted throughout the output window, causing anything that used the timestamps (like hovering over a line, or logging) to throw an error. Reported by anony858.
   * Added an INSTALL file, for people who download the source and then don't know what to do with it.
   * Double-clicking a command in the Input History window now sends it directly to the MUSH, as it used to. Suggested by qa'toq.
   * Control+Alt+R resends the last command you typed to the MUSH. Suggested by qa'toq.
