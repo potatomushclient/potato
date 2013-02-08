@@ -10240,7 +10240,7 @@ proc ::potato::slashConfigSave {w} {
   set name $slashConfig($w,name)
 
   # Check for valid name
-  if { ![regexp -nocase {^[a-z][a-z0-9]{1,50}$} $name] } {
+  if { ![regexp -nocase {^[a-z][a-z0-9]{0,49}$} $name] } {
        {*}$error [T "That is not a valid name."]
        return;
      }
