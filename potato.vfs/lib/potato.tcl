@@ -6591,7 +6591,7 @@ proc ::potato::main {} {
   # Load TLS if available, for SSL connections
   if { [catch {package require tls 1.5-} reqtls errdict] } {
        set potato(hasTLS) 0
-       set potato(hasTLS1.6)
+       set potato(hasTLS1.6) 0
        errorLog "Unable to load TLS for SSL connecions: $reqtls" warning [errorTrace $errdict]
      } else {
        set potato(hasTLS) 1
