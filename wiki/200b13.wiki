@@ -1,7 +1,7 @@
 #summary Version 2.0.0b13
 
 =Version 2.0.0b13=
-==Not Yet Released==
+==Released February 28th 2013==
 
   * The input window sizes haven't been saved for some time, but now will be again. Reported by qa'toq, among others.
   * Fixed a potential bug in the SOCKS4 proxy code. Reported by Paige.
