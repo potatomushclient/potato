@@ -2,7 +2,7 @@
 
 = Downloading Tcl =
 
-Potato is written in [http://www.tcl.tk Tcl/Tk], an interpreted language available for many platforms. The [Downloads binary downloads] of Potato include a Tcl interpreter, so you don't need to install one. However, if you're [RunFromSource running Potato from SVN or the source], you'll need a copy of Tcl, too. Potato runs best on Tcl/Tk 8.6, but will also work on Tcl/Tk 8.5.
+Potato is written in [http://www.tcl.tk Tcl/Tk], an interpreted language available for many platforms. The [Downloads binary downloads] of Potato include a Tcl interpreter, so you don't need to install one. However, if you're [RunFromSource running Potato from SVN or the source], you'll need a copy of Tcl, too. Potato runs best on Tcl/Tk 8.6, but will also work on Tcl/Tk 8.5. It will *not* run with Tcl/Tk 8.4 or older.
 
 If you're running Windows or MacOS X and don't already have Tcl installed on your system, we recommend you install [http://www.activestate.com ActiveTcl], a full Tcl/Tk install from !ActiveState. This includes everything you need to start using Potato.
 
