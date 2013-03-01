@@ -8569,6 +8569,8 @@ proc ::potato::setUpBindings {} {
 
   # Use Return to send text. Inserting a newline is configurable with the insertNewline task
   bind PotatoInput <Return> "::potato::send_mushage %W 0 ; break"
+  # Make sure the keypad Enter key does the same thing
+  catch {bind PotatoInput <KP_Enter> [bind PotatoInput <Return>]}
 
   # Counteract the annoying case-sensitiveness of bindings
   foreach x [list Text PotatoInput PotatoOutput] {
