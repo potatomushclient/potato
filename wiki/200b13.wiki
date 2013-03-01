@@ -1,7 +1,7 @@
 #summary Version 2.0.0b13
 
 =Version 2.0.0b13=
-==Released February 28th 2013==
+==Released March 1st 2013==
 
   * The input window sizes haven't been saved for some time, but now will be again. Reported by qa'toq, among others.
   * Fixed a potential bug in the SOCKS4 proxy code. Reported by Paige.
@@ -33,6 +33,8 @@
   * Custom /commands can now have single-character names. Requested by Kimiko.
   * Scrolling on the home screen was broken - it didn't always scroll with the mousewheel, and clicking a link when you were scrolled down did nothing.
   * The TinyURL code is now slightly simpler, and more in line with TinyURL's API Terms of Use.
+  * Binaries are now built with a slightly different build of Tcl, which contains more complete timezone data. Fixes an issue reported by qa'toq.
+  * The keypad Enter key didn't work the same as the Return key on Linux. Reported by Julianna Rogers.
   
   * Potato binaries are now built using Tcl/Tk 8.6.0, and some tweaks have been made to take advantage of new features in 8.6. If you're running Potato from source, it's recommended you [www.activestate.com/activetcl update your Tcl install] - the features listed below rely on it.
   * Support for connecting to IPv6 addresses.
