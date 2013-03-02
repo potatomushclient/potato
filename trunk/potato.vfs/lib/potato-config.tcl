@@ -94,7 +94,7 @@ proc ::potato::setPrefs {readfile} {
   set world(0,beep,sound) "Once" ;# All, Once or None
 
   set world(0,temp) 0
-  set world(0,autoconnect) 0
+  set world(0,autoconnect) -1
 
   set world(0,top,font) TkFixedFont
   set world(0,top,bg) #000000
