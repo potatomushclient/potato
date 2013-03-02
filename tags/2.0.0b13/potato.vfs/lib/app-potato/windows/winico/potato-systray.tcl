@@ -1,6 +1,6 @@
 
 if { [catch {package require Winico 0.6} err errdict] } {
-     errorLog "Unable to load Winico: $err" warning [errorTrace $errdict]
+     ::potato::errorLog "Unable to load Winico: $err" warning [errorTrace $errdict]
      unset -nocomplain err errdict
      return;
    }
@@ -16,11 +16,11 @@ if { [catch {set ::potato::systray(main) [winico createfrom $::potato::systray(m
    }
 
 set ::potato::systray(menu) [menu .systray -tearoff 0]
-$::potato::systray(menu) add command -label [T "Restore"] -command ::potato::winicoRestore
+$::potato::systray(menu) add command -label [::potato::T "Restore"] -command ::potato::winicoRestore
 $::potato::systray(menu) add separator
-$::potato::systray(menu) add command -label [T "Hide Icon"] -command ::potato::hideSystrayIcon
+$::potato::systray(menu) add command -label [::potato::T "Hide Icon"] -command ::potato::hideSystrayIcon
 $::potato::systray(menu) add separator
-$::potato::systray(menu) add command -label [T "Exit"] -command ::potato::chk_exit
+$::potato::systray(menu) add command -label [::potato::T "Exit"] -command ::potato::chk_exit
 
 set ::potato::systray(mapped) 0
 set ::potato::systray(flashing) 0
