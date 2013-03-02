@@ -36,7 +36,7 @@
   * Binaries are now built with a slightly different build of Tcl, which contains more complete timezone data. Fixes an issue reported by qa'toq.
   * The keypad Enter key didn't work the same as the Return key on Linux. Reported by Julianna Rogers.
   
-  * Potato binaries are now built using Tcl/Tk 8.6.0, and some tweaks have been made to take advantage of new features in 8.6. If you're running Potato from source, it's recommended you [www.activestate.com/activetcl update your Tcl install] - the features listed below rely on it.
+  * Potato binaries are now built using Tcl/Tk 8.6.0, and some tweaks have been made to take advantage of new features in 8.6. If you're running Potato from source, it's recommended you [http://www.activestate.com/activetcl update your Tcl install] - the features listed below rely on it.
   * Support for connecting to IPv6 addresses.
   * On MacOS X, Potato will now bounce the application dock icon when there's new activity.
   * Possibly-better-looking tooltips on X11.
