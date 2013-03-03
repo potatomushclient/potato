@@ -4,6 +4,7 @@ if { $::tcl_platform(platform) ne "windows" } {
    }
 
 if { [catch {package require potato-winflash}] } {
+tk_messageBox -message "Ack!"
      return;
    }
 namespace eval ::potato {}

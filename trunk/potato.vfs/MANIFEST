@@ -1,0 +1,51 @@
+File                         Desc
+---------------------------  -------------------------------------
+main.tcl                     Launch script for running Potato from source
+INSTALL                      Instructions for installing Tcl/Tk and running Potato
+LICENSE                      The MIT License. This file MUST be distributed with all copies of the source. 
+MANIFEST                     This file
+
+
+lib/potato.tcl               The main code for Potato
+lib/potato-version.tcl       [return]s the current Potato version
+lib/potato-font.tcl          Potato's font dialog, used on Tk 8.5
+lib/potato-skin.tcl          GUI-related code
+lib/potato-telnet.tcl        Telnet parsing code
+lib/potato-proxy.tcl         Base Proxy support code
+lib/potato-proxy-SOCKS4.tcl  SOCKS4-specific Proxy code
+lib/potato-spell.tcl         Spell-checking code
+lib/potato-encoding.tcl      Routines for conversion between different encodings
+lib/potato-events.tcl        Code for dealing with Potato's Events
+lib/potato-config.tcl        Code for dealing with the configuration (and configuring) of Potato
+lib/potato-wikihelp.tcl      Code for parsing and displaying helpfiles in Google Code Wiki format
+
+lib/images/                  A numer of image files used by Potato
+  flags/                     Images of flags, used in the Change Language window
+
+lib/help/                    The new helpfiles, from the Google Code site wiki
+
+lib/i18n/                    Translation files for Potato's messages
+
+lib/app-potato/              Addition libraries/extensions
+  pkgIndex.tcl               The pkgIndex for all the additional potato-* files
+  windows/                   Contains MS Windows-specific extensions
+    tls/                     TLS extension, for SSL connections
+    winflash/                The Winflash extension, and windows-specific potato-flash
+    winico/                  The Winico extension, and Windows-specific potato-systray
+    stpotato.ico             New icon used in the systray by winico
+    potato2.ico              Old icon used in the systray by winico
+  linux/                     Contains Linux-specific extensions
+    linflash1.0/             The linflash package's source code, for flashing the taskbar icon on Linux
+    flash/                   Linux-specific potato-flash
+  macosx/                    Mac OS X specific extensions
+    potato.icns              Normal Potato icon in Mac format
+    warning.icns             A 'Warning' icon for activity alerts, in Mac format
+    tkdock1.0/               The tkdock package, to manipulate Potato's dock icon
+    flash/                   Mac-specific potato-flash
+    tls/                     TLS for Mac
+   
+
+/tools/                          Holds scripts used for working with Potato
+  potato-translate-template.tcl  Creates a template file containing all the messages in Potato which are translated
+  potato-translate-merge.tcl     Merges an existing translation file with a template file
+  potato-template.txt            A blank template file for Potato translations
