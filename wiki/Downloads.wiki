@@ -20,9 +20,8 @@ Linux binaries are no longer provided, as they actually proved more troublesome 
 
 As of version 2.0.0b12, a *[http://code.google.com/p/potatomushclient/downloads/list?can=2&q=OpSys%3AOSX+Featured MacOS X .dmg binary]* is available. These binaries are provided by Yuriko.
 
-You can also run Potato on MacOS X, [RunFromSource from SVN, a Starkit or the source].
+You can also run Potato on the Mac [RunFromSource from SVN, a Starkit or the source].
 
-As I don't have access to a Mac myself, Potato is less-tested on MacOS.
 ==Source==
 
 You can also download the [http://code.google.com/p/potatomushclient/downloads/list?can=3&q=Type%3ASource+&colspec=Filename+Summary+Uploaded+Size+DownloadCount+Type source code] for the latest version, or download a [http://code.google.com/p/potatomushclient/downloads/list?can=3&q=Type%3AStarkit&colspec=Filename+Summary+Uploaded+Size+DownloadCount+Type Starkit archive]. To run from source, you'll need to have [GettingTcl Tcl/Tk] installed on your computer.
