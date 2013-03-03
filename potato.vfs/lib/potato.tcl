@@ -6419,6 +6419,25 @@ proc ::potato::bgError {msg errdict} {
 
 };# ::potato::bgError
 
+#: proc ::potato::checkbits
+#: desc Try to check whether the currently-running Tcl interpreter is 32- or 64-bit, and store
+#: the result in a variable. This uses far too much guess-work for my liking.
+#: return 32 or 64
+proc ::potato::checkbits {} {
+  global tcl_platform;
+  variable potato;
+
+  if { $tcl_platform(pointerSize) <= 4 } {
+       set bits 32
+     } else {
+       set bits 64
+     }
+
+  set potato(bits) $bits
+  return $bits;
+
+};# ::potato::checkbits
+
 #: proc ::potato::main
 #: desc called when the program starts, to do some basic init
 #: return nothing
@@ -6438,6 +6457,8 @@ proc ::potato::main {} {
   set potato(version) [source [file join [file dirname [info script]] "potato-version.tcl"]]
   set potato(contact) "talvo@talvo.com"
   set potato(webpage) "http://code.google.com/p/potatomushclient/"
+
+  checkbits
 
   set potato(appPrefVersion) 2
 
@@ -12236,7 +12257,7 @@ proc ::potato::showPackageInfo {} {
   $t insert end "System Info:\n" title
   $t insert end "Platform:" bolded " $tcl_platform(platform)\n"
   $t insert end "OS:" bolded " $tcl_platform(os) ($tcl_platform(osVersion))\n"
-  $t insert end "Machine:" bolded " $tcl_platform(machine)\n"
+  $t insert end "Machine:" bolded " $tcl_platform(machine) ([checkbits]-bit)\n"
   $t insert end "Windowing System:" bolded " [tk windowingsystem]\n"
 
   $t insert end "\n"

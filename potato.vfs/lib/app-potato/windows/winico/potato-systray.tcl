@@ -1,6 +1,6 @@
 
 if { [catch {package require Winico 0.6} err errdict] } {
-     ::potato::errorLog "Unable to load Winico: $err" warning [errorTrace $errdict]
+     ::potato::errorLog "Unable to load Winico: $err" warning [::potato::errorTrace $errdict]
      unset -nocomplain err errdict
      return;
    }

@@ -20,12 +20,18 @@ You can also check out the source via SVN for the latest changes.
 
 2) Installing Tcl/Tk
 --------------------
+Potato requires Tcl/Tk to run. Tcl/Tk 8.6.0 is the recommended minimum
+version, as it adds a number of useful new features, though for the time
+being, 8.5 still works as well.
+
   a) Windows
   ----------
-  On Windows, you can download TclKit, a single-file Tcl/Tk executable, from
-  http://tclkit.googlecode.com/files/tclkit-8.5.9-win32.upx.exe
-  Place this .exe in the "potato.vfs" directory where this INSTALL file is
-  located.
+  On Windows, the easiest way to install Tcl is ActiveState's ActiveTcl
+  (see 'c' below). Alternatively, you can download a Tclkit, a single-file
+  Tcl/Tk executable, from http://www.patthoyts.tk/tclkit/win32-ix86/
+  Select the highest version number (currently 8.6.0) and download the
+  tclkit-gui*.exe file. Place this .exe in the "potato.vfs" directory where 
+  this INSTALL file is located.
 
   b) Linux
   --------
@@ -43,10 +49,13 @@ You can also check out the source via SVN for the latest changes.
 
      emerge tcl tk
      emerge dev-tcltk/tls
+     
+  Many Linux package managers still contain Tcl 8.5; in this case, Tcl 8.6
+  can be obtained by installing ActiveTcl (see 'c' below).
   
-  c) c) All platforms (Windows, Linux or MacOS X)
+  c) All platforms (Windows, Linux or MacOS X)
   -----------------------------------------------
-  You can also obtain ActiveTcl 8.5 for Windows, Linux or MacOS X from
+  You can also obtain ActiveTcl 8.6 for Windows, Linux or MacOS X from
   ActiveState at http://www.activestate.com/activetcl/downloads
   
   ActiveTcl is a full Tcl and Tk installation.
@@ -80,6 +89,9 @@ at talvo@talvo.com
 If you find a bug or would like to request a feature, please open a ticket
 on the issue tracker at http://code.google.com/p/potatomushclient/issues/list
 
-Thanks for downloading Potato, and I hope you find it useful
+Thanks for downloading Potato, and I hope you find it useful!
+
+If you do find Potato useful, and are interested in making a donation towards
+its development, please visit www.potatomushclient.com/donate.php
 
 -- Mike Griffiths (Talvo)
