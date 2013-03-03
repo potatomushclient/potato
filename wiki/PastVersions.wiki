@@ -4,6 +4,7 @@
 
 Below is a list of past releases of Potato. Select a version to see changes.
 
+  * [200b14 Version 2.0.0b14]
   * [200b13 Version 2.0.0b13]
   * [200b12 Version 2.0.0b12]
   * [200b11 Version 2.0.0b11]
