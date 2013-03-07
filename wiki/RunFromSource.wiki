@@ -4,7 +4,7 @@
 
 The simplest way to run Potato is using a [Downloads binary], which contains the Potato source and a Tcl interpreter in a single file. However, if you don't wish to do this (either because a binay is not available for your platform, because you already have Tcl installed on your system, or because you wish to make changes to the source), you can run Potato from source. There are three ways to do this:
 
-  * Download the [Downloads#Source source code]
+  * Download the [http://code.google.com/p/potatomushclient/downloads/list?can=3&q=Type%3ASource+&colspec=Filename+Summary+Uploaded+Size+DownloadCount+Type source code]
   * Checkout from SVN
   * Download the [Downloads#Source Starkit], a single-file archive of the Potato source code. Not suitable if you want to modify the Potato code!
 
