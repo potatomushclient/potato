@@ -2477,7 +2477,7 @@ proc ::potato::connZero {} {
   set textpos2 [expr {((700 - $textpos)/2)+$textpos}]
 
   connZeroAddText $canvas $textpos2 y 1 $potato(name) [list Tahoma 18 bold] [list h1] -width 350
-  connZeroAddText $canvas $textpos2 y 1 [T "The Graphical MU* Client for Windows and Linux"] \
+  connZeroAddText $canvas $textpos2 y 1 [T "The Graphical MU* Client for Windows, Linux and MacOS X"] \
     [list Tahoma 16 bold] [list h2] -width 350
   connZeroAddText $canvas $textpos2 y 1 [T "Version %s. Written by Mike Griffiths (%s)" $potato(version) $potato(contact)] \
     [list Tahoma 9 bold] [list h3] -width 350
@@ -2671,12 +2671,12 @@ proc ::potato::connZeroFact {} {
     "Potato is the only MUSH client with two input windows." \
     "You can use /commands to perform custom actions when Events run." \
     "You can make Potato your default Telnet client on Windows. You probably can on Linux, too, but I couldn't tell you how." \
-    "Potato runs on Windows and Linux." \
+    "Potato runs on Windows, Linux and MacOS X." \
     "You can force Potato to load/save its configuration and world files in the same directory as the Potato executable or source code by using the --local command line option. This is useful if you're running it on a flash drive." \
     "Potato can run in any language, and there are now translations available for more than 2 languages! (OK, so that's not a lot.) If you'd like to help translate Potato into another language, please let us know." \
     "If you have ASpell installed on your computer, Potato can use it to perform spellchecking." \
     "Potato can log as HTML to preserve ANSI colours in the output." \
-    "Potato is the only modern graphical MU* client that runs on Windows and Linux natively. It should run on MacOS X, too, though it's not as heavily tested." \
+    "Potato is the only modern graphical MU* client that runs on Windows, Linux and MacOS X natively." \
     "Potato has full Unicode support, allowing you to MU* in any language on games which support it, such as TinyMUXes." \
   ]
 
@@ -2686,7 +2686,7 @@ proc ::potato::connZeroFact {} {
     "If Potato can't do it, nobody can. Or maybe you'll want to submit a feature request." \
     "'Potato' is the only word which is pronounced exactly the same in every language on the planet, except for the word 'gullible'." \
     "It's rumoured that the man in our logo, Mr Potato, is the illegitimate son of Mr Peanut, though this has never been substantiated." \
-    "Anyone who donates towards Potato's development can request a signed photo of the Potato mascot, Mr Potato." \
+    "Anyone who donates towards Potato's development can request a signed photo of the Potato mascot, Mr Potato. Donations can be made through Paypal via the Help menu." \
   ]
 
   set allfacts [concat $food $client $stupid]
@@ -2704,6 +2704,7 @@ proc ::potato::connZeroFact {} {
 #: desc Handle a click on a link in the connZero canvas $win, either to connect to a world, open the address book or add a new world
 #: return nothing
 proc ::potato::connZeroClick {win x y} {
+  variable world;
 
   set index [$win find withtag hoverTag]
   if { [llength $index] != 1 } {
@@ -2725,9 +2726,10 @@ proc ::potato::connZeroClick {win x y} {
   if { [string range $tag 0 4] == "world" } {
        set id [string range $tag 5 end]
        if { [string is integer -strict $id] } {
-            potato::newConnectionDefault $id
+            $win itemconfig $index -fill $world(0,ansi,link)
             $win dtag hoverTag
             $win config -cursor {}
+            potato::newConnectionDefault $id
             return;
           }
      }
@@ -2936,7 +2938,9 @@ proc ::potato::connect {c first} {
          if { [catch {::potato::proxy::${proxy}::connect $fid [lindex $x 0] [lindex $x 1]} msg] } {
               outputSystem $c $msg
               catch {ioClose $fid}
-              set conn($c,id) ""
+              if { [info exists conn($c,id)] } {
+                   set conn($c,id) ""
+                 }
               continue;
             }
           # Successful proxy connection! Huzzah!
@@ -2958,7 +2962,9 @@ proc ::potato::connect {c first} {
           switch $res {
             -1 {
                 catch {ioClose $fid}
-                set conn($c,id) ""
+                if { [info exists conn($c,id)] } {
+                     set conn($c,id) ""
+                   }
                 return 0;
                 # Cancelled
                }
@@ -2968,7 +2974,10 @@ proc ::potato::connect {c first} {
              default {# Error.
                       outputSystem $c [T "Unable to connect to host %s:%d: %s" $host $port $res]
                       catch {ioClose $fid}
-                      set conn($c,id) ""
+                      if { [info exists conn($c,id)] } {
+                           # In case the connection has been closed
+                           set conn($c,id) ""
+                         }
                       continue;
                      }
           }
@@ -3006,12 +3015,16 @@ proc ::potato::connect {c first} {
                 if { ![info exists conn($c,ssl-handshake)] } {
                      # Well, this shouldn't happen
                      catch {ioClose $fid}
-                     set conn($c,fid) ""
+                     if { [info exists conn($c,id)] } {
+                          set conn($c,fid) ""
+                        }
                      return;
                    } elseif { $conn($c,ssl-handshake) eq "disconnect" } {
                      # Connection has been disconnected by user
                      outputSystem $c [T "Connection cancelled."]
-                     set conn($c,id) "";# just to be safe
+                     if { [info exists conn($c,id)] } {
+                          set conn($c,id) "";# just to be safe
+                        }
                      return;
                    }
                 if { $conn($c,ssl-handshake) ne "complete" } {
