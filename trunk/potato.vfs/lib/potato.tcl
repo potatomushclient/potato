@@ -8657,7 +8657,7 @@ proc ::potato::TextInsert {win char} {
   if { [::tk::TextCursorInSelection $win] } {
        set compound 1
        set indices [list sel.first sel.last]
-     } elseif { $overtype } {
+     } elseif { $overtype && [$win get insert] ni [list "" "\r" "\n"] } {
        set compound 1
        set indices [list insert]
      }
