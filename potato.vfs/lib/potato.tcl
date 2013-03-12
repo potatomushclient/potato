@@ -8565,8 +8565,8 @@ proc ::potato::setUpBindings {} {
        bind Text <Control-a> {%W tag add sel 1.0 end-1c; %W mark set insert end-1c; %W see insert; break}
      } else {
        bind Text <<SelectAll>> {%W tag add sel 1.0 end-1c; %W mark set insert end-1c; %W see insert; break}
-       catch {event add <<SelectAll>> <Control-a>}
-       catch {event add <<SelectAll>> <Control-A>}
+       catch {event delete <<LineStart>> <Control-a> <Control-A>}
+       catch {event add <<SelectAll>> <Control-a> <Control-A>}
      }
 
   # stop Tile buttons taking focus when clicked
