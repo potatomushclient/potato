@@ -3784,6 +3784,12 @@ proc ::potato::get_mushageProcess {c line} {
 
   # Flatten
   set inserts [flattenParsedANSI $tagged $tagList]
+  if { [llength $inserts] % 2 } {
+       # Make sure $inserts always has an even number of elements.
+       # If the final element has no tags, add an empty element to
+       # signify that.
+       lappend inserts ""
+     }
 
   if { !$empty && $world($w,ansi,force-normal) } {
        # Force explicit ANSI-normal at the end of the line
@@ -3837,10 +3843,10 @@ proc ::potato::get_mushageProcess {c line} {
          set swidget [lindex $x 1]
          set aE [atEnd $swidget]
          if { [$swidget count -chars 1.0 3.0] != 1 } {
-              $swidget insert end "\n" ""
+              $swidget insert end "\n" "" {*}$inserts [clock seconds] [list timestamp]
+            } else {
+              $swidget insert end {*}$inserts [clock seconds] [list timestamp]
             }
-         $swidget insert end "" "" {*}$inserts
-         $swidget insert end [clock seconds] [list timestamp]
          if { !$noActivity } {
               ::skin::$potato(skin)::spawnUpdate $c $sname
             }
@@ -7098,6 +7104,10 @@ proc ::potato::showMessageTimestamp {widget x y} {
        return;
      }
   set timestamp [$widget get {*}$stamp]
+  if { $timestamp eq "" || [catch {clock format $timestamp -format $misc(clockFormat)} disp] } {
+       # No timestamp
+       return;
+     }
   # Find coords to show it
   set coords [$widget bbox $index]
   if { [llength $coords] < 2 || [lindex $coords 0] eq "" || [lindex $coords 1] eq "" } {
@@ -7106,7 +7116,8 @@ proc ::potato::showMessageTimestamp {widget x y} {
      }
   set x [expr {[lindex $coords 0] + [winfo rootx $widget]}]
   set y [expr {[lindex $coords 1] + [winfo rooty $widget]}]
-  tooltipEnter $widget 900 [clock format $timestamp -format $misc(clockFormat)] $x $y
+
+  tooltipEnter $widget 900 $disp $x $y
 
   return;
 
