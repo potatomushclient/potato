@@ -1,0 +1,14 @@
+#summary Version 2.0.0b14
+
+=Version 2.0.0b14=
+==Not Yet Released==
+
+  * Some slight modifications to the winflash code, for flashing the taskbar on Windows.
+  * 64-bit versions of winflash, winico and tls provided by Givur, so that I can do native 64-bit Windows releases. Thank you, Givur!
+  * Moved the MANIFEST file to a more sensible location, at the bottom of the directory tree.
+  * Updated INSTALL file to recommend Tcl 8.6 and link to newer Tclkits for Windows.
+  * Added a 'Donate' link in the Help menu. Suggested by qa'toq.
+  * Overtype mode no longer lets you type over a carriage return/newline.
+  * Control+A didn't always do "Select All" on Linux. Reported by Muse.
+  * Inserts into spawn windows could happen in the wrong order, causing timestamps to be missed and errors to be thrown when Potato tried to display them. Reported by Merin.
+  * When multiple events are matched, the text will be Omitted from Display if this option is enabled for any event, instead of only checking the first; this is more useful. Suggested by Merin.
