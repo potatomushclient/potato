@@ -151,13 +151,17 @@ proc ::potato::eventsMatch {c _tagged _lineNoansi _eventInfo} {
              !set eventInfo(spawnTo) [process_slash_cmd $c spawnTo 2 realArgs]
            }
 
-        !set eventInfo(omit) $world($w,events,$event,omit)
-
-        if { [info exists world($w,events,$event,noActivity)] } {
-             !set eventInfo(noActivity) $world($w,events,$event,noActivity)
+        if { [info exists world($w,events,$event,omit)] && $world($w,events,$event,omit) } {
+             set eventInfo(omit) 1
            }
 
-        !set eventInfo(log) $world($w,events,$event,log)
+        if { [info exists world($w,events,$event,noActivity)] && $world($w,events,$event,noActivity) } {
+             set eventInfo(noActivity) 1
+           }
+
+        if { [info exists world($w,events,$event,log)] && $world($w,events,$event,log) } {
+             set eventInfo(log) 1
+           }
 
         if { $world($w,events,$event,fg) ne "" } {
              for {set i $start} {$i <= $end} {incr i} {
