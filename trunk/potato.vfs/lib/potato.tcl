@@ -8588,6 +8588,8 @@ proc ::potato::setUpBindings {} {
   bind TButton <FocusIn> {%W instate !disabled {%W state [list active focus]}}
   bind TButton <FocusOut> {%W instate !disabled {%W state [list !active !focus]}}
 
+  bind Text <<Paste>> [list ::potato::textPaste %W]
+
   # Copy some bindings from Text to PotatoOutput, so we can remove the 'Text' bindtags from it.
   # (safer to copy those we want than block those we don't, as more we don't want might be added later)
   # Virtual events at the end are new in Tk 8.6 and replace some of the fixed bindings
@@ -8792,6 +8794,31 @@ proc ::potato::textCopy {win} {
   return;
 
 };# ::potato::textCopy
+
+#: proc ::potato::textPaste
+#: arg win widget path
+#: desc Perform a 'Paste' on the text widget $win. Based on Tk's built-in tk_textPaste
+#: return nothing
+proc ::potato::textPaste {win} {
+
+  if { [catch {::tk::GetSelection $win CLIPBOARD} sel] } {
+       return;
+     }
+  set oldSeparator [$win cget -autoseparators]
+  if { $oldSeparator } {
+       $win configure -autoseparators 0
+       $win edit separator
+     }
+  catch {$win delete sel.first sel.last}
+  $win insert insert $sel
+  if { $oldSeparator } {
+       $win edit separator
+       $win configure -autoseparators 1
+     }
+
+  return;
+
+};# ::potato::textPaste
 
 #: proc ::potato::activeTextWidget
 #: desc Return the text widget currently displayed in the main window. We need to ask the skin, as they may be displaying a spawn window instead.
