@@ -7293,7 +7293,7 @@ proc ::potato::showMSSP {} {
 
   # Build list
   foreach x [lsort -dictionary -index 0 $conn($c,telnet,mssp)] {
-     $tree insert {} end -values [list $x]
+     $tree insert {} end -values $x
   }
 
   return;
