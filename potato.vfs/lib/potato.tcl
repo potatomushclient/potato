@@ -4732,6 +4732,7 @@ proc ::potato::closeConn {{c ""} {autoDisconnect 0} {prompt 1}} {
                 -message [T "Do you want to save this world for later?"]]
             if { $ans eq "yes" } {
                  set world($w,temp) 0
+                 saveWorlds
                } elseif { $ans eq "cancel" } {
                  return;
                }
@@ -7259,22 +7260,23 @@ proc ::potato::connIDs {{includeDefault 0}} {
 };# ::potato::connIDs
 
 #: proc ::potato::showMSSP
-#: desc Show MSSP info for the current connection.
+#: arg c connection id
+#: desc Show MSSP info for connection $c.
 #: return nothing
-proc ::potato::showMSSP {} {
+proc ::potato::showMSSP {{c ""}} {
   variable conn;
   variable world;
 
-  set c [up]
+  if { $c eq "" } {
+       set c [up]
+     }
   if { ![info exists conn($c,telnet,mssp)] || ![llength $conn($c,telnet,mssp)] } {
        bell -displayof .
        return;
      }
 
   set win .mssp$c
-  if { [reshowWindow $win] } {
-       return;
-     }
+  catch {destroy $win}
   toplevel $win
   registerWindow $c $win
   wm title $win [T "MSSP Info for \[%d. %s\]" $c $world($conn($c,world),name)]
