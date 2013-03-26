@@ -1563,8 +1563,7 @@ proc ::potato::doLog {c file append buffer leave timestamps html echo} {
      }
 
   set file [file nativename [file normalize $file]]
-  set err [catch {open $file $mode} fid]
-  if { $err } {
+  if { [catch {file mkdir [file dirname $file]} fid] || [catch {open $file $mode} fid] } {
        outputSystem $c "Unable to log to \"$file\": $fid"
        return;
      }
