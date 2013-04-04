@@ -186,6 +186,9 @@ proc ::potato::manageWorldVersionNew {w} {
 
   # This should always be last.
   set world($w,version) $potato(worldVersion)
+  if { [info exists world($w,groups)] } {
+       set world($w,groups) [lsearch -all -inline -not -glob $world($w,groups) "INT:*"]
+     }
 
   return;
 
@@ -5179,7 +5182,7 @@ proc ::potato::manageWorldsDragDrop {{cancel 0}} {
 proc ::potato::manageWorldsTwiddleGroup {groups groupid {count 0}} {
   variable manageWorlds;
 
-  if { ![winfo exists $groups] || ![$groups exists $groupid] } {
+  if { ![winfo exists $groups] || ![$groups exists $groupid] || [string match "INT:*" $groupid] } {
        return;
      }
 
@@ -5442,6 +5445,11 @@ proc ::potato::manageWorldsBtn {type win} {
        }
      } elseif { $type eq "delgroup" } {
        set sel [lindex [$manageWorlds(gTree) sel] 0]
+       if { [string match "INT:*" $sel] || $sel eq "" } {
+            tk_messageBox -parent $manageWorlds(toplevel) -title [T "Delete Group?"] \
+              -icon error -type ok -message [T "You cannot delete that group."]
+            return 0;
+          }
        set ans [tk_messageBox -parent $manageWorlds(toplevel) -title [T "Delete Group?"] \
              -icon question -type yesno -message [T "Do you really want to delete the group \"%s\"?" $sel]]
        if { $ans eq "yes" } {
@@ -6632,7 +6640,11 @@ proc ::potato::main {} {
   if { [catch {package require tls 1.5-} reqtls errdict] } {
        set potato(hasTLS) 0
        set potato(hasTLS1.6) 0
-       errorLog "Unable to load TLS for SSL connecions: $reqtls" warning [errorTrace $errdict]
+       set tlserr "Unable to load TLS for SSL connections: $reqtls"
+       if { $::tcl_platform(platform) eq "linux" } {
+            append tlserr "  (You may need to install the 'tcl-tls' package from your package manager.)"
+          }
+       errorLog $tkserr warning [errorTrace $errdict]
      } else {
        set potato(hasTLS) 1
        # For some reason, some TLS 1.5.0s in Linux apparantly report themselves as
@@ -7083,6 +7095,12 @@ proc ::potato::showMessageTimestamp {widget x y} {
 
   if { ![info exists tooltip($widget)] } {
        set tooltip($widget) 0
+     }
+
+  if { !$misc(showTimestamps) } {
+       # Don't display it
+       tooltipLeave $widget
+       return;
      }
 
   set index [$widget index @$x,$y]

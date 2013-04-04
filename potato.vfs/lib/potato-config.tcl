@@ -188,6 +188,8 @@ proc ::potato::setPrefs {readfile} {
 
   set misc(connZeroInputWindows) 1
 
+  set misc(showTimestamps) 1
+
   set misc(autoConnect) 1 ;# should we run autoconnects?
 
   set misc(checkForUpdates) 1
@@ -1059,6 +1061,13 @@ $sub.cb state disabled
        pack [::ttk::checkbutton $sub.c -variable ::potato::worldconfig(MISC,connZeroInputWindows) \
                           -onvalue 1 -offvalue 0] -side left
        set potato::worldconfig(MISC,connZeroInputWindows) $misc(connZeroInputWindows)
+
+       pack [set sub [::ttk::frame $frame.showTimestamps]] -side top -pady 5 -anchor nw
+       pack [::ttk::label $sub.l -text [T "Show Message Timestamps?"] -width $lW -anchor w -justify left] -side left
+       pack [::ttk::checkbutton $sub.c -variable ::potato::worldconfig(MISC,showTimestamps) \
+                          -onvalue 1 -offvalue 0] -side left
+       set potato::worldconfig(MISC,showTimestamps) $misc(showTimestamps)
+
 
      }
 
