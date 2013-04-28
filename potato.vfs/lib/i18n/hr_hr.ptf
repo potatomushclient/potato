@@ -2,60 +2,75 @@
 # Untranslated strings:
 
 %s reloaded successfully.
--
+%s - uspješno ponovno učitano.
+
+&Donate to Potato's Development
+&Doniraj za Potato-ov Razvoj
 
 Address Book
--
+Adresar
 
 Connect To World
--
+Spoji Se Na Svijet
 
 Connection attempt cancelled. - %s
--
+Pokušaj veze obustavljen. - %s
 
 Connection cancelled.
--
+Veza obustavljena.
 
 Log input?
--
+Logiraj unos?
 
 No
--
+Ne
 
 Package Info
--
+Podaci o Paketima
 
 Persist Prompts?
--
+Ustrajni Promptovi?
 
 Report Errors?
--
+Prijavljuj Greške?
 
 Send null-byte keepalives?
--
+Šalji nul-bajtove za održavanje veze?
 
 Show Input Wins on Startup?
--
+Prikazuj Prozore Za Unos Pri Pokretanju?
+
+Show Message Timestamps?
+Prikazuj Vremenske Oznake Poruka?
 
 Show Package Info
--
+Prikaži Podatke o Paketima
 
 Spawn already exists.
--
+Spawn već postoji.
+
+The Graphical MU* Client for Windows, Linux and MacOS X
+Grafički MU* Klijent za Windowse, Linux i MacOS X
 
 Toggle Spawn Windows
--
+Prebaci Između Spawn Prozora
 
 Unable to open \"%s\": %s
--
+Ne mogu otvoriti \"%s\": %s
 
 Unable to save to \"%s\": %s
--
+Ne mogu snimiti \"%s\": %s
+
+You cannot delete that group.
+Ne možeš obrisati tu grupu.
 
 # Obsolete strings:
 
 Manage Worlds
 Podesi Svjetove
+
+The Graphical MU* Client for Windows and Linux
+Grafički MU* Klijent za Windowse i Linux
 
 # Existing translations:
 
@@ -1612,9 +1627,6 @@ To nije ispravno ime.
 
 That name is already in use.
 To ime se već koristi.
-
-The Graphical MU* Client for Windows and Linux
-Grafički MU* Klijent za Windowse i Linux
 
 The Keyboard Shortcut '%s' is already in use by the task '%s'. Do you want to override it?
 Tipkovničnu prečicu '%s' već koristi proces '%s'. Želiš li ga spriječiti?
