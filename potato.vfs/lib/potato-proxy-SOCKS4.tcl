@@ -89,7 +89,7 @@ proc ::potato::proxy::SOCKS4::callback {fid host port resvar} {
   # Failed. Try and give a specific reason why...
   unset state($fid)
   if { $status eq "\x5c" || $status eq "\x5d" } {
-       set $restvar [::potato::T "identd not running/user ID could not be verified"]
+       set $resvar [::potato::T "identd not running/user ID could not be verified"]
      } else {
        set $resvar [::potato::T "Proxy server rejected request for %s:%d" $host $port]
      }
