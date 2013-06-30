@@ -17,3 +17,4 @@
   * When logging via /log, Potato would give a "No such file" error if the directory to log to didn't exist, instead of creating it. Reported by The Dreaming Gecko.
   * You can now disable timestamps when hovering over received text. Suggested by Frakir.
   * Fixed a typo in the SOCKS4 Proxy code. Reported by Paige.
+  * Fixed a bug in viewing spawn windows via the View menu when the Spawn Toolbar is turned off. Reported by tsen.
