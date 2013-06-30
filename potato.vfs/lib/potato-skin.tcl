@@ -1658,7 +1658,7 @@ proc ::skin::potato::showSpawn {c spawn} {
   raise $t
   $t configure -yscrollcommand [list $widgets(conn,$c,txtframe,sb) set]
   $widgets(conn,$c,txtframe,sb) configure -command [list $t yview]
-  if { $disp($c) ne "" } {
+  if { $disp($c) ne ""  && [winfo exists $widgets(spawnbar).spawn_$disp($c)] } {
        $widgets(spawnbar).spawn_$disp($c) configure -image ::skin::potato::img::spawnbarUp
      }
 
