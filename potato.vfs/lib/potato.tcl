@@ -6644,7 +6644,7 @@ proc ::potato::main {} {
        if { $::tcl_platform(platform) eq "linux" } {
             append tlserr "  (You may need to install the 'tcl-tls' package from your package manager.)"
           }
-       errorLog $tkserr warning [errorTrace $errdict]
+       errorLog $tlserr warning [errorTrace $errdict]
      } else {
        set potato(hasTLS) 1
        # For some reason, some TLS 1.5.0s in Linux apparantly report themselves as
