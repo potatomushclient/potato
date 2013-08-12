@@ -304,7 +304,7 @@ proc ::potato::saveWorlds {} {
      lappend temp [list $w $world($w,name)]
   }
   if { ![info exists temp] } {
-       return;# no worlds to save
+       return 1;# no worlds to save
      }
   set temp [lsort -index 1 -dictionary $temp]
 
