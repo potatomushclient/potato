@@ -1,7 +1,7 @@
 #summary Version 2.0.0b14
 
 =Version 2.0.0b14=
-==Not Yet Released==
+==Released August 12th 2013==
 
   * Some slight modifications to the winflash code, for flashing the taskbar on Windows.
   * 64-bit versions of winflash, winico and tls provided by Givur, so that I can do native 64-bit Windows releases. Thank you, Givur!
@@ -10,7 +10,7 @@
   * Added a 'Donate' link in the Help menu. Suggested by qa'toq.
   * Overtype mode no longer lets you type over a carriage return/newline.
   * Control+A didn't always do "Select All" on Linux. Reported by Muse.
-  * Inserts into spawn windows could happen in the wrong order, causing timestamps to be missed and errors to be thrown when Potato tried to display them. Reported by Merin.
+  * Inserts into spawn windows could happen in the wrong order, causing timestamps to be missed and errors to be thrown when Potato tried to display them. Reported by Merin and others.
   * When multiple events are matched, the text will be Omitted from Display if this option is enabled for any event, instead of only checking the first; this is more useful. Suggested by Merin.
   * When you have text selected and paste something, the selection is overridden. This always happened on Windows, but not on Linux. Reported by Muse.
   * MSSP info was displayed incorrectly. Reported by Lionel@M`*`U`*`S`*`H.
