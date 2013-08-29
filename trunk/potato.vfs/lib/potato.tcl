@@ -10789,7 +10789,7 @@ proc ::potato::parse_slash_cmd {c _str mode _vars} {
        return [list 0 "" ""];
      }
 
-  # Copied from process_slash_command
+  # Copied from process_slash_command. Really shouldn't be copied, but defined somewhere it can be reused.
   array set modes [list default 0 recursing 1 field 2]
 
   set cmd ""

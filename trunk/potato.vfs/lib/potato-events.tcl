@@ -184,7 +184,7 @@ proc ::potato::eventsMatch {c _tagged _lineNoansi _eventInfo} {
            }
 
         set send $world($w,events,$event,send)
-        set send [process_slash_cmd $c send 2 realArgs]
+        set send [process_slash_cmd $c send 0 realArgs]
         if { $send ne "" } {
              lappend eventInfo(send) $send
            }
