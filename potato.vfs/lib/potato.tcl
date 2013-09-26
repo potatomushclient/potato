@@ -10158,7 +10158,7 @@ proc ::potato::setUserVar {c global str} {
 proc ::potato::unsetUserVar {c global varName} {
   variable conn;
 
-  if { [string index $str 0] eq "_" } {
+  if { [string index $varName 0] eq "_" } {
        return;
      }
 
