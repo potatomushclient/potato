@@ -15,7 +15,7 @@ You can also use a Custom mail format. The following keywords are replaced autom
   * %to%
   * %cc%
   * %bcc*
-  * %subject*
+  * %subject%
   * %body%
   
 The string ";;" (two semi-colons) separates commands.
