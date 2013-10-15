@@ -14,7 +14,7 @@ You can also use a Custom mail format. The following keywords are replaced autom
 
   * %to%
   * %cc%
-  * %bcc*
+  * %bcc%
   * %subject%
   * %body%
   
