@@ -3553,6 +3553,7 @@ proc ::potato::debug_packet {c dir text} {
       "\n"      {set dchar \u21B5}
       "\r"      {set dchar \u240D}
       "\u0020"  {set dchar \u2423}
+      "\0"      {set dchar \u2400}
       default   {set dchar $char}
     }
     $win(txt,btxt) insert end $dchar $tag
