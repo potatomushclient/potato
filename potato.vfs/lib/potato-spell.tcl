@@ -36,7 +36,7 @@ proc ::potato::spellcheck::spellcheck {string} {
      }
 
 
-  pack [::ttk::label $frame.top_label -text [T "Words:"]] -side top -anchor nw
+  ::ttk::label $frame.top_label -text [T "Words:"]
 
   set left [::ttk::frame $frame.left]
   pack [set top [::ttk::frame $left.top]] -expand 1 -fill both
@@ -44,7 +44,7 @@ proc ::potato::spellcheck::spellcheck {string} {
   pack [::ttk::scrollbar $top.sb -command "$input yview"] -side left -fill y
 
   ::ttk::label $frame.bottom_label -text [T "Suggestions:"]
-  pack [set bottom [::ttk::frame $frame.bottom]] -side top -expand 1 -fill both
+  set bottom [::ttk::frame $frame.bottom]
   pack [set tree [::ttk::treeview $bottom.tree -style "Spell.Treeview" -columns Suggestion -show {} -yscrollcommand "$bottom.sb set" -height 6 -selectmode browse]] -side left -anchor nw -expand 1 -fill both
   $tree column Suggestion -width 50
   pack [::ttk::scrollbar $bottom.sb -command "$tree yview"] -side left -fill y
