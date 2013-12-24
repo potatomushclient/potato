@@ -12,6 +12,10 @@ I honestly have no idea - I didn't name it. The very first version of Potato was
 
 See previous question.
 
+==I found a bug!==
+
+Please [https://code.google.com/p/potatomushclient/issues/list file a ticket] on the online Issue Tracker, if there isn't one up for the bug already.
+
 ==Will you ever add _`<`desired feature`>`_?==
 
 Maybe! Feel free to [ContactMe discuss it] with me and/or put up a ticket.
@@ -21,6 +25,18 @@ Maybe! Feel free to [ContactMe discuss it] with me and/or put up a ticket.
 Thank you! I gratefully accept [http://www.keyboardzombie.com/donate donations] of anything which can be traded for food, and also have a few wishlists at various places.
 
 _Note:_ Unfortunately, I'm no longer able to accept your first-born son. There's far too much paperwork involved, and quite a mess if you forget to put air-holes in the box before mailing. Sorry.
+
+==Can I do any scripting in Potato?==
+
+Yes! Some scripting can be achieved via the [SlashCommands /commands]; anything more complex can be done with custom Tcl code. If there's something you'd like to do but you're not sure how, [ContactMe let me know] and I'll help if I can. However, I do have limited time, so can't always promise to do giant custom scripts just for you. No harm in asking, though.
+
+==If it's called _Potato_, why is the logo a peanut?==
+
+Don't be absurd; everyone knows peanuts wear top hats and monocles, not baseball caps.
+
+==Help!==
+
+If you have any problems 
 
 ==Why is this FAQ so short?==
 
