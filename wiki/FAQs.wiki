@@ -6,7 +6,7 @@ There are a few questions which, since I first released Potato way back when, I'
 
 ==Why is it called _Potato_?==
 
-I honestly have no idea - I didn't name it. The very first version of Potato was written by someone I once knew on a MUSH; I started learning Tcl/Tk so I could play with it, and ended up spending several years and much of my sanity re-writing it from scratch a few times and adding a lot more features.
+I honestly have no idea - I didn't name it. The very first version of Potato was written by someone I once knew on a MUSH; I started learning Tcl/Tk so I could play with it, and ended up spending several years and much of my sanity re-writing it from scratch a few times and adding a lot more features. The name was retained for posterity.
 
 ==Why did you write it in Tcl? Why not _`<`my favourite language`>`_?==
 
@@ -20,11 +20,11 @@ Please [https://code.google.com/p/potatomushclient/issues/list file a ticket] on
 
 Maybe! Feel free to [ContactMe discuss it] with me and/or put up a ticket.
 
-==Potato is awesome! And free! How can I contribute?==
+==Potato is awesome! And free! Can I contribute in some way?==
 
-Thank you! I gratefully accept [http://www.keyboardzombie.com/donate donations] of anything which can be traded for food, and also have a few wishlists at various places.
+Yes; thank you! I gratefully accept [http://www.keyboardzombie.com/donate donations] of anything which can be traded for food, and also have a few wishlists at various places.
 
-_Note:_ Unfortunately, I'm no longer able to accept your first-born son. There's far too much paperwork involved, and quite a mess if you forget to put air-holes in the box before mailing. Sorry.
+_Note:_ Unfortunately, I'm no longer able to accept your first-born son. There's far too much paperwork involved, and quite a mess if you forget to put air-holes in the box before mailing him. Sorry.
 
 ==Can I do any scripting in Potato?==
 
@@ -36,7 +36,7 @@ Don't be absurd; everyone knows peanuts wear top hats and monocles, not baseball
 
 ==Why should I use _Potato_ instead _`<`other client`>`?==
 
-Potato rivals most other clients in terms of [Features features], runs on Windows, Linux and Mac OS, is totally free (unless you're feeling generous), and is one of only a handful of MUSH clients which is still being updated.
+Potato rivals most other clients in terms of [Features features], runs on Windows, Linux and MacOS X, is totally free (unless you're feeling generous _`*`nudge nudge wink wink`*`), and is one of only a handful of MUSH clients which is still being updated.
 
 ==Help!==
 
@@ -46,7 +46,7 @@ If you have any problems, questions, etc, that aren't covered here or elsewhere 
 
 Although Kitai did try and convince me to add more pizzazz`*` (his words, not mine), I had to decide against it in the end. Sorry, Kitai. Besides, if you've read this far, you're probably interested enough in Potato that I don't need to lure you in with nekkid pictures, anyway.
 
-(`*` If enough people request it, I will add more pizza.)
+(`*` If enough people request it, though, I will add more pizza. A link to the petition will follow shortly.)
 
 ==Why is this FAQ so short?==
 
