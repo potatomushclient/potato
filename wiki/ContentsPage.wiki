@@ -5,6 +5,7 @@
     * [ContactMe Contact Me]
     * [Credits Credits and Contributions]
     * [License]
+    * [FAQs]
   * [GettingStarted Getting Started]
     * [GUI Potato's Interface]
       * [GUIMenus Potato's Menus]
