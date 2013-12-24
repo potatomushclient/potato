@@ -34,9 +34,13 @@ Yes! Some scripting can be achieved via the [SlashCommands /commands]; anything 
 
 Don't be absurd; everyone knows peanuts wear top hats and monocles, not baseball caps.
 
-==Why should I use _Potato_ instead _`<`other client`>`?==
+==Why should I use _Potato_ instead of _`<`other client`>`_?==
 
-Potato rivals most other clients in terms of [Features features], runs on Windows, Linux and MacOS X, is totally free (unless you're feeling generous _`*`nudge nudge wink wink`*`), and is one of only a handful of MUSH clients which is still being updated.
+Potato rivals most other clients in terms of [Features features], runs on Windows, Linux and MacOS X, is totally free (unless you're feeling generous _`*`nudge nudge wink wink`*`_), and is one of only a handful of MUSH clients which is still being updated.
+
+==Why doesn't Potato work on my favourite MUD?==
+
+I have recently found out that Potato doesn't always work nicely on MUDs, which do things a little differently to MUSHes. This should be resolved in the next release or two, though - sorry for the inconvenience!
 
 ==Help!==
 
