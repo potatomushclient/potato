@@ -1,0 +1,27 @@
+#summary Frequently Asked Questions about Potato
+
+= Frequently Asked Questions =
+
+There are a few questions which, since I first released Potato way back when, I've been asked many times. Thus, the Official Potato FAQ (_patent pending_; _known to cause stupidity in the state of California_).
+
+==Why is it called _Potato_?==
+
+I honestly have no idea - I didn't name it. The very first version of Potato was written by someone I once knew on a MUSH; I started learning Tcl/Tk so I could play with it, and ended up spending several years and much of my sanity re-writing it from scratch a few times and adding a lot more features.
+
+==Why did you write it in Tcl? Why not _`<`my favourite language`>`_?==
+
+See previous question.
+
+==Will you ever add _`<`desired feature`>`_?==
+
+Maybe! Feel free to [ContactMe discuss it] with me and/or put up a ticket.
+
+==Potato is awesome! And free! How can I contribute?==
+
+Thank you! I gratefully accept [http://www.keyboardzombie.com/donate donations] of anything which can be traded for food, and also have a few wishlists at various places.
+
+_Note:_ Unfortunately, I'm no longer able to accept your first-born son. There's far too much paperwork involved, and quite a mess if you forget to put air-holes in the box before mailing. Sorry.
+
+==Why is this FAQ so short?==
+
+Because it's 2am and I'm going to bed.
