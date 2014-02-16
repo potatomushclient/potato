@@ -9312,6 +9312,7 @@ proc ::potato::loadDefaultUserBindings {{clear 0}} {
     "insertNewline" "Control-Return" \
     "resendLastCmd" "Control-Alt-R" \
     "toggleSpawns" "Control-Alt-Tab" \
+    "textEd" "Control-Alt-space" \
     ]
   foreach {task binding} $defaults {
     if { ![taskExists $task] } {
