@@ -6533,7 +6533,7 @@ proc ::potato::main {} {
 
   set potato(skinCurrVersion) "1.5" ;# The current version of the skin spec. If changes made aren't
                                     ;# incompatible, this may be higher than skinMinVersion
-  cd $path(homedir)
+  catch {cd $path(homedir)}
 
   set path(log) $path(homedir)
   set path(upload) $path(homedir)
@@ -6624,7 +6624,7 @@ proc ::potato::main {} {
   catch {package require potato-flash 1.0}
   catch {package require potato-systray 1.0}
 
-  ::tcl::tm::path add $path(userlib)
+  catch {::tcl::tm::path add $path(userlib)}
 
   # We need to set the prefs before we load anything...
   setPrefs 1
