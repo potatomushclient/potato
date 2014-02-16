@@ -3834,7 +3834,11 @@ proc ::potato::get_mushageProcess {c line} {
           }
      }
 
-  set spawns $conn($c,spawnAll)
+  if { !$empty && !$omit } {
+       set spawns $conn($c,spawnAll)
+     } else {
+       set spawns [list]
+     }     
   if { !$empty && $eventInfo(matched) && $eventInfo(spawnTo) ne "" } {
        lappend spawns $eventInfo(spawnTo)
      }
