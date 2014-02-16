@@ -10,3 +10,5 @@ The following commands are available from the Edit menu:
     * Returns to `%r`
     * Spaces to `%b`
     * Escape Special Characters
+    * Strip Empty Lines
+    * Remove All Carriage Returns
