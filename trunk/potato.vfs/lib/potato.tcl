@@ -8047,6 +8047,13 @@ proc ::potato::build_menu_edit {m} {
 
   $m add cascade -menu $menu(edit,convert,path) {*}[menu_label [T "&Convert..."]]
 
+  $menu(edit,convert,path) delete 0 end
+  createMenuTask $menu(edit,convert,path) convertNewlines
+  createMenuTask $menu(edit,convert,path) convertSpaces
+  createMenuTask $menu(edit,convert,path) convertChars
+  $menu(edit,convert,path) add command {*}[menu_label [T "&Strip Empty Lines"]] -command "::potato::textSquishReturns"
+  $menu(edit,convert,path) add command {*}[menu_label [T "Remove &All Carriage Returns"]] -command "::potato::textStripReturns"
+
   return;
 
 };# ::potato::build_menu_edit
@@ -8235,10 +8242,6 @@ proc ::potato::setUpMenu {} {
   set menu(tools) [$menuname index end]
   $menuname add cascade -menu $menuname.help {*}[menu_label [T "&Help"]]
   set menu(help) [$menuname index end]
-
-  createMenuTask $menu(edit,convert,path) convertNewlines
-  createMenuTask $menu(edit,convert,path) convertSpaces
-  createMenuTask $menu(edit,convert,path) convertChars
 
   return;
 
@@ -12762,6 +12765,47 @@ proc ::potato::textFindAndReplace {win chars} {
   return;
 
 };# ::potato::textFindAndReplace
+
+#: proc ::potato::textSquishReturns
+#: arg win path to text widget
+#: desc Remove all empty newlines in $win (or the active input window if $win is empty)
+#: return nothing
+proc ::potato::textSquishReturns {{win ""}} {
+
+  if { $win eq "" } {
+       set win [connInfo "" input3]
+     }
+  
+  set text [$win get 1.0 end-1c]
+  set text [regsub -all {(^\n+|\n+$)} $text ""]
+  set text [regsub -all {\n\n+} $text \n]
+  
+  $win replace 1.0 end $text
+  
+  return;
+
+};# ::potato::textSquishReturns
+
+#: proc ::potato::textStripReturns
+#: arg win path to text widget
+#: desc Remove all carriage returns in $win (or the active input window if $win is empty), leaving one single line of text
+#: return nothing
+proc ::potato::textStripReturns {{win ""}} {
+
+  if { $win eq "" } {
+       set win [connInfo "" input3]
+     }
+  
+  textFindAndReplace $win [list "\n" ""]
+  set text [$win get 1.0 end-1c]
+  set text [regsub -all {(^\n+|\n+$)} $text ""]
+  set text [regsub -all {\n\n+} $text \n]
+  
+  $win replace 1.0 end $text
+  
+  return;
+
+};# ::potato::textStripReturns
 
 #: proc ::potato::toggleInputWindows
 #: arg c connection id. Defaults to ""
