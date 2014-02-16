@@ -3838,7 +3838,7 @@ proc ::potato::get_mushageProcess {c line} {
        set spawns $conn($c,spawnAll)
      } else {
        set spawns [list]
-     }     
+     }
   if { !$empty && $eventInfo(matched) && $eventInfo(spawnTo) ne "" } {
        lappend spawns $eventInfo(spawnTo)
      }
@@ -8511,9 +8511,8 @@ proc ::potato::setUpBindings {} {
   bind Text <<Selection>> {%W tag remove sel end-1c end}
 
   # Allow for Insert key to toggle overtype on/off in text widgets
-  bind all <KeyRelease-Insert> "[list ::potato::toggleOvertype];break"
-  bind Text <KeyRelease-Insert> "[list ::potato::toggleOvertype];break"
-  bind Text <Insert> ""
+  bind all <Insert> "[list ::potato::toggleOvertype all];break"
+  bind Text <Insert> "[list ::potato::toggleOvertype Text];break"
   bind Text <Key> [list ::potato::TextInsert %W %A]
 
   # The help for the Listbox widget says that it will only take focus on click if -takefocus is true.
@@ -8657,11 +8656,6 @@ proc ::potato::setUpBindings {} {
            }
      }
   }
-
-  if { $has86 && $::tcl_platform(os) eq "Darwin" } {
-       # Woops. 8.6.0 has the wrong binding on MacOS X
-       bind Text <<Paste>> [list tk_textPaste %W]
-     }
 
   # Right-click while resizing a paned window to cancel
   bind Panedwindow <3> {catch {%W proxy forget} ; unset -nocomplain ::tk::Priv(sash) ::tk::Priv(dx) ::tk::Priv(dy)}
@@ -11724,13 +11718,13 @@ proc ::potato::textSquishReturns {{win ""}} {
   if { $win eq "" } {
        set win [connInfo "" input3]
      }
-  
+
   set text [$win get 1.0 end-1c]
   set text [regsub -all {(^\n+|\n+$)} $text ""]
   set text [regsub -all {\n\n+} $text \n]
-  
+
   $win replace 1.0 end $text
-  
+
   return;
 
 };# ::potato::textSquishReturns
@@ -11744,14 +11738,14 @@ proc ::potato::textStripReturns {{win ""}} {
   if { $win eq "" } {
        set win [connInfo "" input3]
      }
-  
+
   textFindAndReplace $win [list "\n" ""]
   set text [$win get 1.0 end-1c]
   set text [regsub -all {(^\n+|\n+$)} $text ""]
   set text [regsub -all {\n\n+} $text \n]
-  
+
   $win replace 1.0 end $text
-  
+
   return;
 
 };# ::potato::textStripReturns
