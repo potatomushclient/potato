@@ -383,6 +383,11 @@ proc ::potato::eventConfig {{w ""}} {
      lappend fg $x "$x Highlight"
      lappend bg $x
   }
+  
+  for {set i 0} {$i < 256} {incr i} {
+    lappend fg "XTerm $i"
+    lappend bg "XTerm $i"
+  }
 
   pack [set row [::ttk::frame $frame.right.fg]] -side top -anchor nw -fill x -padx 5 -pady 2
   pack [::ttk::label $row.l -text [T "Change FG:"] -width $lwidth -justify left -anchor w] -side left -anchor nw -padx 2
@@ -663,10 +668,12 @@ proc ::potato::eventSave {w} {
                set world($w,events,$this,$x) "x"
              } elseif { [lindex $lower 0] eq "ansi" } {
                set world($w,events,$this,$x) "$x"
+             } elseif { [lindex $lower 0] eq "xterm" } {
+               set world($w,events,$this,$x) "xterm[lindex $lower 1]"
              } else {
                set world($w,events,$this,$x) [string index [lindex $lower 0] 0]
              }
-          if { [llength $lower] == 2 && [lindex $lower 0] ne "normal" } {
+          if { [llength $lower] == 2 && [lindex $lower 0] ni [list "xterm" "normal"] } {
                append world($w,events,$this,$x) "h"
              }
         }
@@ -768,6 +775,8 @@ proc ::potato::eventConfigSelect {w states} {
           set eventConfig($w,$x) "Don't Change"
         } elseif { [string length $world($w,events,$this,$x)] == 3 } {
           set eventConfig($w,$x) "ANSI Highlight"
+        } elseif { [string match -nocase "xterm*" $world($w,events,$this,$x)] } {
+          set eventConfig($w,$x) [string map -nocase [list "xterm" "XTerm " "xterm " "XTerm "] $world($w,events,$this,$x)]
         } else {
           set eventConfig($w,$x) [string map $colours $world($w,events,$this,$x)]
         }
