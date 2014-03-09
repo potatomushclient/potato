@@ -9,3 +9,4 @@
   * You can now use the 256 XTerm Colours in [Events].
   * Added options to the [EditMenu Edit Menu] for removing empty lines from the input window, and for removing all carriage returns. Requested by Red.
   * Fixed a bug which stopped Potato from starting on a small number of systems. Reported by kobayashikojiro.
+  * Using [SlashCommands /setprefix] to clear a prefix didn't work. Reported by fuzzyweapon.

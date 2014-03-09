@@ -41,7 +41,7 @@ The following is a list of available commands, with terse descriptions:
   * `/send <string>` - Send `<string>` to the current connection. Allows for nesting other /commands in `<string>`.
   * `/set <varname>=<value>` - Set a variable for the current connection.
   * `/setglobal <varname>=<value>` - Set a variable for all connections.
-  * `/setprefix [<window>=]<prefix>` - Set a prefix for the output window `<window>` or for the current output window if no `<window>` is given.
+  * `/setprefix [<window>=][<prefix>]` - Set a prefix for the output window `<window>` or for the current output window if no `<window>` is given. If no `<prefix>` is given, clears the current prefix.
   * `/show <number>` - Show connection number `<number>`.
   * `/show [<number>.]<window>` - Show output window `<window>` for connection number `<number>`, or the current connection if `<number>` is omitted.
   * `/silent [<args>]` - Historical alias for `/null`.
