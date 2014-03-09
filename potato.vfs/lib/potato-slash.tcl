@@ -134,7 +134,10 @@
 
   if { $str eq "" } {
        # Clear prefix
-       unset -nocomplain world($w,prefixes,$window)
+	   set curr [lsearch -exact -nocase -index 0 $world($w,prefixes) $window]
+	   if { $curr != -1 } {
+	        set world($w,prefixes) [lreplace $world($w,prefixes) $curr $curr]
+		  }
      } else {
        # Update prefix. We enable the new prefix, even if there
        # was an existing, disabled one.
