@@ -1056,3 +1056,9 @@
   return [list 1];
 
 };# /history
+
+# Alias some /commands
+::potato::alias_slash_cmd show world ;# /world
+::potato::alias_slash_cmd show w ;# /w
+::potato::alias_slash_cmd speedwalk sw;# /sw
+::potato::alias_slash_cmd null silent ;# /silent
