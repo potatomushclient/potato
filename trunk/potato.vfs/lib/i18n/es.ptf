@@ -46,6 +46,9 @@
 &Default Character (%s)
 -
 
+&Donate to Potato's Development
+-
+
 &Escape Special Characters
 -
 
@@ -86,6 +89,9 @@
 -
 
 &Stop Logging
+-
+
+&Strip Empty Lines
 -
 
 &Upload File
@@ -625,6 +631,9 @@ Quick Connect
 Regexp Match?
 -
 
+Remove &All Carriage Returns
+-
+
 Replacement:
 -
 
@@ -703,6 +712,9 @@ Show Input &History Window
 Show Input Wins on Startup?
 -
 
+Show Message Timestamps?
+-
+
 Show Package Info
 -
 
@@ -763,7 +775,7 @@ System, Echo and Link Colours
 Tcl Code &Console
 -
 
-The Graphical MU* Client for Windows and Linux
+The Graphical MU* Client for Windows, Linux and MacOS X
 -
 
 There is a newer version of Potato (%s) available.\nYou can download it from Potato's Google Code site.\nWould you like to do so now?
@@ -875,6 +887,9 @@ You are currently running version:
 -
 
 You cannot bind to that key. Sorry.
+-
+
+You cannot delete that group.
 -
 
 You don't have any worlds defined yet! Use one of the links above to add a world.

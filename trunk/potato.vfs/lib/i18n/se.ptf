@@ -4,6 +4,12 @@
 %s reloaded successfully.
 -
 
+&Donate to Potato's Development
+-
+
+&Strip Empty Lines
+-
+
 Address Book
 -
 
@@ -28,6 +34,9 @@ Package Info
 Persist Prompts?
 -
 
+Remove &All Carriage Returns
+-
+
 Report Errors?
 -
 
@@ -37,10 +46,16 @@ Send null-byte keepalives?
 Show Input Wins on Startup?
 -
 
+Show Message Timestamps?
+-
+
 Show Package Info
 -
 
 Spawn already exists.
+-
+
+The Graphical MU* Client for Windows, Linux and MacOS X
 -
 
 Toggle Spawn Windows
@@ -52,10 +67,16 @@ Unable to open \"%s\": %s
 Unable to save to \"%s\": %s
 -
 
+You cannot delete that group.
+-
+
 # Obsolete strings:
 
 Manage Worlds
 Hantera världar
+
+The Graphical MU* Client for Windows and Linux
+Den grafiska MU*-klienten för Windows och Linux
 
 # Existing translations:
 
@@ -1612,9 +1633,6 @@ Det är inte ett giltigt namn.
 
 That name is already in use.
 Det namnet används redan.
-
-The Graphical MU* Client for Windows and Linux
-Den grafiska MU*-klienten för Windows och Linux
 
 The Keyboard Shortcut '%s' is already in use by the task '%s'. Do you want to override it?
 Kortkommandot '%s' används redan av uppgiften '%s'. Vill du skriva över det?

@@ -6709,13 +6709,6 @@ proc ::potato::main {} {
           }
      }
 
-
-  # Alias some /commands
-  ::potato::alias_slash_cmd show world ;# /world
-  ::potato::alias_slash_cmd show w ;# /w
-  ::potato::alias_slash_cmd speedwalk sw;# /sw
-  ::potato::alias_slash_cmd null silent ;# /silent
-
   if { ![file exists $path(custom)] } {
        errorLog "Custom code file \"[file nativename [file normalize $path(custom)]]\" does not exist." message
      } elseif { [catch {source $path(custom)} err errdict] } {
@@ -6855,6 +6848,7 @@ proc ::potato::i18nPotato {} {
      map,hr_hr   "Hrvatski (Croatian)" \
      map,es      "Espa\u00f1ol (Spanish)" \
      map,se      "Svenska (Swedish)" \
+     map,no      "Norwegian" \
   ]
 
   set loclist [lsearch -all -inline -not -regexp $loclist {^(.*,.*)?$}]

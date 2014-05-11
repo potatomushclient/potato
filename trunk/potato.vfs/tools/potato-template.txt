@@ -22,7 +22,7 @@
 %s - Help
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 756)
 %s reloaded successfully.
 -
 
@@ -112,6 +112,10 @@
 
 # potato.tcl (::potato::tasksInit)
 &Disconnect
+-
+
+# potato.tcl (::potato::build_menu_help)
+&Donate to Potato's Development
 -
 
 # potato.tcl (::potato::mailWindow), potato.tcl (::potato::setUpMenu), potato.tcl (::potato::textEditor)
@@ -226,6 +230,10 @@
 &Stop Logging
 -
 
+# potato.tcl (::potato::build_menu_edit)
+&Strip Empty Lines
+-
+
 # potato.tcl (::potato::tasksInit)
 &Text Editor
 -
@@ -258,27 +266,27 @@
 --------- New Activity ---------
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 264)
 /at cancelled.
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 182)
 /at: Time must be in the future.
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 439)
 /cls cannot be abbreviated.
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 460)
 /cls: Invalid connection.
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 455)
 /cls: Invalid window name.
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 471)
 /cls: No such window.
 -
 
@@ -286,7 +294,7 @@
 /command Name:
 -
 
-# potato.tcl (::potato::parseConnectRequest)
+# potato-slash.tcl (line 1043), potato-slash.tcl (line 1046)
 /history: Invalid position
 -
 
@@ -422,15 +430,15 @@ Allow Partial Names?
 Ambiguous /command \"%s\".
 -
 
-# potato.tcl (::potato::parseConnectRequest)
+# potato-slash.tcl (line 986)
 Ambiguous character name \"%s\"
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 867)
 Ambiguous option \"%s\"
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 932)
 Ambiguous world name \"%s\".
 -
 
@@ -486,7 +494,7 @@ Auto-reconnect in %s...
 Auto-Sends
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 540)
 Available slash commands: %s
 -
 
@@ -658,7 +666,7 @@ Close &All Logs
 Command
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 191)
 Command will run at %s, id %s
 -
 
@@ -1034,7 +1042,7 @@ Enter the connection information\nfor the new world below.
 Enter the name for the new Group, and click Add.
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 768)
 Error (%d): %s
 -
 
@@ -1126,7 +1134,7 @@ Force ANSI Normal?
 Format:
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 172)
 Format: /at <time>=<string>
 -
 
@@ -1166,7 +1174,7 @@ Global S&lash Commands
 Global Timers
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 546)
 Global User-defined commands: %s
 -
 
@@ -1286,15 +1294,15 @@ Input:
 Insert Newline
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 388)
 Invalid %s pattern \"%s\": %s
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 259)
 Invalid /at ID.
 -
 
-# potato.tcl (::potato::parseConnectRequest)
+# potato-slash.tcl (line 992)
 Invalid connection id/character name
 -
 
@@ -1302,7 +1310,7 @@ Invalid connection id/character name
 Invalid editor name '%s'.
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 52)
 Invalid input window \"%s\": must be 1, 2 or 3
 -
 
@@ -1310,19 +1318,19 @@ Invalid input window \"%s\": must be 1, 2 or 3
 Invalid name.
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 350)
 Invalid option \"%s\" to /limit
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 878)
 Invalid setting \"%s\" for \"%s\"
 -
 
-# potato.tcl (::potato::createSpawnWindow), potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 362), potato.tcl (::potato::createSpawnWindow)
 Invalid Spawn Name
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 785)
 Invalid speedwalk command
 -
 
@@ -1386,11 +1394,11 @@ Log
 Log as HTML?
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 828)
 Log file \"%s\" is ambiguous.
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 826)
 Log file \"%s\" not found.
 -
 
@@ -1558,11 +1566,11 @@ No
 No of Connections
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 244)
 No such macro \"%s\".
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 931)
 No such world \"%s\". Use \"/quick host port\" to connect to a world that isn't in the address book.
 -
 
@@ -1770,6 +1778,10 @@ Reconnecting...
 Regexp Match?
 -
 
+# potato.tcl (::potato::build_menu_edit)
+Remove &All Carriage Returns
+-
+
 # potato-spell.tcl (::potato::spellcheck::spellcheck)
 Replace
 -
@@ -1790,7 +1802,7 @@ Report Errors?
 Restore
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 774)
 Return (%d): %s
 -
 
@@ -1990,6 +2002,10 @@ Show Input &History Window
 Show Input Wins on Startup?
 -
 
+# potato-config.tcl (::potato::configureWorld)
+Show Message Timestamps?
+-
+
 # potato.tcl (::potato::errorLogWindow), potato.tcl (::potato::about)
 Show Package Info
 -
@@ -2050,7 +2066,7 @@ Sorry, we were unable to check for a new version at this time. Please try again 
 Spaces to %&b
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 364)
 Spawn already exists.
 -
 
@@ -2127,7 +2143,7 @@ That name is already in use.
 -
 
 # potato.tcl (::potato::connZero)
-The Graphical MU* Client for Windows and Linux
+The Graphical MU* Client for Windows, Linux and MacOS X
 -
 
 # potato.tcl (::potato::keyboardShortcutSave)
@@ -2214,7 +2230,7 @@ Unable to create new spawn window \"%s\": %s
 Unable to create TinyURL: %s
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 91)
 Unable to launch TinyURL at \"%s\": %s
 -
 
@@ -2270,7 +2286,7 @@ Ungrouped
 Unknown /command \"%s\". Use /slash for a list. Use //command to send directly to MU*.
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 863)
 Unknown option \"%s\"
 -
 
@@ -2306,7 +2322,7 @@ Use NOP Keepalive?
 Use SSL?:
 -
 
-# potato.tcl (::potato::customSlashCommand)
+# potato-slash.tcl (line 543)
 User-defined commands for this world: %s
 -
 
@@ -2384,6 +2400,10 @@ You are currently running version:
 
 # potato.tcl (::potato::keyboardShortcutSave)
 You cannot bind to that key. Sorry.
+-
+
+# potato.tcl (::potato::manageWorldsBtn)
+You cannot delete that group.
 -
 
 # potato.tcl (::potato::connZero)

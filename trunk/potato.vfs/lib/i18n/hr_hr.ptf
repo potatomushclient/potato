@@ -1,68 +1,11 @@
 
 # Untranslated strings:
 
-%s reloaded successfully.
-%s - uspješno ponovno učitano.
+&Strip Empty Lines
+-
 
-&Donate to Potato's Development
-&Doniraj za Potato-ov Razvoj
-
-Address Book
-Adresar
-
-Connect To World
-Spoji Se Na Svijet
-
-Connection attempt cancelled. - %s
-Pokušaj veze obustavljen. - %s
-
-Connection cancelled.
-Veza obustavljena.
-
-Log input?
-Logiraj unos?
-
-No
-Ne
-
-Package Info
-Podaci o Paketima
-
-Persist Prompts?
-Ustrajni Promptovi?
-
-Report Errors?
-Prijavljuj Greške?
-
-Send null-byte keepalives?
-Šalji nul-bajtove za održavanje veze?
-
-Show Input Wins on Startup?
-Prikazuj Prozore Za Unos Pri Pokretanju?
-
-Show Message Timestamps?
-Prikazuj Vremenske Oznake Poruka?
-
-Show Package Info
-Prikaži Podatke o Paketima
-
-Spawn already exists.
-Spawn već postoji.
-
-The Graphical MU* Client for Windows, Linux and MacOS X
-Grafički MU* Klijent za Windowse, Linux i MacOS X
-
-Toggle Spawn Windows
-Prebaci Između Spawn Prozora
-
-Unable to open \"%s\": %s
-Ne mogu otvoriti \"%s\": %s
-
-Unable to save to \"%s\": %s
-Ne mogu snimiti \"%s\": %s
-
-You cannot delete that group.
-Ne možeš obrisati tu grupu.
+Remove &All Carriage Returns
+-
 
 # Obsolete strings:
 
@@ -91,6 +34,9 @@ Grafički MU* Klijent za Windowse i Linux
 
 %s - Help
 %s - Pomoć
+
+%s reloaded successfully.
+%s - uspješno ponovno učitano.
 
 %s Version %s
 %s Verzija %s
@@ -157,6 +103,9 @@ Prozor s Logom za &Debagiranje
 
 &Disconnect
 &Prekini
+
+&Donate to Potato's Development
+&Doniraj za Potato-ov Razvoj
 
 &Edit
 Ur&edi
@@ -355,6 +304,9 @@ Dodaj u Prijašnje Naredbe?
 
 Address
 Adresa
+
+Address Book
+Adresar
 
 After connecting, wait
 Nakon spajanja, čekaj
@@ -593,6 +545,9 @@ Konfiguriraj &Postavke Programa
 Confirm Exit?
 Potvrdi Izlaz?
 
+Connect To World
+Spoji Se Na Svijet
+
 Connected - %s - %s
 Veza uspostavljena - %s - %s
 
@@ -613,6 +568,12 @@ Spajam se...
 
 Connection
 Veza
+
+Connection attempt cancelled. - %s
+Pokušaj veze obustavljen. - %s
+
+Connection cancelled.
+Veza obustavljena.
 
 Connection closed by proxy server.
 Vezu je zatvorio proxy server.
@@ -1109,6 +1070,9 @@ Log \"%s\" nije pronađen.
 Log from \[%d. %s\]
 Log za \[%d. %s\]
 
+Log input?
+Logiraj unos?
+
 Log opened %s
 Log otvoren %s
 
@@ -1220,6 +1184,9 @@ Sljed
 Next History Command
 Kasnija Naredba
 
+No
+Ne
+
 No of Connections
 Broj Spajanja
 
@@ -1280,6 +1247,9 @@ Ostale Opcije
 Output
 Ispis
 
+Package Info
+Podaci o Paketima
+
 Packet Debugger for \[%d. %s\]
 Debager paketa za \[%d. %s\]
 
@@ -1294,6 +1264,9 @@ Vrsta Uzorka:
 
 Pattern:
 Uzorak:
+
+Persist Prompts?
+Ustrajni Promptovi?
 
 Place in &Bottom Input Window
 Stavi u &Donji Prozor Za Unos
@@ -1384,6 +1357,9 @@ Zamijeni?
 
 Replacement:
 Zamjena:
+
+Report Errors?
+Prijavljuj Greške?
 
 Restore
 Vrati
@@ -1490,6 +1466,9 @@ Pošalji Prijavu nakon (sekunde):
 Send Mail - \[%d. %s\]
 Šalji Poštu - \[%d. %s\]
 
+Send null-byte keepalives?
+Šalji nul-bajtove za održavanje veze?
+
 Send to &World
 Pošalji u &Svijet
 
@@ -1532,6 +1511,15 @@ Prikazuj Bipove?
 Show Input &History Window
 Pokaži Prozor S Ranijim &Naredbama
 
+Show Input Wins on Startup?
+Prikazuj Prozore Za Unos Pri Pokretanju?
+
+Show Message Timestamps?
+Prikazuj Vremenske Oznake Poruka?
+
+Show Package Info
+Prikaži Podatke o Paketima
+
 Show Spawn Toolbar?
 Pokaži Traku Sa Spawnovima?
 
@@ -1573,6 +1561,9 @@ Sorry, we were unable to check for a new version at this time. Please try again 
 
 Spaces to %&b
 Razmake u %&b
+
+Spawn already exists.
+Spawn već postoji.
 
 Spawn Sys Messages?
 Spawnaj Sust. Poruke?
@@ -1628,6 +1619,9 @@ To nije ispravno ime.
 That name is already in use.
 To ime se već koristi.
 
+The Graphical MU* Client for Windows, Linux and MacOS X
+Grafički MU* Klijent za Windowse, Linux i MacOS X
+
 The Keyboard Shortcut '%s' is already in use by the task '%s'. Do you want to override it?
 Tipkovničnu prečicu '%s' već koristi proces '%s'. Želiš li ga spriječiti?
 
@@ -1651,6 +1645,9 @@ Davatelj TinyURL-a:
 
 Toggle &Input Windows
 Biraj Prozor za &Unos
+
+Toggle Spawn Windows
+Prebaci Između Spawn Prozora
 
 Toggle to Main Window?
 Prebaci u Glavni Prozor?
@@ -1697,6 +1694,9 @@ Ne mogu dogovoriti SSL: %s
 Unable to negotiate SSL: %s. Please make sure the port is ssl-enabled.
 Ne mogu dogovoriti SSL: %s. Molim, provjeriti je li ssl omogućen na portu.
 
+Unable to open \"%s\": %s
+Ne mogu otvoriti \"%s\": %s
+
 Unable to open file \"%s\": %s
 Ne mogu otvoriti datoteku \"%s\": %s
 
@@ -1705,6 +1705,9 @@ Ne mogu pročitati datoteku \"%s\".
 
 Unable to save preferences: %s
 Ne mogu snimiti postavke: %s
+
+Unable to save to \"%s\": %s
+Ne mogu snimiti \"%s\": %s
 
 Unable to save world '%s': %s
 Ne mogu snimiti svijet '%s': %s
@@ -1810,6 +1813,9 @@ Trenutno koristiš verziju:
 
 You cannot bind to that key. Sorry.
 Ne možeš napraviti prečicu od te tipke. Žao mi je.
+
+You cannot delete that group.
+Ne možeš obrisati tu grupu.
 
 You don't have any worlds defined yet! Use one of the links above to add a world.
 Još nemaš definiranih svjetova! Upotrijebi jedan od gornjih linkova da dodaš svijet.

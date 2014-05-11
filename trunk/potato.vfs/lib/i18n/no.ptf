@@ -1,0 +1,1827 @@
+
+# Untranslated strings:
+
+&Donate to Potato's Development
+&Doner til Potatos utvikler
+
+&Strip Empty Lines
+&Fjern tomme linjer
+
+Remove &All Carriage Returns
+Fjern &Alle nylinjer
+
+Show Message Timestamps?
+Vis meldingstidsstempel?
+
+The Graphical MU* Client for Windows, Linux and MacOS X
+Den grafiske MU* klienten for Windows, Linux og MacOS X
+
+You cannot delete that group.
+Du kan ikke slette den gruppen.
+
+# Obsolete strings:
+
+Manage Worlds
+Håndtere verdener
+
+The Graphical MU* Client for Windows and Linux
+Den grafiske MU* klienten for Windows og Linux
+
+# Existing translations:
+
+ bytes
+ byte
+
+ of 
+ av
+
+%d Times
+%d ganger
+
+%dh %dm
+%dt %dm
+
+%s - Event Configuration
+%s - Hendelseskonfiguration
+
+%s - Help
+%s - Hjelp
+
+%s reloaded successfully.
+%s ble lastet om.
+
+%s Version %s
+%s Versjon %s
+
+%s Version %s.\nA MU* Client written in Tcl/Tk by\nMike Griffiths (%s)
+%s Versjon %s.\nEn MU*-klient skrevet i Tcl/Tk av\nMike Griffiths (%s)
+
+&Abort
+&Avbryt
+
+&About Potato
+&Om Potato
+
+&Action
+&Handling
+
+&Add New Prefix
+&Legg til nytt prefix
+
+&Address Book
+&Adressebok
+
+&ANSI Colour...
+&ANSI-farge...
+
+&ANSI Colours to Tags
+&ANSI-farge på taggar
+
+&Cancel
+&Avbryt
+
+&Cancel Add/Edit
+&Avbryt legg til/Endre
+
+&Close Connection
+&Steng tilkobling
+
+&Close Spawn
+&Steng Undervinduer
+
+&Connect To...
+&Koble til...
+
+&Convert...
+&Konverter...
+
+&Copy
+&Kopier
+
+&Copy Selected Text
+&Kopier markert tekst
+
+&Debug Packets?
+&Feilsøk pakker?
+
+&Debugging Log Window
+&Feilsøkingslogg
+
+&Default Character (%s)
+&Standard rolleperson (%s)
+
+&Delete Prefix
+&Slett prefix
+
+&Disconnect
+&Koble fra
+
+&Edit
+&Editer
+
+&Edit Prefix
+&Editer Prefix
+
+&Escape Special Characters
+&Escape spesialtegn
+
+&Escape Special Chars
+&Escape spesialtegn
+
+&File
+&Fil
+
+&Find
+&Finn
+
+&Global Events
+&Globale hendelser
+
+&Help
+&Hjelp
+
+&Ignore
+&Ignorer
+
+&Logging
+&Logging
+
+&Macro Window
+&Macrovindu
+
+&Next Connection
+&Neste tilkobling
+
+&No
+&Nei
+
+&No Character
+&Ingen rolleperson
+
+&OK
+&OK
+
+&Open...
+&Åpne...
+
+&Options
+&Alternativer
+
+&Paste
+&Lim inn
+
+&Prefix...
+&Prefix...
+
+&Previous Connection
+&Forrige tilkobling
+
+&Reconnect
+&Koble til på nytt
+
+&Resend Last Command
+&Send samme kommando igjen
+
+&Retry
+&Prøv igjen
+
+&Returns to %r
+&Retur blir %r
+
+&Save As...
+&Lagre som...
+
+&Show Connection Stats
+&Vis tilkoblingsstatistikker
+
+&Spawns
+&Undervinduer
+
+&Stop Logging
+&Avslutt logging
+
+&Text Editor
+&Tekstredigeringsprogram
+
+&Tools
+&Verktøy
+
+&Upload File
+&Last opp fil
+
+&View
+&Vis
+
+&Yes
+&Ja
+
+(Temp)
+(Temp)
+
+----- Activity in %d. %s -----
+----- Aktivitet i %d. %s -----
+
+--------- New Activity ---------
+--------- Ny aktivitet ---------
+
+/at cancelled.
+/at avbrutt.
+
+/at: Time must be in the future.
+/at: Angitt tid må være i fremtiden.
+
+/cls cannot be abbreviated.
+/cls kan inte forkortes.
+
+/cls: Invalid connection.
+/cls: Ugyldig tilkobling.
+
+/cls: Invalid window name.
+/cls: Ugyldig vindusnavn.
+
+/cls: No such window.
+/cls: Finner ikke det vinduet.
+
+/command Name:
+/kommandonavn:
+
+/history: Invalid position
+/historie: Ugyldig posisjon
+
+1st Address:
+Første adresse:
+
+1st Port:
+Første port:
+
+2nd Address:
+Andre adresse:
+
+2nd Port:
+Andre port:
+
+A Macro with that name already exists. Override?
+En makro med det navnet eksisterer allerede. Overskriv?
+
+AaBbYyZz
+AaBbYyZz
+
+About %s
+Om %s
+
+Accept
+Aksepter
+
+Activity Settings
+Aktivitetsinnstillinger
+
+Activity?
+Aktivitet?
+
+Add
+Legg til
+
+Add /command
+Legg til /kommando
+
+Add Character
+Legg til rolleperson
+
+Add Event
+Legg til hendelse
+
+Add Global Timer
+Legg til global timer
+
+Add Macro
+Legg til makro
+
+Add New Group
+Legg til ny gruppe
+
+Add New World
+Legg til ny verden
+
+Add Timer
+Legg til timer
+
+Add Timer for %s
+Legg til timer for %s
+
+Add to History?
+Legg til i historikk?
+
+Address
+Addresse
+
+Address Book
+Adressebok
+
+After connecting, wait
+Etter tilkobling, vent
+
+All words are now spelled correctly.
+Alle ord er nå stavet korrekt.
+
+All words are spelled correctly.
+Alle ord er stavet korrekt.
+
+All Worlds
+Alle verdener
+
+Allow ANSI Colours?
+Tillat ANSI farger?
+
+Allow ANSI Flash?
+Tillat ANSI blinking?
+
+Allow ANSI Underline?
+Tillat ANSI understreking?
+
+Allow Auto-Connects?
+Tillat automatiske tilkoblinger?
+
+Allow Partial Names?
+Tillat delvise navn?
+
+Ambiguous /command \"%s\".
+Tvetydig /kommando \"%s\".
+
+Ambiguous character name \"%s\"
+Tvetydig rollepersonsnavn \"%s\"
+
+Ambiguous option \"%s\"
+Tvetydig alternativ \"%s\"
+
+Ambiguous world name \"%s\".
+Tvetydig verdensnavn \"%s\".
+
+And repeat every
+Og gjenta hvert
+
+ANSI, Colours and Fonts
+ANSI, farger og skrifttyper
+
+Append to File?
+Legg til fil?
+
+Are you sure you want to quit?
+Vil du virkelig avslutte programmet?
+
+Are you sure you want to quit? There are still open connections!
+Vil du virkelig avslutte programmet? Du er fortsatt tilkoblet!
+
+Argument Pattern:
+Argumentmønster:
+
+ASpell executable:
+ASpell kjørbar fil:
+
+Attempt Telnet Negotiation?
+Forsøk telnet-forhandling?
+
+Auto Reconnect after (seconds):
+Koble til igjen automatisk etter (sekunder):
+
+Auto Reconnect when booted?
+Koble til igjen automatisk etter brudd?
+
+Auto-reconnect cancelled.
+Automatisk gjentilkobling avsluttet.
+
+Auto-reconnect in %s...
+Automatisk gjentilkobling om %s...
+
+Auto-Sends
+Automatiske utsendinger
+
+Available slash commands: %s
+Tilgjengelige /kommandoer: %s
+
+Backwards
+Tilbake
+
+Basic Settings
+Grunnleggende innstillinger
+
+Basics
+Grunnleggende
+
+BCC:
+BCC:
+
+Bottom Input
+Nedre inndatafelt
+
+Browser Command:
+Browserkommando:
+
+C&lose Window
+&Lukk vindu
+
+C&ut
+&Klipp ut
+
+Cancel
+Avbryt
+
+Case Sensitive?
+Match store/små bokstaver?
+
+Case?
+Store/små bokstaver?
+
+CC:
+CC:
+
+Change
+Endre
+
+Change &Language
+Endre &Språk
+
+Change BG:
+Endre BG:
+
+Change FG:
+Endre FG:
+
+Change Input Font
+Endre inndataskrifttype
+
+Change Output Font
+Endre utdataskrifttype
+
+Char
+Rolleperson
+
+Character Name:
+Rollepersonsnavn:
+
+Character:
+Rolleperson:
+
+Characters
+Rollepersoner
+
+Check &Spelling
+Kontroller &Staving
+
+Check for &Updates
+Se etter &Oppdateringer
+
+Check for Updates - %s
+Se etter oppdateringer - %s
+
+Check for Updates on Startup?
+Se etter oppdateringer ved oppstart?
+
+Checking for updates...
+Ser etter oppdateringer...
+
+Choose %s Colour
+Velg %s farge
+
+Choose Colour
+Velg farge
+
+Choose Default Input Font
+Velg standard inndataskrifttype
+
+Choose Default Output Font
+Velg standard utdataskrifttype
+
+Choose Input Font for %s
+Velg inndataskrifttype for %s
+
+Choose Output Font for %s
+Velg utdataskrifttype for %s
+
+Clear
+Tøm
+
+Clear History Command
+Tøm kommandohistorikk
+
+Clear Output Buffer
+Tøm utdatabuffer
+
+Clear Previous 'New Activity'?
+Tøm tidligere 'ny aktivitet'?
+
+Click a misspelled word to begin
+Klikk et feilstavet ord for å begynne
+
+Clock Format:
+Klokkeformat:
+
+Close
+Lukk
+
+Close &All Logs
+Lukk &alle logger
+
+Command
+Kommando
+
+Command will run at %s, id %s
+Kommando vil kjøres %s, id %s
+
+Commands
+Kommandoer
+
+Commands:
+Kommandoer:
+
+Conf
+Konf
+
+Configuration Options for '%s'
+Konfigureringsalternativ fÃ¶r '%s'
+
+Configure &Events
+Konfigurere &hendelser
+
+Configure &Prefixes/Auto-Say
+Konfigurere &prefix/auto-say
+
+Configure &World
+Konfigurere &verden
+
+Configure Program &Settings
+Konfigurere program&innstillinger
+
+Confirm Exit?
+Bekreft avslutning?
+
+Connect To World
+Koble til verden
+
+Connected - %s - %s
+Koblet til- %s - %s
+
+Connected For:
+Tilkoblet for:
+
+Connected.
+Tilkoblet.
+
+Connecting to %s proxy at %s:%s...
+Kobler til %s proxy på %s:%s...
+
+Connecting to %s:%d...
+Kobler til %s:%d...
+
+Connecting...
+Kobler til...
+
+Connection
+Tilkobling
+
+Connection attempt cancelled. - %s
+Tilkoblingsforsøk avbrutt. - %s
+
+Connection cancelled.
+Tilkobling avbrutt.
+
+Connection closed by proxy server.
+Tilkobling stengt av proxyserver.
+
+Connection Settings
+Tilkoblingsalternativer
+
+Connection Statistics
+Tilkoblingsstatistikk
+
+Continue?
+Fortsett?
+
+Continuous
+Kontinuerlig
+
+Continuously
+Kontinuerlig
+
+Convert &Returns to %r
+Endre &returer til %r
+
+Convert &Spaces to %b
+Endre &mellomrom til %b
+
+Convert NBSPs?
+Endre NBSPs?
+
+Convert returns?
+Endre returer?
+
+Convert To:
+Endre til:
+
+Copy
+Kopier
+
+Copy &Hyperlink
+Kopiere &hyperlenke
+
+Copy to Clipboard
+Kopiere til utklippsbord
+
+Copy World
+Kopier verden
+
+Current Window Size
+Nåværende vindusstørrelse
+
+Custom /command Config
+Tilpassede /kommandoer for konfigurasjon
+
+Custom /commands for %s
+Tilpassede /kommander for %s
+
+Custom:
+Tilpassede:
+
+Customise &Slash Commands
+Tilpasse &skråstrekkommandoer
+
+Customise Keyboard Shortcuts
+Tilpasse tastatursnarveier
+
+d
+d
+
+day
+dag
+
+days
+dager
+
+Default Char:
+Standard rolleperson:
+
+Default World Settings
+Standardinnstillinger for verden
+
+Delay (seconds):
+Forsinkelse (sekunder):
+
+Delete
+Slett
+
+Delete /command
+Slett /kommando
+
+Delete Character
+Slett rolleperson
+
+Delete Event
+Slett hendelse
+
+Delete Group
+Slett gruppe
+
+Delete Group?
+Slett gruppe?
+
+Delete Macro
+Slett macro
+
+Delete Timer
+Slett timer
+
+Delete World
+Slett verden
+
+Delete World?
+Slett verden?
+
+Description:
+Beskrivelse:
+
+Did you know?
+Visste du?
+
+Direction
+Retning
+
+Discard
+Ta bort
+
+Disconnect and close the window?
+Koble fra og lukk vinduet?
+
+Disconnect from %d. %s?
+Koble fra %d. %s?
+
+Disconnected from host. - %s
+Koblet fra tjeneren. -%s
+
+Disconnected.
+Koblet fra.
+
+Disconnected. Auto-reconnect in %s.
+Koblet fra. Kobler til på nytt om %s.
+
+Display
+Vis
+
+Display?
+Vis?
+
+Do you really want to cancel the file upload for \[%d. %s\]?
+Vil du virkelig avbryte filopplastningen for \[%d. %s\]?
+
+Do you really want to clear the Keyboard Shortcut for \"%s\"?
+Vil du virkelig slette tastatursnarveien for \"%s\"?
+
+Do you really want to delete \"%s\"?
+Vil du virkelig slette \"%s\"?
+
+Do you really want to delete the group \"%s\"?
+Vil du virkelig slette gruppen \"%s\"?
+
+Do you want to save this world for later?
+Vil du lagre denne verdenen?
+
+Done
+Ferdig
+
+Down
+Ned
+
+E&xit
+&Avslutt
+
+Echo
+Ekko
+
+Echo Sent Commands?
+Lokalt ekko av sendte kommandoer?
+
+Echo Timer Commands?
+Lokalt ekko av timerkommandoer?
+
+Edit /command
+Rediger /kommando
+
+Edit Character
+Rediger rolleperson
+
+Edit Event
+Rediger hendelse
+
+Edit Global Timer
+Rediger global timer
+
+Edit Macro
+Rediger macro
+
+Edit Timer
+Rediger timer
+
+Edit Timer for %s
+Rediger timer for %s
+
+Edit World
+Rediger verden
+
+Editor
+Redigeringsprogram
+
+Effects
+Effekter
+
+Enable this timer?
+Aktivere denne timeren?
+
+Enabled?
+Aktivert?
+
+Encoding changed to %s
+Tegnkoding endret til %s
+
+Enter the connection information\nfor the new world below.
+Skriv inn tilkoblingsinformasjon\nfor den nye verdenen nedenfor.
+
+Enter the name for the new Group, and click Add.
+Skriv navnet på den nye gruppen, og klikk Legg til.
+
+Error (%d): %s
+Feil (%d): %s
+
+Error: %s
+Feil: %s
+
+Event Name:
+Hendelsesnavn:
+
+Events
+Hendelser
+
+Every
+Hver
+
+Exactly
+Eksakt
+
+Existing Worlds:
+Eksisterende verdener:
+
+Exit
+Avslutt
+
+External Requests:
+Eksterne forespørsler:
+
+F-Commands
+F-kommandoer
+
+File Upload
+Filopplasting
+
+File Upload - \[%d. %s\]
+Filopplasting - \[%d. %s\]
+
+Find
+Finn
+
+Find Next
+Finn neste
+
+Find...
+Finn...
+
+Find:
+Finn:
+
+Flash SysTray Icon?
+Blink systemikon?
+
+Flash Taskbar?
+Blink aktivitetsfeltet?
+
+Font
+Skrift
+
+Font style:
+Skriftstil:
+
+Font:
+Skrift:
+
+Force ANSI Normal?
+Påtving ANSI-normal?
+
+Format:
+Format:
+
+Format: /at <time>=<string>
+Format: /at <time>=<string>
+
+Forwards
+Fremover
+
+Frequency
+Frekvens
+
+Global &Macro Window
+Globalt &Macrovindu
+
+Global Custom /commands
+Globale egne /kommandoer
+
+Global Event Configuration
+Globale hendelserkonfigurasjon
+
+Global Macros
+Globale makroer
+
+Global Prefixes
+Globale prefikser
+
+Global S&lash Commands
+Globale &skråstrekskommandoer
+
+Global Timers
+Globale timere
+
+Global User-defined commands: %s
+Globale brukerdefinerte kommandoer: %s
+
+Go &East
+Gå &Østover
+
+Go &North
+Gå &Nordover
+
+Go &South
+Gå &Sørover
+
+Go &West
+Gå &Vestover
+
+Go To
+Gå til
+
+Go to Connection
+Gå til tilkobling
+
+Go to webpage: %s
+Gå til nettsiden: %s
+
+h
+t
+
+Handle GA/EOR Prompts?
+Håntere GA/EOR-prompter?
+
+Help
+Hjelp
+
+Hide
+Skjul
+
+Hide Icon
+Skjul ikon
+
+Highlight Colours
+Markeringsfarger
+
+Host:
+Vert:
+
+hour
+time
+
+hours
+timer
+
+ID
+ID
+
+identd not running/user ID could not be verified
+identd kjører ikke/brukerID kunne ikke verifiseres
+
+Ignore
+Ignorere
+
+Ignore Empty Lines?
+Ignorere tomme linjer?
+
+Ignore empty lines?
+Ignorere tomme linjer?
+
+Ignore NL after Prompts?
+Ignorere NL etter prompter?
+
+Include Buffer From: 
+Inkluder buffer fra:
+
+Indent By:
+Innrykk med:
+
+Input
+Inndata
+
+Input Colour:
+Inndatafarge:
+
+Input History for %d. %s
+Inndatahistorikk for %d. %s
+
+Input:
+Inndata:
+
+Insert Newline
+Sett inn ny linje
+
+Invalid %s pattern \"%s\": %s
+Ugyldig %s mønster \"%s\": %s
+
+Invalid /at ID.
+Ugyldig /at ID.
+
+Invalid connection id/character name
+Ugyldig tilkoblingsID/rollepersonsnavn
+
+Invalid editor name '%s'.
+Ugyldig redigeringsprogramnavn '%s'.
+
+Invalid input window \"%s\": must be 1, 2 or 3
+Ugyldig inndatavindu \"%s\": må være 1, 2 eller 3
+
+Invalid name.
+Ugyldig navn.
+
+Invalid option \"%s\" to /limit
+Ugyldig alternativ \"%s\" for /limit
+
+Invalid setting \"%s\" for \"%s\"
+Ugyldig innstilling \"%s\" for \"%s\"
+
+Invalid Spawn Name
+Ugyldig navn for undervindu
+
+Invalid speedwalk command
+Ugyldig speedwalk-kommando
+
+Invalid var name
+Ugyldig variabelnavn
+
+Invalid var string
+Ugyldig variabelstreng
+
+Invalid window name.
+Ugyldig vindusnavn.
+
+Keyboard Shortcut
+Tastatursnarvei
+
+Keyboard Shortcut for \"%s\"
+Tastatursnarvei for \"%s\"
+
+Keyboard Shortcuts
+Tastatursnarveier
+
+Language Selection
+Språkvalg
+
+Leave Log Open?
+La loggen være åpen?
+
+Limit Input Lines?
+Begrense inndatalinjer?
+
+Limit Output Lines?
+Begrense utdatalinjer?
+
+Limit Spawn Lines?
+Begrense linjeantall i undervinduer?
+
+Limit To:
+Begrens til:
+
+Link
+Lenke
+
+Log
+Logg
+
+Log as HTML?
+Logg som HTML?
+
+Log file \"%s\" is ambiguous.
+Loggfil \"%s\" er tvetydig.
+
+Log file \"%s\" not found.
+Loggfil \"%s\" ble ikke funnet.
+
+Log from \[%d. %s\]
+Logg fra \[%d. %s\]
+
+Log input?
+Logg inndata?
+
+Log opened %s
+Logg åpnet %s
+
+Log what?
+Logg hva?
+
+Logfile from %s
+Loggfil fra %s
+
+Logged to \"%s\".
+Logget til \"%s\".
+
+Logging to %d logfiles stopped.
+Logging til %d loggfiler stoppet.
+
+Logging to \"%s\" stopped.
+Logging til \"%s\" stoppet.
+
+Login Format:
+Loginformat:
+
+Logs?
+Logger?
+
+m
+m
+
+Macros
+Makroer
+
+Macros for %s
+Makroer for %s
+
+Mail Window
+Epostvindu
+
+Main Window
+Hovedvindu
+
+Manage &Auto-Connects
+Håndtere &autotilkoblinger
+
+Match All?
+Søk alle?
+
+Minimize to SysTray?
+Minimere til varslingsfelt?
+
+minute
+minutt
+
+minutes
+minutter
+
+Misc Settings
+Diverse innstillinger
+
+Miscellaneous
+Diverse
+
+Miscellaneous Display Options
+Diverse visningsalternativ
+
+Miscellaneous Options
+Diverse alternativ
+
+Move Down
+Gå ned
+
+Move Up
+Gå opp
+
+MPP Formatted?
+MPP-formatert?
+
+MSSP Info for \[%d. %s\]
+MSSP info for \[%d. %s\]
+
+MU* Name
+MU* navn
+
+MU* Type:
+MU* type:
+
+Name
+Navn
+
+Name:
+Navn:
+
+Negotiate Encoding?
+Forhandle tegnkoding?
+
+Negotiate NAWS?
+Forhandle NAWS?
+
+Negotiate SSL?
+Forhandle SSL?
+
+New Group
+Ny gruppe
+
+New World
+Ny verden
+
+Next
+Neste
+
+Next History Command
+Neste historikk-kommando
+
+No
+Nei
+
+No of Connections
+Antall tilkoblinger
+
+No such macro \"%s\".
+Ingen slik makro \"%s\".
+
+No such world \"%s\". Use \"/quick host port\" to connect to a world that isn't in the address book.
+Ingen slik verden \"%s\". Bruk \"/hurtigtilkobling\" for å koble til en verden som ikke er i adresseboken.
+
+No valid addresses to connect to.
+Ingen gyldige adresser å koble til.
+
+None
+Ingen
+
+Normal Colours
+Normale farger
+
+Not Connected
+Ikke tilkoblet
+
+Not Connected - Reconnect Every %s
+Ikke tilkoblet - Kobler til på nytt hvert %s
+
+Not connected.
+Ikke tilkoblet.
+
+Note: Shortcut in use by '%s'.
+OBS: Snarvei benyttes av '%s'.
+
+Notes
+Notater
+
+Now logging to \"%s\".
+Logging pågår til \"%s\".
+
+OK
+OK
+
+Omit From:
+Utelat fra:
+
+Open &Mail Window
+Åpne &epostvindu
+
+Open Address Book
+Åpne adressebok
+
+Open File
+Åpne fil
+
+Options
+Alternativ
+
+Other Options
+Andre alternativ
+
+Output
+Utdata
+
+Package Info
+Pakkeinformasjon
+
+Packet Debugger for \[%d. %s\]
+Pakkefeilsøker for \[%d. %s\]
+
+Password:
+Passord:
+
+Pattern
+Mønster
+
+Pattern Type:
+Mønstertype:
+
+Pattern:
+Mønster:
+
+Persist Prompts?
+Bevar spørrelinje?
+
+Place in &Bottom Input Window
+Plassere i &nedre inndatavindu
+
+Place in &Top Input Window
+Plassere i &øvre inndatavindu
+
+Play Beeps?
+Spill av lydsignaler?
+
+Please select your desired language below and click Save\n\nNote that changes may not take effect until after you reboot.
+Velg ditt ønskede språk under og klikk Lagre\n\nBemerk at endringen kan kreve at du starter om programmet.
+
+Please wait. Checking spelling...
+Vennligst vent, kontrollerer staving...
+
+Port:
+Port:
+
+Potato Auto-Connects
+Potato autotilkoblinger
+
+Potato Debugging Log
+Potato feilsøkingslogg
+
+Prefix
+Prefiks
+
+Prefixes
+Prefikser
+
+Prefixes for %s
+Prefiksen for %s
+
+Press the desired keyboard shortcut for '%s'.\nWhen the correct shortcut is displayed below, click Accept,\nor click Cancel to keep the current shortcut.
+Trykk valgt tastatursnarvei for '%s'.\nNår den valgte snarveien vises nedenfor, klikk aksepter,\neller klikk avbryt for å beholde nåværende snarvei.
+
+Prev
+Forrige
+
+Previous History Command
+Forrige historikkommando
+
+Program Configuration for %s
+Programinnstillinger %s
+
+Program Settings
+Programinnstillinger:
+
+Progress: 
+Status:
+
+Proxy Host:
+Proxyvert:
+
+Proxy Port:
+Proxyport:
+
+Proxy server rejected request for %s:%d
+Proxytjeneren avviste forespørsel for %s:%d
+
+Proxy Type:
+Proxytype:
+
+Quick Connect
+Hurtigtilkobling
+
+Quick Connection
+Hurtigtilkobling
+
+Recipient:
+Mottakere:
+
+Reconnect All
+Koble til alle på nytt
+
+Reconnecting...
+Kobler til på nytt...
+
+Regexp Match?
+Regexp matching?
+
+Replace
+Erstatt
+
+Replace?
+Erstatt?
+
+Replacement:
+Erstatning:
+
+Report Errors?
+Rapporter feil?
+
+Restore
+Tilbakestill
+
+Return (%d): %s
+Retur (%d): %s
+
+Run F2 Command
+Kjør F2-kommandoen
+
+Run F3 Command
+Kjør F3-kommandoen
+
+Run F4 Command
+Kjør F4-kommandoen
+
+Run F5 Command
+Kjør F5-kommandoen
+
+Run F6 Command
+Kjør F6-kommandoen
+
+Run F7 Command
+Kjør F7-kommandoen
+
+Run F8 Command
+Kjør F8-kommandoen
+
+Run F9 Command
+Kjør F9-kommandoen
+
+Run F10 Command
+Kjør F10-kommandoen
+
+Run F11 Command
+Kjør F11-kommandoen
+
+Run F12 Command
+Kjør F12-kommandoen
+
+Run the commands:
+Kjør kommandoene:
+
+Run When:
+Kjør når:
+
+Run:
+Kjør:
+
+s
+s
+
+Sample
+Prøve
+
+Save
+Lagre
+
+Save Character
+Lagre rolleperson
+
+Save File
+Lagre fil
+
+Save to Input History
+Lagre i inndatahistorikk
+
+second
+sekund
+
+seconds
+sekunder
+
+Select a command and press 1 to place it in the top input window, 2 to place it in the lower input window, or 3 to send it directly to the MU*. Press 4 to copy it to the clipboard. Press escape to close the window.
+Velg en kommando og trykk 1 for å plassere den i det øvre inndatavinduet, 2 for å plassere i nedre inndatavindu, eller 3 for å sende direkte til MU*en. Trykk 4 for å kopiere til utklippstavle. Trykk ESC for å lukke vinduet.
+
+Select a command, then click a button to edit its binding
+Velg en kommando, og klikk deretter en knapp for å endre tilknytningen
+
+Select to Copy?
+Velg og kopier?
+
+Send
+Send
+
+Send &Selection to World
+Send &markering til verden
+
+Send after Login info:
+Send etter innlogging:
+
+Send before Login info:
+Send før innlogging:
+
+Send Client Info?
+Send klientinfo?
+
+Send Client Name As:
+Send klientnavn som:
+
+Send Login Details after (seconds):
+Send innloggingsdata etter (sekunder):
+
+Send Mail - \[%d. %s\]
+Send post- \[%d. %s\]
+
+Send null-byte keepalives?
+Send null-byte keepalive pakker?
+
+Send to &World
+Send til &Verden
+
+Send to MUSH
+Send til MUSH
+
+Send to MUSH:
+Send til MUSH:
+
+Send upon first connect, before Login info:
+Send etter første tilkobling, før innlogginsdata:
+
+Send:
+Send:
+
+Set auto-prefixes to apply for %s below.
+Sett autoprefiks for %s under.
+
+Set auto-prefixes to apply for all worlds below.
+Sett autoprefiks som gjelder for alle verdener under.
+
+Show &Helpfiles
+Vis &Hjelpefiler
+
+Show &Log Window
+Vis &Loggvindu
+
+Show &MSSP Info
+Vis &MSSP info
+
+Show 'Activity in <World>'?
+Vis 'Aktivitet i <Verden>'?
+
+Show 'New Activity'?
+Vis 'Ny aktivitet'?
+
+Show Beeps?
+Vis lydsignaler?
+
+Show Input &History Window
+Vis vindu for &Inndatahistorikk
+
+Show Input Wins on Startup?
+Vis inndata vindu ved oppstart?
+
+Show Package Info
+Vis pakkeinfo
+
+Show Spawn Toolbar?
+Vis verktøyfelt for undervinduer?
+
+Show Status Bar?
+Vis statusfelt?
+
+Show SysTray Icon?
+Vis varslingsfeltikon?
+
+Show Timestamps?
+Vis tidsstempel?
+
+Show Toolbar &Labels?
+Vis &etiketter på verktøyfelt?
+
+Show Two Input Windows?
+Vis to inndatavinduer?
+
+Show Verbose Messages?
+Vis detaljerte meldinger?
+
+Show World Toolbar?
+Vis verktøyfeltet for verdener?
+
+Show XTERM Colours?
+Vis XTERM-farger?
+
+Size:
+Størrelse:
+
+Sorry, that key is not allowed.
+Den tasten er ikke tillatt.
+
+Sorry, that's not a valid character name.
+Det er ikke et gyldig karakternavn.
+
+Sorry, we were unable to check for a new version at this time. Please try again later.\n\nIf the problem persists, please let us know.
+Vi kunne ikke sjekke etter nye versjoner. Vennligst prøv senere.\n\nHvis problemet vedvarer, vennligst si fra.
+
+Spaces to %&b
+Mellomrom til %&b
+
+Spawn already exists.
+Undervindu eksisterer allerede.
+
+Spawn Sys Messages?
+Send systemmeldinger til undervindu?
+
+Spawn To:
+Send til undervindu:
+
+Spawn?
+Lage undervindu?
+
+Spellcheck
+Stavekontroll
+
+Spellchecker
+Stavekontroll
+
+Split Input Cmds?
+Del inndatakommandoer?
+
+Start Maximized?
+Start maksimert?
+
+Starting Encoding:
+Starter koding:
+
+Subject:
+Emne:
+
+Suggestions:
+Forslag:
+
+Sys
+Sys
+
+System, Echo and Link Colours
+System-, ekko- och lenkefarger.
+
+Tcl Code &Console
+TCL-kode &konsoll
+
+Telnet Options
+Telnetalternativ
+
+Temp/Deleted
+Temp/Slettet
+
+Text
+Tekst
+
+That is not a valid name.
+Det er ikke et gyldig navn.
+
+That name is already in use.
+Det navnet er allerede i bruk.
+
+The Keyboard Shortcut '%s' is already in use by the task '%s'. Do you want to override it?
+Tastatursnarveien '%s' benyttes allerede av oppgaven '%s'. Vil du overskrive?
+
+There is a newer version of Potato (%s) available.\nYou can download it from Potato's Google Code site.\nWould you like to do so now?
+Det fins en nyere versjon av Potato (%s).\nDu kan laste den ned fra Potatos Google Code side.\nVil du gjøre dette nå?
+
+There is already a character with that name. Overwrite?
+Det finnes allerede en rolleperson med det navnet. Overskriv?
+
+There is already a prefix for \"%s\". Override?
+Det fins allerede et prefiks for \"%s\". Skriv over?
+
+Timers
+Timers
+
+Times
+Ganger
+
+TinyURL Provider:
+TinyURL leverandør:
+
+Toggle &Input Windows
+Bytt &Inndatavinduer
+
+Toggle Spawn Windows
+Skru undervinduer på/av.
+
+Toggle to Main Window?
+Bytt til hovedvinduet?
+
+Too many spawns
+For mange undervinduer
+
+Top Input
+Øvre inndatavindu
+
+Total Connection Time
+Total tilkoblingstid
+
+Two Input Windows?
+To inndatavinduer?
+
+Type
+Type
+
+Type:
+Type:
+
+Unable to connect to %s:%d - SSL not available.
+Kan ikke koble til %s:%d - SSL ikke tilgjengelig.
+
+Unable to connect to host %s:%d: %s
+Kan ikke koble til verden %s:%d: %s
+
+Unable to connect to proxy: %s
+Kan ikke koble til proxy: %s
+
+Unable to create new spawn window \"%s\": %s
+Kan ikke skape undervindu \"%s\": %s
+
+Unable to create TinyURL: %s
+Kan ikke skape TinyURL: %s
+
+Unable to launch TinyURL at \"%s\": %s
+Kan ikke åpne TinyURL \"%s\": %s
+
+Unable to negotiate SSL: %s
+Kan ikke etablere SSL tilkobling: %s
+
+Unable to negotiate SSL: %s. Please make sure the port is ssl-enabled.
+Kan ikke forhandle SSL: %s. Kontroller at porten støtter SSL.
+
+Unable to open \"%s\": %s
+Kunne ikke åpne \"%s\": %s
+
+Unable to open file \"%s\": %s
+Kan ikke åpne filen \"%s\": %s
+
+Unable to read file \"%s\".
+Kan ikke lese filen \"%s\".
+
+Unable to save preferences: %s
+Kan ikke lagre innstillinger: &s
+
+Unable to save to \"%s\": %s
+Kunne ikke lagre til \"%s\": %s
+
+Unable to save world '%s': %s
+Kan ikke lagre verdenen'%s': %s
+
+Unable to save world info: directory does not exist.
+Kan ikke lagre verdensinformasjon: katalogen finnes ikke.
+
+Unable to spell-check text: %s
+Kan ikke utføre stavekontroll på teksten: %s
+
+Undelete
+Angre sletting
+
+Ungrouped
+Ugruppert
+
+Unknown /command \"%s\". Use /slash for a list. Use //command to send directly to MU*.
+Ukjent /kommando \"%s\". Bruk /skråstrek for en liste. Bruk //kommando for å sende direkte til MU*.
+
+Unknown option \"%s\"
+Ukjent alternativ \"%s\"
+
+Up
+Opp
+
+Upload
+Last opp
+
+Upload of \"%s\" cancelled.
+Opplastning av \"%s\" avbrutt.
+
+Upload of \"%s\" completed.
+Opplasting av \"%s\" fullført.
+
+Upload Status - \[%d. %s\]
+Opplastningsstatus- \[%d. %s\]
+
+Uploading file \"%s\"...
+Laster opp filen \"%s\"...
+
+Use NOP Keepalive?
+Send NOP Keepalive?
+
+Use SSL?:
+Bruk SSL?:
+
+User-defined commands for this world: %s
+Brukerdefinerte kommandoer for denne verdenen: %s
+
+Value
+Verdi
+
+Variable
+Variabel
+
+Version %s. Written by Mike Griffiths (%s)
+Versjon %s. Skrevet av Mike Griffiths (%s)
+
+View helpfile '%s'
+Vis hjelpefilen '%s'
+
+Visit Potato &Website
+Besøk Potatos &Webside
+
+Warning! Using that key is not recommended!
+Advarsel! Å bruke den tasten er ikke anbefalt!
+
+Widget Theme:
+Widgettema:
+
+Window
+Vindu
+
+With:
+Med:
+
+Words:
+Ord:
+
+World Name
+Verdensnavn
+
+World Name:
+Verdensnavn:
+
+Would you like to use the settings for \[%s. %s\], rather than quick-connecting?
+Vil du benytte innstillingene for \[%s. %s\], istedet for hurtigtilkobling?
+
+Wrap Lines?
+Bryt linjer?
+
+Wrap text at:
+Bryt linje ved kolonne:
+
+Yes
+Ja
+
+You are already using the latest version of Potato.
+Du kjører siste versjon av Potato.
+
+You are currently running version:
+Du kjører denne versjonen:
+
+You cannot bind to that key. Sorry.
+Du kan ikke binde til den tasten. Beklager.
+
+You don't have any worlds defined yet! Use one of the links above to add a world.
+Du har ikke laget noen verdener enda! Bruk en av lenkene ovenfor for å legge til en verden.
+
+You must enter a character name.
+Du må fylle inn et rollepersonsnavn.
+
+You must select a file.
+Du må velge en fil.
