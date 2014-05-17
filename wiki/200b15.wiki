@@ -13,3 +13,4 @@
   * Potato is now slightly more forgiving about special characters in URLs when hyperlinking, to allow for Wiki URLs like www.foo.bar/baz_(boing) or www.foo.bar/baz:boing.
   * Using "Shift-Insert" to paste would mistakenly toggle Overtype Mode. Reported by spork.
   * New Norwegian translation, by Kenneth Aalberg (Odin@M*U*S*H).
+  * The example logroll [Macros macro] had a mistake, causing it to duplicate the backlog in the log file every 24 hours. Reported by Matthew Wheeler.
