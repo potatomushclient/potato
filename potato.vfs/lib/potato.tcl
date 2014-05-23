@@ -8505,8 +8505,8 @@ proc ::potato::setUpBindings {} {
   bind Text <<Selection>> {%W tag remove sel end-1c end}
 
   # Allow for Insert key to toggle overtype on/off in text widgets
-  bind all <Insert> "[list ::potato::toggleOvertype all];break"
-  bind Text <Insert> "[list ::potato::toggleOvertype Text];break"
+  bind all <Insert> "[list ::potato::toggleOvertype];break"
+  bind Text <Insert> "[list ::potato::toggleOvertype];break"
   bind Text <Key> [list ::potato::TextInsert %W %A]
 
   # The help for the Listbox widget says that it will only take focus on click if -takefocus is true.
