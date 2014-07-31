@@ -1,5 +1,8 @@
 #summary Download links for Potato
 
+=*NOTE*=
+Because Google Code is no longer allowing for new downloads to be added,the latest (2.0.0b15) version of Potato can currently be downloaded from [http://www.potatomushclient.com/downloads/ the Potato Website] until a more permanant download page is set up.
+
 =Downloading Potato=
 
 A binary .exe of Potato is available for MS Windows.
