@@ -1,7 +1,7 @@
 #summary Version 2.0.0b15
 
 =Version 2.0.0b15=
-==Not Yet Released==
+==Released July 31st 2014==
 
   * The 'Send' field in Events wasn't parsed for [SlashCommands /commands], even though it should have been. Reported by Karen M.
   * Fixed a bug in [SlashCommands /unset].
