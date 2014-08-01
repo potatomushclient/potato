@@ -10,7 +10,7 @@
   * Added options to the [EditMenu Edit Menu] for removing empty lines from the input window, and for removing all carriage returns. Requested by Red.
   * Fixed a bug which stopped Potato from starting on a small number of systems. Reported by kobayashikojiro.
   * Using [SlashCommands /setprefix] to clear a prefix didn't work. Reported by fuzzyweapon.
-  * Potato is now slightly more forgiving about special characters in URLs when hyperlinking, to allow for Wiki URLs like www.foo.bar/baz_(boing) or www.foo.bar/baz:boing.
+  * Potato is now slightly more forgiving about special characters in URLs when hyperlinking, to allow for Wiki URLs `like www.foo.bar/baz_(boing)` or `www.foo.bar/baz:boing`.
   * Using "Shift-Insert" to paste would mistakenly toggle Overtype Mode. Reported by spork.
-  * New Norwegian translation, by Kenneth Aalberg (Odin@M*U*S*H).
+  * New Norwegian translation, by Kenneth Aalberg (Odin@M`*`U`*`S`*`H).
   * The example logroll [Macros macro] had a mistake, causing it to duplicate the backlog in the log file every 24 hours. Reported by Matthew Wheeler.
