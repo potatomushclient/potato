@@ -8194,6 +8194,10 @@ proc ::potato::build_menu_help {m} {
   $m add separator
   createMenuTask $m about
   $m add command {*}[menu_label [T "Check for &Updates"]] -command [list ::potato::checkForUpdates]
+  set ver $::potato::potato(version)
+  if { [set changelog [::wikihelp::findTopic $ver]] ne "" || [set changelog [::wikihelp::findTopic [string map [list "." ""] $ver]]] ne "" } {
+       $m add command {*}[menu_label [T "View Changelog"]] -command [list ::wikihelp::help $changelog]
+     }
   $m add separator
   $m add command {*}[menu_label [T "&Donate to Potato's Development"]] -command [list ::potato::launchWebPage "http://www.potatomushclient.com/donate.php"]
   $m add command {*}[menu_label [T "Visit Potato &Website"]] -command [list ::potato::launchWebPage $::potato::potato(webpage)]
