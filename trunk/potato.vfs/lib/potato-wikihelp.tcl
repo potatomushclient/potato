@@ -231,6 +231,27 @@ proc ::wikihelp::clickTopic {widget x y} {
 
 };# ::wikihelp::clickTopic
 
+#: proc ::wikihelp::findTopic
+#: arg topic The topic to search for
+#: desc Return the internal name (file name) of the given topic, if any, or empty string if not found
+#: return topic name or empty string
+proc ::wikihelp::findTopic {topic} {
+  variable index;
+  variable info;
+  
+  if { !$info(indexed) } {
+       index
+     }
+  
+  if { [info exists index(file,$topic)] } {
+       return $topic;
+     } elseif { [info exists index(summary,$topic)] } {
+       return $index(summary,$topic);
+     } else {
+       return;
+     }
+};# ::wikihelp::findTopic
+
 #: proc ::wikihelp::showTopic
 #: arg topic The topic to display
 #: desc Show the given $topic in the text window
@@ -241,12 +262,8 @@ proc ::wikihelp::showTopic {topic} {
   variable info;
   variable history;
 
-  if { [info exists index(file,$topic)] } {
-       # Fine
-     } elseif { [info exists index(summary,$topic)] } {
-       set topic $index(summary,$topic);# we want the filename
-     } else {
-       # Not found
+  set topic [findTopic $topic]
+  if { $topic eq "" } {
        return 0;
      }
 
