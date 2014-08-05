@@ -1,30 +1,21 @@
 #summary Download links for Potato
 
-=*NOTE*=
-Because Google Code is no longer allowing for new downloads to be added,the latest (2.0.0b15) version of Potato can currently be downloaded from [http://www.potatomushclient.com/downloads/ the Potato Website] until a more permanant download page is set up.
-
 =Downloading Potato=
-
-A binary .exe of Potato is available for MS Windows.
-
-You can also download a [RunFromSource source code archive, or checkout the latest copy from SVN]. Potato can be run from source (without compiling) on Windows, Linux, and MacOS X.
+Because Google Code no longer allows adding new Download files, the latest versions of Potato are available directly from [http://www.potatomushclient.com/downloads/ the Potato Website]. Old versions will be kept on the Google Code site, should you need them.
 
 ==Windows==
-
-You can download the *[http://code.google.com/p/potatomushclient/downloads/list?can=2&q=OpSys%3AWindows+Type%3AExecutable+Featured latest Windows binary here]*. [http://code.google.com/p/potatomushclient/downloads/list?can=1&q=OpSys%3AWindows+Type%3AExecutable&colspec=Filename+Summary+Uploaded+Size+DownloadCount+Opsys+Type Older versions] are also available.
+Potato is available as a single-file .exe for MS Windows (32- and 64-bit).
 
 ==Linux==
-
 The easiest way to run Potato on Linux is currently [RunFromSource running from source]. There is no compiling required.
 
 Linux binaries are no longer provided, as they actually proved more troublesome for people to use than the source. However, if you'd like a Linux binary, I can provide them on request.
 
 ==MacOS X==
 
-As of version 2.0.0b12, a *[http://code.google.com/p/potatomushclient/downloads/list?can=2&q=OpSys%3AOSX+Featured MacOS X .dmg binary]* is available. These binaries are provided by Yuriko.
+As of version 2.0.0b12, a MacOS X .dmg binary is available. These binaries are provided by Yuriko.
 
 You can also run Potato on the Mac [RunFromSource from SVN, a Starkit or the source].
 
-==Source==
-
-You can also download the [http://code.google.com/p/potatomushclient/downloads/list?can=3&q=Type%3ASource+&colspec=Filename+Summary+Uploaded+Size+DownloadCount+Type source code] for the latest version, or download a [http://code.google.com/p/potatomushclient/downloads/list?can=2&q=Type%3AStarkit&colspec=Filename+Summary+Uploaded+Size+DownloadCount+Type Starkit archive]. To run from source, you'll need to have [GettingTcl Tcl/Tk] installed on your computer.
+==Old Versions==
+Old versions of Potato can be found [http://code.google.com/p/potatomushclient/downloads/list here].
