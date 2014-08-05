@@ -6487,8 +6487,8 @@ proc ::potato::main {} {
 
   set potato(name) "Potato MU* Client"
   set potato(version) [source [file join [file dirname [info script]] "potato-version.tcl"]]
-  set potato(contact) "talvo@talvo.com"
-  set potato(webpage) "http://code.google.com/p/potatomushclient/"
+  set potato(contact) "mike@keyboardzombie.com"
+  set potato(webpage) "http://www.potatomushclient.com/"
 
   checkbits
 
@@ -8371,7 +8371,7 @@ proc ::potato::checkForUpdatesSub {background token {err ""}} {
               -text [T "There is a newer version of Potato (%s) available.\nYou can download it from Potato's Google Code site.\nWould you like to do so now?" $vers]]
        $update(btns).ok configure -text [T "No"] -default normal
        pack [::ttk::button $update(btns).yes -text [T "Yes"] -default active \
-               -command "[list ::potato::launchWebPage http://code.google.com/p/potatomushclient/wiki/Downloads?tm=2] ; [list destroy $update(win)]"] -side left -before $update(btns).ok -padx 8
+               -command "[list ::potato::launchWebPage http://www.potatomushclient.com/downloads/] ; [list destroy $update(win)]"] -side left -before $update(btns).ok -padx 8
        update
        center $update(win)
        if { $background } {
