@@ -8368,7 +8368,7 @@ proc ::potato::checkForUpdatesSub {background token {err ""}} {
   if { $difference == 1 } {
        # New version available!
        pack [::ttk::label $update(main).new -font $font \
-              -text [T "There is a newer version of Potato (%s) available.\nYou can download it from Potato's Google Code site.\nWould you like to do so now?" $vers]]
+              -text [T "There is a newer version of Potato (%s) available.\nYou can download it from Potato's website.\nWould you like to do so now?" $vers]]
        $update(btns).ok configure -text [T "No"] -default normal
        pack [::ttk::button $update(btns).yes -text [T "Yes"] -default active \
                -command "[list ::potato::launchWebPage http://www.potatomushclient.com/downloads/] ; [list destroy $update(win)]"] -side left -before $update(btns).ok -padx 8
