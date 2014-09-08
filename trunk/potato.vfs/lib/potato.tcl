@@ -74,8 +74,6 @@ proc ::potato::manageWorldVersion {w version} {
        set version 0
      }
 
-  set world($w,version) 0
-
   if { ! ($version & $wf(verbose_mu_type)) } {
        set world($w,type) [lindex [list MUD MUSH] $world($w,type)]
      }
@@ -124,7 +122,7 @@ proc ::potato::manageWorldVersion {w version} {
             }
        }
      }
-
+     
   if { !($version & $wf(prefixes_list)) } {
        !set world($w,prefixes) [list]
        foreach x [removePrefix [arraySubelem world $w,prefixes] $w,prefixes] {
@@ -184,6 +182,15 @@ proc ::potato::manageWorldVersionNew {w} {
        unset -nocomplain world($w,selectToCopy)
      }
 
+  if { $version < 2 } {
+       foreach x [array names world $w,events,*,pattern] {
+         set x [string range $x 0 end-8]
+         if { $world($x,matchtype) eq "contains" } {
+              set world($x,pattern,int) [str2Regexp $world($x,pattern)]
+            }
+       }
+     }
+     
   # This should always be last.
   set world($w,version) $potato(worldVersion)
   if { [info exists world($w,groups)] } {
@@ -411,6 +418,9 @@ proc ::potato::worldFlags {{total 0}} {
   set f(prefixes_list)     512    ;# Prefixes are stored in a single list, instead of an array
   set f(new_slash_cmds)   1024    ;# new, nestable /commands, and events using [/get 0] instead of %0
   set f(better_version)   2048    ;# Versions are now stored in $world($w,version) instead, replacing the bitwise system.
+
+  # DO NOT ADD ANYTHING ELSE HERE. Use $world($w,version) instead.
+  
   if { !$total } {
        return [array get f];
      } else {
@@ -1103,12 +1113,17 @@ proc ::potato::uploadWindowStart {c} {
                   -side left -anchor nw -padx 3
   pack [pspinbox $frame.options.delay.sb -textvariable ::potato::conn($c,upload,delay) -from 0 -to 60 \
              -validate all -validatecommand {regexp {^[0-9]*\.?[0-9]?$} %P} -width 4 -increment 0.5] -side left
+             
+  pack [::ttk::frame $frame.options.prefix] -side top -pady 3 -anchor nw -expand 1 -fill x
+  pack [::ttk::label $frame.options.prefix.l -text [T "Prefix:"] -width 20 -anchor w -justify left] -side top -anchor nw -padx 3
+  pack [::ttk::entry $frame.options.prefix.e -textvariable ::potato::conn($c,upload,prefix)] -side top -anchor nw -padx 3 -fill x
 
   pack [::ttk::frame $frame.file] -side top -anchor center -fill x -padx 6 -pady 8
   pack [entry $frame.file.e -textvariable potato::conn($c,upload,file) \
             -disabledbackground white -state disabled -width 30 -cursor {}] -side left -expand 1 -fill x;#abc make me Tile!
   pack [::ttk::button $frame.file.sel -command [list ::potato::selectFile potato::conn($c,upload,file) $win 0] \
               -image ::potato::img::dotdotdot] -side left -padx 8
+              
 
   pack [::ttk::frame $frame.btns] -side top -anchor center -fill x -padx 6 -pady 8
   pack [::ttk::frame $frame.btns.ok] -side left -padx 6 -expand 1 -fill x
@@ -1245,10 +1260,15 @@ proc ::potato::uploadBegin {c} {
      }
 
   if { !$blank } {
+       if { [info exists conn($c,upload,prefix)] && [string length $conn($c,upload,prefix)] } {
+            set prefix $conn($c,upload,prefix)
+          } else {
+            set prefix ""
+          }
        foreach string $data {
-          send_to_real $c $string
+          send_to_real $c "$prefix$string"
           if { $conn($c,upload,history) } {
-               addToInputHistory $c $string
+               addToInputHistory $c "$prefix$string"
              }
        }
        set delay [expr {round(1000 * $conn($c,upload,delay))}]
@@ -1367,6 +1387,7 @@ proc ::potato::uploadEnd {c cancelled} {
   set conn($c,upload,bytes) 0
   set conn($c,upload,newlineLength) 1
   set conn($c,upload,fileSize) 0
+  set conn($c,upload,prefix) ""
   # We leave delay, ignoreEmpty and history for next time
 
   catch {destroy .upload_status_$c}
@@ -6514,7 +6535,7 @@ proc ::potato::main {} {
   # The version of the world files.
   # This is an incrementing integer, not a bit flag.
   # See ::potato::manageWorldVersionNew
-  set potato(worldVersion) 1
+  set potato(worldVersion) 2
 
   # Number of connections made
   set potato(conns) 0
@@ -12271,6 +12292,16 @@ proc ::potato::glob2Regexp {pattern} {
   return "^$temp\$";
 
 };# ::potato::glob2Regexp
+
+#: proc ::potato::str2Regexp
+#: arg str A string
+#: desc Escape all special characters in $str to make it a valid regexp which matches $str
+#: return A regexp
+proc ::potato::str2Regexp {str} {
+
+  return [regsub -all {([^a-zA-Z0-9])} $str {\\\1}];
+
+};# ::potato::str2Regexp
 
 #: proc ::potato::resendLastCmd
 #: arg c connection id
