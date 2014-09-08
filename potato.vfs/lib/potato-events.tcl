@@ -47,56 +47,33 @@ proc ::potato::eventsMatch {c _tagged _lineNoansi _eventInfo} {
            continue;
          }
       unset -nocomplain arg
-      set all 0
-      switch $world($w,events,$event,matchtype) {
-          "regexp" -
-          "wildcard" {
-                    set failStr 0
-                    set matchCmd [list regexp -all -indices]
-                    if { !$world($w,events,$event,case) } {
-                         lappend matchCmd "-nocase"
-                       }
-                    if { $world($w,events,$event,matchAll) } {
-                         set all 1
-                       }
-                    lappend matchCmd "--"
-                    if { $world($w,events,$event,matchtype) eq "wildcard" } {
-                         lappend matchCmd $world($w,events,$event,pattern,int)
-                       } else {
-                         lappend matchCmd $world($w,events,$event,pattern)
-                       }
-                    lappend matchCmd $str
-                    set matchCmdArgs [list startAndEnd arg(0) arg(1) arg(2) arg(3) \
-                             arg(4) arg(5) arg(6) arg(7) arg(8) arg(9)]
-                   }
-          "contains" {
-                    set failStr -1
-                    set matchCmd [list string first]
-                    if { $world($w,events,$event,case) } {
-                         lappend matchCmd $world($w,events,$event,pattern) $str
-                       } else {
-                         lappend matchCmd [string tolower $world($w,events,$event,pattern)] $strL
-                       }
-                   }
-      };# switch
-      if { [catch {{*}$matchCmd} result] || $result == $failStr } {
+      set all $world($w,events,$event,matchAll)
+      set matchCmd [list regexp -all -indices]
+      if { !$world($w,events,$event,case) } {
+           lappend matchCmd "-nocase"
+         }
+      lappend matchCmd "--"
+      if { $world($w,events,$event,matchtype) eq "regexp" } {
+           lappend matchCmd $world($w,events,$event,pattern)
+         } else {
+           lappend matchCmd $world($w,events,$event,pattern,int)
+         }
+      lappend matchCmd $str
+      set matchCmdArgs [list startAndEnd arg(0) arg(1) arg(2) arg(3) \
+               arg(4) arg(5) arg(6) arg(7) arg(8) arg(9)]
+
+      if { [catch {{*}$matchCmd} result] || $result == 0 } {
            continue;
          }
-      if { $world($w,events,$event,matchtype) eq "contains" } {
-           set start $result
-           set reslen [expr {[string length $world($w,events,$event,pattern)] - 1}]
-           set end [expr {$result + $reslen}]
-           set arg(0) [list $start $end]
-           set allMatches [list [list $start $end [array get arg]]]
-         } elseif { $all && $result > 1} {
+      if { $all && $result > 1} {
            set matchCmd [list regexp -all -inline -indices]
            if { !$world($w,events,$event,case) } {
                 lappend matchCmd "-nocase"
               }
-           if { $world($w,events,$event,matchtype) eq "wildcard" } {
-                lappend matchCmd $world($w,events,$event,pattern,int)
-              } else {
+           if { $world($w,events,$event,matchtype) eq "regexp" } {
                 lappend matchCmd $world($w,events,$event,pattern)
+              } else {
+                lappend matchCmd $world($w,events,$event,pattern,int)
               }
            lappend matchCmd $str
            set allPositions [{*}$matchCmd]
@@ -690,6 +667,8 @@ proc ::potato::eventSave {w} {
 
   if { $world($w,events,$this,matchtype) eq "wildcard" } {
        set world($w,events,$this,pattern,int) [glob2Regexp $world($w,events,$this,pattern)]
+     } else if { $world($w,events,$this,matchtype) eq "contains" } {
+       set world($w,events,$this,pattern,int) [str2Regexp $world($w,events,$this,pattern)]
      } else {
        set world($w,events,$this,pattern,int) ""
      }
