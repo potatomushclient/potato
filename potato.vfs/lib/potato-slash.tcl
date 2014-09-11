@@ -606,11 +606,11 @@
   if { [set space [string first " " $str]] != -1 } {
        set switch [string range $str 0 $space-1]
        set str [string range $str $space+1 end]
-       if { $x eq "-local" } {
+       if { $switch eq "-local" } {
             set global 0
-          } elseif { $x eq "-global" } {
+          } elseif { $switch eq "-global" } {
             set local 0
-          } elseif { $x ne "-all" } {
+          } elseif { $switch ne "-all" } {
             return [list 0 "/get: Invalid switch \"$switch\": Must be one of -all, -global or -local"];
           }
      }
