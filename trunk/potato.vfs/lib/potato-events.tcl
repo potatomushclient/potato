@@ -667,7 +667,7 @@ proc ::potato::eventSave {w} {
 
   if { $world($w,events,$this,matchtype) eq "wildcard" } {
        set world($w,events,$this,pattern,int) [glob2Regexp $world($w,events,$this,pattern)]
-     } else if { $world($w,events,$this,matchtype) eq "contains" } {
+     } elseif { $world($w,events,$this,matchtype) eq "contains" } {
        set world($w,events,$this,pattern,int) [str2Regexp $world($w,events,$this,pattern)]
      } else {
        set world($w,events,$this,pattern,int) ""
