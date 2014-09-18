@@ -8591,6 +8591,8 @@ proc ::potato::setUpBindings {} {
        catch {bind all <5> [list ::potato::mouseWheel %W -120]}
      } else {
        bind PotatoOutput <MouseWheel> [bind Text <MouseWheel>]
+       bind PotatoOutput <Button-4> [bind Text <Button-4>]
+       bind PotatoOutput <Button-5> [bind Text <Button-5>]
      }
 
   # Make Control-BackSpace delete the previous word
