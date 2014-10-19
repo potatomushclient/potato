@@ -107,7 +107,6 @@ proc ::potato::setPrefs {readfile} {
   set world(0,wrap,indent) 2
 
   set world(0,convertNonBreakingSpaces) 1
-  set world(0,selectToCopy) 0
 
   set world(0,spawnSystem) 1
 
