@@ -65,6 +65,7 @@ proc ::potato::setPrefs {readfile} {
   set world(0,telnet,term) 1
   set world(0,telnet,term,as) ""
   set world(0,telnet,keepalive) 0
+  set world(0,telnet,timeout) 1
   set world(0,telnet,prompts) 1
   set world(0,telnet,promptsPersist) 1
   set world(0,telnet,prompt,ignoreNewline) 1
@@ -599,6 +600,10 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
   pack [set sub [::ttk::frame $frame.telnet]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "Attempt Telnet Negotiation?"] -width 35 -justify left -anchor w] -side left -padx 3
   pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,telnet) -onvalue 1 -offvalue 0] -side left
+  
+  pack [set sub [::ttk::frame $frame.telnetTimeout]] -side top -pady 5 -anchor nw
+  pack [::ttk::label $sub.label -text [T "Abort Telnet after 90 seconds?"] -width 35 -justify left -anchor w] -side left -padx 3
+  pack [::ttk::checkbutton $sub.cb -variable ::potato::worldconfig($w,telnet,timeout) -onvalue 1 -offvalue 0] -side left
 
   pack [set sub [::ttk::frame $frame.encStart]] -side top -pady 5 -anchor nw
   pack [::ttk::label $sub.label -text [T "Starting Encoding:"] -width 35 -justify left -anchor w] -side left -padx 3
