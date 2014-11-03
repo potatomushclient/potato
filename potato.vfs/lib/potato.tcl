@@ -3988,7 +3988,7 @@ proc ::potato::parseSpawnList {c spawns} {
 #: arg onlyspawns Should we only check if it's a valid spawn name (1), or also allow "_main", "_none" and "_all"?
 #: desc Check if the name is a valid spawn name. Optionally, also allow for "_main" and "_all". Names are case-insensitive, and valid names are always returned lower-case.
 #: return empty string if invalid, lower-cased $name if valid
-proc ::potato::validSpawnName {name onlyspawns} {
+proc ::potato::validSpawnName {name {onlyspawns 0}} {
 
   if { ![string length [string trim $name]] } {
        return "";

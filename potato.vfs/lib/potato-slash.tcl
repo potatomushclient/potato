@@ -518,7 +518,7 @@
      } else {
        set c2 $c
      }
-  if { [set window [validSpawnName $window]] eq "" || [findSpawn $c2 $window] == -1 } {
+  if { [set window [validSpawnName $window 0]] eq "" || [findSpawn $c2 $window] == -1 } {
        return [list 0]
      }
   # $window may signify the main text widget, but by using showSpawn not showConn we
