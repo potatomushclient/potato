@@ -7,7 +7,7 @@ You can set Potato's options by selecting *Options...*, *Configure Program Setti
   * The *Default World Settings* set the world options used for new worlds, and are set in the same way as the [ConfigureWorlds individual world settings].
   * The *Program Settings* affect how Potato works. They're split into two sections:
     * *Misc Settings* set various options for the program.
-    * *Global Timers* allows you to set timers that run for all worlds, alongside the world's individual timers, and are configured the same as [ConfigureWorldsTimers] world-specific timers.
+    * *Global Timers* allows you to set timers that run for all worlds, alongside the world's individual timers, and are configured the same as [ConfigureWorldsTimers world-specific timers].
 
 ==Misc Settings==
 
@@ -24,4 +24,3 @@ You can set Potato's options by selecting *Options...*, *Configure Program Setti
   * *TinyURL Provider*: Which website should we use for creating short URLs via the `/tinyurl` [SlashCommands /command]?
   * *Widget Theme*: Allows you to adjust the appearance of Potato slightly. Native looks are available on Windows and MacOS X, and are recommended.
   * *Allow Auto-Connects?*: Should we allow [AutoConnects Auto-Connects]?
-
