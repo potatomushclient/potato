@@ -315,7 +315,8 @@ proc ::potato::spellcheck::checkSpelling {string} {
 };# ::potato::spellcheck::checkSpelling
 
 proc ::potato::spellcheck::checkSpellingSub {pipe} {
-
+  variable spellcheck;
+  
   set i 0
   set return [list]
   while { [set count [gets $pipe line]] >= 0 } {
@@ -332,7 +333,12 @@ proc ::potato::spellcheck::checkSpellingSub {pipe} {
        }
   }
 
-  close $pipe
+  catch {fconfigure $pipe -blocking 1}
+  if { [catch {close $pipe} err] } {
+       set spellcheck(error) $err
+       set ::potato::spellcheck::spellcheck(result) [list 0 [list]]
+       return;
+     }
 
   set ::potato::spellcheck::spellcheck(result) [list $i $return];
   return;

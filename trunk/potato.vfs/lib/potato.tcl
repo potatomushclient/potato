@@ -3937,7 +3937,7 @@ proc ::potato::get_mushageProcess {c line} {
 #: arg num Number of remaining times to beep
 #: desc Beep $num times, with a brief delay between each beep. To avoid locking up the app, this proc calls itself recursively to perform each subsequent beep, using [after]
 #: return nothing
-proc ::potato::beepNumTimes {num} {
+proc ::potato::beepNumTimes {{num 1}} {
 
   if { $num == 0 } {
        return;
