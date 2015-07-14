@@ -6480,16 +6480,41 @@ proc ::potato::checkbits {} {
   global tcl_platform;
   variable potato;
 
-  if { $tcl_platform(pointerSize) <= 4 } {
-       set bits 32
+  if { $tcl_platform(platform) eq "windows" } {
+       if { $tcl_platform(machine) eq "amd64" } {
+            set bits 64
+          } else {
+            set bits 32
+          }
      } else {
-       set bits 64
+       if { $tcl_platform(wordSize) == 8 } {
+            set bits 64
+          } else {
+            set bits 32
+          }
      }
 
   set potato(bits) $bits
   return $bits;
 
 };# ::potato::checkbits
+
+#: proc ::potato::os
+#: desc Check which operating system we're running on.
+#: return windows, macosx, android or linux
+proc ::potato::os {} {
+	global tcl_platform;
+	
+	if { $tcl_platform(platform) eq "windows" } {
+		return "windows";
+	} elseif { $tcl_platform(os) eq "Darwin" } {
+		return "macosx";
+	} elseif { [package present borg] } {
+		return "android";
+	} else {
+		return "linux";
+	}
+};# ::potato::os
 
 #: proc ::potato::main
 #: desc called when the program starts, to do some basic init
@@ -6714,11 +6739,13 @@ proc ::potato::main {} {
   set running 1;# so potato.tcl can be re-sourced without re-running this proc
 
   newConnection 0
-  # We do this after newConnection, or the <FocusIn> binding comes up wrong
-  setUpBindings
 
+  # This must come before setUpBindings
   setUpFlash
   setupSystray
+  
+  # We do this after newConnection, or the <FocusIn> binding comes up wrong
+  setUpBindings
 
   if { $::tcl_platform(platform) eq "windows" } {
        if { ![catch {package require dde 1.3} err errdict] } {

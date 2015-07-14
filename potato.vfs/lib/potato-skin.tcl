@@ -969,7 +969,7 @@ proc ::skin::potato::status {c} {
           }
      }
 
-  if { [::potato::up] == $c } {
+  if { [::potato::up] == $c && [activeTextWidget $c] eq [::potato::connInfo $c textWidget] } {
        # We should never get "closed" for this, because it'll be unshown'n first.
        if { [set pos [lsearch -exact $idle(ids) $c]] != -1 } {
             set idle(ids) [lreplace $idle(ids) $pos $pos]
@@ -1267,7 +1267,7 @@ proc ::skin::potato::activeTextWidget {{c ""}} {
      }
 
   if { ![info exists disp($c)] || $disp($c) eq "" } {
-       return [potato::connInfo $c textWidget];
+       return [::potato::connInfo $c textWidget];
      } else {
        set pos [::potato::findSpawn $c $disp($c)]
        if { $pos == -1 } {
