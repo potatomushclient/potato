@@ -1,0 +1,16 @@
+#summary Spell Checking
+
+=Spell Checking=
+
+Potato currently uses ASpell for spell checking. Currently, spell checking is available on demand via the Edit menu; there is no support for as-you-type spell checking (with the red squiggly underlines).
+
+==Installing ASpell==
+
+===Windows===
+
+On Windows, you'll need to download and install both the *Full Installer* and the *aspell-en.exe* files from the [http://aspell.net/win32/ ASpell Win32 webpage]. After installing both, go to [ConfigurePotato Options → Configure Program], select Misc Settings, and set the ASpell Executable option to the path to your aspell.exe - for me, the path was `C:\Program Files (x86)\Aspell\bin\aspell.exe`. After that, spell checking should be enabled in the Edit menu.
+
+===Linux and Mac OS X===
+You can either obtain ASpell from your OS's package manager, or download and compile it yourself from the [http://aspell.net/ ASpell website] (full instructions are available on their site), then set the [ConfigurePotato ASpell Executable] option in Potato to the aspell executable as mentioned above.
+
+If anyone has more detailed instructions for installed ASpell on these platforms, please [ContactMe let me know] and I'll include them here.
