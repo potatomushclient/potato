@@ -2,7 +2,7 @@
 
 =Credits and Contributions=
 
-Potato MU`*` Client was written by Mike Griffiths (talvo@talvo.com). Based loosely on earlier code which was originally written by Keith Vetter (Brinli@ElendorMUSH).
+Potato MU`*` Client was written by Mike Griffiths (mike@keyboardzombie.com). Based loosely on earlier code which was originally written by Keith Vetter (Brinli@ElendorMUSH).
 
   * Some ideas for the telnet processing code were taken from code written by Todd Martin, available from [http://wiki.tcl.tk/5644]
   * The Winflash and Linflash libraries were  written by Youness El Alaoui (!KaKaRoTo - kakaroto@users.sourceforge.net).
