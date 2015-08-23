@@ -4,7 +4,7 @@
 
 If you're interested in translating Potato into another language, or would like to update an existing translation, please [ContactMe contact me] and let me know which language (just in case someone else is already working on a translation in that language, to avoid duplicated efforts).
 
-When you're ready to start, download the [http://potatomushclient.googlecode.com/svn/trunk/potato.vfs/tools/potato-template.txt Translation Template file] from the Potato SVN repo. 
+When you're ready to start, download the [http://potatomushclient.googlecode.com/svn/trunk/potato.vfs/tools/potato-template.txt Translation Template file] from the Potato GIT repo. 
 ==File Format==
 
 The template file is in the format:

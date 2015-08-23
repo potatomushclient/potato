@@ -1,7 +1,7 @@
 #summary Download links for Potato
 
 =Downloading Potato=
-Because Google Code no longer allows adding new Download files, the latest versions of Potato are available directly from [http://www.potatomushclient.com/downloads/ the Potato Website]. Old versions will be kept on the Google Code site, should you need them.
+The latest versions of Potato are available directly from [http://www.potatomushclient.com/downloads/ the Potato Website]. Old versions are available from the old [https://code.google.com/p/potatomushclient/downloads/list?can=1 Google Code] site.
 
 ==Windows==
 Potato is available as a single-file .exe for MS Windows (32- and 64-bit).
@@ -15,7 +15,7 @@ Linux binaries are no longer provided, as they actually proved more troublesome 
 
 As of version 2.0.0b12, a MacOS X .dmg binary is available. These binaries are provided by Yuriko.
 
-You can also run Potato on the Mac [RunFromSource from SVN, a Starkit or the source].
+You can also run Potato on the Mac [RunFromSource from GIT, a Starkit or the source].
 
 ==Old Versions==
 Old versions of Potato can be found [http://code.google.com/p/potatomushclient/downloads/list here].

@@ -22,6 +22,6 @@ It has all the standard [Features features] you'd expect in a MU`*` client and m
   * Graphical [MailWindow Mail Window], for writing and sending in-game mail in any format
   * Optional [TwoInputWindows second input window], useful for chatting while you're RPing or coding in the first input window
 
-The help-files are still a work-in-progress. If you need help with anything, and can't find it here, feel free to [ContactMe contact me]. Bug reports, fixes, suggestions, etc, are also welcome, preferably via a [http://code.google.com/p/potatomushclient/issues/list ticket on the Google Code site].
+The help-files are still a work-in-progress. If you need help with anything, and can't find it here, feel free to [ContactMe contact me]. Bug reports, fixes, suggestions, etc, are also welcome, preferably by opening an Issue on the [http://www.potatomushclient.com/support Potato Github site].
 
 -- Mike
