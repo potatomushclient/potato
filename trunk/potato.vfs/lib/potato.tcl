@@ -8334,7 +8334,7 @@ proc ::potato::checkForUpdates {{background 0}} {
   set update(labelfont) $labelfont
   set update(waiting) 1
 
-  set url {http://potatomushclient.googlecode.com/svn/trunk/potato.vfs/lib/potato-version.tcl}
+  set url {http://www.potatomushclient.com/potato-version-check}
   if { [catch {set token [::http::geturl $url -command [list ::potato::checkForUpdatesSub $background]]} err] } {
        ::potato::checkForUpdatesSub $background {} $err
        return;
