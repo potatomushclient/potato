@@ -1,0 +1,17 @@
+#summary Version 2.0.0b16
+
+=Version 2.0.0b16=
+==Released August 23rd 2015==
+
+** With this release, Potato is moving from Google Code to Github. Bugs, feature requests, etc, should now be reported on the Github site or via the [http://www.potatomushclient.com Potato homepage]. **
+
+  * Updated all Google Code references to Github.
+  * Updated my contact details, which still showed my old email address.
+  * 'contains' matches in [Events] now work better, allowing 'Match All' to be used.
+  * Fixed a bug in [SlashCommands /get] reported by Paige.
+  * Scrolling with the mousewheel didn't always work on Linux. Reported by Jordan.
+  * The 'Select to Copy' option didn't save across shutdowns.
+  * Added an option to disable Telnet Check timeouts, for RhostMUSHes. Reported by Yumemirareru and others.
+  * Fixed a bug in [SlashCommands /world] reported by Paige.
+  * Improvements to error reporting in the Spell Check window, and added a helpfile about installing ASpell and setting up Spell Checking.
+  * Assorted other fixes
