@@ -3,8 +3,8 @@ namespace eval ::wikihelp {
   variable path;     # Widget paths
   variable index;    # File and topic names
 
-  set info(defaultTopic) "WelcomeToPotato"
-  set info(TOC) "ContentsPage"
+  set info(defaultTopic) "Home"
+  set info(TOC) "_Sidebar"
   set info(win) .wikihelp
   set info(indexed) 0
   set info(disppath) "Potato Help"
@@ -19,7 +19,7 @@ namespace eval ::wikihelp::images {
   variable wikiImagesLen;
 
   # Path that Wiki images are stored in
-  set wikiImages "http://potatomushclient.googlecode.com/svn/wiki/"
+  set wikiImages "https://github.com/talvo/potato/wiki/"
   set wikiImagesLen [string length $wikiImages]
 }
 
@@ -267,7 +267,7 @@ proc ::wikihelp::showTopic {topic} {
        return 0;
      }
 
-  if { [catch {open [file join $info(filepath) $topic.wiki] r} fid] } {
+  if { [catch {open [file join $info(filepath) $topic.md] r} fid] } {
        return 0;# can't open file
      }
 
@@ -288,11 +288,13 @@ proc ::wikihelp::showTopic {topic} {
 
   # Show the topic in the tree
   set curr [lindex [$path(tree) selection] 0]
-  if { [info exists index(list,$topic)] && ($curr eq "" || $curr ni $index(list,$topic)) } {
+  if { [info exists index(list,$topic)] } {
        set new [lindex $index(list,$topic) 0]
-       $path(tree) see $new
-       $path(tree) selection set $new
-       $path(tree) focus $new
+       if { $curr eq "" || $curr ni $index(list,$topic) } {
+            $path(tree) see $new
+            $path(tree) selection set $new
+            $path(tree) focus $new
+          }
        set join ""
        set disppath ""
        while { $new ne "" } {
@@ -314,54 +316,46 @@ proc ::wikihelp::showTopic {topic} {
 #: return list of text/tag pairs for [$textWidget insert]
 proc ::wikihelp::parse {input} {
 
-  set italic 0
-  set bold 0
+  set italic ""
+  set bold ""
   set noparse 0
-  set multinoparse 0
-  set linkparse 0
-  set headerparse 0
+  set multinoparse ""
   set values [list]
   set input [string map [list \r\n \n \r \n] $input]
-  set buffer ""
-  set past_pragma 0
+  set ilen [string length $input]
 
   set html_entity_names [list lt gt copy nbsp amp]
   set html_entity_chars [list "<" ">" [format %c 169] " " "&"];# <-- this uses a regular space for &nbsp; since we don't squish anyway
 
   foreach line [split $input "\n"] {
-     set marginTag "margins"
-     if { !$past_pragma } {
-          if { [string index $line 0] eq "#" } {
-               continue; # skip #pragma lines like #summary
-             } else {
-               set past_pragma 1
-             }
-        }
-     if { !$multinoparse && [string equal $line "\{\{\{"] } {
-          set multinoparse 1
-          continue;
-        } elseif { $multinoparse && [string equal $line "\}\}\}"] } {
-          set multinoparse 0
-          continue;
-        } elseif { $multinoparse } {
-          # Don't parse this line
-          lappend values "$line\n" [parseTags [list $marginTag] $bold $italic 1]
-          continue;
-        } elseif { [regexp {^#(summary|labels|sidebar)} $line] } {
-          continue;
-        } elseif { [regexp {^.*----+.*$} $line] } {
-          # Horizontal rule
-          lappend values "                             " hr "\n" ""
-          continue;
-        } elseif { [regexp {^( {2,})([*#]) *(.+)$} $line -> newlistdepth newlisttype rest] } {
+    set marginTag margins
+    if { $multinoparse ne "" } {
+         if { $line eq $multinoparse } {
+              set multinoparse ""
+              continue;
+            } else {
+              lappend values $line "margins noparse"
+            }
+       } elseif { $line eq "```" || $line eq "~~~" } {
+         set multinoparse $line
+         continue;
+       } elseif { $line eq "" } {
+       } elseif { [regexp {^(#{1,6}) +(.+?) *?( #* *)?$} $line - hlen htext] } {
+         set hlen [string length $hlen]
+         lappend values {*}[subparse $htext noparse bold italic "$marginTag header$hlen"]
+       } elseif { [regexp {^ {0,3}([-_*])( *\1){2,} *$} $line] } {
+         lappend values "                             " hr
+       } elseif { [regexp {^( {2,})([-+*]|\\d+[).] ) *(.+)$} $line -> newlistdepth newlisttype rest] } {
           # List
           #abc set marginTag to list-depth tag with extra indents, insert better list chars, etc
           set newlistdepth [expr { [string length $newlistdepth] / 2}]
           if { ![info exists list($newlistdepth,type)] || $list($newlistdepth,type) ne $newlisttype } {
+               if { $newlisttype ni [list "-" "*" "+"] } {
+                    set newlisttype "#" ;# numerical / ordered list
+                  }
                set list($newlistdepth,type) $newlisttype
                if { $newlisttype eq "#" } {
                     set list($newlistdepth,count) 0
-
                   }
              }
           if { $list($newlistdepth,type) eq "#" } {
@@ -375,112 +369,182 @@ proc ::wikihelp::parse {input} {
                set marginTag "marginList$newlistdepth"
              }
           lappend values "  $listchar  " [list $marginTag]
-          set line $rest
+          lappend values {*}[subparse $rest noparse bold italic $marginTag]
         } else {
+          lappend values {*}[subparse $line noparse bold italic $marginTag]
         }
-     # Get all non-special chars
-     while { [string length $line]} {
-       if { $noparse } {
-            regexp {^([^`]*)(.)?(.*?)$} $line -> easy char line
-          } elseif { $linkparse } {
-            regexp {^([^]]*)(.)?(.*?)$} $line -> easy char line
-          } else {
-            regexp {^([^*_`=[]*)(.)?(.*?)$} $line -> easy char line
-          }
-       if { $easy ne "" } {
-            if { $linkparse || $headerparse } {
-                 append buffer $easy
-               } else {
-                 # insert everything up to our special char
-                 regsub -all {(^|\s|[^A-Za-z0-9!_-])!(\S+)} $easy "\\1\\2" easy
-                 lappend values $easy [parseTags [list $marginTag] $bold $italic $noparse]
-               }
-          }
-       if { $char eq "" } {
-            continue; # nothing special to parse
-          }
-       switch -exact -- $char {
-          *  {set bold [expr {!$bold}]}
-          _  {set italic [expr {!$italic}]}
-          `  {set noparse [expr {!$noparse}]}
-          \[ {set linkparse 1}
-          \] {set linkparse 0
-              set link [parseLink $buffer]
-              if { [lindex $link 0] eq "link" } {
-                   regsub -all {(^|\s|[^A-Za-z0-9!_-])!(\S+)} [lindex $link 2] "\\1\\2" linkdisp
-                   lappend values $linkdisp [parseTags [concat $marginTag [lindex $link 3]] $bold $italic $noparse]
-                 } elseif { [lindex $link 0] eq "image" } {
-                   lappend values [list "<<IMAGE>>"] [list [lindex $link 2]]
-                 } elseif { [lindex $link 0] eq "plain" } {
-                   # Was probably an anchor which we don't support, but are good enough to ignore gracefully
-                   regsub -all {(^|\s|[^A-Za-z0-9!_-])!(\S+)} [lindex $link 1] "\\1\\2" linkdisp
-                   lappend values $linkdisp [parseTags $marginTag $bold $italic $noparse]
-                 }
-              set buffer ""
-             }
-           = {if { [string length $buffer] } {
-                   # Closing the header
-                   if { ![info exists headersize] } {
-                        set headersize $headerparse
-                      }
-                   incr headerparse -1
-                   if { !$headerparse } {
-                        # Finished the close
-                        lappend values [string trim $buffer] [parseTags [list $marginTag header$headersize] $bold $italic $noparse]
-                        unset headersize
-                        set buffer ""
-                      }
-                 } else {
-                   incr headerparse
-                 }
-             }
-        }
-     }
 
-     if { $linkparse } {
-          # We'll allow multi-line links
-        } elseif { $headerparse } {
-          # But not multiline headers
-          if { $headerparse > 3 } {
-               set headerparse 3
-             }
-          if { [string length $buffer] } {
-               lappend values [string trim $buffer] [parseTags [list $marginTag header$headerparse] $bold $italic $noparse]
-             }
-          set headerparse 0
-          set buffer ""
-        } elseif { $noparse } {
-          set noparse 0
-        }
      lappend values "\n" ""
   }
-
-  # OK, end of the file. Let's see what we didn't close...
-  if { $linkparse } {
-       # OK, we left a link open. We almost certainly didn't mean to. Hrm. Let's just ignore it. :P
-     }
-  # OK, actually, links are the only multi-line markup that buffers the text, so we're good.
-
+  
   return $values;
-
 };# ::wikihelp::parse
 
+proc ::wikihelp::subparse {text _noparse _bold _italic {extra_tags ""}} {
+  upvar $_noparse noparse $_bold bold $_italic italic;
+  
+  set esc 0
+  set last ""
+  set retlist [list]
+  set curr ""
+  set linktext ""
+  set link 0
+
+  set tlen [string length $text]
+  for {set i 0} {$i < $tlen} {incr i} {
+    set x [string index $text $i]
+    if { $x eq "`" && (!$esc || $noparse) } {
+         # Noparse
+         if { !$link } {
+              lappend retlist $curr [parseTags $extra_tags $bold $italic $noparse]
+              set curr ""
+            }
+         set noparse [expr {!$noparse}]
+	   } elseif { $noparse } {
+	     if { $link } {
+		      append linktext $x
+			} else {
+			  append curr $x
+			}
+       } elseif { $esc } {
+         if { $link } {
+              append linktext $x
+            } else {
+              append curr $x
+            }
+         set esc 0
+       } elseif { $x eq "\\" } {
+         set esc 1
+       } elseif { $x eq "*" || $x eq "_" } {
+         if { [string index $text $i+1] eq $x } {
+              # Got ** or __, for bold
+              # Skip over the second one
+              incr i
+              if { $bold ne "" && $bold ne "$x$x" } {
+                   # Our opening bold was ** but now we have __ (or vice versa) - 
+                   # treat as literal text
+                   if { $link } {
+                        append linktext "$x$x"
+                      } else {
+                        append curr "$x$x"
+                      }
+                 } else {
+                   # Toggle bold
+                   if { !$link } {
+                        lappend retlist $curr [parseTags $extra_tags $bold $italic $noparse]
+                        set curr ""
+                      }
+                   if { $bold eq "" } {
+                        set bold "$x$x"
+                      } else {
+                        set bold ""
+                      }
+                 }
+            } else {
+              # Got a single * or _, for italic
+              if { $italic ne "" && $italic ne $x } {
+                   # Got the wrong closing char, treat as literal
+                   if { $link } {
+                        append linktext $x
+                      } else {
+                        append curr $x
+                      }
+                 } else {
+                   # Toggle italic
+                   if { !$link } {
+                        lappend retlist $curr [parseTags $extra_tags $bold $italic $noparse]
+                        set curr ""
+                      }
+                   if { $italic eq "" } {
+                        set italic $x
+                      } else {
+                        set italic ""
+                      }
+                 }
+            }
+       } elseif { $x eq "\[" || ($x eq "!" && [string index $text $i+1] eq "\[") } {
+         # An image or a link
+         if { $x eq "!" } {
+              incr i
+              set linktext "!\["
+            } else {
+              set linktext "\["
+            }
+         set link 1
+         lappend retlist $curr [parseTags $extra_tags $bold $italic $noparse]
+         set curr ""
+       } elseif { $link == 1 && $x eq "]" } {
+         if { [string index $text $i+1] eq "(" } {
+              set link 2
+              incr i
+              append linktext "]("
+            } else {
+              # Parse $linktext
+              append linktext "]"
+              set plink [parseLink $linktext]
+            }
+       } elseif { $link == 2 && $x eq ")" } {
+         # Parse $linktext
+         append linktext ")"
+         set plink [parseLink $linktext]
+       } else {
+         if { $link } {
+              append linktext $x
+            } else {
+              append curr $x
+            }
+       }
+    if { [info exists plink] } {
+        set linktext ""
+        set link 0
+        if { [lindex $plink 0] eq "link" } {
+             lappend retlist [lindex $plink 2] [parseTags [concat $extra_tags [lindex $plink 3]] $bold $italic $noparse]
+           } elseif { [lindex $plink 0] eq "image" } {
+             lappend retlist [list "<<IMAGE>>"] [list [lindex $plink 2]]
+           } elseif { [lindex $plink 0] eq "plain" } {
+             # Was probably an anchor which we don't support, but are good enough to ignore gracefully
+             lappend retlist [lindex $plink 2] [parseTags $extra_tags $bold $italic $noparse]
+           }
+        unset plink
+      }
+  }
+
+  if { $link } {
+       # open link. Let's just input as raw text
+       set curr $linktext
+     }
+     
+  if { $curr ne "" } {
+       lappend retlist $curr [parseTags $extra_tags $bold $italic $noparse]
+     }
+
+  return $retlist;
+
+};# ::wikihelp::subparse
+
 #: proc ::wikihelp::parseLink
-#: arg str String to parse
-#: desc Parse out WikiLink text, which will be in the format "<linkto>[ <name>]". (If no <name>, it defaults to <linkto>.)
-#: desc If the link is to a Wiki-hosted image, try and convert to display the image instead. Otherwise, link as normal.
+#: arg str String to parse, in the format "[url]" or "[link-text](url)"
+#: desc Parse out WikiLink text. If the link is to a Wiki-hosted image, try and convert to display the image instead. Otherwise, link as normal.
 #: return [list <type> <linkto> <name> [list <tags>]] where <type> is "text" or "image", and where <tags> are the appropriate text widget tags (badlink, or link + weblink/wikilink, possibly + linkTo:<linkto>)
 proc ::wikihelp::parseLink {str} {
   variable index;
   variable info;
 
-  if { [set space [string first " " $str]] > -1 } {
-       set linkto [string range $str 0 $space-1]
-       set name [string trim [string range $str $space+1 end]]
+  if { [string index $str 0] eq "!" } {
+       set image 1
+       set str [string range $str 1 end]
      } else {
-       set linkto $str
-       set name ""
+       set image 0
      }
+  if { [string index $str end] eq "]" } {
+       # We just have [URL]
+       set linkto [string range $str 1 end-1]
+       set name ""
+     } else {
+       # We have [text](URL)
+       regexp {^\[(.+?)\]\((.+)\)$} $str - name linkto
+     }
+
   if { $name eq $linkto } {
        set name ""
      }
@@ -492,7 +556,7 @@ proc ::wikihelp::parseLink {str} {
        return [list "plain" $name];
      }
   # Check for a Wiki Image
-  if { [string equal -length $::wikihelp::images::wikiImagesLen $::wikihelp::images::wikiImages $linkto] } {
+  if { $image && [string equal -length $::wikihelp::images::wikiImagesLen $::wikihelp::images::wikiImages $linkto] } {
        # Looks like we have one.
        set imagename [file tail $linkto]
        set exts [list ".gif"]
@@ -505,7 +569,7 @@ proc ::wikihelp::parseLink {str} {
                }
             return [list "image" $linkto ::wikihelp::images::$imagename];
           }
-       # If we get here, we didn't find the image, so we continue as normal with a link.
+       # If we get here, we didn't find the image or couldn't display it, so we continue as normal with a link.
      }
   if { [regexp {^(f|ht)tps?://.+} $linkto] } {
        set tags [list weblink link "linkTo:$linkto"]
@@ -539,7 +603,16 @@ proc ::wikihelp::parseLink {str} {
 #: return New list of tags
 proc ::wikihelp::parseTags {tags bold italic noparse} {
 
-  set str "[lindex [list "" "noparse"] $noparse][lindex [list "" "bold"] $bold][lindex [list "" "italic"] $italic]"
+  set str ""
+  if { $noparse } {
+       append str "noparse"
+     }
+  if { $bold ne "" } {
+       append str "bold"
+     }
+  if { $italic ne "" } {
+       append str "italic"
+     }
   if { $str ne "" } {
        lappend tags $str
      }
@@ -562,7 +635,7 @@ proc ::wikihelp::populateTOC {} {
   array unset index list,*
 
   # If possible, we'll use the designated Table of Contents file.
-  if { [info exists info(TOC)] && [file exists [set file [file join $info(filepath) $info(TOC).wiki]]] && [file readable $file] } {
+  if { [info exists info(TOC)] && [file exists [set file [file join $info(filepath) $info(TOC).md]]] && [file readable $file] } {
        # We have a TOC file, use that.
        if { ![catch {open $file r} fid] } {
             set parents [list {}]
@@ -574,7 +647,7 @@ proc ::wikihelp::populateTOC {} {
               if { ![regexp {^( {2,})\* *(.+?) *$} $line -> spaces topic] } {
                    continue; # Skip non-list items
                  }
-              set topic [regsub -all -- "`(.+?)`" $topic {\1}];# Since we don't parse this (but Google does), strip out any backticks protecting text
+              set topic [regsub -all -- "`(.+?)`" $topic {\1}];# Since we don't parse this, strip out any backticks protecting text
               set count [expr {[string length $spaces] / 2}]
               if { $count > $indent } {
                    lappend indents $count
@@ -591,17 +664,12 @@ proc ::wikihelp::populateTOC {} {
                    set indent [lindex $indents end]
                    set parent [lindex $parents end]
                  }
-               if { [string match {\[*\]} $topic] } {
-                    set topic [string range $topic 1 end-1]
-                    if { [set space [string first " " $topic]] > -1 } {
-                         set summary [string range $topic $space+1 end]
-                         set topic [string range $topic 0 $space-1]
-                         if { [string trim $summary] eq "" } {
-                              set summary $topic
-                            }
-                       } else {
+               if { [regexp {^\[(.+?)\]\((.+?)\)$} $topic - summary topic] || [regexp {^\[((.+?))\]$} $topic - summary topic]} {
+                    if { [set summary [string trim $summary]] eq "" } {
                          set summary $topic
                        }
+                    regsub -all {\\(.)} $summary \\1 summary
+                    regsub -all {\\(.)} $topic \\1 topic
                     if { [info exists index(file,$topic)] } {
                          set tags [list link wikilink linkTo:$topic]
                        } else {
@@ -641,28 +709,18 @@ proc ::wikihelp::populateTOC {} {
 };# ::wikihelp::populateTOC
 
 #: proc ::wikihelp::index
-#: desc Index the available files, storing the filename and the "#summary" line (if present) to use as a title.
+#: desc Index the available files, storing the filename to use as a title.
 #: return nothing
 proc ::wikihelp::index {} {
   variable info;
   variable path;
   variable index;
 
-  foreach x [glob -nocomplain -dir $info(filepath) *.wiki] {
-    if { [catch {open $x r} fid] } {
-          continue; # Don't even track the filename, since we can't open it to read
-       }
+  foreach x [glob -nocomplain -dir $info(filepath) *.md] {
     set filename [file rootname [file tail $x]]
     set summary $filename ;# default in case no summary is present
-    while { [gets $fid line] >= 0 && ![eof $fid] } {
-      if { [string match "#summary *" $line] } {
-           set summary [string trim [string range $line 9 end]]
-           break;
-         }
-    }
     set index(file,$filename) $summary
     set index(summary,$summary) $filename
-    close $fid
   }
 
   set info(indexed) 1
