@@ -5142,7 +5142,7 @@ proc ::potato::manageWorldsDragDrop {{cancel 0}} {
 
   catch {destroy $manageWorlds(wTree,drag,popup)}
 
-  if { $manageWorlds(wTree,drag,id) eq "" || $cancel } {
+  if { ![info exists manageWorlds(wTree,drag,id)] || $manageWorlds(wTree,drag,id) eq "" || $cancel } {
        set manageWorlds(wTree,drag,id) ""
        return;
      }
