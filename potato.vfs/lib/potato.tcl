@@ -5,58 +5,57 @@ namespace eval ::potato::img {}
 namespace eval ::skin {}
 
 if { [info exists ::potato::running] && $::potato::running } {
-     # Being loaded via /reload; check we can.
-     if { ![info exists ::potato::potato(loadedPrefVersion)] || \
-          $::potato::potato(loadedPrefVersion) < 2 } {
-          set errmsg "Due to incompatible changes in the way world "
-          append errmsg "configuration is handled, you cannot use "
-          append errmsg "/reload at this time. Please restart Potato "
-          append errmsg "fully when convenient to update."
-          error $errmsg;
-        }
-   }
+	# Being loaded via /reload; check we can.
+	if { ![info exists ::potato::potato(loadedPrefVersion)] || \
+		$::potato::potato(loadedPrefVersion) < 2 } {
+		set errmsg "Due to incompatible changes in the way world "
+		append errmsg "configuration is handled, you cannot use "
+		append errmsg "/reload at this time. Please restart Potato "
+		append errmsg "fully when convenient to update."
+		error $errmsg;
+	}
+}
 
 #: proc ::potato::loadWorlds
 #: desc load all the stored world info from the files
 #: return number of worlds loaded
 proc ::potato::loadWorlds {} {
-  variable potato;
-  variable world;
-  variable path;
+	variable potato;
+	variable world;
+	variable path;
 
-  set files [glob -nocomplain -dir $path(world) *.wld]
+	set files [glob -nocomplain -dir $path(world) *.wld]
 
-  # "World Loaded Successfully" should NOT be translated.
-  if { [llength $files] != 0 } {
-       foreach x [lsort -dictionary $files] {
-         unset -nocomplain newWorld
-         if { ![catch {source $x} return errdict] && [lrange [split $return " "] 0 2] eq [list World Loaded Successfully] } {
+	# "World Loaded Successfully" should NOT be translated.
+	if { [llength $files] != 0 } {
+		foreach x [lsort -dictionary $files] {
+			unset -nocomplain newWorld
+			if { ![catch {source $x} return errdict] && [lrange [split $return " "] 0 2] eq [list World Loaded Successfully] } {
+				if { [info exists newWorld(isDefaultWorld)] } {
+					set w 0
+				} else {
+					set w [incr potato(worlds)]
+				}
+				foreach opt [array names newWorld] {
+					set world($w,$opt) $newWorld($opt)
+				}
+				set world($w,id) $w
+				manageWorldVersion $w [lindex [split $return " "] 3]
+			} else {
+				!set errdict [list]
+				errorLog "Unable to load world file \"[file nativename [file normalize $x]]\": $return" error [errorTrace $errdict]
+			}
+		}
+	}
 
-              if { [info exists newWorld(isDefaultWorld)] } {
-                   set w 0
-                 } else {
-                   set w [incr potato(worlds)]
-                 }
-              foreach opt [array names newWorld] {
-                 set world($w,$opt) $newWorld($opt)
-              }
-              set world($w,id) $w
-              manageWorldVersion $w [lindex [split $return " "] 3]
-            } else {
-              !set errdict [list]
-              errorLog "Unable to load world file \"[file nativename [file normalize $x]]\": $return" error [errorTrace $errdict]
-            }
-       }
-     }
-
-  set worlds [worldIDs 1]
-  if { "0" ni $worlds } {
-       lappend worlds "0"
-     }
-  foreach w $worlds {
-    loadWorldDefaults $w 0
-  }
-  return $potato(worlds);
+	set worlds [worldIDs 1]
+	if { "0" ni $worlds } {
+		lappend worlds "0"
+	}
+	foreach w $worlds {
+		loadWorldDefaults $w 0
+	}
+	return $potato(worlds);
 
 };# ::potato::loadWorlds
 
@@ -66,96 +65,97 @@ proc ::potato::loadWorlds {} {
 #: desc World $w was loaded from a version $version world file; make any changes necessary to bring it up to date with a current world file.
 #: return nothing
 proc ::potato::manageWorldVersion {w version} {
-  variable world;
+	variable world;
 
-  array set wf [worldFlags];# array of all current world flags
+	array set wf [worldFlags];# array of all current world flags
 
-  if { ![string is integer -strict $version] } {
-       set version 0
-     }
+	if { ![string is integer -strict $version] } {
+		set version 0
+	}
 
-  if { ! ($version & $wf(verbose_mu_type)) } {
-       set world($w,type) [lindex [list MUD MUSH] $world($w,type)]
-     }
+	if { ! ($version & $wf(verbose_mu_type)) } {
+		set world($w,type) [lindex [list MUD MUSH] $world($w,type)]
+	}
 
-  if { ! ($version & $wf(new_encoding)) } {
-       if { [info exists world($w,unicode)] } {
-            if { $world($w,unicode) == 1 } {
-                 set world($w,encoding,negotiate) 0
-               }
-            unset -nocomplain world($w,unicode)
-          }
-     }
+	if { ! ($version & $wf(new_encoding)) } {
+		if { [info exists world($w,unicode)] } {
+			if { $world($w,unicode) == 1 } {
+				set world($w,encoding,negotiate) 0
+			}
+			unset -nocomplain world($w,unicode)
+		}
+	}
 
-  if { ! ($version & $wf(many_chars)) } {
-       set world($w,charList) [list]
-       if { [info exists world($w,charName)] && $world($w,charName) ne "" } {
-            !set world($w,charPass) ""
-            lappend world($w,charList) [list $world($w,charName) $world($w,charPass)]
-          }
-       unset -nocomplain world($w,charName) world($w,charPass)
-    }
-
-
-  ### Somewhat separate from the above
-  if { ($version & $wf(obfusticated_pw)) && [llength $world($w,charList)] } {
-       # Un-obfusticate the passwords, for actual use. It will be re-obfusticated on save.
-       # NOTE: By the time we get here, we always have many_chars
-       set newCharList [list]
-       foreach x $world($w,charList) {
-         set char [lindex $x 0]
-         set pw [lindex $x 1]
-         if { !($version & $wf(fixed_obfusticate)) } {
-              lappend newCharList [list $char [obfusticate $pw -1]]
-            } else {
-              lappend newCharList [list $char [obfusticate $pw 0]]
-            }
-       }
-       set world($w,charList) $newCharList
-     }
-
-  if { ! ($version & $wf(event_noactivity)) } {
-       foreach x [array names world $w,events,*,pattern] {
-         set x [string range $x 0 end-8]
-         if { ![info exists world($x,noActivity)] } {
-              set world($x,noActivity) 0
-            }
-       }
-     }
-     
-  if { !($version & $wf(prefixes_list)) } {
-       !set world($w,prefixes) [list]
-       foreach x [removePrefix [arraySubelem world $w,prefixes] $w,prefixes] {
-         lappend world($w,prefixes) [list $x {*}$world($w,prefixes,$x)]
-         unset world($w,prefixes,$x)
-       }
-     }
-
-  set maplist [list "\[" "\\\[" "\]" "\\\]" \
-                    "%0" {[/get 0]} "%1" {[/get 1]} "%2" {[/get 2]} \
-                    "%3" {[/get 3]} "%4" {[/get 4]} "%5" {[/get 5]} \
-                    "%6" {[/get 6]} "%7" {[/get 7]} "%8" {[/get 8]} \
-                    "%9" {[/get 9]} \
-              ]
-  if { !($version & $wf(new_slash_cmds)) } {
-       foreach x [arraySubelem world $w,events] {
-         foreach y [list "input,string" "send"] {
-           if { [info exists world($x,$y)] && [regexp {%[0-9]} $world($x,$y)] } {
-                if { [string match "/*" $world($x,$y)] || [string match {%[0-9]} $world($x,$y)] } {
-                     set world($x,$y) [string map $maplist $world($x,$y)]
-                   } else {
-                     set world($x,$y) "\[[string map $maplist $world($x,$y)]\]"
-                   }
-              }
-         }
-       }
-     }
+	if { ! ($version & $wf(many_chars)) } {
+		set world($w,charList) [list]
+		if { [info exists world($w,charName)] && $world($w,charName) ne "" } {
+			!set world($w,charPass) ""
+			lappend world($w,charList) [list $world($w,charName) $world($w,charPass)]
+		}
+		unset -nocomplain world($w,charName) world($w,charPass)
+	}
 
 
-  # Manage newer features which use the new version number
-  manageWorldVersionNew $w
+	### Somewhat separate from the above
+	if { ($version & $wf(obfusticated_pw)) && [llength $world($w,charList)] } {
+		# Un-obfusticate the passwords, for actual use. It will be re-obfusticated on save.
+		# NOTE: By the time we get here, we always have many_chars
+		set newCharList [list]
+		foreach x $world($w,charList) {
+			set char [lindex $x 0]
+			set pw [lindex $x 1]
+			if { !($version & $wf(fixed_obfusticate)) } {
+				lappend newCharList [list $char [obfusticate $pw -1]]
+			} else {
+				lappend newCharList [list $char [obfusticate $pw 0]]
+			}
+		}
+		set world($w,charList) $newCharList
+	}
 
-  return;
+	if { ! ($version & $wf(event_noactivity)) } {
+		foreach x [array names world $w,events,*,pattern] {
+			set x [string range $x 0 end-8]
+			if { ![info exists world($x,noActivity)] } {
+				set world($x,noActivity) 0
+			}
+		}
+	}
+
+	if { !($version & $wf(prefixes_list)) } {
+		!set world($w,prefixes) [list]
+		foreach x [removePrefix [arraySubelem world $w,prefixes] $w,prefixes] {
+			lappend world($w,prefixes) [list $x {*}$world($w,prefixes,$x)]
+			unset world($w,prefixes,$x)
+		}
+	}
+
+	set maplist [list \
+		"\[" "\\\[" "\]" "\\\]" \
+		"%0" {[/get 0]} "%1" {[/get 1]} "%2" {[/get 2]} \
+		"%3" {[/get 3]} "%4" {[/get 4]} "%5" {[/get 5]} \
+		"%6" {[/get 6]} "%7" {[/get 7]} "%8" {[/get 8]} \
+		"%9" {[/get 9]} \
+	]
+	if { !($version & $wf(new_slash_cmds)) } {
+		foreach x [arraySubelem world $w,events] {
+			foreach y [list "input,string" "send"] {
+				if { [info exists world($x,$y)] && [regexp {%[0-9]} $world($x,$y)] } {
+					if { [string match "/*" $world($x,$y)] || [string match {%[0-9]} $world($x,$y)] } {
+						set world($x,$y) [string map $maplist $world($x,$y)]
+					} else {
+						set world($x,$y) "\[[string map $maplist $world($x,$y)]\]"
+					}
+				}
+			}
+		}
+	}
+
+
+	# Manage newer features which use the new version number
+	manageWorldVersionNew $w
+
+	return;
 
 };# potato::manageWorldVersion
 
@@ -164,40 +164,40 @@ proc ::potato::manageWorldVersion {w version} {
 #: desc Manage changes to the world options file for world $w, updating settings as needed to reflect changes made between the current version and the one it was saved under.
 #: return nothing
 proc ::potato::manageWorldVersionNew {w} {
-  variable world;
-  variable potato;
-  variable misc;
+	variable world;
+	variable potato;
+	variable misc;
 
-  if { [info exists world($w,version)] } {
-       set version $world($w,version)
-     } else {
-       set version 0
-     }
+	if { [info exists world($w,version)] } {
+		set version $world($w,version)
+	} else {
+		set version 0
+	}
 
-  if { $version < 1 } {
-       # In version 1, this is a global option
-       if { $w == 0 && [info exists world(0,selectToCopy)] } {
-            set misc(selectToCopy) $world(0,selectToCopy)
-          }
-       unset -nocomplain world($w,selectToCopy)
-     }
+	if { $version < 1 } {
+		# In version 1, this is a global option
+		if { $w == 0 && [info exists world(0,selectToCopy)] } {
+			set misc(selectToCopy) $world(0,selectToCopy)
+		}
+		unset -nocomplain world($w,selectToCopy)
+	}
 
-  if { $version < 2 } {
-       foreach x [array names world $w,events,*,pattern] {
-         set x [string range $x 0 end-8]
-         if { $world($x,matchtype) eq "contains" } {
-              set world($x,pattern,int) [str2Regexp $world($x,pattern)]
-            }
-       }
-     }
-     
-  # This should always be last.
-  set world($w,version) $potato(worldVersion)
-  if { [info exists world($w,groups)] } {
-       set world($w,groups) [lsearch -all -inline -not -glob $world($w,groups) "INT:*"]
-     }
+	if { $version < 2 } {
+		foreach x [array names world $w,events,*,pattern] {
+			set x [string range $x 0 end-8]
+			if { $world($x,matchtype) eq "contains" } {
+				set world($x,pattern,int) [str2Regexp $world($x,pattern)]
+			}
+		}
+	}
 
-  return;
+	# This should always be last.
+	set world($w,version) $potato(worldVersion)
+	if { [info exists world($w,groups)] } {
+		set world($w,groups) [lsearch -all -inline -not -glob $world($w,groups) "INT:*"]
+	}
+
+	return;
 
 };# ::potato::manageWorldVersionNew
 
@@ -207,65 +207,66 @@ proc ::potato::manageWorldVersionNew {w} {
 #: desc Set default settings for any options not set in world $w. If $override is true, override already-set options with defaults, too.
 #: return nothing
 proc ::potato::loadWorldDefaults {w override} {
-  variable world;
-  variable potato;
+	variable world;
+	variable potato;
 
-  # Options we don't copy. This is a list of option name wildcard patterns.
-  set nocopyPatterns [list isDefaultWorld *,font,created,* id fcmd,* events events,* timer timer,* groups slashcmd slashcmd,* macro,*]
+	# Options we don't copy. This is a list of option name wildcard patterns.
+	set nocopyPatterns [list isDefaultWorld *,font,created,* id fcmd,* events events,* timer timer,* groups slashcmd slashcmd,* macro,*]
 
 #xxx CHANGE THIS
-  # Load preset defaults for these, don't copy from the default. This is a list of optionName optionDefault pairs.
-  # All of these should also be matched by nocopyPatterns above.
-  set standardDefaults [list fcmd,2 {} fcmd,3 {} fcmd,4 {} fcmd,5 {} fcmd,6 {} fcmd,7 {} fcmd,8 {} \
-                             fcmd,9 {} fcmd,10 {} fcmd,11 {} fcmd,12 {} \
-                             events {} groups [list] slashcmd [list]]
+	# Load preset defaults for these, don't copy from the default. This is a list of optionName optionDefault pairs.
+	# All of these should also be matched by nocopyPatterns above.
+	set standardDefaults [list fcmd,2 {} fcmd,3 {} fcmd,4 {} fcmd,5 {} \
+		fcmd,6 {} fcmd,7 {} fcmd,8 {} fcmd,9 {} fcmd,10 {} fcmd,11 {} \
+		fcmd,12 {} events {} groups [list] slashcmd [list] \
+	]
 
-  if { $w != 0 } {
-       foreach opt [removePrefix [array names world 0,*] 0] {
-         set copy 1
-         if { !$override && [info exists world($w,$opt)] } {
-              continue;
-            }
-         foreach nocopy $nocopyPatterns {
-           if { [string match $nocopy $opt] } {
-                set copy 0
-                break;
-              }
-           }
-         if { !$copy } {
-              continue;
-            }
-         set world($w,$opt) $world(0,$opt)
-       }
-     }
+	if { $w != 0 } {
+		foreach opt [removePrefix [array names world 0,*] 0] {
+			set copy 1
+			if { !$override && [info exists world($w,$opt)] } {
+				continue;
+			}
+			foreach nocopy $nocopyPatterns {
+				if { [string match $nocopy $opt] } {
+					set copy 0
+					break;
+				}
+			}
+			if { !$copy } {
+				continue;
+			}
+			set world($w,$opt) $world(0,$opt)
+		}
+	}
 
-  foreach {opt default} $standardDefaults {
-    if { $override || ![info exists world($w,$opt)] } {
-         set world($w,$opt) $default
-       }
-  }
+	foreach {opt default} $standardDefaults {
+		if { $override || ![info exists world($w,$opt)] } {
+			set world($w,$opt) $default
+		}
+	}
 
-  if { [info exists world($w,events)] } {
-       foreach x $world($w,events) {
-         foreach {opt def} [list matchAll 0 replace 0 "replace,with" "" name ""] {
-           if { ![info exists world($w,events,$x,$opt)] } {
-                set world($w,events,$x,$opt) $def
-              }
-         }
-       }
-     }
+	if { [info exists world($w,events)] } {
+		foreach x $world($w,events) {
+			foreach {opt def} [list matchAll 0 replace 0 "replace,with" "" name ""] {
+				if { ![info exists world($w,events,$x,$opt)] } {
+					set world($w,events,$x,$opt) $def
+				}
+			}
+		}
+	}
 
-  if { $w != 0 } {
-       foreach x $world($w,groups) {
-         if { $x ni $world(0,groups) } {
-              lappend world(0,groups) $x
-            }
-       }
-     }
+	if { $w != 0 } {
+		foreach x $world($w,groups) {
+			if { $x ni $world(0,groups) } {
+				lappend world(0,groups) $x
+			}
+		}
+	}
 
-  set world($w,version) $potato(worldVersion)
+	set world($w,version) $potato(worldVersion)
 
-  return;
+	return;
 
 };# ::potato::loadWorldDefaults
 
@@ -275,106 +276,106 @@ proc ::potato::loadWorldDefaults {w override} {
 #: return modified name
 proc ::potato::sanitizeWorldName {name} {
 
-  # Convert spaces to underscores
-  set name [string map [list " " "_"] [string trim $name]]
+	# Convert spaces to underscores
+	set name [string map [list " " "_"] [string trim $name]]
 
-  # Remove all potentially-bad characters
-  regsub -all {[^A-Za-z0-9_-]} $name {} name
+	# Remove all potentially-bad characters
+	regsub -all {[^A-Za-z0-9_-]} $name {} name
 
-  # Max name length
-  set name [string range $name 0 15]
+	# Max name length
+	set name [string range $name 0 15]
 
-  return $name;
+	return $name;
 };# ::potato::sanitizeWorldName
 
 #: proc ::potato::saveWorlds
 #: desc save all the stored worlds to disk
 #: return 1 on success, 0 on failure
 proc ::potato::saveWorlds {} {
-  variable world;
-  variable path;
-  variable potato;
+	variable world;
+	variable path;
+	variable potato;
 
-  set make [catch {file mkdir $path(world)}]
-  if { $make || ![file exists $path(world)] || ![file isdirectory $path(world)] } {
-       tk_messageBox -icon error -parent . -type ok -title $potato(name) \
-                     -message [T "Unable to save world info: directory does not exist."]
-       return 0;
-     }
+	set make [catch {file mkdir $path(world)}]
+	if { $make || ![file exists $path(world)] || ![file isdirectory $path(world)] } {
+		tk_messageBox -icon error -parent . -type ok -title $potato(name) \
+			-message [T "Unable to save world info: directory does not exist."]
+		return 0;
+	}
 
-  foreach x [glob -nocomplain -dir $path(world) *.wld] {
-     catch {file delete $x}
-  }
+	foreach x [glob -nocomplain -dir $path(world) *.wld] {
+		catch {file delete $x}
+	}
 
-  # Generate sorted list of world ids.
-  foreach w [worldIDs 1] {
-     lappend temp [list $w $world($w,name)]
-  }
-  if { ![info exists temp] } {
-       return 1;# no worlds to save
-     }
-  set temp [lsort -index 1 -dictionary $temp]
+	# Generate sorted list of world ids.
+	foreach w [worldIDs 1] {
+		lappend temp [list $w $world($w,name)]
+	}
+	if { ![info exists temp] } {
+		return 1;# no worlds to save
+	}
+	set temp [lsort -index 1 -dictionary $temp]
 
-  set i 1
-  foreach x $temp {
-     set w [lindex $x 0]
-     if { $w != 0 && $world($w,temp) } {
-          continue;
-        }
-     if { $w == 0 } {
-          set num "000"
-          set san "DefaultWorld"
-        } else {
-          set san [sanitizeWorldName $world($w,name)]
-          set num [format %03d $i]
-        }
-     if { $san ne "" } {
-          set fnames [list "$san-$num.wld" "world$num.wld"]
-        } else {
-          set fnames [list "world$num.wld"]
-        }
-     foreach fname $fnames {
-       set err [catch {open [file join $path(world) $fname] w+} fid]
-       if { !$err } {
-            break;
-          }
-     }
-     if { $err } {
-          tk_messageBox -icon error -parent . -type ok -title $potato(name) \
-                  -message [T "Unable to save world '%s': %s" $world($w,name) $fid]
-          continue;
-        }
-     puts $fid "# $world($w,name) - $world($w,host):$world($w,port)"
-     puts $fid "# Saved from Potato $potato(version)\n"
-     if { $w == 0 } {
-          puts $fid [list set newWorld(isDefaultWorld) 1]
-          puts $fid ""
-        }
-     foreach y [lsort -dictionary [array names world $w,*]] {
-        scan $y $w,%s opt
-        if { $opt eq "top,font,created" || $opt eq "bottom,font,created" || \
-             $opt eq "id" || [string match nosave,* $opt] } {
-             continue;
-           }
-        set value $world($w,$opt)
-        if { $opt eq "charList" && [llength $world($w,$opt)] } {
-             # Obfusticate!
-             set value [list]
-             foreach x $world($w,$opt) {
-               set char [lindex $x 0]
-               set pw [lindex $x 1]
-               lappend value [list $char [obfusticate $pw 1]]
-             }
-           }
-        puts $fid [list set newWorld($opt) $value]
-     }
-     # This should NOT be translated
-     puts $fid [list return "World Loaded Successfully [worldFlags 1]"]
-     close $fid
-     incr i
-  }
+	set i 1
+	foreach x $temp {
+		set w [lindex $x 0]
+		if { $w != 0 && $world($w,temp) } {
+			continue;
+		}
+		if { $w == 0 } {
+			set num "000"
+			set san "DefaultWorld"
+		} else {
+			set san [sanitizeWorldName $world($w,name)]
+			set num [format %03d $i]
+		}
+		if { $san ne "" } {
+			set fnames [list "$san-$num.wld" "world$num.wld"]
+		} else {
+			set fnames [list "world$num.wld"]
+		}
+		foreach fname $fnames {
+			set err [catch {open [file join $path(world) $fname] w+} fid]
+			if { !$err } {
+				break;
+			}
+		}
+		if { $err } {
+			tk_messageBox -icon error -parent . -type ok -title $potato(name) \
+				-message [T "Unable to save world '%s': %s" $world($w,name) $fid]
+			continue;
+		}
+		puts $fid "# $world($w,name) - $world($w,host):$world($w,port)"
+		puts $fid "# Saved from Potato $potato(version)\n"
+		if { $w == 0 } {
+			puts $fid [list set newWorld(isDefaultWorld) 1]
+			puts $fid ""
+		}
+		foreach y [lsort -dictionary [array names world $w,*]] {
+			scan $y $w,%s opt
+			if { $opt eq "top,font,created" || $opt eq "bottom,font,created" || \
+				$opt eq "id" || [string match nosave,* $opt] } {
+				continue;
+			}
+			set value $world($w,$opt)
+			if { $opt eq "charList" && [llength $world($w,$opt)] } {
+				# Obfusticate!
+				set value [list]
+				foreach x $world($w,$opt) {
+					set char [lindex $x 0]
+					set pw [lindex $x 1]
+					lappend value [list $char [obfusticate $pw 1]]
+				}
+			}
+			puts $fid [list set newWorld($opt) $value]
+		}
+		# This should NOT be translated
+		puts $fid [list return "World Loaded Successfully [worldFlags 1]"]
+		close $fid
+		incr i
+	}
 
-  return 1;
+	return 1;
 
 };# ::potato::saveWorlds
 
@@ -385,17 +386,17 @@ proc ::potato::saveWorlds {} {
 #: return modified $str
 proc ::potato::obfusticate {str dir} {
 
-  # For un-obfusticating old, broken passwords.
-  set map-1 {5 B f 7 w S L I i 6 2 D + p X V Q Y t u / N e ! x v b P k F c { } 1 d z Z - W 9 , g q s T y l H . m A $ 4 r K ? 8 R C E * o M 3 = G 0 O J j h a n G U # ? 4 z I j V a n 1 q o Z e d w h H = O U b F i . k ! s S R D Q 6 c l / C $ B f T L W + P t , m N y v 2 8 - J 9 p r A x * E 0 X K 5 u 3 Y g 7 M}
+	# For un-obfusticating old, broken passwords.
+	set map-1 {5 B f 7 w S L I i 6 2 D + p X V Q Y t u / N e ! x v b P k F c { } 1 d z Z - W 9 , g q s T y l H . m A $ 4 r K ? 8 R C E * o M 3 = G 0 O J j h a n G U # ? 4 z I j V a n 1 q o Z e d w h H = O U b F i . k ! s S R D Q 6 c l / C $ B f T L W + P t , m N y v 2 8 - J 9 p r A x * E 0 X K 5 u 3 Y g 7 M}
 
-  set map1 [list _ z p 5 E c 3 q J S b F q _ z T i K B h L Q u W + t 4 E g n D w U O w + M - 6 6 n 1 2 r l b y L Q 8 Z o I R V 3 . 7 7 f R x f j C s h N A G H D - u c / = C N p F X 8 A O J e P 0 k a 2 k H o Z K Y v g W y Y V / U T 4 s m d i P d S . m 9 5 B 9 M j e r l X 0 1 = x I G v t a]
+	set map1 [list _ z p 5 E c 3 q J S b F q _ z T i K B h L Q u W + t 4 E g n D w U O w + M - 6 6 n 1 2 r l b y L Q 8 Z o I R V 3 . 7 7 f R x f j C s h N A G H D - u c / = C N p F X 8 A O J e P 0 k a 2 k H o Z K Y v g W y Y V / U T 4 s m d i P d S . m 9 5 B 9 M j e r l X 0 1 = x I G v t a]
 
-  set map0 [list]
-  foreach {x y} $map1 {
-    lappend map0 $y $x
-  }
+	set map0 [list]
+	foreach {x y} $map1 {
+		lappend map0 $y $x
+	}
 
-  return [string map [set map$dir] $str];
+	return [string map [set map$dir] $str];
 
 };# ::potato::obfusticate
 
@@ -405,31 +406,31 @@ proc ::potato::obfusticate {str dir} {
 #: return list of name/value pairs, or total of all flags
 proc ::potato::worldFlags {{total 0}} {
 
-  set f(has_world_flags)     1    ;# world file uses flags
-  set f(verbose_mu_type)     2    ;# Uses "MUD" and "MUSH" (not 0 and 1) for world($w,type)
-  set f(new_encoding)        4    ;# Has the new $w,encoding,* options in place of $w,unicode
-  set f(obfusticated_pw)     8    ;# Passwords are obfusticated
-  set f(many_chars)         16    ;# World has multiple characters in $world($w,charList) as [list [list name pw] [list name pw]], not $world($w,charName) and $world($w,charPass)
-  set f(event_noactivity)   32    ;# Events have a noActivity option
+	set f(has_world_flags)     1    ;# world file uses flags
+	set f(verbose_mu_type)     2    ;# Uses "MUD" and "MUSH" (not 0 and 1) for world($w,type)
+	set f(new_encoding)        4    ;# Has the new $w,encoding,* options in place of $w,unicode
+	set f(obfusticated_pw)     8    ;# Passwords are obfusticated
+	set f(many_chars)         16    ;# World has multiple characters in $world($w,charList) as [list [list name pw] [list name pw]], not $world($w,charName) and $world($w,charPass)
+	set f(event_noactivity)   32    ;# Events have a noActivity option
 # These two are obsolete, but not reused temporarily for the benefit of anyone using SVN.
 #  set f(event_matchall)    64    ;# Events have a matchAll option
 #  set f(event_replace)    128    ;# Events have replace / replace,with
-  set f(fixed_obfusticate) 256    ;# Password obfustication was broken. Like, really broken.
-  set f(prefixes_list)     512    ;# Prefixes are stored in a single list, instead of an array
-  set f(new_slash_cmds)   1024    ;# new, nestable /commands, and events using [/get 0] instead of %0
-  set f(better_version)   2048    ;# Versions are now stored in $world($w,version) instead, replacing the bitwise system.
+	set f(fixed_obfusticate) 256    ;# Password obfustication was broken. Like, really broken.
+	set f(prefixes_list)     512    ;# Prefixes are stored in a single list, instead of an array
+	set f(new_slash_cmds)   1024    ;# new, nestable /commands, and events using [/get 0] instead of %0
+	set f(better_version)   2048    ;# Versions are now stored in $world($w,version) instead, replacing the bitwise system.
 
-  # DO NOT ADD ANYTHING ELSE HERE. Use $world($w,version) instead.
-  
-  if { !$total } {
-       return [array get f];
-     } else {
-       set num 0
-       foreach x [array names f] {
-         set num [expr {$num | $f($x)}]
-       }
-       return $num;
-     }
+	# DO NOT ADD ANYTHING ELSE HERE. Use $world($w,version) instead.
+
+	if { !$total } {
+		return [array get f];
+	} else {
+		set num 0
+		foreach x [array names f] {
+			set num [expr {$num | $f($x)}]
+		}
+		return $num;
+	}
 
 };# ::potato::worldFlags
 
@@ -438,93 +439,93 @@ proc ::potato::worldFlags {{total 0}} {
 #: desc Show the window for configuring Prefixes (Auto-Says) for world $w, or the world of the currently displayed connection's world if $c is "".
 #: return nothing
 proc ::potato::prefixWindow {{w ""}} {
-  variable conn;
-  variable world;
-  variable prefixWindow
+	variable conn;
+	variable world;
+	variable prefixWindow
 
-  if { $w eq "" } {
-       set w $conn([up],world)
-     }
+	if { $w eq "" } {
+		set w $conn([up],world)
+	}
 
-  set win .prefixWin$w
-  if { [winfo exists $win] } {
-       reshowWindow $win
-       return;
-     }
+	set win .prefixWin$w
+	if { [winfo exists $win] } {
+		reshowWindow $win
+		return;
+	}
 
-  if { $w == 0 } {
-       set title [T "Global Prefixes"]
-       set message [T "Set auto-prefixes to apply for all worlds below."]
-     } else {
-       set title [T "Prefixes for %s" $world($w,name)]
-       set message [T "Set auto-prefixes to apply for %s below." $world($w,name)]
-     }
+	if { $w == 0 } {
+		set title [T "Global Prefixes"]
+		set message [T "Set auto-prefixes to apply for all worlds below."]
+	} else {
+		set title [T "Prefixes for %s" $world($w,name)]
+		set message [T "Set auto-prefixes to apply for %s below." $world($w,name)]
+	}
 
-  toplevel $win
-  wm title $win $title
+	toplevel $win
+	wm title $win $title
 
-  pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both
-  pack [label $frame.l -text $message] -side top -anchor n -pady 8
+	pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both
+	pack [label $frame.l -text $message] -side top -anchor n -pady 8
 
-  pack [set sub [::ttk::frame $frame.treeframe]] -expand 1 -fill both -padx 10 -pady 8
-  set tree [::ttk::treeview $sub.tree -columns [list Window Prefix] -show [list tree headings] -selectmode browse -takefocus 0]
-  set sbX [::ttk::scrollbar $sub.sbX -orient horizontal -command [list $tree xview]]
-  set sbY [::ttk::scrollbar $sub.sbY -orient vertical -command [list $tree yview]]
-  grid_with_scrollbars $tree $sbX $sbY
-  $tree configure -xscrollcommand [list $sbX set]
-  $tree configure -yscrollcommand [list $sbY set]
+	pack [set sub [::ttk::frame $frame.treeframe]] -expand 1 -fill both -padx 10 -pady 8
+	set tree [::ttk::treeview $sub.tree -columns [list Window Prefix] -show [list tree headings] -selectmode browse -takefocus 0]
+	set sbX [::ttk::scrollbar $sub.sbX -orient horizontal -command [list $tree xview]]
+	set sbY [::ttk::scrollbar $sub.sbY -orient vertical -command [list $tree yview]]
+	grid_with_scrollbars $tree $sbX $sbY
+	$tree configure -xscrollcommand [list $sbX set]
+	$tree configure -yscrollcommand [list $sbY set]
 
-  set prefixWindow($w,path,tree) $tree
+	set prefixWindow($w,path,tree) $tree
 
-  $tree column #0  -width 70 -stretch 0 -anchor center
-  $tree column Window -width 90 -stretch 1 -anchor e
-  $tree column Prefix -width 250 -stretch 1 -anchor w
-  $tree heading #0 -text [T "Enabled?"]
-  $tree heading Window -text "   [T "Window"]   "
-  $tree heading Prefix -text "   [T "Prefix"]   " -anchor w
+	$tree column #0  -width 70 -stretch 0 -anchor center
+	$tree column Window -width 90 -stretch 1 -anchor e
+	$tree column Prefix -width 250 -stretch 1 -anchor w
+	$tree heading #0 -text [T "Enabled?"]
+	$tree heading Window -text "   [T "Window"]   "
+	$tree heading Prefix -text "   [T "Prefix"]   " -anchor w
 
-  $tree tag bind on <Button-1> [list ::potato::prefixWindowToggle $w 1 %x %y]
-  $tree tag bind off <Button-1> [list ::potato::prefixWindowToggle $w 0 %x %y]
+	$tree tag bind on <Button-1> [list ::potato::prefixWindowToggle $w 1 %x %y]
+	$tree tag bind off <Button-1> [list ::potato::prefixWindowToggle $w 0 %x %y]
 
-  # Display prefixes
-  prefixWindowUpdate $w
+	# Display prefixes
+	prefixWindowUpdate $w
 
-  if { [llength [$tree children {}]] } {
-       set first [lindex [$tree children {}] 0]
-       $tree selection set $first
-       $tree focus $first
-       set state "!disabled"
-     } else {
-       set state "disabled"
-     }
+	if { [llength [$tree children {}]] } {
+		set first [lindex [$tree children {}] 0]
+		$tree selection set $first
+		$tree focus $first
+		set state "!disabled"
+	} else {
+		set state "disabled"
+	}
 
-  pack [set sub [::ttk::frame $frame.addedit]] -expand 1 -fill y -side top -anchor nw -padx 20 -pady 8
-  pack [set prefixWindow($w,path,aewindow) [::ttk::entry $sub.window -textvariable ::potato::prefixWindow($w,ae,window)]] -side left -padx 5
-  pack [set prefixWindow($w,path,aeprefix) [::ttk::entry $sub.prefix -textvariable ::potato::prefixWindow($w,ae,prefix)]] -side left -padx 5
-  pack [set prefixWindow($w,path,aeadd)    [::ttk::button $sub.add -text [T "Save"] -command [list ::potato::prefixWindowSave $w]]] -side left -padx 5
-  pack [set prefixWindow($w,path,aecancel) [::ttk::button $sub.cancel -text [T "Cancel"] -command [list ::potato::prefixWindowCancel $w]]] -side left -padx 5
+	pack [set sub [::ttk::frame $frame.addedit]] -expand 1 -fill y -side top -anchor nw -padx 20 -pady 8
+	pack [set prefixWindow($w,path,aewindow) [::ttk::entry $sub.window -textvariable ::potato::prefixWindow($w,ae,window)]] -side left -padx 5
+	pack [set prefixWindow($w,path,aeprefix) [::ttk::entry $sub.prefix -textvariable ::potato::prefixWindow($w,ae,prefix)]] -side left -padx 5
+	pack [set prefixWindow($w,path,aeadd)    [::ttk::button $sub.add -text [T "Save"] -command [list ::potato::prefixWindowSave $w]]] -side left -padx 5
+	pack [set prefixWindow($w,path,aecancel) [::ttk::button $sub.cancel -text [T "Cancel"] -command [list ::potato::prefixWindowCancel $w]]] -side left -padx 5
 
-  foreach x [array names prefixWindow $w,path,ae*] {
-    $prefixWindow($x) state disabled
-  }
+	foreach x [array names prefixWindow $w,path,ae*] {
+		$prefixWindow($x) state disabled
+	}
 
-  menu $win.m -tearoff 0
-  $win configure -menu $win.m
-  menu $win.m.prefix -tearoff 0 -postcommand [list ::potato::prefixWindowPostMenu $w]
-  set prefixWindow($w,path,menu) $win.m.prefix
-  $win.m add cascade {*}[menu_label [T "&Prefix..."]] -menu $win.m.prefix
-  $win.m.prefix add command {*}[menu_label [T "&Add New Prefix"]] -command [list ::potato::prefixWindowAdd $w]
-  $win.m.prefix add command {*}[menu_label [T "&Edit Prefix"]] -command [list ::potato::prefixWindowEdit $w]
-  $win.m.prefix add command {*}[menu_label [T "&Delete Prefix"]] -command [list ::potato::prefixWindowDelete $w]
-  $win.m.prefix add command {*}[menu_label [T "&Cancel Add/Edit"]] -command [list ::potato::prefixWindowCancel $w]
-  $win.m.prefix add separator
-  $win.m.prefix add command {*}[menu_label [T "C&lose Window"]] -command [list destroy $win]
+	menu $win.m -tearoff 0
+	$win configure -menu $win.m
+	menu $win.m.prefix -tearoff 0 -postcommand [list ::potato::prefixWindowPostMenu $w]
+	set prefixWindow($w,path,menu) $win.m.prefix
+	$win.m add cascade {*}[menu_label [T "&Prefix..."]] -menu $win.m.prefix
+	$win.m.prefix add command {*}[menu_label [T "&Add New Prefix"]] -command [list ::potato::prefixWindowAdd $w]
+	$win.m.prefix add command {*}[menu_label [T "&Edit Prefix"]] -command [list ::potato::prefixWindowEdit $w]
+	$win.m.prefix add command {*}[menu_label [T "&Delete Prefix"]] -command [list ::potato::prefixWindowDelete $w]
+	$win.m.prefix add command {*}[menu_label [T "&Cancel Add/Edit"]] -command [list ::potato::prefixWindowCancel $w]
+	$win.m.prefix add separator
+	$win.m.prefix add command {*}[menu_label [T "C&lose Window"]] -command [list destroy $win]
 
-  bind $win <Destroy> [list array unset ::potato::prefixWindow $w,*]
+	bind $win <Destroy> [list array unset ::potato::prefixWindow $w,*]
 
-  focus $win
+	focus $win
 
-  return;
+	return;
 
 };# ::potato::prefixWindow
 
@@ -533,16 +534,16 @@ proc ::potato::prefixWindow {{w ""}} {
 #: desc Cancel add/editing a prefix in $w's prefix window.
 #: return nothing
 proc ::potato::prefixWindowCancel {w} {
-  variable prefixWindow;
+	variable prefixWindow;
 
-  $prefixWindow($w,path,aewindow) delete 0 end
-  $prefixWindow($w,path,aeprefix) delete 0 end
-  $prefixWindow($w,path,tree) state !disabled
-  foreach x [list window prefix add cancel] {
-    $prefixWindow($w,path,ae$x) state disabled
-  }
+	$prefixWindow($w,path,aewindow) delete 0 end
+	$prefixWindow($w,path,aeprefix) delete 0 end
+	$prefixWindow($w,path,tree) state !disabled
+	foreach x [list window prefix add cancel] {
+		$prefixWindow($w,path,ae$x) state disabled
+	}
 
-  return;
+	return;
 
 };# ::potato::prefixWindowCancel
 
@@ -552,29 +553,30 @@ proc ::potato::prefixWindowCancel {w} {
 #: desc Update the tree of prefixes in world $w's Prefix Window from the vars. Set selection to $sel
 #: return nothing
 proc ::potato::prefixWindowUpdate {w {sel ""}} {
-  variable world;
-  variable prefixWindow;
+	variable world;
+	variable prefixWindow;
 
-  set tree $prefixWindow($w,path,tree)
-  $tree state !disabled
+	set tree $prefixWindow($w,path,tree)
+	$tree state !disabled
 
-  $tree delete [$tree children {}]
+	$tree delete [$tree children {}]
 
-  set list [lsort -index 0 $world($w,prefixes)]
-  set states [list off on]
-  set images [list ::potato::img::cb-unticked ::potato::img::cb-ticked]
-  foreach x $list {
-    foreach {window prefix enabled} $x {break}
-    $tree insert {} end -id $window -values [list $window [string map [list " " \u00b7] $prefix]] \
-                        -tags [list [lindex $states $enabled]] \
-                        -image [list [lindex $images $enabled]]
-  }
-  if { $sel ne "" } {
-       $tree selection set $sel
-       $tree focus $sel
-     }
+	set list [lsort -index 0 $world($w,prefixes)]
+	set states [list off on]
+	set images [list ::potato::img::cb-unticked ::potato::img::cb-ticked]
+	foreach x $list {
+		foreach {window prefix enabled} $x {break}
+		$tree insert {} end -id $window \
+			-values [list $window [string map [list " " \u00b7] $prefix]] \
+			-tags [list [lindex $states $enabled]] \
+			-image [list [lindex $images $enabled]]
+	}
+	if { $sel ne "" } {
+		$tree selection set $sel
+		$tree focus $sel
+	}
 
-  return;
+	return;
 
 };# ::potato::prefixWindowUpdate
 
@@ -586,30 +588,30 @@ proc ::potato::prefixWindowUpdate {w {sel ""}} {
 #: desc Toggle the state of the currently selected item if we're clicking on the Enabled (tree) column
 #: return nothing
 proc ::potato::prefixWindowToggle {w state x y} {
-  variable prefixWindow;
-  variable world;
+	variable prefixWindow;
+	variable world;
 
-  set tree $prefixWindow($w,path,tree)
-  if { [$tree instate disabled] } {
-       return;# Very, very annoying. Bah at whoever didn't make disabled Treeviews work right.
-     }
-  set sel [lindex [$tree selection] 0]
-  if { $sel eq "" } {
-       return;
-     }
-  if { [lindex [$tree identify $x $y] 0] eq "item" } {
-       # Close enough!
-       set tags [list on off]
-       set images [list ::potato::img::cb-ticked ::potato::img::cb-unticked]
-       set newstates [list 1 0]
-       $tree item $sel -tags [list [lindex $tags $state]] -image [lindex $images $state]
-       set pos [lsearch -exact -index 0 $world($w,prefixes) $sel]
-       set item [lindex $world($w,prefixes) $pos]
-       set item [lreplace $item 2 2 [lindex $newstates $state]]
-       set world($w,prefixes) [lreplace $world($w,prefixes) $pos $pos $item]
-     }
+	set tree $prefixWindow($w,path,tree)
+	if { [$tree instate disabled] } {
+		return;# Very, very annoying. Bah at whoever didn't make disabled Treeviews work right.
+	}
+	set sel [lindex [$tree selection] 0]
+	if { $sel eq "" } {
+		return;
+	}
+	if { [lindex [$tree identify $x $y] 0] eq "item" } {
+		# Close enough!
+		set tags [list on off]
+		set images [list ::potato::img::cb-ticked ::potato::img::cb-unticked]
+		set newstates [list 1 0]
+		$tree item $sel -tags [list [lindex $tags $state]] -image [lindex $images $state]
+		set pos [lsearch -exact -index 0 $world($w,prefixes) $sel]
+		set item [lindex $world($w,prefixes) $pos]
+		set item [lreplace $item 2 2 [lindex $newstates $state]]
+		set world($w,prefixes) [lreplace $world($w,prefixes) $pos $pos $item]
+	}
 
-  return;
+	return;
 
 };# ::potato::prefixWindowToggle
 
@@ -618,54 +620,54 @@ proc ::potato::prefixWindowToggle {w state x y} {
 #: desc Save the new (or edited) prefix in world $w's prefix window
 #: return nothing
 proc ::potato::prefixWindowSave {w} {
-  variable prefixWindow;
-  variable world;
-  variable potato;
+	variable prefixWindow;
+	variable world;
+	variable potato;
 
-  set toplevel [winfo toplevel $prefixWindow($w,path,aewindow)]
+	set toplevel [winfo toplevel $prefixWindow($w,path,aewindow)]
 
-  set window [$prefixWindow($w,path,aewindow) get]
-  set prefix [$prefixWindow($w,path,aeprefix) get]
-  # Validate window name
-  if { [set window [validSpawnName $window 0]] eq "" || $window eq "_none" } {
-        tk_messageBox -icon error -parent $toplevel -title [T "Prefixes"] \
-                      -message [T "Invalid window name."]
-        return;
-     }
+	set window [$prefixWindow($w,path,aewindow) get]
+	set prefix [$prefixWindow($w,path,aeprefix) get]
+	# Validate window name
+	if { [set window [validSpawnName $window 0]] eq "" || $window eq "_none" } {
+		tk_messageBox -icon error -parent $toplevel -title [T "Prefixes"] \
+			-message [T "Invalid window name."]
+		return;
+	}
 
-  set existing [lsearch -exact -index 0 $world($w,prefixes) $window]
+	set existing [lsearch -exact -index 0 $world($w,prefixes) $window]
 
-  if { $existing != -1 && $window ne $prefixWindow($w,editing) } {
-       set ans [tk_messageBox -icon error -parent $toplevel -title [T "Prefixes"] -type yesno \
-                     -message [T "There is already a prefix for \"%s\". Override?" $window]]
-       if { $ans ne "yes" } {
-            return;
-          }
-       set world($w,prefixes) [lreplace $world($w,prefixes) $existing $existing]
-     }
+	if { $existing != -1 && $window ne $prefixWindow($w,editing) } {
+		set ans [tk_messageBox -icon error -parent $toplevel -title [T "Prefixes"] -type yesno \
+			-message [T "There is already a prefix for \"%s\". Override?" $window]]
+		if { $ans ne "yes" } {
+			return;
+		}
+		set world($w,prefixes) [lreplace $world($w,prefixes) $existing $existing]
+	}
 
-  set editing [lsearch -exact -index 0 $world($w,prefixes) $prefixWindow($w,editing)]
+	set editing [lsearch -exact -index 0 $world($w,prefixes) $prefixWindow($w,editing)]
 
-  if { $editing != -1 } {
-       set state [lindex [lindex $world($w,prefixes) $editing] 2]
-       set world($w,prefixes) [lreplace $world($w,prefixes) $editing $editing]
-     } else {
-       set state 1
-     }
-  if { $prefix ne "" } {
-       lappend world($w,prefixes) [list $window $prefix $state]
-     }
+	if { $editing != -1 } {
+		set state [lindex [lindex $world($w,prefixes) $editing] 2]
+		set world($w,prefixes) [lreplace $world($w,prefixes) $editing $editing]
+	} else {
+		set state 1
+	}
+	if { $prefix ne "" } {
+		lappend world($w,prefixes) [list $window $prefix $state]
+	}
 
-  $prefixWindow($w,path,aewindow) delete 0 end
-  $prefixWindow($w,path,aeprefix) delete 0 end
+	$prefixWindow($w,path,aewindow) delete 0 end
+	$prefixWindow($w,path,aeprefix) delete 0 end
 
-  foreach x [list window prefix add cancel] {
-    $prefixWindow($w,path,ae$x) state disabled
-  }
+	foreach x [list window prefix add cancel] {
+		$prefixWindow($w,path,ae$x) state disabled
+	}
 
-  prefixWindowUpdate $w $window
+	prefixWindowUpdate $w $window
 
-  return;
+	return;
 
 };# ::potato::prefixWindowSave
 
@@ -674,22 +676,22 @@ proc ::potato::prefixWindowSave {w} {
 #: desc Delete the currently selected prefix in world $w's prefix window
 #: return nothing
 proc ::potato::prefixWindowDelete {w} {
-  variable prefixWindow;
-  variable world;
+	variable prefixWindow;
+	variable world;
 
-  set sel [lindex [$prefixWindow($w,path,tree) sel] 0]
-  if { $sel eq "" } {
-       return;
-     }
+	set sel [lindex [$prefixWindow($w,path,tree) sel] 0]
+	if { $sel eq "" } {
+		return;
+	}
 
-  set pos [lsearch -exact -nocase -index 0 $world($w,prefixes) $sel]
-  if { $pos != -1 } {
-       set world($w,prefixes) [lreplace $world($w,prefixes) $pos $pos]
-     }
+	set pos [lsearch -exact -nocase -index 0 $world($w,prefixes) $sel]
+	if { $pos != -1 } {
+		set world($w,prefixes) [lreplace $world($w,prefixes) $pos $pos]
+	}
 
-  prefixWindowUpdate $w
+	prefixWindowUpdate $w
 
-  return;
+	return;
 
 };# ::potato::prefixWindowDelete
 
@@ -698,16 +700,16 @@ proc ::potato::prefixWindowDelete {w} {
 #: desc Add a new prefix in world $w's prefix window
 #: return nothing
 proc ::potato::prefixWindowAdd {w} {
-  variable prefixWindow;
+	variable prefixWindow;
 
-  $prefixWindow($w,path,tree) state disabled
-  foreach x [list window prefix add cancel] {
-    $prefixWindow($w,path,ae$x) state !disabled
-  }
-  set prefixWindow($w,editing) ""
-  focus $prefixWindow($w,path,aewindow)
+	$prefixWindow($w,path,tree) state disabled
+	foreach x [list window prefix add cancel] {
+		$prefixWindow($w,path,ae$x) state !disabled
+	}
+	set prefixWindow($w,editing) ""
+	focus $prefixWindow($w,path,aewindow)
 
-  return;
+	return;
 
 };# ::potato::prefixWindowAdd
 
@@ -716,27 +718,27 @@ proc ::potato::prefixWindowAdd {w} {
 #: desc Edit the currently selected prefix for world $w's prefix window
 #: return nothing
 proc ::potato::prefixWindowEdit {w} {
-  variable prefixWindow;
-  variable world;
+	variable prefixWindow;
+	variable world;
 
-  set tree $prefixWindow($w,path,tree)
-  set sel [lindex [$tree selection] 0]
-  if { $sel eq "" } {
-       return;
-     }
-  $tree state disabled
-  foreach x [list window prefix add cancel] {
-    $prefixWindow($w,path,ae$x) state !disabled
-  }
-  $prefixWindow($w,path,aewindow) insert end $sel
-  set pos [lsearch -exact -index 0 $world($w,prefixes) $sel]
-  if { $pos != -1 } {
-       $prefixWindow($w,path,aeprefix) insert end [lindex [lindex $world($w,prefixes) $pos] 1]
-     }
-  set prefixWindow($w,editing) $sel
-  focus $prefixWindow($w,path,aewindow)
+	set tree $prefixWindow($w,path,tree)
+	set sel [lindex [$tree selection] 0]
+	if { $sel eq "" } {
+		return;
+	}
+	$tree state disabled
+	foreach x [list window prefix add cancel] {
+		$prefixWindow($w,path,ae$x) state !disabled
+	}
+	$prefixWindow($w,path,aewindow) insert end $sel
+	set pos [lsearch -exact -index 0 $world($w,prefixes) $sel]
+	if { $pos != -1 } {
+		$prefixWindow($w,path,aeprefix) insert end [lindex [lindex $world($w,prefixes) $pos] 1]
+	}
+	set prefixWindow($w,editing) $sel
+	focus $prefixWindow($w,path,aewindow)
 
-  return;
+	return;
 
 };# ::potato::prefixWindowEdit
 
@@ -745,27 +747,27 @@ proc ::potato::prefixWindowEdit {w} {
 #: desc Configure menu item states when menu is posted
 #: return nothing
 proc ::potato::prefixWindowPostMenu {w} {
-  variable prefixWindow;
+	variable prefixWindow;
 
-  set m $prefixWindow($w,path,menu)
-  if { [$prefixWindow($w,path,aecancel) instate !disabled] } {
-       $m entryconfigure 0 -state disabled
-       $m entryconfigure 1 -state disabled
-       $m entryconfigure 2 -state disabled
-       $m entryconfigure 3 -state normal
-     } elseif { [llength [$prefixWindow($w,path,tree) children {}]] } {
-       $m entryconfigure 0 -state normal
-       $m entryconfigure 1 -state normal
-       $m entryconfigure 2 -state normal
-       $m entryconfigure 3 -state disabled
-     } else {
-       $m entryconfigure 0 -state normal
-       $m entryconfigure 1 -state disabled
-       $m entryconfigure 2 -state disabled
-       $m entryconfigure 3 -state disabled
-     }
+	set m $prefixWindow($w,path,menu)
+	if { [$prefixWindow($w,path,aecancel) instate !disabled] } {
+		$m entryconfigure 0 -state disabled
+		$m entryconfigure 1 -state disabled
+		$m entryconfigure 2 -state disabled
+		$m entryconfigure 3 -state normal
+	} elseif { [llength [$prefixWindow($w,path,tree) children {}]] } {
+		$m entryconfigure 0 -state normal
+		$m entryconfigure 1 -state normal
+		$m entryconfigure 2 -state normal
+		$m entryconfigure 3 -state disabled
+	} else {
+		$m entryconfigure 0 -state normal
+		$m entryconfigure 1 -state disabled
+		$m entryconfigure 2 -state disabled
+		$m entryconfigure 3 -state disabled
+	}
 
-  return;
+	return;
 
 };# ::potato::prefixWindowPostMenu
 
@@ -774,115 +776,117 @@ proc ::potato::prefixWindowPostMenu {w} {
 #: desc Show a "send mail" window for connection $c, or the currently displayed connection if $c is ""
 #: return nothing
 proc ::potato::mailWindow {{c ""}} {
-  variable conn;
-  variable world;
-  variable gameMail;
+	variable conn;
+	variable world;
+	variable gameMail;
 
-  if { $c eq "" } {
-       set c [up]
-     }
-  if { $c == 0 } {
-       bell -displayof .
-       return;
-     }
-  set win .mailWindow$c
-  if { [winfo exists $win] } {
-       reshowWindow $win
-       return;
-     }
-  toplevel $win
-  wm withdraw $win
-  registerWindow $c $win
+	if { $c eq "" } {
+		set c [up]
+	}
+	if { $c == 0 } {
+		bell -displayof .
+		return;
+	}
+	set win .mailWindow$c
+	if { [winfo exists $win] } {
+		reshowWindow $win
+		return;
+	}
+	toplevel $win
+	wm withdraw $win
+	registerWindow $c $win
 
-  set w $conn($c,world)
+	set w $conn($c,world)
 
-  wm title $win [T "Send Mail - \[%d. %s\]" $c $world($w,name)]
+	wm title $win [T "Send Mail - \[%d. %s\]" $c $world($w,name)]
 
-  set menu [menu $win.m -tearoff 0]
-  $win configure -menu $menu
-  $menu add cascade -menu [set fileMenu [menu $menu.file -tearoff 0]] {*}[menu_label [T "&File"]]
-  $menu add cascade -menu [set editMenu [menu $menu.edit -tearoff 0]] {*}[menu_label [T "&Edit"]]
+	set menu [menu $win.m -tearoff 0]
+	$win configure -menu $menu
+	$menu add cascade -menu [set fileMenu [menu $menu.file -tearoff 0]] {*}[menu_label [T "&File"]]
+	$menu add cascade -menu [set editMenu [menu $menu.edit -tearoff 0]] {*}[menu_label [T "&Edit"]]
 
-  pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both
+	pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both
 
-  pack [set to [::ttk::frame $frame.to]] -side top -anchor nw -expand 0 -fill x -padx 5 -pady 3
-  pack [::ttk::label $to.l -text [T "Recipient:"] -width 10] -side left -anchor nw
-  pack [::ttk::entry $to.e -textvariable ::potato::conn($c,mailWindow,to) -width 40] -side left -anchor nw -fill x
+	pack [set to [::ttk::frame $frame.to]] -side top -anchor nw -expand 0 -fill x -padx 5 -pady 3
+	pack [::ttk::label $to.l -text [T "Recipient:"] -width 10] -side left -anchor nw
+	pack [::ttk::entry $to.e -textvariable ::potato::conn($c,mailWindow,to) -width 40] -side left -anchor nw -fill x
 
-  pack [set cc [::ttk::frame $frame.cc]] -side top -anchor nw -expand 0 -fill x -padx 5 -pady 3
-  pack [::ttk::label $cc.l -text [T "CC:"] -width 10] -side left -anchor nw
-  pack [::ttk::entry $cc.e -textvariable ::potato::conn($c,mailWindow,cc) -width 40] -side left -anchor nw -fill x
+	pack [set cc [::ttk::frame $frame.cc]] -side top -anchor nw -expand 0 -fill x -padx 5 -pady 3
+	pack [::ttk::label $cc.l -text [T "CC:"] -width 10] -side left -anchor nw
+	pack [::ttk::entry $cc.e -textvariable ::potato::conn($c,mailWindow,cc) -width 40] -side left -anchor nw -fill x
 
-  pack [set bcc [::ttk::frame $frame.bcc]] -side top -anchor nw -expand 0 -fill x -padx 5 -pady 3
-  pack [::ttk::label $bcc.l -text [T "BCC:"] -width 10] -side left -anchor nw
-  pack [::ttk::entry $bcc.e -textvariable ::potato::conn($c,mailWindow,bcc) -width 40] -side left -anchor nw -fill x
+	pack [set bcc [::ttk::frame $frame.bcc]] -side top -anchor nw -expand 0 -fill x -padx 5 -pady 3
+	pack [::ttk::label $bcc.l -text [T "BCC:"] -width 10] -side left -anchor nw
+	pack [::ttk::entry $bcc.e -textvariable ::potato::conn($c,mailWindow,bcc) -width 40] -side left -anchor nw -fill x
 
-  pack [set subject [::ttk::frame $frame.subject]] -side top -anchor nw -expand 0 -fill x -padx 5 -pady 3
-  pack [::ttk::label $subject.l -text [T "Subject:"] -width 10] -side left -anchor nw
-  pack [::ttk::entry $subject.e -textvariable ::potato::conn($c,mailWindow,subject) -width 40] \
-      -side left -anchor nw -fill x
+	pack [set subject [::ttk::frame $frame.subject]] -side top -anchor nw -expand 0 -fill x -padx 5 -pady 3
+	pack [::ttk::label $subject.l -text [T "Subject:"] -width 10] -side left -anchor nw
+	pack [::ttk::entry $subject.e -textvariable ::potato::conn($c,mailWindow,subject) -width 40] \
+		-side left -anchor nw -fill x
 
-  foreach x [list to cc bcc subject] {
-    set conn($c,mailWindow,$x) ""
-    set conn($c,mailWindow,${x}Widget) "[set $x].e"
-  }
+	foreach x [list to cc bcc subject] {
+		set conn($c,mailWindow,$x) ""
+		set conn($c,mailWindow,${x}Widget) "[set $x].e"
+	}
 
-  set formats [array names gameMail]
-  lappend formats "Custom"
-  pack [set format [::ttk::frame $frame.format]] -side top -anchor nw -expand 0 -fill x -padx 5 -pady 3
-  pack [::ttk::label $format.l -text [T "Format:"] -width 10] -side left -anchor nw
-  pack [::ttk::combobox $format.cb -justify left -state normal -width 40 \
-               -textvariable ::potato::conn($c,mailWindow,format) \
-               -values $formats -state readonly] -side left -anchor nw -fill x
-  set ::potato::conn($c,mailWindow,format) $world($w,mailFormat)
-  set ::potato::conn($c,mailWindow,formatWidget) $format.cb
+	set formats [array names gameMail]
+	lappend formats "Custom"
+	pack [set format [::ttk::frame $frame.format]] -side top -anchor nw -expand 0 -fill x -padx 5 -pady 3
+	pack [::ttk::label $format.l -text [T "Format:"] -width 10] -side left -anchor nw
+	pack [::ttk::combobox $format.cb -justify left -state normal -width 40 \
+			-textvariable ::potato::conn($c,mailWindow,format) \
+			-values $formats -state readonly] -side left -anchor nw -fill x
+	set ::potato::conn($c,mailWindow,format) $world($w,mailFormat)
+	set ::potato::conn($c,mailWindow,formatWidget) $format.cb
 
-  pack [set custom [::ttk::frame $frame.custom]] -side top -anchor nw -expand 0 -fill x -padx 5 -pady 3
-  pack [::ttk::label $custom.l -text [T "Custom:"] -width 10] -side left -anchor nw
-  pack [::ttk::entry $custom.e -textvariable ::potato::conn($c,mailWindow,custom) -width 40 -validate focusout \
-                               -validatecommand [list ::potato::mailWindowFormatChange $c]] \
-     -side left -anchor nw -fill x
-  set conn($c,mailWindow,custom) $world($w,mailFormat,custom)
-  set conn($c,mailWindow,customWidget) $custom.e
-  if { $conn($c,mailWindow,format) ne "Custom" } {
-       $custom.e state disabled
-     }
+	pack [set custom [::ttk::frame $frame.custom]] -side top -anchor nw -expand 0 -fill x -padx 5 -pady 3
+	pack [::ttk::label $custom.l -text [T "Custom:"] -width 10] -side left -anchor nw
+	pack [::ttk::entry $custom.e \
+		-textvariable ::potato::conn($c,mailWindow,custom) -width 40 \
+		-validate focusout \
+		-validatecommand [list ::potato::mailWindowFormatChange $c]] \
+		-side left -anchor nw -fill x
+	set conn($c,mailWindow,custom) $world($w,mailFormat,custom)
+	set conn($c,mailWindow,customWidget) $custom.e
+	if { $conn($c,mailWindow,format) ne "Custom" } {
+		$custom.e state disabled
+	}
 
-  bind $format.cb <<ComboboxSelected>> [list ::potato::mailWindowFormatChange $c]
+	bind $format.cb <<ComboboxSelected>> [list ::potato::mailWindowFormatChange $c]
 
-  pack [set txt [::ttk::frame $frame.txt]] -side top -anchor nw -expand 1 -fill both -padx 5 -pady 3
-  pack [set textWidget [text $txt.t -height 12 -width 40 -wrap word -background white -foreground black \
-             -font TkFixedFont -yscrollcommand [list $txt.sb set] -undo 1]] -expand 1 -fill both -side left -anchor nw
-  pack [::ttk::scrollbar $txt.sb -orient vertical -command [list $txt.t yview]] -side left -anchor nw -fill y -padx 3
-  set conn($c,mailWindow,bodyWidget) $txt.t
+	pack [set txt [::ttk::frame $frame.txt]] -side top -anchor nw -expand 1 -fill both -padx 5 -pady 3
+	pack [set textWidget [text $txt.t -height 12 -width 40 -wrap word -background white -foreground black \
+		-font TkFixedFont -yscrollcommand [list $txt.sb set] -undo 1]] -expand 1 -fill both -side left -anchor nw
+	pack [::ttk::scrollbar $txt.sb -orient vertical -command [list $txt.t yview]] -side left -anchor nw -fill y -padx 3
+	set conn($c,mailWindow,bodyWidget) $txt.t
 
-  pack [set convert [::ttk::frame $frame.convert]] -side top -anchor n -padx 5 -pady 8
-  pack [::ttk::label $convert.l -text [T "Convert returns?"]] -side left -anchor nw -padx 3
-  pack [::ttk::checkbutton $convert.cb -variable ::potato::world($w,mailConvertReturns)] -side left -anchor nw -padx 3
-  pack [::ttk::label $convert.l2 -text [T "Convert To:"]] -side left -anchor nw -padx 3
-  pack [::ttk::entry $convert.e -width 5 -textvariable ::potato::world($w,mailConvertReturns,to)] -side left -anchor nw -padx 3
-  pack [set btns [::ttk::frame $frame.btns]] -side top -anchor n -padx 5 -pady 8
-  pack [::ttk::button $btns.ok -text [T "Send"] -width 8 -default active \
-             -command [list ::potato::mailWindowSend $c $win]] -side left -padx 8
-  pack [::ttk::button $btns.cancel -text [T "Cancel"] -width 8 -command [list destroy $win]] -side left -padx 8
+	pack [set convert [::ttk::frame $frame.convert]] -side top -anchor n -padx 5 -pady 8
+	pack [::ttk::label $convert.l -text [T "Convert returns?"]] -side left -anchor nw -padx 3
+	pack [::ttk::checkbutton $convert.cb -variable ::potato::world($w,mailConvertReturns)] -side left -anchor nw -padx 3
+	pack [::ttk::label $convert.l2 -text [T "Convert To:"]] -side left -anchor nw -padx 3
+	pack [::ttk::entry $convert.e -width 5 -textvariable ::potato::world($w,mailConvertReturns,to)] -side left -anchor nw -padx 3
+	pack [set btns [::ttk::frame $frame.btns]] -side top -anchor n -padx 5 -pady 8
+	pack [::ttk::button $btns.ok -text [T "Send"] -width 8 -default active \
+		-command [list ::potato::mailWindowSend $c $win]] -side left -padx 8
+	pack [::ttk::button $btns.cancel -text [T "Cancel"] -width 8 -command [list destroy $win]] -side left -padx 8
 
-  $fileMenu add command {*}[menu_label [T "&Escape Special Characters"]] -command [list ::potato::escapeChars $textWidget]
+	$fileMenu add command {*}[menu_label [T "&Escape Special Characters"]] -command [list ::potato::escapeChars $textWidget]
 
-  bind $win <Escape> [list $btns.cancel invoke]
-  bind $win <Destroy> [list ::potato::mailWindowCleanup $c]
+	bind $win <Escape> [list $btns.cancel invoke]
+	bind $win <Destroy> [list ::potato::mailWindowCleanup $c]
 
-  $editMenu add command {*}[menu_label [T "&Copy"]] -command [list event generate $textWidget <<Copy>>] -accelerator Ctrl+C
-  $editMenu add command {*}[menu_label [T "C&ut"]] -command [list event generate $textWidget <<Cut>>] -accelerator Ctrl+X
-  $editMenu add command {*}[menu_label [T "&Paste"]] -command [list event generate $textWidget <<Paste>>] -accelerator Ctrl+V
-  $editMenu configure -postcommand [list ::potato::editMenuCXV $editMenu 0 1 2 $textWidget]
+	$editMenu add command {*}[menu_label [T "&Copy"]] -command [list event generate $textWidget <<Copy>>] -accelerator Ctrl+C
+	$editMenu add command {*}[menu_label [T "C&ut"]] -command [list event generate $textWidget <<Cut>>] -accelerator Ctrl+X
+	$editMenu add command {*}[menu_label [T "&Paste"]] -command [list event generate $textWidget <<Paste>>] -accelerator Ctrl+V
+	$editMenu configure -postcommand [list ::potato::editMenuCXV $editMenu 0 1 2 $textWidget]
 
-  mailWindowFormatChange $c
+	mailWindowFormatChange $c
 
-  center $win
-  reshowWindow $win 0
-  focus $to.e
+	center $win
+	reshowWindow $win 0
+	focus $to.e
 
-  return;
+	return;
 
 };# ::potato::mailWindow
 
@@ -891,28 +895,28 @@ proc ::potato::mailWindow {{c ""}} {
 #: desc Adjust the states of the entries in $c's mail window, based on the currently selected mail format
 #: return 1 (b/c this command is used as a -validatecommand for a ttk::entry widget)
 proc ::potato::mailWindowFormatChange {c} {
-  variable conn;
-  variable gameMail;
+	variable conn;
+	variable gameMail;
 
-  set type [$conn($c,mailWindow,formatWidget) get]
-  set custom $conn($c,mailWindow,customWidget)
-  if { $type eq "Custom" } {
-       $custom state !disabled
-       set format [$custom get]
-     } else {
-       $custom state disabled
-       set format $gameMail($type)
-     }
+	set type [$conn($c,mailWindow,formatWidget) get]
+	set custom $conn($c,mailWindow,customWidget)
+	if { $type eq "Custom" } {
+		$custom state !disabled
+		set format [$custom get]
+	} else {
+		$custom state disabled
+		set format $gameMail($type)
+	}
 
-  foreach field {to cc bcc subject} {
-    if { [string first "%$field%" $format] > -1 } {
-         $conn($c,mailWindow,${field}Widget) state !disabled
-       } else {
-         $conn($c,mailWindow,${field}Widget) state disabled
-       }
-  }
+	foreach field {to cc bcc subject} {
+		if { [string first "%$field%" $format] > -1 } {
+			$conn($c,mailWindow,${field}Widget) state !disabled
+		} else {
+			$conn($c,mailWindow,${field}Widget) state disabled
+		}
+	}
 
-  return 1;
+	return 1;
 
 };# ::potato::mailWindowFormatChange
 
@@ -922,47 +926,47 @@ proc ::potato::mailWindowFormatChange {c} {
 #: desc Send the mail typed in the Mail Window for connection $c to the connection, and destroy the mail window $win. (Bindings on $win for <Destroy> take care of variable cleanup)
 #: return nothing
 proc ::potato::mailWindowSend {c win} {
-  variable conn;
-  variable world;
-  variable gameMail;
+	variable conn;
+	variable world;
+	variable gameMail;
 
-  set w $conn($c,world)
+	set w $conn($c,world)
 
-  # Figure out the mail format
-  set format $conn($c,mailWindow,format)
-  if { $format eq "Custom" } {
-       set world($w,mailFormat) Custom
-       set world($w,mailFormat,custom) $conn($c,mailWindow,custom)
-       set cmd [string map [list ";;" \b] $world($w,mailFormat,custom)]
-     } else {
-       set world($w,mailFormat) $format
-       set cmd $gameMail($format)
-     }
+	# Figure out the mail format
+	set format $conn($c,mailWindow,format)
+	if { $format eq "Custom" } {
+		set world($w,mailFormat) Custom
+		set world($w,mailFormat,custom) $conn($c,mailWindow,custom)
+		set cmd [string map [list ";;" \b] $world($w,mailFormat,custom)]
+	} else {
+		set world($w,mailFormat) $format
+		set cmd $gameMail($format)
+	}
 
 
-  set msg [$conn($c,mailWindow,bodyWidget) get 1.0 end-1char]
-  if { $world($w,mailConvertReturns) } {
-       set msg [string map [list "\n" $world($w,mailConvertReturns,to)] $msg]
-     }
+	set msg [$conn($c,mailWindow,bodyWidget) get 1.0 end-1char]
+	if { $world($w,mailConvertReturns) } {
+		set msg [string map [list "\n" $world($w,mailConvertReturns,to)] $msg]
+	}
 
-  set cmd [string map [list " ;; " "\b" ";;" "\b"] $cmd]
-  set maps [list "%body%" $msg]
-  foreach x [list to cc bcc subject] {
-    if { [string first "%$x%" $cmd] > -1 } {
-         lappend maps "%$x%" $conn($c,mailWindow,$x)
-       }
-  }
-  set mailcmd [string map $maps $cmd]
+	set cmd [string map [list " ;; " "\b" ";;" "\b"] $cmd]
+	set maps [list "%body%" $msg]
+	foreach x [list to cc bcc subject] {
+		if { [string first "%$x%" $cmd] > -1 } {
+			lappend maps "%$x%" $conn($c,mailWindow,$x)
+		}
+	}
+	set mailcmd [string map $maps $cmd]
 
-  addToInputHistory $c $mailcmd
+	addToInputHistory $c $mailcmd
 
-  foreach x [split $mailcmd \b] {
-    send_to_real $c $x
-  }
+	foreach x [split $mailcmd \b] {
+		send_to_real $c $x
+	}
 
-  destroy $win
+	destroy $win
 
-  return;
+	return;
 
 };# ::potato::mailWindowSend
 
@@ -971,11 +975,11 @@ proc ::potato::mailWindowSend {c win} {
 #: desc Cleanup vars set by the mail window for connection $c, because it's being destroyed
 #: return nothing
 proc ::potato::mailWindowCleanup {c} {
-  variable conn;
+	variable conn;
 
-  array unset conn $c,mailWindow,*
+	array unset conn $c,mailWindow,*
 
-  return;
+	return;
 
 };# potato::mailWindowCleanup
 
@@ -990,30 +994,30 @@ proc ::potato::mailWindowCleanup {c} {
 #: return nothing
 proc ::potato::editMenuCXV {menu copyIndex cutIndex pasteIndex text} {
 
-  if { ![winfo exists $text] || [$text cget -state] eq "disabled" } {
-       $menu entryconfigure $copyIndex -state disabled
-       $menu entryconfigure $cutIndex -state disabled
-       $menu entryconfigure $pasteIndex -state disabled
-       return;
-     }
+	if { ![winfo exists $text] || [$text cget -state] eq "disabled" } {
+		$menu entryconfigure $copyIndex -state disabled
+		$menu entryconfigure $cutIndex -state disabled
+		$menu entryconfigure $pasteIndex -state disabled
+		return;
+	}
 
-  set sel [llength [$text tag nextrange sel 1.0]]
-  if { $sel } {
-       $menu entryconfigure $copyIndex -state normal
-       $menu entryconfigure $cutIndex -state normal
-     } else {
-       $menu entryconfigure $copyIndex -state disabled
-       $menu entryconfigure $cutIndex -state disabled
-     }
+	set sel [llength [$text tag nextrange sel 1.0]]
+	if { $sel } {
+		$menu entryconfigure $copyIndex -state normal
+		$menu entryconfigure $cutIndex -state normal
+	} else {
+		$menu entryconfigure $copyIndex -state disabled
+		$menu entryconfigure $cutIndex -state disabled
+	}
 
-    if { ![catch {::tk::GetSelection $text CLIPBOARD} clipboard] && [string length $clipboard] } {
-       set state normal
-     } else {
-       set state disabled
-     }
-  $menu entryconfigure $pasteIndex -state $state
+	if { ![catch {::tk::GetSelection $text CLIPBOARD} clipboard] && [string length $clipboard] } {
+		set state normal
+	} else {
+		set state disabled
+	}
+	$menu entryconfigure $pasteIndex -state $state
 
-  return;
+	return;
 
 };# ::potato::editMenuCXV
 
@@ -1024,16 +1028,16 @@ proc ::potato::editMenuCXV {menu copyIndex cutIndex pasteIndex text} {
 #: return 1 if window existed (and has been reshown), 0 otherwise
 proc ::potato::reshowWindow {win {bell 1}} {
 
-  if { ![winfo exists $win] } {
-       return 0;
-     }
-  wm deiconify $win
-  raise $win
-  focus -force $win
-  if { $bell } {
-       bell -displayof $win
-     }
-  return 1;
+	if { ![winfo exists $win] } {
+		return 0;
+	}
+	wm deiconify $win
+	raise $win
+	focus -force $win
+	if { $bell } {
+		bell -displayof $win
+	}
+	return 1;
 
 };# ::potato::reshowWindow
 
@@ -1043,24 +1047,24 @@ proc ::potato::reshowWindow {win {bell 1}} {
 #: desc allow the user to select a file to upload (if they aren't already doing so), or the dialog for them to cancel, if they are.
 #: return nothing
 proc ::potato::uploadWindow {{c ""}} {
-  variable conn;
+	variable conn;
 
-  if { $c eq "" } {
-       set c [up]
-     }
+	if { $c eq "" } {
+		set c [up]
+	}
 
-  if { $c == 0 } {
-       bell -displayof .
-       return;
-     }
+	if { $c == 0 } {
+		bell -displayof .
+		return;
+	}
 
-  if { $conn($c,upload,fid) eq "" } {
-       uploadWindowStart $c
-     } else {
-       uploadProgressWindow $c
-     }
+	if { $conn($c,upload,fid) eq "" } {
+		uploadWindowStart $c
+	} else {
+		uploadProgressWindow $c
+	}
 
-  return;
+	return;
 
 };# ::potato::uploadWindow
 
@@ -1069,82 +1073,82 @@ proc ::potato::uploadWindow {{c ""}} {
 #: desc Show the window which allows the user to upload a file to connection $c
 #: return nothing
 proc ::potato::uploadWindowStart {c} {
-  variable conn;
-  variable world;
+	variable conn;
+	variable world;
 
-  set win .upload_file_$c
-  if { [winfo exists $win] } {
-       reshowWindow $win
-       return;
-     }
+	set win .upload_file_$c
+	if { [winfo exists $win] } {
+		reshowWindow $win
+		return;
+	}
 
-  toplevel $win
-  lappend conn($c,widgets) $win
-  wm withdraw $win
-  wm title $win [T "File Upload - \[%d. %s\]" $c $world($conn($c,world),name)]
+	toplevel $win
+	lappend conn($c,widgets) $win
+	wm withdraw $win
+	wm title $win [T "File Upload - \[%d. %s\]" $c $world($conn($c,world),name)]
 
-  set bindings [list]
+	set bindings [list]
 
-  pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both -side left -anchor nw
-  pack [::ttk::labelframe $frame.options -text [T "Options"]] -side top -anchor center -padx 6 -pady 7
-  pack [::ttk::frame $frame.options.empty] -side top -pady 3 -anchor nw
-  pack [::ttk::label $frame.options.empty.l -text [T "Ignore empty lines?"] -width 20 \
-                  -underline 0 -anchor w -justify left] -side left -anchor nw -padx 3
-  pack [::ttk::checkbutton $frame.options.empty.cb -variable potato::conn($c,upload,ignoreEmpty) \
-                   -onvalue 1 -offvalue 0] -side left -padx 3
-  lappend bindings i $frame.options.empty.cb
+	pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both -side left -anchor nw
+	pack [::ttk::labelframe $frame.options -text [T "Options"]] -side top -anchor center -padx 6 -pady 7
+	pack [::ttk::frame $frame.options.empty] -side top -pady 3 -anchor nw
+	pack [::ttk::label $frame.options.empty.l -text [T "Ignore empty lines?"] -width 20 \
+		-underline 0 -anchor w -justify left] -side left -anchor nw -padx 3
+	pack [::ttk::checkbutton $frame.options.empty.cb -variable potato::conn($c,upload,ignoreEmpty) \
+		-onvalue 1 -offvalue 0] -side left -padx 3
+	lappend bindings i $frame.options.empty.cb
 
-  pack [::ttk::frame $frame.options.history] -side top -pady 3 -anchor nw
-  pack [::ttk::label $frame.options.history.l -text [T "Add to History?"] -width 20 \
-                  -underline 7 -anchor w -justify left] -side left -anchor nw -padx 3
-  pack [::ttk::checkbutton $frame.options.history.cb -variable potato::conn($c,upload,history) \
-                   -onvalue 1 -offvalue 0] -side left -padx 3
-  lappend bindings h $frame.options.history.cb
+	pack [::ttk::frame $frame.options.history] -side top -pady 3 -anchor nw
+	pack [::ttk::label $frame.options.history.l -text [T "Add to History?"] -width 20 \
+		-underline 7 -anchor w -justify left] -side left -anchor nw -padx 3
+	pack [::ttk::checkbutton $frame.options.history.cb -variable potato::conn($c,upload,history) \
+		-onvalue 1 -offvalue 0] -side left -padx 3
+	lappend bindings h $frame.options.history.cb
 
-  pack [::ttk::frame $frame.options.mpp] -side top -pady 3 -anchor nw
-  pack [::ttk::label $frame.options.mpp.l -text [T "MPP Formatted?"] -width 20 \
-                  -underline 0 -anchor w -justify left] -side left -anchor nw -padx 3
-  pack [::ttk::checkbutton $frame.options.mpp.cb -variable potato::conn($c,upload,mpp) \
-                  -onvalue 1 -offvalue 0] -side left -padx 3
-  lappend bindings m $frame.options.mpp.cb
+	pack [::ttk::frame $frame.options.mpp] -side top -pady 3 -anchor nw
+	pack [::ttk::label $frame.options.mpp.l -text [T "MPP Formatted?"] -width 20 \
+		-underline 0 -anchor w -justify left] -side left -anchor nw -padx 3
+	pack [::ttk::checkbutton $frame.options.mpp.cb -variable potato::conn($c,upload,mpp) \
+		-onvalue 1 -offvalue 0] -side left -padx 3
+	lappend bindings m $frame.options.mpp.cb
 
-  pack [::ttk::frame $frame.options.delay] -side top -pady 3 -anchor nw
-  pack [::ttk::label $frame.options.delay.l -text [T "Delay (seconds):"] -width 20  -anchor w -justify left] \
-                  -side left -anchor nw -padx 3
-  pack [pspinbox $frame.options.delay.sb -textvariable ::potato::conn($c,upload,delay) -from 0 -to 60 \
-             -validate all -validatecommand {regexp {^[0-9]*\.?[0-9]?$} %P} -width 4 -increment 0.5] -side left
-             
-  pack [::ttk::frame $frame.options.prefix] -side top -pady 3 -anchor nw -expand 1 -fill x
-  pack [::ttk::label $frame.options.prefix.l -text [T "Prefix:"] -width 20 -anchor w -justify left] -side top -anchor nw -padx 3
-  pack [::ttk::entry $frame.options.prefix.e -textvariable ::potato::conn($c,upload,prefix)] -side top -anchor nw -padx 3 -fill x
+	pack [::ttk::frame $frame.options.delay] -side top -pady 3 -anchor nw
+	pack [::ttk::label $frame.options.delay.l -text [T "Delay (seconds):"] -width 20  -anchor w -justify left] \
+		-side left -anchor nw -padx 3
+	pack [pspinbox $frame.options.delay.sb -textvariable ::potato::conn($c,upload,delay) -from 0 -to 60 \
+		-validate all -validatecommand {regexp {^[0-9]*\.?[0-9]?$} %P} -width 4 -increment 0.5] -side left
 
-  pack [::ttk::frame $frame.file] -side top -anchor center -fill x -padx 6 -pady 8
-  pack [entry $frame.file.e -textvariable potato::conn($c,upload,file) \
-            -disabledbackground white -state disabled -width 30 -cursor {}] -side left -expand 1 -fill x;#abc make me Tile!
-  pack [::ttk::button $frame.file.sel -command [list ::potato::selectFile potato::conn($c,upload,file) $win 0] \
-              -image ::potato::img::dotdotdot] -side left -padx 8
-              
+	pack [::ttk::frame $frame.options.prefix] -side top -pady 3 -anchor nw -expand 1 -fill x
+	pack [::ttk::label $frame.options.prefix.l -text [T "Prefix:"] -width 20 -anchor w -justify left] -side top -anchor nw -padx 3
+	pack [::ttk::entry $frame.options.prefix.e -textvariable ::potato::conn($c,upload,prefix)] -side top -anchor nw -padx 3 -fill x
 
-  pack [::ttk::frame $frame.btns] -side top -anchor center -fill x -padx 6 -pady 8
-  pack [::ttk::frame $frame.btns.ok] -side left -padx 6 -expand 1 -fill x
-  pack [set okBtn [::ttk::button $frame.btns.ok.btn -command [list ::potato::uploadWindowInvoke $c $win] \
-             -text [T "Upload"] -underline 0 -width 8 -default active]] -side top -anchor center
-  lappend bindings u $frame.btns.ok.btn
-  pack [::ttk::frame $frame.btns.cancel] -side left -padx 6 -expand 1 -fill x
-  pack [set cancelBtn [::ttk::button $frame.btns.cancel.btn -command [list destroy $win] \
-             -text [T "Cancel"] -underline 0 -width 8]] -side top -anchor center
-  lappend bindings c $frame.btns.cancel.btn
+	pack [::ttk::frame $frame.file] -side top -anchor center -fill x -padx 6 -pady 8
+	pack [entry $frame.file.e -textvariable potato::conn($c,upload,file) \
+		-disabledbackground white -state disabled -width 30 -cursor {}] -side left -expand 1 -fill x;#abc make me Tile!
+	pack [::ttk::button $frame.file.sel -command [list ::potato::selectFile potato::conn($c,upload,file) $win 0] \
+		-image ::potato::img::dotdotdot] -side left -padx 8
 
-  foreach {letter cmd} $bindings {
-     bind $win <Alt-$letter> [list $cmd invoke]
-  }
-  bind $win <Return> [list $okBtn invoke]
-  bind $win <Escape> [list $cancelBtn invoke]
 
-  update idletasks
-  center $win
-  wm deiconify $win
-  return;
+	pack [::ttk::frame $frame.btns] -side top -anchor center -fill x -padx 6 -pady 8
+	pack [::ttk::frame $frame.btns.ok] -side left -padx 6 -expand 1 -fill x
+	pack [set okBtn [::ttk::button $frame.btns.ok.btn -command [list ::potato::uploadWindowInvoke $c $win] \
+		-text [T "Upload"] -underline 0 -width 8 -default active]] -side top -anchor center
+	lappend bindings u $frame.btns.ok.btn
+	pack [::ttk::frame $frame.btns.cancel] -side left -padx 6 -expand 1 -fill x
+	pack [set cancelBtn [::ttk::button $frame.btns.cancel.btn -command [list destroy $win] \
+		-text [T "Cancel"] -underline 0 -width 8]] -side top -anchor center
+	lappend bindings c $frame.btns.cancel.btn
+
+	foreach {letter cmd} $bindings {
+		bind $win <Alt-$letter> [list $cmd invoke]
+	}
+	bind $win <Return> [list $okBtn invoke]
+	bind $win <Escape> [list $cancelBtn invoke]
+
+	update idletasks
+	center $win
+	wm deiconify $win
+	return;
 
 };# ::potato::uploadWindowStart
 
@@ -1154,39 +1158,39 @@ proc ::potato::uploadWindowStart {c} {
 #: desc if a valid file is selected and connection $c is connected, destroy $win and start uploading the given file to the connection. Else, raise an error
 #: return nothing
 proc ::potato::uploadWindowInvoke {c win} {
-  variable conn;
-  variable world;
+	variable conn;
+	variable world;
 
-  set file $conn($c,upload,file)
-  if { $conn($c,connected) != 1 } {
-       set errorMsg [T "Not connected."]
-     } elseif { $file eq "" } {
-       set errorMsg [T "You must select a file."]
-     } elseif { ![file exists $file] || ![file isfile $file] || ![file readable $file] } {
-       set errorMsg [T "Unable to read file \"%s\"." $file]
-     } elseif { [catch {open $file r} fid] } {
-       set errorMsg [T "Unable to open file \"%s\": %s" $file $fid]
-     }
+	set file $conn($c,upload,file)
+	if { $conn($c,connected) != 1 } {
+		set errorMsg [T "Not connected."]
+	} elseif { $file eq "" } {
+		set errorMsg [T "You must select a file."]
+	} elseif { ![file exists $file] || ![file isfile $file] || ![file readable $file] } {
+		set errorMsg [T "Unable to read file \"%s\"." $file]
+	} elseif { [catch {open $file r} fid] } {
+		set errorMsg [T "Unable to open file \"%s\": %s" $file $fid]
+	}
 
-  if { [info exists errorMsg] } {
-       tk_messageBox -message $errorMsg -title [T "File Upload"] -parent $win -type ok -icon error
-       return;
-     }
+	if { [info exists errorMsg] } {
+		tk_messageBox -message $errorMsg -title [T "File Upload"] -parent $win -type ok -icon error
+		return;
+	}
 
-  set int 0
-  set fraction 0
-  scan $conn($c,upload,delay) %d.%d int fraction
-  unregisterWindow $c $win
-  destroy $win
+	set int 0
+	set fraction 0
+	scan $conn($c,upload,delay) %d.%d int fraction
+	unregisterWindow $c $win
+	destroy $win
 
-  outputSystem $c [T "Uploading file \"%s\"..." $file]
+	outputSystem $c [T "Uploading file \"%s\"..." $file]
 
-  set conn($c,upload,fileSize) [file size $conn($c,upload,file)]
-  set conn($c,upload,fid) $fid
-  uploadBegin $c
-  catch {uploadProgressWindow $c}
+	set conn($c,upload,fileSize) [file size $conn($c,upload,file)]
+	set conn($c,upload,fid) $fid
+	uploadBegin $c
+	catch {uploadProgressWindow $c}
 
-  return;
+	return;
 
 };# ::potato::uploadWindowInvoke
 
@@ -1196,89 +1200,89 @@ proc ::potato::uploadWindowInvoke {c win} {
 #: desc For connection $c, begin uploading the file selected by the user to the game, using the conn($c,upload,*) vars.
 #: return nothing
 proc ::potato::uploadBegin {c} {
-  variable conn;
+	variable conn;
 
-  if { [eof $conn($c,upload,fid)] } {
-       if { $conn($c,upload,mpp) && [string length $conn($c,upload,mpp,buffer)] } {
-            # Send what's in the buffer, it's all we have.
-            send_to_real $c $conn($c,upload,mpp,buffer)
-            if { $conn($c,upload,history) } {
-                 addToInputHistory $c $conn($c,upload,mpp,buffer)
-               }
-            set conn($c,upload,mpp,buffer) ""
-          }
-       uploadEnd $c 0
-       return;
-     }
+	if { [eof $conn($c,upload,fid)] } {
+		if { $conn($c,upload,mpp) && [string length $conn($c,upload,mpp,buffer)] } {
+			# Send what's in the buffer, it's all we have.
+			send_to_real $c $conn($c,upload,mpp,buffer)
+			if { $conn($c,upload,history) } {
+				addToInputHistory $c $conn($c,upload,mpp,buffer)
+			}
+			set conn($c,upload,mpp,buffer) ""
+		}
+		uploadEnd $c 0
+		return;
+	}
 
-  gets $conn($c,upload,fid) line
-  set first_line [expr {$conn($c,upload,bytes) == 0}]
-  if { $first_line } {
-       # Our first read; check the newline length
-       set conn($c,upload,newlineLength) [expr {[tell $conn($c,upload,fid)] - [string bytelength $line]}]
-     } else {
-       incr conn($c,upload,bytes) $conn($c,upload,newlineLength);# for the newline
-     }
+	gets $conn($c,upload,fid) line
+	set first_line [expr {$conn($c,upload,bytes) == 0}]
+	if { $first_line } {
+		# Our first read; check the newline length
+		set conn($c,upload,newlineLength) [expr {[tell $conn($c,upload,fid)] - [string bytelength $line]}]
+	} else {
+		incr conn($c,upload,bytes) $conn($c,upload,newlineLength);# for the newline
+	}
 
-  # Increment for the length of the string
-  incr conn($c,upload,bytes) [string bytelength $line]
+	# Increment for the length of the string
+	incr conn($c,upload,bytes) [string bytelength $line]
 
-  # Does this line contain any data to be sent, or is it blank?
-  set blank 1
-  # Data to send
-  set data [list]
+	# Does this line contain any data to be sent, or is it blank?
+	set blank 1
+	# Data to send
+	set data [list]
 
-  # Check for MPP
-  if { $conn($c,upload,mpp) } {
-       # Need to check things differently. Damn.
-       if { [string trim $line " \t"] eq "" || [string range $line 0 1] eq "@@" } {
-            # blank/whitespace/comment line
-          } elseif { [string index $line 0] eq ">" } {
-            # Formatted line
-            if { $conn($c,upload,mpp,gt) } {
-                 set conn($c,upload,mpp,gt) 0
-               } else {
-                 append conn($c,upload,mpp,buffer) "%r"
-               }
-            append conn($c,upload,mpp,buffer) [string map [list " " %b "\t" %t % \\% {;} {\;} \[ \\\[ \] \\\] ( \\( ) \\) , \\, ^ \\^ $ \\$ \{ \\\{ \} \\\} \\ \\\\] [string range $line 1 end]]
-          } elseif { [string index $line 0] eq " " || [string index $line 0] eq "\t" } {
-            # Unformatted continuation
-            append conn($c,upload,mpp,buffer) [string trimleft $line " \t"]
-          } else {
-            if { [string length $conn($c,upload,mpp,buffer)] } {
-                 lappend data $conn($c,upload,mpp,buffer)
-                 set blank 0
-               }
-            set conn($c,upload,mpp,gt) 1
-            set conn($c,upload,mpp,buffer) $line
-          }
-     } elseif { $line ne "" || !$conn($c,upload,ignoreEmpty) } {
-       set blank 0
-       lappend data $line
-     } else {
-       set blank 1
-     }
+	# Check for MPP
+	if { $conn($c,upload,mpp) } {
+		# Need to check things differently. Damn.
+		if { [string trim $line " \t"] eq "" || [string range $line 0 1] eq "@@" } {
+			# blank/whitespace/comment line
+		} elseif { [string index $line 0] eq ">" } {
+			# Formatted line
+			if { $conn($c,upload,mpp,gt) } {
+				set conn($c,upload,mpp,gt) 0
+			} else {
+				append conn($c,upload,mpp,buffer) "%r"
+			}
+			append conn($c,upload,mpp,buffer) [string map [list " " %b "\t" %t % \\% {;} {\;} \[ \\\[ \] \\\] ( \\( ) \\) , \\, ^ \\^ $ \\$ \{ \\\{ \} \\\} \\ \\\\] [string range $line 1 end]]
+		} elseif { [string index $line 0] eq " " || [string index $line 0] eq "\t" } {
+			# Unformatted continuation
+			append conn($c,upload,mpp,buffer) [string trimleft $line " \t"]
+		} else {
+			if { [string length $conn($c,upload,mpp,buffer)] } {
+				lappend data $conn($c,upload,mpp,buffer)
+				set blank 0
+			}
+			set conn($c,upload,mpp,gt) 1
+			set conn($c,upload,mpp,buffer) $line
+		}
+	} elseif { $line ne "" || !$conn($c,upload,ignoreEmpty) } {
+		set blank 0
+		lappend data $line
+	} else {
+		set blank 1
+	}
 
-  if { !$blank } {
-       if { [info exists conn($c,upload,prefix)] && [string length $conn($c,upload,prefix)] } {
-            set prefix $conn($c,upload,prefix)
-          } else {
-            set prefix ""
-          }
-       foreach string $data {
-          send_to_real $c "$prefix$string"
-          if { $conn($c,upload,history) } {
-               addToInputHistory $c "$prefix$string"
-             }
-       }
-       set delay [expr {round(1000 * $conn($c,upload,delay))}]
-     } else {
-       set delay 0
-     }
+	if { !$blank } {
+		if { [info exists conn($c,upload,prefix)] && [string length $conn($c,upload,prefix)] } {
+			set prefix $conn($c,upload,prefix)
+		} else {
+			set prefix ""
+		}
+		foreach string $data {
+			send_to_real $c "$prefix$string"
+			if { $conn($c,upload,history) } {
+				addToInputHistory $c "$prefix$string"
+			}
+		}
+		set delay [expr {round(1000 * $conn($c,upload,delay))}]
+	} else {
+		set delay 0
+	}
 
-  set conn($c,upload,after) [after $delay [list ::potato::uploadBegin $c]]
+	set conn($c,upload,after) [after $delay [list ::potato::uploadBegin $c]]
 
-  return;
+	return;
 
 };# ::potato::uploadBegin
 
@@ -1287,53 +1291,53 @@ proc ::potato::uploadBegin {c} {
 #: desc Show a window giving the progress of a file upload, and allowing the user to cancel said upload.
 #: return nothing
 proc ::potato::uploadProgressWindow {c} {
-  variable conn;
-  variable world;
+	variable conn;
+	variable world;
 
-  if { ![info exists conn($c,upload,fid)] || $conn($c,upload,fid) eq "" } {
-       return;
-     }
+	if { ![info exists conn($c,upload,fid)] || $conn($c,upload,fid) eq "" } {
+		return;
+	}
 
-  set win .upload_status_$c
-  if { [winfo exists $win] } {
-       reshowWindow $win
-       return;
-     }
+	set win .upload_status_$c
+	if { [winfo exists $win] } {
+		reshowWindow $win
+		return;
+	}
 
-  toplevel $win
-  registerWindow $c $win
-  wm withdraw $win
-  wm title $win [T "Upload Status - \[%d. %s\]" $c $world($conn($c,world),name)]
+	toplevel $win
+	registerWindow $c $win
+	wm withdraw $win
+	wm title $win [T "Upload Status - \[%d. %s\]" $c $world($conn($c,world),name)]
 
-  pack [set frame [::ttk::frame $win.frame]] -side left -expand 1 -fill both -anchor nw
-  pack [::ttk::frame $frame.top] -side top -fill x -padx 6 -pady 10
-  pack [::ttk::label $frame.top.progress -text [T "Progress: "]] -side left
-  pack [::ttk::label $frame.top.count -textvariable potato::conn($c,upload,bytes)] -side left
-  pack [::ttk::label $frame.top.of -text [T " of "]] -side left
-  pack [::ttk::label $frame.top.total -textvariable potato::conn($c,upload,fileSize)] -side left
-  pack [::ttk::label $frame.top.bytes -text [T " bytes"]] -side left
+	pack [set frame [::ttk::frame $win.frame]] -side left -expand 1 -fill both -anchor nw
+	pack [::ttk::frame $frame.top] -side top -fill x -padx 6 -pady 10
+	pack [::ttk::label $frame.top.progress -text [T "Progress: "]] -side left
+	pack [::ttk::label $frame.top.count -textvariable potato::conn($c,upload,bytes)] -side left
+	pack [::ttk::label $frame.top.of -text [T " of "]] -side left
+	pack [::ttk::label $frame.top.total -textvariable potato::conn($c,upload,fileSize)] -side left
+	pack [::ttk::label $frame.top.bytes -text [T " bytes"]] -side left
 
-  pack [::ttk::frame $frame.progress] -side top -fill x -padx 6 -pady 10
-  pack [::ttk::progressbar $frame.progress.pb -orient horizontal -length 275 -maximum $conn($c,upload,fileSize) \
-               -variable ::potato::conn($c,upload,bytes)] -side left -expand 1 -fill x
+	pack [::ttk::frame $frame.progress] -side top -fill x -padx 6 -pady 10
+	pack [::ttk::progressbar $frame.progress.pb -orient horizontal -length 275 -maximum $conn($c,upload,fileSize) \
+			-variable ::potato::conn($c,upload,bytes)] -side left -expand 1 -fill x
 
-  pack [::ttk::frame $frame.btns] -side top -fill x -padx 6 -pady 10
-  pack [::ttk::frame $frame.btns.hide] -side left -expand 1 -fill x
-  pack [::ttk::button $frame.btns.hide.btn -text [T "Hide"] -width 8 -default active \
-               -underline 0 -command [list destroy $win]] -side top
-  pack [::ttk::frame $frame.btns.cancel] -side left -expand 1 -fill x
-  pack [::ttk::button $frame.btns.cancel.btn -text [T "Cancel"] -width 8 -underline 0 -command [list ::potato::uploadCancel $c $win]] -side top
+	pack [::ttk::frame $frame.btns] -side top -fill x -padx 6 -pady 10
+	pack [::ttk::frame $frame.btns.hide] -side left -expand 1 -fill x
+	pack [::ttk::button $frame.btns.hide.btn -text [T "Hide"] -width 8 -default active \
+			-underline 0 -command [list destroy $win]] -side top
+	pack [::ttk::frame $frame.btns.cancel] -side left -expand 1 -fill x
+	pack [::ttk::button $frame.btns.cancel.btn -text [T "Cancel"] -width 8 -underline 0 -command [list ::potato::uploadCancel $c $win]] -side top
 
-  bind $win <Escape> [list $frame.btns.hide.btn invoke]
-  bind $win <Return> [list $frame.btns.hide.btn invoke]
-  bind $win <Alt-h> [list $frame.btns.hide.btn invoke]
-  bind $win <Alt-c> [list $frame.btns.cancel.btn invoke]
+	bind $win <Escape> [list $frame.btns.hide.btn invoke]
+	bind $win <Return> [list $frame.btns.hide.btn invoke]
+	bind $win <Alt-h> [list $frame.btns.hide.btn invoke]
+	bind $win <Alt-c> [list $frame.btns.cancel.btn invoke]
 
-  update idletasks
-  center $win
-  wm deiconify $win
+	update idletasks
+	center $win
+	wm deiconify $win
 
-  return;
+	return;
 
 };# ::potato::uploadProgressWindow
 
@@ -1343,20 +1347,20 @@ proc ::potato::uploadProgressWindow {c} {
 #: desc Run when the user clicks to cancel a file upload. Prompt to check they want to, and if they do, stop the upload for connection $c and destroy window $win
 #: return nothing
 proc ::potato::uploadCancel {c win} {
-  variable conn;
-  variable world;
+	variable conn;
+	variable world;
 
-  set ans [tk_messageBox -parent $win -title [T "File Upload"] -type yesno -icon question \
-        -message [T "Do you really want to cancel the file upload for \[%d. %s\]?" $c $world($conn($c,world),name)]]
-  if { $ans ne "yes" } {
-       return;
-     }
+	set ans [tk_messageBox -parent $win -title [T "File Upload"] -type yesno -icon question \
+		-message [T "Do you really want to cancel the file upload for \[%d. %s\]?" $c $world($conn($c,world),name)]]
+	if { $ans ne "yes" } {
+		return;
+	}
 
-  unregisterWindow $c $win
-  destroy $win
-  uploadEnd $c 1
+	unregisterWindow $c $win
+	destroy $win
+	uploadEnd $c 1
 
-  return;
+	return;
 
 };# ::potato::uploadCancel
 
@@ -1366,33 +1370,33 @@ proc ::potato::uploadCancel {c win} {
 #: desc Do the back-end work of closing the file upload for connection $c, showing the message, etc.
 #: return nothing
 proc ::potato::uploadEnd {c cancelled} {
-  variable conn;
+	variable conn;
 
-  if { ![info exists conn($c,upload,fid)] || $conn($c,upload,fid) eq "" } {
-       return;
-     }
+	if { ![info exists conn($c,upload,fid)] || $conn($c,upload,fid) eq "" } {
+		return;
+	}
 
-  after cancel $conn($c,upload,after)
+	after cancel $conn($c,upload,after)
 
-  if { $cancelled } {
-       outputSystem $c [T "Upload of \"%s\" cancelled." $conn($c,upload,file)]
-     } else {
-       outputSystem $c [T "Upload of \"%s\" completed." $conn($c,upload,file)]
-     }
+	if { $cancelled } {
+		outputSystem $c [T "Upload of \"%s\" cancelled." $conn($c,upload,file)]
+	} else {
+		outputSystem $c [T "Upload of \"%s\" completed." $conn($c,upload,file)]
+	}
 
-  close $conn($c,upload,fid)
-  set conn($c,upload,fid) ""
-  set conn($c,upload,file) ""
-  set conn($c,upload,after) ""
-  set conn($c,upload,bytes) 0
-  set conn($c,upload,newlineLength) 1
-  set conn($c,upload,fileSize) 0
-  set conn($c,upload,prefix) ""
-  # We leave delay, ignoreEmpty and history for next time
+	close $conn($c,upload,fid)
+	set conn($c,upload,fid) ""
+	set conn($c,upload,file) ""
+	set conn($c,upload,after) ""
+	set conn($c,upload,bytes) 0
+	set conn($c,upload,newlineLength) 1
+	set conn($c,upload,fileSize) 0
+	set conn($c,upload,prefix) ""
+	# We leave delay, ignoreEmpty and history for next time
 
-  catch {destroy .upload_status_$c}
+	catch {destroy .upload_status_$c}
 
-  return;
+	return;
 
 };# ::potato::uploadEnd
 
@@ -1401,109 +1405,109 @@ proc ::potato::uploadEnd {c cancelled} {
 #: desc show the log window for connection $c (or the currently displayed connection, if $c is ""), allowing the user to start logging
 #: return nothing
 proc ::potato::logWindow {{c ""}} {
-  variable conn;
-  variable world;
+	variable conn;
+	variable world;
 
-  if { $c eq "" } {
-       set c [up]
-     }
+	if { $c eq "" } {
+		set c [up]
+	}
 
-  if { $c == 0 } {
-       bell -displayof .
-       return;
-     }
+	if { $c == 0 } {
+		bell -displayof .
+		return;
+	}
 
-  set win .log_win_$c
-  if { [winfo exists $win] } {
-       reshowWindow $win
-       return;
-     }
+	set win .log_win_$c
+	if { [winfo exists $win] } {
+		reshowWindow $win
+		return;
+	}
 
-  set w $conn($c,world)
+	set w $conn($c,world)
 
-  toplevel $win
-  registerWindow $c $win
-  wm withdraw $win
-  wm title $win [T "Log from \[%d. %s\]" $c $world($w,name)]
+	toplevel $win
+	registerWindow $c $win
+	wm withdraw $win
+	wm title $win [T "Log from \[%d. %s\]" $c $world($w,name)]
 
-  set conn($c,logDialog,buffer) {Main Window}
-  set conn($c,logDialog,append) 1
-  set conn($c,logDialog,future) 1
-  #set conn($c,logDialog,wrap) 0
-  set conn($c,logDialog,timestamps) 0
-  set conn($c,logDialog,html) 0
-  set conn($c,logDialog,file) ""
-  set conn($c,logDialog,echo) 0
+	set conn($c,logDialog,buffer) {Main Window}
+	set conn($c,logDialog,append) 1
+	set conn($c,logDialog,future) 1
+	#set conn($c,logDialog,wrap) 0
+	set conn($c,logDialog,timestamps) 0
+	set conn($c,logDialog,html) 0
+	set conn($c,logDialog,file) ""
+	set conn($c,logDialog,echo) 0
 
-  set bindings [list]
+	set bindings [list]
 
-  pack [set frame [::ttk::frame $win.frame]] -side left -expand 1 -fill both -anchor nw
+	pack [set frame [::ttk::frame $win.frame]] -side left -expand 1 -fill both -anchor nw
 
-  pack [::ttk::frame $frame.top] -side top -padx 5 -pady 10
-  pack [::ttk::labelframe $frame.top.buffer -text [T "Include Buffer From: "] -padding 2] -side left -anchor nw -padx 6
-  set spawns [list "No Buffer" "Main Window"]
-  foreach x $conn($c,spawns) {
-    lappend spawns [lindex $x 0]
-  }
-  pack [::ttk::combobox $frame.top.buffer.cb -values $spawns \
-             -textvariable potato::conn($c,logDialog,buffer) -state readonly] -side top -anchor nw
+	pack [::ttk::frame $frame.top] -side top -padx 5 -pady 10
+	pack [::ttk::labelframe $frame.top.buffer -text [T "Include Buffer From: "] -padding 2] -side left -anchor nw -padx 6
+	set spawns [list "No Buffer" "Main Window"]
+	foreach x $conn($c,spawns) {
+		lappend spawns [lindex $x 0]
+	}
+	pack [::ttk::combobox $frame.top.buffer.cb -values $spawns \
+			-textvariable potato::conn($c,logDialog,buffer) -state readonly] -side top -anchor nw
 
-  pack [::ttk::labelframe $frame.top.options -text [T "Other Options"] -padding 2] -side left -anchor nw -padx 6
-  pack [::ttk::checkbutton $frame.top.options.future -variable potato::conn($c,logDialog,future) \
-             -onvalue 1 -offvalue 0 -text [T "Leave Log Open?"] -underline 10] -side top -anchor w
-  lappend bindings o $frame.top.options.future
-  pack [::ttk::checkbutton $frame.top.options.append -variable potato::conn($c,logDialog,append) \
-             -onvalue 1 -offvalue 0 -text [T "Append to File?"] -underline 0] -side top -anchor w
-  lappend bindings a $frame.top.options.append
-  pack [::ttk::checkbutton $frame.top.options.timestamps -variable potato::conn($c,logDialog,timestamps) \
-             -onvalue 1 -offvalue 0 -text [T "Show Timestamps?"] -underline 5] -side top -anchor w
-  lappend bindings t $frame.top.options.timestamps
-  pack [::ttk::checkbutton $frame.top.options.html -variable potato::conn($c,logDialog,html) \
-             -onvalue 1 -offvalue 0 -text [T "Log as HTML?"] -underline 7] -side top -anchor w
-  lappend bindings h $frame.top.options.html
-  pack [::ttk::checkbutton $frame.top.options.echo -variable potato::conn($c,logDialog,echo) \
-             -onvalue 1 -offvalue 0 -text [T "Log input?"] -underline 4] -side top -anchor w
-  lappend bindings i $frame.top.options.echo
+	pack [::ttk::labelframe $frame.top.options -text [T "Other Options"] -padding 2] -side left -anchor nw -padx 6
+	pack [::ttk::checkbutton $frame.top.options.future -variable potato::conn($c,logDialog,future) \
+		-onvalue 1 -offvalue 0 -text [T "Leave Log Open?"] -underline 10] -side top -anchor w
+	lappend bindings o $frame.top.options.future
+	pack [::ttk::checkbutton $frame.top.options.append -variable potato::conn($c,logDialog,append) \
+		-onvalue 1 -offvalue 0 -text [T "Append to File?"] -underline 0] -side top -anchor w
+	lappend bindings a $frame.top.options.append
+	pack [::ttk::checkbutton $frame.top.options.timestamps -variable potato::conn($c,logDialog,timestamps) \
+		-onvalue 1 -offvalue 0 -text [T "Show Timestamps?"] -underline 5] -side top -anchor w
+	lappend bindings t $frame.top.options.timestamps
+	pack [::ttk::checkbutton $frame.top.options.html -variable potato::conn($c,logDialog,html) \
+		-onvalue 1 -offvalue 0 -text [T "Log as HTML?"] -underline 7] -side top -anchor w
+	lappend bindings h $frame.top.options.html
+	pack [::ttk::checkbutton $frame.top.options.echo -variable potato::conn($c,logDialog,echo) \
+		-onvalue 1 -offvalue 0 -text [T "Log input?"] -underline 4] -side top -anchor w
+	lappend bindings i $frame.top.options.echo
 
-  #pack [::ttk::checkbutton $frame.top.options.wrap -variable potato::conn($c,logDialog,wrap) \
-  #           -onvalue 1 -offvalue 0 -text [T "Wrap Lines?"] -underline 0] -side top -anchor w
-  #lappend bindings w $frame.top.options.wrap
+	#pack [::ttk::checkbutton $frame.top.options.wrap -variable potato::conn($c,logDialog,wrap) \
+	#           -onvalue 1 -offvalue 0 -text [T "Wrap Lines?"] -underline 0] -side top -anchor w
+	#lappend bindings w $frame.top.options.wrap
 
-  pack [::ttk::frame $frame.file] -side top -anchor center -fill x -padx 6 -pady 4
-  pack [::ttk::entry $frame.file.e -textvariable potato::conn($c,logDialog,file) -width 30] -side left -expand 1 -fill x
-  $frame.file.e state readonly
+	pack [::ttk::frame $frame.file] -side top -anchor center -fill x -padx 6 -pady 4
+	pack [::ttk::entry $frame.file.e -textvariable potato::conn($c,logDialog,file) -width 30] -side left -expand 1 -fill x
+	$frame.file.e state readonly
 
 
-  set html {
-    {{HTML Files}       {.html}        }
-  }
+	set html [list \
+		[list "HTML Files" ".html"] \
+	]
 
-  pack [::ttk::button $frame.file.sel -command [list ::potato::selectFile potato::conn($c,logDialog,file) $win 1 $html] \
-              -image ::potato::img::dotdotdot] -side left -padx 8
-  lappend bindings f $frame.file.sel
+	pack [::ttk::button $frame.file.sel -command [list ::potato::selectFile potato::conn($c,logDialog,file) $win 1 $html] \
+		-image ::potato::img::dotdotdot] -side left -padx 8
+	lappend bindings f $frame.file.sel
 
-  pack [::ttk::frame $frame.btns] -side top -anchor center -expand 1 -fill x -padx 6 -pady 4
-  pack [::ttk::frame $frame.btns.ok] -side left -expand 1 -fill x -padx 8
-  pack [::ttk::button $frame.btns.ok.btn -text [T "Log"] -width 8 -underline 0 -default active \
-              -command [list ::potato::logWindowInvoke $c $win]] -side top
-  lappend bindings l $frame.btns.ok.btn
-  pack [::ttk::frame $frame.btns.cancel] -side left -expand 1 -fill x -padx 8
-  pack [::ttk::button $frame.btns.cancel.btn -text [T "Cancel"] -width 8 -underline 0 \
-              -command [list destroy $win]] -side top
-  lappend bindings c $frame.btns.cancel.btn
+	pack [::ttk::frame $frame.btns] -side top -anchor center -expand 1 -fill x -padx 6 -pady 4
+	pack [::ttk::frame $frame.btns.ok] -side left -expand 1 -fill x -padx 8
+	pack [::ttk::button $frame.btns.ok.btn -text [T "Log"] -width 8 -underline 0 -default active \
+		-command [list ::potato::logWindowInvoke $c $win]] -side top
+	lappend bindings l $frame.btns.ok.btn
+	pack [::ttk::frame $frame.btns.cancel] -side left -expand 1 -fill x -padx 8
+	pack [::ttk::button $frame.btns.cancel.btn -text [T "Cancel"] -width 8 -underline 0 \
+		-command [list destroy $win]] -side top
+	lappend bindings c $frame.btns.cancel.btn
 
-  foreach {letter widget} $bindings {
-     bind $win <Alt-$letter> [list $widget invoke]
-  }
+	foreach {letter widget} $bindings {
+		bind $win <Alt-$letter> [list $widget invoke]
+	}
 
-  bind $win <Return> [list $frame.btns.ok.btn invoke]
-  bind $win <Escape> [list $frame.btns.cancel.btn invoke]
-  update idletasks
-  center $win
-  wm deiconify $win
-  focus $frame.file.sel
+	bind $win <Return> [list $frame.btns.ok.btn invoke]
+	bind $win <Escape> [list $frame.btns.cancel.btn invoke]
+	update idletasks
+	center $win
+	wm deiconify $win
+	focus $frame.file.sel
 
-  return;
+	return;
 
 };# ::potato::logWindow
 
@@ -1513,23 +1517,23 @@ proc ::potato::logWindow {{c ""}} {
 #: desc Using the options set in window $win for connection $c, start logging
 #: return nothing
 proc ::potato::logWindowInvoke {c win} {
-  variable conn;
+	variable conn;
 
-  # Don't destroy the window until we've done some validation...
-  if { $conn($c,logDialog,file) eq "" || ($conn($c,logDialog,future) == 0 && $conn($c,logDialog,buffer) == -1) } {
-       bell -displayof $win
-       focus $win
-       return; # no file selected, or told not to log anything
-     }
+	# Don't destroy the window until we've done some validation...
+	if { $conn($c,logDialog,file) eq "" || ($conn($c,logDialog,future) == 0 && $conn($c,logDialog,buffer) == -1) } {
+		bell -displayof $win
+		focus $win
+		return; # no file selected, or told not to log anything
+	}
 
-  doLog $c $conn($c,logDialog,file) $conn($c,logDialog,append) \
-    $conn($c,logDialog,buffer) $conn($c,logDialog,future) \
-    $conn($c,logDialog,timestamps) $conn($c,logDialog,html) \
-    $conn($c,logDialog,echo)
-  unregisterWindow $c $win
-  destroy $win
-  array unset conn $c,logDialog,*
-  return;
+	doLog $c $conn($c,logDialog,file) $conn($c,logDialog,append) \
+	$conn($c,logDialog,buffer) $conn($c,logDialog,future) \
+	$conn($c,logDialog,timestamps) $conn($c,logDialog,html) \
+	$conn($c,logDialog,echo)
+	unregisterWindow $c $win
+	destroy $win
+	array unset conn $c,logDialog,*
+	return;
 
 };# ::potato::logWindowInvoke
 
@@ -1546,246 +1550,249 @@ proc ::potato::logWindowInvoke {c win} {
 #: desc include output from one of the windows. If $leave, don't close the file, leave it open to log incoming text to, possibly causing us to close an already-open log file.
 #: return nothing
 proc ::potato::doLog {c file append buffer leave timestamps html echo} {
-  variable conn;
-  variable world;
-  variable misc;
-  variable potato;
+	variable conn;
+	variable world;
+	variable misc;
+	variable potato;
 
-  if { ![info exists conn($c,world)] } {
-       return;
-     }
+	if { ![info exists conn($c,world)] } {
+		return;
+	}
 
-  set mode [lindex [list w a] $append]
+	set mode [lindex [list w a] $append]
 
-  if { ![catch {clock format [clock seconds] -format $file} newfile] } {
-       set file $newfile
-     }
+	if { ![catch {clock format [clock seconds] -format $file} newfile] } {
+		set file $newfile
+	}
 
-  set header [T "Logfile from %s" $world($conn($c,world),name)]
-  if { $conn($c,char) ne "" } {
-       append header " ($conn($c,char))"
-     }
+	set header [T "Logfile from %s" $world($conn($c,world),name)]
+	if { $conn($c,char) ne "" } {
+		append header " ($conn($c,char))"
+	}
 
-  if { [catch {set subheader [T "Log opened %s" [clock format [clock seconds] -format $misc(clockFormat)]]}] } {
-       set subheader ""
-       set timestamps 0
-     }
+	if { [catch {set subheader [T "Log opened %s" [clock format [clock seconds] -format $misc(clockFormat)]]}] } {
+		set subheader ""
+		set timestamps 0
+	}
 
-  if { $buffer eq "" || $buffer eq "_none" || $buffer eq "No Buffer" || $buffer eq "_all" || [set buffer [validSpawnName $buffer 0]] eq "" } {
-       set t ""
-     } elseif { $buffer eq "_main" || $buffer eq "main window" } {
-       set t $conn($c,textWidget)
-     } elseif { [set pos [findSpawn $c $buffer]] != -1 } {
-       set t [lindex [lindex $conn($c,spawns) $pos] 0]
-     } else {
-       set t ""
-     }
+	if { $buffer eq "" || $buffer eq "_none" || $buffer eq "No Buffer" || $buffer eq "_all" || [set buffer [validSpawnName $buffer 0]] eq "" } {
+		set t ""
+	} elseif { $buffer eq "_main" || $buffer eq "main window" } {
+		set t $conn($c,textWidget)
+	} elseif { [set pos [findSpawn $c $buffer]] != -1 } {
+		set t [lindex [lindex $conn($c,spawns) $pos] 0]
+	} else {
+		set t ""
+	}
 
-  if { !$leave && $t eq "" } {
-       outputSystem $c [T "Log what?"]
-       return;
-     }
+	if { !$leave && $t eq "" } {
+		outputSystem $c [T "Log what?"]
+		return;
+	}
 
-  set file [file nativename [file normalize $file]]
-  if { [catch {file mkdir [file dirname $file]} fid] || [catch {open $file $mode} fid] } {
-       outputSystem $c "Unable to log to \"$file\": $fid"
-       return;
-     }
-  fconfigure $fid -encoding $conn($c,id,encoding)
-  set enc $conn($c,id,encoding)
-  if { [string match -nocase {iso[0-9]*} $enc] } {
-       set enc [string replace $enc 0 2 iso-]
-     }
+	set file [file nativename [file normalize $file]]
+	if { [catch {file mkdir [file dirname $file]} fid] || [catch {open $file $mode} fid] } {
+		outputSystem $c "Unable to log to \"$file\": $fid"
+		return;
+	}
+	fconfigure $fid -encoding $conn($c,id,encoding)
+	set enc $conn($c,id,encoding)
+	if { [string match -nocase {iso[0-9]*} $enc] } {
+		set enc [string replace $enc 0 2 iso-]
+	}
 
-  if { $html } {
-       set leave 0;# not currently supported
-     }
+	if { $html } {
+		set leave 0;# not currently supported
+	}
 
-  if { $html } {
-       puts $fid {<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">}
-       puts $fid {<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">}
-       puts $fid {<head>}
-       puts $fid "\t<title>[htmlEscape $header]</title>"
-       puts -nonewline $fid "\t"
-       puts $fid [format {<meta http-equiv="Content-Type" content="text/html;charset=%s" />} $enc]
-       puts $fid "\t<meta name=\"description\" content=\"[htmlEscape "$header. $subheader"]\"  />"
-       puts $fid [format {%s<meta name="author" content="%s Version %s" />} \t $potato(name) $potato(version)]
-       if { $t eq "" } {
-            set thtml $conn($c,textWidget)
-          } else {
-            set thtml $t
-          }
-       puts $fid "\t<style type=\"text/css\">"
-       puts $fid "\t\t<!--"
-       puts $fid "\t\t body {"
-       puts $fid "\t\t\tbackground-color:[htmlColor [$thtml cget -background]];"
-       puts $fid "\t\t\tcolor:[htmlColor [$thtml cget -foreground]];"
-       array set font [font actual [$thtml cget -font]]
-       puts $fid "\t\t\tfont-family: $font(-family),\"$font(-family)\",monospace;"
-       puts $fid "\t\t\tfont-size: $font(-size)pt;"
-       if { $font(-weight) eq "bold " } {
-            puts $fid "\t\t\tfont-weight:bold;"
-          }
-       if { $font(-slant) eq "italic" } {
-            puts $fid "\t\t\tfont-style:italic;"
-          }
-       if { $font(-underline) && $font(-overstrike) } {
-            puts $fid "\t\t\ttext-decoration:underline line-through;"
-          } elseif { $font(-underline) } {
-            puts $fid "\t\t\ttext-decoration:underline;"
-          } elseif { $font(-overstrike) } {
-            puts $fid "\t\t\ttext-decoration:line-through;"
-          }
-       puts $fid "\t\t}"
+	if { $html } {
+		puts $fid {<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">}
+		puts $fid {<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">}
+		puts $fid {<head>}
+		puts $fid "\t<title>[htmlEscape $header]</title>"
+		puts -nonewline $fid "\t"
+		puts $fid [format {<meta http-equiv="Content-Type" content="text/html;charset=%s" />} $enc]
+		puts $fid "\t<meta name=\"description\" content=\"[htmlEscape "$header. $subheader"]\"  />"
+		puts $fid [format {%s<meta name="author" content="%s Version %s" />} \t $potato(name) $potato(version)]
+		if { $t eq "" } {
+			set thtml $conn($c,textWidget)
+		} else {
+			set thtml $t
+		}
+		puts $fid "\t<style type=\"text/css\">"
+		puts $fid "\t\t<!--"
+		puts $fid "\t\t body {"
+		puts $fid "\t\t\tbackground-color:[htmlColor [$thtml cget -background]];"
+		puts $fid "\t\t\tcolor:[htmlColor [$thtml cget -foreground]];"
+		array set font [font actual [$thtml cget -font]]
+		puts $fid "\t\t\tfont-family: $font(-family),\"$font(-family)\",monospace;"
+		puts $fid "\t\t\tfont-size: $font(-size)pt;"
+		if { $font(-weight) eq "bold " } {
+			puts $fid "\t\t\tfont-weight:bold;"
+		}
+		if { $font(-slant) eq "italic" } {
+			puts $fid "\t\t\tfont-style:italic;"
+		}
+		if { $font(-underline) && $font(-overstrike) } {
+			puts $fid "\t\t\ttext-decoration:underline line-through;"
+		} elseif { $font(-underline) } {
+			puts $fid "\t\t\ttext-decoration:underline;"
+		} elseif { $font(-overstrike) } {
+			puts $fid "\t\t\ttext-decoration:line-through;"
+		}
+		puts $fid "\t\t}"
 
-       set styles [lsort -dictionary [lsearch -all -inline -glob [$thtml tag names] ANSI*]]
-       if { !$leave } {
-            # We only need to put the styles we've used
-            for {set i [llength $styles];incr i -1} {$i >= 0} {incr i -1} {
-              if { ![llength [$thtml tag ranges [lindex $styles $i]]] } {
-                   set styles [lreplace $styles $i $i]
-                 }
-            }
-          }
-       lappend styles system
-       if { $echo } {
-            lappend styles echo
-          }
-       foreach x $styles {
-         set this ""
-         if { [set col [$thtml tag cget $x -foreground]] ne "" } {
-              append this "color:[htmlColor $col];"
-            }
-         if { [set col [$thtml tag cget $x -background]] ne "" } {
-              append this "background-color:[htmlColor $col];"
-            }
-         if { $this ne "" } {
-              puts $fid "\t\t.$x {$this}"
-            }
-       }
-       if { "ANSI_underline" in $styles } {
-            puts $fid "\t\t.ANSI_underline {text-decoration:underline;}"
-          }
-       lappend styles weblink
-       puts $fid "\t\t.center {text-align:center}"
-       puts $fid "\t\t-->"
-       puts $fid "\t</style>"
-       puts $fid {</head>}
-       puts $fid {<body>}
-       puts $fid "\t<h1>[htmlEscape $header]</h1>"
-       puts $fid "\t<h2>[htmlEscape $subheader]</h2>"
-     } else {
-       puts $fid "$header\n$subheader\n"
-     }
+		set styles [lsort -dictionary [lsearch -all -inline -glob [$thtml tag names] ANSI*]]
+		if { !$leave } {
+			# We only need to put the styles we've used
+			for {set i [llength $styles];incr i -1} {$i >= 0} {incr i -1} {
+				if { ![llength [$thtml tag ranges [lindex $styles $i]]] } {
+					set styles [lreplace $styles $i $i]
+				}
+			}
+		}
+		lappend styles system
+		if { $echo } {
+			lappend styles echo
+		}
+		foreach x $styles {
+			set this ""
+			if { [set col [$thtml tag cget $x -foreground]] ne "" } {
+				append this "color:[htmlColor $col];"
+			}
+			if { [set col [$thtml tag cget $x -background]] ne "" } {
+				append this "background-color:[htmlColor $col];"
+			}
+			if { $this ne "" } {
+				puts $fid "\t\t.$x {$this}"
+			}
+		}
+		if { "ANSI_underline" in $styles } {
+			puts $fid "\t\t.ANSI_underline {text-decoration:underline;}"
+		}
+		lappend styles weblink
+		puts $fid "\t\t.center {text-align:center}"
+		puts $fid "\t\t-->"
+		puts $fid "\t</style>"
+		puts $fid {</head>}
+		puts $fid {<body>}
+		puts $fid "\t<h1>[htmlEscape $header]</h1>"
+		puts $fid "\t<h2>[htmlEscape $subheader]</h2>"
+	} else {
+		puts $fid "$header\n$subheader\n"
+	}
 
-  if { [winfo exists $t] && [winfo class $t] eq "Text" } {
-       set max [$t count -lines 1.0 end]
-       for {set i 1} {$i <= $max} {incr i} {
-         set linking 0
-         set omit 0
-         set opentags [list]
-         if { "nobacklog" in [set tags [$t tag names $i.0]] } {
-              continue;
-            }
-         if { "echo" in $tags && !$echo } {
-              continue;
-            }
-         if { $html } {
-              puts -nonewline $fid "\t<div";
-              if { "center" in $tags } {
-                   puts -nonewline $fid { class="center"}
-                 }
-              puts -nonewline $fid ">"
-            }
-         if { $timestamps } {
-              if { $html } {
-                   # nothing yet
-                 } else {
-                   puts -nonewline $fid "\[[clock format [$t get {*}[$t tag nextrange timestamp $i.0]] -format $misc(clockFormat)]\] "
-                 }
-            }
-         if { $html } {
-              set data [$t dump -tag -text $i.0 "$i.0 lineend"]
-              foreach {what info where} $data {
-                switch $what {
-                  tagon {if { $info eq "weblink" } {
-                              set linking 1
-                            } elseif { $info eq "timestamp" } {
-                              set omit 1
-                            } elseif { $linking } {
-                              # nothing
-                            } elseif { $info in $styles } {
-                              puts -nonewline $fid "<span class=\"$info\">"
-                              lappend opentags $info
-                            }
-                         }
-                  tagoff {if { $linking } {
-                               set linking 0
-                               puts -nonewline $fid "<a href=\"[htmlEscape $link]\" target=\"_blank\">[htmlEscape $link]</a>"
-                               set link ""
-                             } elseif { $omit } {
-                               set omit 0
-                             } elseif { $info in $opentags } {
-                               puts -nonewline $fid "</span>"
-                               set pos [lsearch -exact $opentags $info]
-                               set opentags [lreplace $opentags $pos $pos]
-                             }
-                         }
-                  text {if { $linking } {
-                             append link $info
-                           } elseif { $omit } {
-                             continue
-                           } else {
-                             puts -nonewline $fid [htmlEscape $info]
-                           }
-                       }
-                }
-              }
-              foreach span $opentags {
-                puts -nonewline $fid "</span>";
-              }
-              puts $fid "</div>"
-            } else {
-              puts $fid [$t get -displaychars -- "$i.0" "$i.0 lineend"]
-            }
-       }
-       flush $fid
-     }
+	if { [winfo exists $t] && [winfo class $t] eq "Text" } {
+		set max [$t count -lines 1.0 end]
+		for {set i 1} {$i <= $max} {incr i} {
+			set linking 0
+			set omit 0
+			set opentags [list]
+			if { "nobacklog" in [set tags [$t tag names $i.0]] } {
+				continue;
+			}
+			if { "echo" in $tags && !$echo } {
+				continue;
+			}
+			if { $html } {
+				puts -nonewline $fid "\t<div";
+				if { "center" in $tags } {
+					puts -nonewline $fid { class="center"}
+				}
+				puts -nonewline $fid ">"
+			}
+			if { $timestamps } {
+				if { $html } {
+					# nothing yet
+				} else {
+					puts -nonewline $fid "\[[clock format [$t get {*}[$t tag nextrange timestamp $i.0]] -format $misc(clockFormat)]\] "
+				}
+			}
+			if { $html } {
+				set data [$t dump -tag -text $i.0 "$i.0 lineend"]
+				foreach {what info where} $data {
+					switch $what {
+						tagon {
+							if { $info eq "weblink" } {
+								set linking 1
+							} elseif { $info eq "timestamp" } {
+								set omit 1
+							} elseif { $linking } {
+								# nothing
+							} elseif { $info in $styles } {
+								puts -nonewline $fid "<span class=\"$info\">"
+								lappend opentags $info
+							}
+						}
+						tagoff {
+							if { $linking } {
+								set linking 0
+								puts -nonewline $fid "<a href=\"[htmlEscape $link]\" target=\"_blank\">[htmlEscape $link]</a>"
+								set link ""
+							} elseif { $omit } {
+								set omit 0
+							} elseif { $info in $opentags } {
+								puts -nonewline $fid "</span>"
+								set pos [lsearch -exact $opentags $info]
+								set opentags [lreplace $opentags $pos $pos]
+							}
+						}
+						text {
+							if { $linking } {
+								append link $info
+							} elseif { $omit } {
+								continue
+							} else {
+								puts -nonewline $fid [htmlEscape $info]
+							}
+						}
+					}
+				}
+				foreach span $opentags {
+					puts -nonewline $fid "</span>";
+				}
+				puts $fid "</div>"
+			} else {
+				puts $fid [$t get -displaychars -- "$i.0" "$i.0 lineend"]
+			}
+		}
+		flush $fid
+	}
 
-  if { $leave } {
-       outputSystem $c [T "Now logging to \"%s\"." $file]
-       set conn($c,log,$fid) [file nativename [file normalize $file]]
-       set conn($c,log,$fid,timestamps) $timestamps
-       set conn($c,log,$fid,echo) $echo
-     } else {
-       if { $html } {
-            puts $fid "</body>\n</html>"
-          }
-       outputSystem $c [T "Logged to \"%s\"." $file]
-       close $fid
-     }
+	if { $leave } {
+		outputSystem $c [T "Now logging to \"%s\"." $file]
+		set conn($c,log,$fid) [file nativename [file normalize $file]]
+		set conn($c,log,$fid,timestamps) $timestamps
+		set conn($c,log,$fid,echo) $echo
+	} else {
+		if { $html } {
+			puts $fid "</body>\n</html>"
+		}
+		outputSystem $c [T "Logged to \"%s\"." $file]
+		close $fid
+	}
 
-  return;
+	return;
 
 };# ::potato::doLog
 
 proc ::potato::htmlColor {color} {
 
-  foreach [list red green blue] [winfo rgb . $color] {break}
+	foreach [list red green blue] [winfo rgb . $color] {break}
 
-  set red [expr {$red / 256}]
-  set blue [expr {$blue / 256}]
-  set green [expr {$green / 256}]
+	set red [expr {$red / 256}]
+	set blue [expr {$blue / 256}]
+	set green [expr {$green / 256}]
 
-  return [format "#%02x%02x%02x" $red $green $blue];
+	return [format "#%02x%02x%02x" $red $green $blue];
 
 };# ::potato::htmlColor
 
 proc ::potato::htmlEscape {str} {
 
-  set map [list "&" "&amp;" "<" "&lt;" ">" "&gt;" {"} "&quot;" " " "&nbsp;" "\u00a0" "&nbsp;"]
-  # This comment contains a single " to avoid throwing off syntax highlighting
-  return [string map $map $str];
+	set map [list "&" "&amp;" "<" "&lt;" ">" "&gt;" {"} "&quot;" " " "&nbsp;" "\u00a0" "&nbsp;"]
+	# This comment contains a single " to avoid throwing off syntax highlighting
+	return [string map $map $str];
 
 };# ::potato::htmlEscape
 
@@ -1796,63 +1803,63 @@ proc ::potato::htmlEscape {str} {
 #: desc Stop logging to filename (or [file channel]) $file, or all files if $file is "", for connection $c.
 #: return 0 if no open logs, -1 if specified log not found, -2 if specified log is ambiguous, 1 (or a success message) if log(s) closed successfully.
 proc ::potato::stopLog {{c ""} {file ""} {verboseReturn 0}} {
-  variable conn;
-  variable misc;
+	variable conn;
+	variable misc;
 
-  if { $c eq "" } {
-       set c [up]
-     }
-  if { [set count [llength [set list [arraySubelem conn $c,log]]]] == 0 } {
-       return 0;# No open logs
-     }
-  set footer "\nLogging stopped at [clock format [clock seconds] -format $misc(clockFormat)]"
-  if { $file eq "" } {
-       if { $count == 1 } {
-            set msg [T "Logging to \"%s\" stopped." $conn([lindex $list 0])]
-          } else {
-            set msg [T "Logging to %d logfiles stopped." $count]
-          }
-        foreach x [removePrefix $list $c,log] {
-          catch {puts $x $footer}
-          close $x
-        }
-        array unset conn $c,log,*
-     } else {
-       if { [info exists conn($c,log,$file)] && ![string match "*,*" $file] } {
-            set match $file
-          } else {
-            set realfile [file nativename [file normalize $file]]
-            set shortrealfile [file tail $file]
-            set count 0
-            foreach x $list {
-               if { $conn($x) eq $realfile } {
-                    set match [removePrefix $x $c,log]
-                    break;
-                  } elseif { [file tail $conn($x)] eq $shortrealfile } {
-                    set match [removePrefix $x $c,log]
-                    incr count
-                    # No break
-                  }
-            }
-            if { ![info exists match] } {
-                 return -1;
-               } elseif { $count > 1 } {
-                 return -2;
-               }
-          }
-       set msg [T "Logging to \"%s\" stopped." $conn($c,log,$match)]
-       catch {puts $match $footer}
-       close $match
-       unset conn($c,log,$match)
-       array unset conn $c,log,$match,*
-     }
+	if { $c eq "" } {
+		set c [up]
+	}
+	if { [set count [llength [set list [arraySubelem conn $c,log]]]] == 0 } {
+		return 0;# No open logs
+	}
+	set footer "\nLogging stopped at [clock format [clock seconds] -format $misc(clockFormat)]"
+	if { $file eq "" } {
+		if { $count == 1 } {
+			set msg [T "Logging to \"%s\" stopped." $conn([lindex $list 0])]
+		} else {
+			set msg [T "Logging to %d logfiles stopped." $count]
+		}
+		foreach x [removePrefix $list $c,log] {
+			catch {puts $x $footer}
+			close $x
+		}
+		array unset conn $c,log,*
+	} else {
+		if { [info exists conn($c,log,$file)] && ![string match "*,*" $file] } {
+			set match $file
+		} else {
+			set realfile [file nativename [file normalize $file]]
+			set shortrealfile [file tail $file]
+			set count 0
+			foreach x $list {
+				if { $conn($x) eq $realfile } {
+					set match [removePrefix $x $c,log]
+					break;
+				} elseif { [file tail $conn($x)] eq $shortrealfile } {
+					set match [removePrefix $x $c,log]
+					incr count
+					# No break
+				}
+			}
+			if { ![info exists match] } {
+				return -1;
+			} elseif { $count > 1 } {
+				return -2;
+			}
+		}
+		set msg [T "Logging to \"%s\" stopped." $conn($c,log,$match)]
+		catch {puts $match $footer}
+		close $match
+		unset conn($c,log,$match)
+		array unset conn $c,log,$match,*
+	}
 
-  if { $verboseReturn } {
-       return $msg;
-     } else {
-       outputSystem $c $msg
-       return 1;
-     }
+	if { $verboseReturn } {
+		return $msg;
+	} else {
+		outputSystem $c $msg
+		return 1;
+	}
 
 };# ::potato::stopLog
 
@@ -1863,32 +1870,32 @@ proc ::potato::stopLog {{c ""} {file ""} {verboseReturn 0}} {
 #: desc Actually log $str to $c's open log files. If $style is "echo", only log if we were told to log echoed input
 #: return nothing
 proc ::potato::log {c str {style ""}} {
-  variable conn;
-  variable misc;
+	variable conn;
+	variable misc;
 
-  if { $c eq "" } {
-       set c [up]
-     }
+	if { $c eq "" } {
+		set c [up]
+	}
 
-  set logs [arraySubelem conn $c,log]
-  set echo [expr {$style eq "echo"}]
-  if { [llength $logs] } {
-       foreach x [removePrefix $logs $c,log] {
-         if { $echo && !$conn($c,log,$x,echo) } {
-              continue;
-            }
-         if { $conn($c,log,$x,timestamps) } {
-              if { ![info exists timestamp] } {
-                   set timestamp "\[[clock format [clock seconds] -format $misc(clockFormat)]]\]"
-                 }
-              puts $x "$timestamp $str"
-            } else {
-              puts $x $str
-            }
-         flush $x
-       }
-     }
-  return;
+	set logs [arraySubelem conn $c,log]
+	set echo [expr {$style eq "echo"}]
+	if { [llength $logs] } {
+		foreach x [removePrefix $logs $c,log] {
+			if { $echo && !$conn($c,log,$x,echo) } {
+				continue;
+			}
+			if { $conn($c,log,$x,timestamps) } {
+				if { ![info exists timestamp] } {
+					set timestamp "\[[clock format [clock seconds] -format $misc(clockFormat)]]\]"
+				}
+				puts $x "$timestamp $str"
+			} else {
+				puts $x $str
+			}
+			flush $x
+		}
+	}
+	return;
 };# ::potato::log
 
 #: proc ::potato::selectFile
@@ -1898,41 +1905,41 @@ proc ::potato::log {c str {style ""}} {
 #: desc Show a dialog for selecting a file to either save to or open. If a file is selected, save it into the variable given in $var
 #: return nothing
 proc ::potato::selectFile {var win save {basetypes ""}} {
-  variable path;
-  upvar #0 $var local;
+	variable path;
+	upvar #0 $var local;
 
-  if { $save } {
-       set cmd tk_getSaveFile
-     } else {
-       set cmd tk_getOpenFile
-     }
+	if { $save } {
+		set cmd tk_getSaveFile
+	} else {
+		set cmd tk_getOpenFile
+	}
 
-  if { $local eq "" } {
-       set basedir $path(homedir)
-       set basefile ""
-     } else {
-       set basedir [file dirname $local]
-       set basefile [file tail $local]
-     }
+	if { $local eq "" } {
+		set basedir $path(homedir)
+		set basefile ""
+	} else {
+		set basedir [file dirname $local]
+		set basefile [file tail $local]
+	}
 
-  set filetypes {
-    {{Text Files}       {.txt}        }
-    {{Text Files}       {.log}        }
-  }
-  if { $basetypes ne "" } {
-       set filetypes [concat $filetypes $basetypes]
-     }
-  lappend filetypes {{All Files}        *             }
-  set file [$cmd -parent $win -initialdir $basedir -initialfile $basefile \
-                 -filetypes $filetypes]
+	set filetypes [list \
+		[list "Text Files" ".txt"] \
+		[list "Text Files" ".log"] \
+	]
+	if { $basetypes ne "" } {
+		set filetypes [concat $filetypes $basetypes]
+	}
+	lappend filetypes {{All Files}        *             }
+	set file [$cmd -parent $win -initialdir $basedir -initialfile $basefile \
+		-filetypes $filetypes]
 
-  if { $file eq "" } {
-       return;
-     }
+	if { $file eq "" } {
+		return;
+	}
 
-  set local [file nativename $file]
+	set local [file nativename $file]
 
-  return;
+	return;
 
 };# ::potato::selectFile
 
@@ -1941,15 +1948,15 @@ proc ::potato::selectFile {var win save {basetypes ""}} {
 #: desc Wrapper for [::potato::newConnection $w <defaultChar>]
 #: return nothing
 proc ::potato::newConnectionDefault {w} {
-  variable world;
+	variable world;
 
-  if { [info exists world($w,charDefault)] } {
-       newConnection $w $world($w,charDefault)
-     } else {
-       newConnection $w
-     }
+	if { [info exists world($w,charDefault)] } {
+		newConnection $w $world($w,charDefault)
+	} else {
+		newConnection $w
+	}
 
-  return;
+	return;
 
 };# ::potato::newConnectionDefault
 
@@ -1958,36 +1965,36 @@ proc ::potato::newConnectionDefault {w} {
 #: desc Make a set of three text widgets for conn $c: One for output, and two for input. This may be for the main output window, or for spawn windows.
 #: return a list of the three widget paths
 proc ::potato::makeTextFrames {c} {
-  variable conn;
-  variable world;
-  variable inputSwap;
+	variable conn;
+	variable world;
+	variable inputSwap;
 
-  set count [incr conn($c,textFrameTotals)]
-  set w $conn($c,world)
+	set count [incr conn($c,textFrameTotals)]
+	set w $conn($c,world)
 
-  set t .conn_${c}_textWidget_$count
-  if { $c == 0 } {
-       set out [canvas $t -width 700 -height 500 -highlightthickness 0]
-     } else {
-       set out [text $t -undo 0 -height 1]
-       createOutputTags $out
-       configureTextWidget $c $out
-       bindtags $out [linsert [bindtags $out] 0 PotatoUserBindings PotatoOutput]
-       set pos [lsearch -exact [bindtags $out] "Text"]
-       bindtags $out [lreplace [bindtags $out] $pos $pos]
-     }
+	set t .conn_${c}_textWidget_$count
+	if { $c == 0 } {
+		set out [canvas $t -width 700 -height 500 -highlightthickness 0]
+	} else {
+		set out [text $t -undo 0 -height 1]
+		createOutputTags $out
+		configureTextWidget $c $out
+		bindtags $out [linsert [bindtags $out] 0 PotatoUserBindings PotatoOutput]
+		set pos [lsearch -exact [bindtags $out] "Text"]
+		bindtags $out [lreplace [bindtags $out] $pos $pos]
+	}
 
-  foreach x [list input1 input2] {
-    set $x [text .conn_${c}_${x}_$count -wrap word -undo 1 -height 1 \
-              -background $world($w,bottom,bg) -font $world($w,bottom,font,created) \
-              -foreground $world($w,bottom,fg) -insertbackground [reverseColour $world($w,bottom,bg)]]
-    bindtags [set $x] [linsert [bindtags [set $x]] 0 PotatoUserBindings PotatoInput]
-    set inputSwap([set $x],count) -1
-    set inputSwap([set $x],conn) $c
-    set inputSwap([set $x],backup) ""
-  }
+	foreach x [list input1 input2] {
+		set $x [text .conn_${c}_${x}_$count -wrap word -undo 1 -height 1 \
+			-background $world($w,bottom,bg) -font $world($w,bottom,font,created) \
+			-foreground $world($w,bottom,fg) -insertbackground [reverseColour $world($w,bottom,bg)]]
+		bindtags [set $x] [linsert [bindtags [set $x]] 0 PotatoUserBindings PotatoInput]
+		set inputSwap([set $x],count) -1
+		set inputSwap([set $x],conn) $c
+		set inputSwap([set $x],backup) ""
+	}
 
-  return [list $out $input1 $input2];
+	return [list $out $input1 $input2];
 
 };# ::potato::makeTextFrames
 
@@ -1997,99 +2004,99 @@ proc ::potato::makeTextFrames {c} {
 #: desc do the basics of opening a new connection to a world, tell the current skin to set things up, then try and connect
 #: return nothing
 proc ::potato::newConnection {w {character ""}} {
-  variable potato;
-  variable conn;
-  variable world;
+	variable potato;
+	variable conn;
+	variable world;
 
-  if { $w == 0 } {
-       # Set up the "not connected" connection
-       set c 0
-     } else {
-       set c [incr potato(conns)]
-       for {set i 1} {$i < $c} {incr i} {
-            if { ![info exists conn($i,world)] } {
-                 set c $i
-                 break;
-               }
-           }
-       unset i
-     }
+	if { $w == 0 } {
+		# Set up the "not connected" connection
+		set c 0
+	} else {
+		set c [incr potato(conns)]
+		for {set i 1} {$i < $c} {incr i} {
+			if { ![info exists conn($i,world)] } {
+				set c $i
+				break;
+			}
+		}
+		unset i
+	}
 
-  # Create fonts for this world, if we haven't already
-  if { ![info exists world($w,top,font,created)] } {
-       set world($w,top,font,created) [font create {*}[font actual $world($w,top,font)]]
-     }
-  if { ![info exists world($w,bottom,font,created)] } {
-       set world($w,bottom,font,created) [font create {*}[font actual $world($w,bottom,font)]]
-     }
+	# Create fonts for this world, if we haven't already
+	if { ![info exists world($w,top,font,created)] } {
+		set world($w,top,font,created) [font create {*}[font actual $world($w,top,font)]]
+	}
+	if { ![info exists world($w,bottom,font,created)] } {
+		set world($w,bottom,font,created) [font create {*}[font actual $world($w,bottom,font)]]
+	}
 
-  set conn($c,world) $w
+	set conn($c,world) $w
 
-  set conn($c,char) $character
-  updateConnName $c;# sets conn($c,name)
-  set conn($c,id) ""
-  set conn($c,address) [list]
-  set conn($c,address,disp) [T "Not Connected"]
-  set conn($c,protocols) [list]
-  set conn($c,idle) 0
-  set conn($c,upload,fid) ""
-  set conn($c,upload,file) ""
-  set conn($c,upload,bytes) 0
-  set conn($c,upload,newlineLength) 1
-  set conn($c,upload,fileSize) 0
-  set conn($c,upload,ignoreEmpty) 1
-  set conn($c,upload,delay) 0.0
-  set conn($c,upload,history) 0
-  set conn($c,upload,mpp) 0
-  set conn($c,upload,mpp,gt) 0
-  set conn($c,upload,mpp,buffer) ""
-  set conn($c,connected) 0
-  set conn($c,reconnectId) ""
-  set conn($c,loginInfoId) ""
-  set conn($c,telnet,state) 0
-  set conn($c,telnet,subState) 0
-  set conn($c,telnet,buffer,line) ""
-  set conn($c,telnet,buffer,codes) ""
-  set conn($c,telnet,afterPrompt) 0
-  set conn($c,telnet,mssp) [list]
-  set conn($c,prompt) ""
-  set conn($c,outputBuffer) ""
-  set conn($c,ansi,fg) fg
-  set conn($c,ansi,bg) bg
-  set conn($c,ansi,flash) 0
-  set conn($c,ansi,underline) 0
-  set conn($c,ansi,highlight) 0
-  set conn($c,ansi,inverse) 0
-  set conn($c,inputHistory) [list]
-  set conn($c,inputHistory,count) 0
-  set conn($c,stats,prev) 0
-  set conn($c,stats,connAt) -1
-  set conn($c,stats,formatted) ""
-  set conn($c,numConnects) 0
-  set conn($c,twoInputWindows) $world($w,twoInputWindows)
-  set conn($c,widgets) [list]
-  set conn($c,spawnAll) [list]
-  set conn($c,spawns) [list]
-  set conn($c,limited) [list]
-  set conn($c,debugPackets) 0
-  set conn($c,userAfterIDs) [list]
-  set conn($c,nawsheight) 24
+	set conn($c,char) $character
+	updateConnName $c;# sets conn($c,name)
+	set conn($c,id) ""
+	set conn($c,address) [list]
+	set conn($c,address,disp) [T "Not Connected"]
+	set conn($c,protocols) [list]
+	set conn($c,idle) 0
+	set conn($c,upload,fid) ""
+	set conn($c,upload,file) ""
+	set conn($c,upload,bytes) 0
+	set conn($c,upload,newlineLength) 1
+	set conn($c,upload,fileSize) 0
+	set conn($c,upload,ignoreEmpty) 1
+	set conn($c,upload,delay) 0.0
+	set conn($c,upload,history) 0
+	set conn($c,upload,mpp) 0
+	set conn($c,upload,mpp,gt) 0
+	set conn($c,upload,mpp,buffer) ""
+	set conn($c,connected) 0
+	set conn($c,reconnectId) ""
+	set conn($c,loginInfoId) ""
+	set conn($c,telnet,state) 0
+	set conn($c,telnet,subState) 0
+	set conn($c,telnet,buffer,line) ""
+	set conn($c,telnet,buffer,codes) ""
+	set conn($c,telnet,afterPrompt) 0
+	set conn($c,telnet,mssp) [list]
+	set conn($c,prompt) ""
+	set conn($c,outputBuffer) ""
+	set conn($c,ansi,fg) fg
+	set conn($c,ansi,bg) bg
+	set conn($c,ansi,flash) 0
+	set conn($c,ansi,underline) 0
+	set conn($c,ansi,highlight) 0
+	set conn($c,ansi,inverse) 0
+	set conn($c,inputHistory) [list]
+	set conn($c,inputHistory,count) 0
+	set conn($c,stats,prev) 0
+	set conn($c,stats,connAt) -1
+	set conn($c,stats,formatted) ""
+	set conn($c,numConnects) 0
+	set conn($c,twoInputWindows) $world($w,twoInputWindows)
+	set conn($c,widgets) [list]
+	set conn($c,spawnAll) [list]
+	set conn($c,spawns) [list]
+	set conn($c,limited) [list]
+	set conn($c,debugPackets) 0
+	set conn($c,userAfterIDs) [list]
+	set conn($c,nawsheight) 24
 
-  foreach [list conn($c,textWidget) conn($c,input1) conn($c,input2)] [makeTextFrames $c] {break};
+	foreach [list conn($c,textWidget) conn($c,input1) conn($c,input2)] [makeTextFrames $c] {break};
 
-  if { $w == 0 } {
-       connZero
-     }
+	if { $w == 0 } {
+		connZero
+	}
 
-  ::skin::$potato(skin)::import $c
+	::skin::$potato(skin)::import $c
 
-  showConn $c
+	showConn $c
 
-  if { $w != 0 } {
-       connect $c 1
-     }
+	if { $w != 0 } {
+		connect $c 1
+	}
 
-  return;
+	return;
 
 };# ::potato::newConnection
 
@@ -2098,20 +2105,20 @@ proc ::potato::newConnection {w {character ""}} {
 #: desc Update the connection name for conn $c based on the world name and the character connected to, if a custom name is not set
 #: return nothing
 proc ::potato::updateConnName {c} {
-  variable conn;
-  variable world;
+	variable conn;
+	variable world;
 
-  if { [info exists conn($c,name)] && [llength $conn($c,name)] && [lindex $conn($c,name) 0] } {
-       return;# custom name set, don't override
-     }
+	if { [info exists conn($c,name)] && [llength $conn($c,name)] && [lindex $conn($c,name) 0] } {
+		return;# custom name set, don't override
+	}
 
-  set connname $world($conn($c,world),name)
-  if { [string length $conn($c,char)] } {
-       append connname " ($conn($c,char))"
-     }
-  set conn($c,name) [list 0 $connname]
+	set connname $world($conn($c,world),name)
+	if { [string length $conn($c,char)] } {
+		append connname " ($conn($c,char))"
+	}
+	set conn($c,name) [list 0 $connname]
 
-  return;
+	return;
 
 };# ::potato::updateConnName
 
@@ -2121,13 +2128,13 @@ proc ::potato::updateConnName {c} {
 #: desc add $protocol to the list of protocols negotiated by connection $c, if not already present
 #: return nothing
 proc ::potato::addProtocol {c protocol} {
-  variable conn;
+	variable conn;
 
-  if { $protocol ni $conn($c,protocols) } {
-       lappend conn($c,protocols) $protocol
-     }
+	if { $protocol ni $conn($c,protocols) } {
+		lappend conn($c,protocols) $protocol
+	}
 
-  return;
+	return;
 
 };# ::potato::addProtocol
 
@@ -2137,9 +2144,9 @@ proc ::potato::addProtocol {c protocol} {
 #: desc return 1 if the given connection has negotiated the given protocol, or 0 otherwise
 #: return 1 or 0
 proc ::potato::hasProtocol {c protocol} {
-  variable conn;
+	variable conn;
 
-  return [expr {$protocol in $conn($c,protocols)}];
+	return [expr {$protocol in $conn($c,protocols)}];
 
 };# ::potato::hasProtocol
 
@@ -2150,29 +2157,29 @@ proc ::potato::hasProtocol {c protocol} {
 #: desc send the string $str to connection $c. Do not perform any escaping.
 #: return nothing
 proc ::potato::sendRaw {c str telnet} {
-  variable conn;
+	variable conn;
 
-  # Make sure we have an id to send to, and that we're not still trying to connect
-  if { $conn($c,id) ne "" && $conn($c,connected) == 1 && $conn($c,id) in [chan names] } {
-       if { $conn($c,debugPackets) } {
-            if { $telnet } {
-                 debug_packet $c 0 $str
-               } else {
-                 debug_packet $c 0 "$str$conn($c,id,lineending)"
-               }
-          }
-       if { $telnet } {
-            ioWrite -nonewline $conn($c,id) $str
-          } else {
-            if { $conn($c,id,encoding) eq "iso8859-1" } {
-                 # Convert Unicode chars to latin equivilents
-                 set str [unicode-to-latin1 $str]
-               }
-            ioWrite -nonewline $conn($c,id) "[encoding convertto $conn($c,id,encoding) $str]$conn($c,id,lineending)"
-          }
-     }
+	# Make sure we have an id to send to, and that we're not still trying to connect
+	if { $conn($c,id) ne "" && $conn($c,connected) == 1 && $conn($c,id) in [chan names] } {
+		if { $conn($c,debugPackets) } {
+			if { $telnet } {
+				debug_packet $c 0 $str
+			} else {
+				debug_packet $c 0 "$str$conn($c,id,lineending)"
+			}
+		}
+		if { $telnet } {
+			ioWrite -nonewline $conn($c,id) $str
+		} else {
+			if { $conn($c,id,encoding) eq "iso8859-1" } {
+				# Convert Unicode chars to latin equivilents
+				set str [unicode-to-latin1 $str]
+			}
+			ioWrite -nonewline $conn($c,id) "[encoding convertto $conn($c,id,encoding) $str]$conn($c,id,lineending)"
+		}
+	}
 
-  return;
+	return;
 
 };# ::potato::sendRaw
 
@@ -2181,35 +2188,35 @@ proc ::potato::sendRaw {c str telnet} {
 #: desc flash the ANSI text for all connections where appropriate
 #: return nothing
 proc ::potato::flashANSI {flashing} {
-  variable misc;
-  variable conn;
-  variable world;
+	variable misc;
+	variable conn;
+	variable world;
 
-  if { $flashing } {
-       foreach c [connIDs] {
-         set w $conn($c,world)
-         $conn($c,textWidget) tag configure ANSI_flash -background "" -foreground ""
-         foreach x $conn($c,spawns) {
-           [lindex $x 1] tag configure ANSI_flash -background "" -foreground ""
-         }
-       }
-       after $misc(ansiFlashDelay,on) [list ::potato::flashANSI 0]
-     } else {
-       foreach c [connIDs] {
-         set w $conn($c,world)
-         if { !$world($w,ansi,flash) } {
-              continue;
-            }
-         set bgcol $world($w,top,bg)
-         $conn($c,textWidget) tag configure ANSI_flash -background $bgcol -foreground $bgcol
-         foreach x $conn($c,spawns) {
-           [lindex $x 1] tag configure ANSI_flash -background $bgcol -foreground $bgcol
-         }
-       }
-       after $misc(ansiFlashDelay,off) [list ::potato::flashANSI 1]
-     }
+	if { $flashing } {
+		foreach c [connIDs] {
+			set w $conn($c,world)
+			$conn($c,textWidget) tag configure ANSI_flash -background "" -foreground ""
+			foreach x $conn($c,spawns) {
+				[lindex $x 1] tag configure ANSI_flash -background "" -foreground ""
+			}
+		}
+		after $misc(ansiFlashDelay,on) [list ::potato::flashANSI 0]
+	} else {
+		foreach c [connIDs] {
+			set w $conn($c,world)
+			if { !$world($w,ansi,flash) } {
+				continue;
+			}
+			set bgcol $world($w,top,bg)
+			$conn($c,textWidget) tag configure ANSI_flash -background $bgcol -foreground $bgcol
+			foreach x $conn($c,spawns) {
+				[lindex $x 1] tag configure ANSI_flash -background $bgcol -foreground $bgcol
+			}
+		}
+		after $misc(ansiFlashDelay,off) [list ::potato::flashANSI 1]
+	}
 
-  return;
+	return;
 
 };# ::potato::flashConnANSI
 
@@ -2219,95 +2226,96 @@ proc ::potato::flashANSI {flashing} {
 #: desc set the ANSI colours, ANSI underline, BG, FG, system, and echo colours for the text widget based on it's connection's world's settings
 #: return nothing
 proc ::potato::configureTextWidget {c t} {
-  variable conn;
-  variable world;
+	variable conn;
+	variable world;
 
-  set w $conn($c,world)
-  $t tag configure ANSI_underline -underline $world($w,ansi,underline)
-  foreach x [list r g b c m y x w fg] {
-     foreach {short long} [list bg background fg foreground] {
-        if { $world($w,ansi,colours) } {
-             set colour $x
-           } else {
-             set colour fg
-           }
-        $t tag configure ANSI_${short}_$x -$long $world($w,ansi,$colour)
-        if { $short eq "bg" } {
-             $t tag configure ANSI_${short}_${x}h -$long $world($w,ansi,${colour})
-           } else {
-             $t tag configure ANSI_${short}_${x}h -$long $world($w,ansi,${colour}h)
-           }
-     }
-  }
-  $t tag configure limited -elide 1
-  $t tag configure ANSI_fg_bg -foreground $world($w,top,bg)
-  $t tag configure system -foreground $world($w,ansi,system)
-  $t tag configure echo -foreground $world($w,ansi,echo)
-  $t tag configure link -foreground $world($w,ansi,link) -underline 1
-  $t tag bind link <Enter> [list %W configure -cursor hand2]
-  $t tag bind link <Leave> [list %W configure -cursor xterm]
-  $t tag bind link <ButtonPress-1> [list ::potato::linkRecolour %W 1]
-  $t tag bind link <ButtonRelease-1> [list ::potato::linkRecolour %W 0]
-  $t tag configure activeLink -foreground red
-  $t configure -background $world($w,top,bg) -foreground $world($w,ansi,fg) \
-               -font $world($w,top,font,created) -insertbackground [reverseColour $world($w,top,bg)]
-  font configure $world($w,top,font,created) {*}[font actual $world($w,top,font)]
-  $t configure -inactiveselectbackground [$t cget -selectbackground]
-  $t tag configure prompt
+	set w $conn($c,world)
+	$t tag configure ANSI_underline -underline $world($w,ansi,underline)
+	foreach x [list r g b c m y x w fg] {
+		foreach {short long} [list bg background fg foreground] {
+			if { $world($w,ansi,colours) } {
+				set colour $x
+			} else {
+				set colour fg
+			}
+			$t tag configure ANSI_${short}_$x -$long $world($w,ansi,$colour)
+			if { $short eq "bg" } {
+				$t tag configure ANSI_${short}_${x}h -$long $world($w,ansi,${colour})
+			} else {
+				$t tag configure ANSI_${short}_${x}h -$long $world($w,ansi,${colour}h)
+			}
+		}
+	}
+	$t tag configure limited -elide 1
+	$t tag configure ANSI_fg_bg -foreground $world($w,top,bg)
+	$t tag configure system -foreground $world($w,ansi,system)
+	$t tag configure echo -foreground $world($w,ansi,echo)
+	$t tag configure link -foreground $world($w,ansi,link) -underline 1
+	$t tag bind link <Enter> [list %W configure -cursor hand2]
+	$t tag bind link <Leave> [list %W configure -cursor xterm]
+	$t tag bind link <ButtonPress-1> [list ::potato::linkRecolour %W 1]
+	$t tag bind link <ButtonRelease-1> [list ::potato::linkRecolour %W 0]
+	$t tag configure activeLink -foreground red
+	$t configure -background $world($w,top,bg) -foreground $world($w,ansi,fg) \
+		-font $world($w,top,font,created) -insertbackground [reverseColour $world($w,top,bg)]
+	font configure $world($w,top,font,created) {*}[font actual $world($w,top,font)]
+	$t configure -inactiveselectbackground [$t cget -selectbackground]
+	$t tag configure prompt
 
-  $t configure -width $world($w,wrap,at)
+	$t configure -width $world($w,wrap,at)
 
-  if { $world($w,wrap,indent) == 0 } {
-       $t tag configure margins -lmargin2 0
-     } else {
-       # Size looks fine on Windows, and hopefully should everywhere else, too.
-       set size [font measure $world($w,top,font,created) -displayof $t "0"]
-       set lm2 "[expr {($world($w,wrap,indent) * 0.75) * $size}]p"
-       $t tag configure margins -lmargin2 $lm2
-     }
+	if { $world($w,wrap,indent) == 0 } {
+		$t tag configure margins -lmargin2 0
+	} else {
+		# Size looks fine on Windows, and hopefully should everywhere else, too.
+		set size [font measure $world($w,top,font,created) -displayof $t "0"]
+		set lm2 "[expr {($world($w,wrap,indent) * 0.75) * $size}]p"
+		$t tag configure margins -lmargin2 $lm2
+	}
 
-  $t tag configure timestamp -elide 1
+	$t tag configure timestamp -elide 1
 
-  # XTerm / FANSI Colors
-  set XTerm [list #000000 #AA0000 #00AA00 #AA5500 #0000AA #AA00AA #00AAAA #AAAAAA \
-                  #555555 #FF5555 #55FF55 #FFFF55 #5555FF #FF55FF #55FFFF #FFFFFF \
-                  #000000 #00005F #000087 #0000AF #0000D7 #0000FF #005F00 #005F5F \
-                  #005F87 #005FAF #005FD7 #005FFF #008700 #00875F #008787 #0087AF \
-                  #0087D7 #0087FF #00AF00 #00AF5F #00AF87 #00AFAF #00AFD7 #00AFFF \
-                  #00D700 #00D75F #00D787 #00D7AF #00D7D7 #00D7FF #00FF00 #00FF5F \
-                  #00FF87 #00FFAF #00FFD7 #00FFFF #5F0000 #5F005F #5F0087 #5F00AF \
-                  #5F00D7 #5F00FF #5F5F00 #5F5F5F #5F5F87 #5F5FAF #5F5FD7 #5F5FFF \
-                  #5F8700 #5F875F #5F8787 #5F87AF #5F87D7 #5F87FF #5FAF00 #5FAF5F \
-                  #5FAF87 #5FAFAF #5FAFD7 #5FAFFF #5FD700 #5FD75F #5FD787 #5FD7AF \
-                  #5FD7D7 #5FD7FF #5FFF00 #5FFF5F #5FFF87 #5FFFAF #5FFFD7 #5FFFFF \
-                  #870000 #87005F #870087 #8700AF #8700D7 #8700FF #875F00 #875F5F \
-                  #875F87 #875FAF #875FD7 #875FFF #878700 #87875F #878787 #8787AF \
-                  #8787D7 #8787FF #87AF00 #87AF5F #87AF87 #87AFAF #87AFD7 #87AFFF \
-                  #87D700 #87D75F #87D787 #87D7AF #87D7D7 #87D7FF #87FF00 #87FF5F \
-                  #87FF87 #87FFAF #87FFD7 #87FFFF #AF0000 #AF005F #AF0087 #AF00AF \
-                  #AF00D7 #AF00FF #AF5F00 #AF5F5F #AF5F87 #AF5FAF #AF5FD7 #AF5FFF \
-                  #AF8700 #AF875F #AF8787 #AF87AF #AF87D7 #AF87FF #AFAF00 #AFAF5F \
-                  #AFAF87 #AFAFAF #AFAFD7 #AFAFFF #AFD700 #AFD75F #AFD787 #AFD7AF \
-                  #AFD7D7 #AFD7FF #AFFF00 #AFFF5F #AFFF87 #AFFFAF #AFFFD7 #AFFFFF \
-                  #D70000 #D7005F #D70087 #D700AF #D700D7 #D700FF #D75F00 #D75F5F \
-                  #D75F87 #D75FAF #D75FD7 #D75FFF #D78700 #D7875F #D78787 #D787AF \
-                  #D787D7 #D787FF #D7AF00 #D7AF5F #D7AF87 #D7AFAF #D7AFD7 #D7AFFF \
-                  #D7D700 #D7D75F #D7D787 #D7D7AF #D7D7D7 #D7D7FF #D7FF00 #D7FF5F \
-                  #D7FF87 #D7FFAF #D7FFD7 #D7FFFF #FF0000 #FF005F #FF0087 #FF00AF \
-                  #FF00D7 #FF00FF #FF5F00 #FF5F5F #FF5F87 #FF5FAF #FF5FD7 #FF5FFF \
-                  #FF8700 #FF875F #FF8787 #FF87AF #FF87D7 #FF87FF #FFAF00 #FFAF5F \
-                  #FFAF87 #FFAFAF #FFAFD7 #FFAFFF #FFD700 #FFD75F #FFD787 #FFD7AF \
-                  #FFD7D7 #FFD7FF #FFFF00 #FFFF5F #FFFF87 #FFFFAF #FFFFD7 #FFFFFF \
-                  #000000 #121212 #1C1C1C #262626 #303030 #3A3A3A #444444 #4E4E4E \
-                  #585858 #626262 #6C6C6C #767676 #808080 #8A8A8A #949494 #9E9E9E \
-                  #A8A8A8 #B2B2B2 #BCBCBC #C6C6C6 #D0D0D0 #DADADA #E4E4E4 #EEEEEE]
-  for {set i 0} {$i < 256} {incr i} {
-    $t tag configure ANSI_fg_xterm$i -foreground [lindex $XTerm $i]
-    $t tag configure ANSI_bg_xterm$i -background [lindex $XTerm $i]
-  }
+	# XTerm / FANSI Colors
+	set XTerm [list \
+		#000000 #AA0000 #00AA00 #AA5500 #0000AA #AA00AA #00AAAA #AAAAAA \
+		#555555 #FF5555 #55FF55 #FFFF55 #5555FF #FF55FF #55FFFF #FFFFFF \
+		#000000 #00005F #000087 #0000AF #0000D7 #0000FF #005F00 #005F5F \
+		#005F87 #005FAF #005FD7 #005FFF #008700 #00875F #008787 #0087AF \
+		#0087D7 #0087FF #00AF00 #00AF5F #00AF87 #00AFAF #00AFD7 #00AFFF \
+		#00D700 #00D75F #00D787 #00D7AF #00D7D7 #00D7FF #00FF00 #00FF5F \
+		#00FF87 #00FFAF #00FFD7 #00FFFF #5F0000 #5F005F #5F0087 #5F00AF \
+		#5F00D7 #5F00FF #5F5F00 #5F5F5F #5F5F87 #5F5FAF #5F5FD7 #5F5FFF \
+		#5F8700 #5F875F #5F8787 #5F87AF #5F87D7 #5F87FF #5FAF00 #5FAF5F \
+		#5FAF87 #5FAFAF #5FAFD7 #5FAFFF #5FD700 #5FD75F #5FD787 #5FD7AF \
+		#5FD7D7 #5FD7FF #5FFF00 #5FFF5F #5FFF87 #5FFFAF #5FFFD7 #5FFFFF \
+		#870000 #87005F #870087 #8700AF #8700D7 #8700FF #875F00 #875F5F \
+		#875F87 #875FAF #875FD7 #875FFF #878700 #87875F #878787 #8787AF \
+		#8787D7 #8787FF #87AF00 #87AF5F #87AF87 #87AFAF #87AFD7 #87AFFF \
+		#87D700 #87D75F #87D787 #87D7AF #87D7D7 #87D7FF #87FF00 #87FF5F \
+		#87FF87 #87FFAF #87FFD7 #87FFFF #AF0000 #AF005F #AF0087 #AF00AF \
+		#AF00D7 #AF00FF #AF5F00 #AF5F5F #AF5F87 #AF5FAF #AF5FD7 #AF5FFF \
+		#AF8700 #AF875F #AF8787 #AF87AF #AF87D7 #AF87FF #AFAF00 #AFAF5F \
+		#AFAF87 #AFAFAF #AFAFD7 #AFAFFF #AFD700 #AFD75F #AFD787 #AFD7AF \
+		#AFD7D7 #AFD7FF #AFFF00 #AFFF5F #AFFF87 #AFFFAF #AFFFD7 #AFFFFF \
+		#D70000 #D7005F #D70087 #D700AF #D700D7 #D700FF #D75F00 #D75F5F \
+		#D75F87 #D75FAF #D75FD7 #D75FFF #D78700 #D7875F #D78787 #D787AF \
+		#D787D7 #D787FF #D7AF00 #D7AF5F #D7AF87 #D7AFAF #D7AFD7 #D7AFFF \
+		#D7D700 #D7D75F #D7D787 #D7D7AF #D7D7D7 #D7D7FF #D7FF00 #D7FF5F \
+		#D7FF87 #D7FFAF #D7FFD7 #D7FFFF #FF0000 #FF005F #FF0087 #FF00AF \
+		#FF00D7 #FF00FF #FF5F00 #FF5F5F #FF5F87 #FF5FAF #FF5FD7 #FF5FFF \
+		#FF8700 #FF875F #FF8787 #FF87AF #FF87D7 #FF87FF #FFAF00 #FFAF5F \
+		#FFAF87 #FFAFAF #FFAFD7 #FFAFFF #FFD700 #FFD75F #FFD787 #FFD7AF \
+		#FFD7D7 #FFD7FF #FFFF00 #FFFF5F #FFFF87 #FFFFAF #FFFFD7 #FFFFFF \
+		#000000 #121212 #1C1C1C #262626 #303030 #3A3A3A #444444 #4E4E4E \
+		#585858 #626262 #6C6C6C #767676 #808080 #8A8A8A #949494 #9E9E9E \
+		#A8A8A8 #B2B2B2 #BCBCBC #C6C6C6 #D0D0D0 #DADADA #E4E4E4 #EEEEEE \
+	]
+	for {set i 0} {$i < 256} {incr i} {
+		$t tag configure ANSI_fg_xterm$i -foreground [lindex $XTerm $i]
+		$t tag configure ANSI_bg_xterm$i -background [lindex $XTerm $i]
+	}
 
-
-  return;
+	return;
 
 };# ::potato::configureTextWidget
 
@@ -2317,40 +2325,40 @@ proc ::potato::configureTextWidget {c t} {
 #: return nothing
 proc ::potato::createOutputTags {t} {
 
-  $t tag configure margins
-  $t tag configure ANSI_flash
-  $t tag configure ANSI_underline
-  $t tag configure link;# this has the link style
-  $t tag configure weblink;# this tells it it's a webpage link, for binding purposes.
-  $t tag configure activeLink;# recolours the link when it's being hovered
-  $t tag configure nobacklog;# don't log when doing "log previous output"
-  $t tag bind weblink <ButtonRelease-1> [list ::potato::doWebLink %W weblink]
-  $t tag configure system
-  $t tag configure echo
-  foreach x [list r g b c m y x w fg] {
-     foreach ground [list bg fg] {
-        $t tag configure ANSI_${ground}_$x
-        $t tag configure ANSI_${ground}_${x}h
-     }
-  }
-  for {set i 0} {$i < 256} {incr i} {
-    $t tag configure ANSI_fg_xterm$i
-    $t tag configure ANSI_bg_xterm$i
-  }
-  $t tag configure ANSI_fg_bg
-  $t tag configure center -justify center -lmargin1 0 -lmargin2 0
-  $t tag raise ANSI_underline
-  $t tag raise link
-  $t tag raise activeLink
-  $t tag raise system
-  $t tag raise center
-  $t tag raise echo
-  $t tag raise ANSI_flash
-  $t tag raise sel
+	$t tag configure margins
+	$t tag configure ANSI_flash
+	$t tag configure ANSI_underline
+	$t tag configure link;# this has the link style
+	$t tag configure weblink;# this tells it it's a webpage link, for binding purposes.
+	$t tag configure activeLink;# recolours the link when it's being hovered
+	$t tag configure nobacklog;# don't log when doing "log previous output"
+	$t tag bind weblink <ButtonRelease-1> [list ::potato::doWebLink %W weblink]
+	$t tag configure system
+	$t tag configure echo
+	foreach x [list r g b c m y x w fg] {
+		foreach ground [list bg fg] {
+			$t tag configure ANSI_${ground}_$x
+			$t tag configure ANSI_${ground}_${x}h
+		}
+	}
+	for {set i 0} {$i < 256} {incr i} {
+		$t tag configure ANSI_fg_xterm$i
+		$t tag configure ANSI_bg_xterm$i
+	}
+	$t tag configure ANSI_fg_bg
+	$t tag configure center -justify center -lmargin1 0 -lmargin2 0
+	$t tag raise ANSI_underline
+	$t tag raise link
+	$t tag raise activeLink
+	$t tag raise system
+	$t tag raise center
+	$t tag raise echo
+	$t tag raise ANSI_flash
+	$t tag raise sel
 
-  $t configure -wrap word -highlightthickness 0 -borderwidth 0 -height 1
+	$t configure -wrap word -highlightthickness 0 -borderwidth 0 -height 1
 
-  return;
+	return;
 
 };# ::potato::createOutputTags
 
@@ -2360,14 +2368,14 @@ proc ::potato::createOutputTags {t} {
 #: desc Alter the appearance of a link as the link is entered or left, to show activity
 #: return nothing
 proc ::potato::linkRecolour {t dir} {
-  variable potato;
+	variable potato;
 
-  if { $dir } {
-       $t tag add activeLink {*}[$t tag prevrange "link" "current + 1 char"]
-     } else {
-       $t tag remove activeLink {*}[$t tag prevrange "activeLink" "current + 1 char"]
-     }
-  return;
+	if { $dir } {
+		$t tag add activeLink {*}[$t tag prevrange "link" "current + 1 char"]
+	} else {
+		$t tag remove activeLink {*}[$t tag prevrange "activeLink" "current + 1 char"]
+	}
+	return;
 
 };# ::potato::linkRecolour
 
@@ -2378,9 +2386,9 @@ proc ::potato::linkRecolour {t dir} {
 #: return nothing
 proc ::potato::doWebLink {t tagname} {
 
-  launchWebPage [$t get {*}[$t tag prevrange $tagname "current + 1 char"]]
+	launchWebPage [$t get {*}[$t tag prevrange $tagname "current + 1 char"]]
 
-  return;
+	return;
 
 };# ::potato::doWebLink
 
@@ -2389,70 +2397,70 @@ proc ::potato::doWebLink {t tagname} {
 #: desc attempt to load the webpage $url in a browser. This proc may need to be more robust at detecting default browsers.
 #: return nothing
 proc ::potato::launchWebPage {url} {
-  variable misc;
+	variable misc;
 
-  if { ![string match "http://*" $url] && ![string match "https://*" $url] && ![string match "ftp://*" $url] } {
-       set url "http://$url"
-     }
+	if { ![string match "http://*" $url] && ![string match "https://*" $url] && ![string match "ftp://*" $url] } {
+		set url "http://$url"
+	}
 
-  if { $misc(browserCmd) ne "" } {
-       #set command [string map [list %1 $url] $misc(browserCmd)]
-       # Try and parse out the command; this is up to the first space, if there's no leading quote, or
-       # the quoted string if there is.
-       if { [string index $misc(browserCmd) 0] eq {"} } {
-            # A quoted string.
-            set secondQuote [string first {"} $misc(browserCmd) 1]
-            if { $secondQuote != -1 } {
-                 set lead [string range $misc(browserCmd) 1 [expr {$secondQuote - 1}]]
-                 set rest [string range $misc(browserCmd) [expr {$secondQuote + 1}] end]
-               }
-           } else {
-             set space [string first " " $misc(browserCmd) ]
-             set lead [string range $misc(browserCmd) 0 [expr {$space - 1}]]
-             set rest [string range $misc(browserCmd) [expr {$space + 1}] end]
-           }
-       if { $lead ne "" } {
-            set prefix [auto_execok $lead]
-            if { $prefix ne "" } {
-                 set command "$prefix [string map [list %1 $url] $rest]"
-               }
-          }
-     } else {
-       # Try and figure out what to do. From http://wiki.tcl.tk/557
-       switch $::tcl_platform(os) {
-          Darwin {
-             set command [list open $url]
-          }
-          HP-UX -
-          Linux  -
-          SunOS {
-            foreach executable {firefox mozilla netscape iexplorer opera lynx
-                        w3m links epiphany galeon konqueror mosaic amaya
-                        browsex elinks} {
-               set executable [auto_execok $executable]
-               if { $executable ne "" } {
-                    set command [list $executable $url]
-                    break;
-                  }
-            }
-          }
-          "Windows 95" {
-            set command "[auto_execok start] {} [list $url]"
-          }
-          "Windows NT" {
-            set command "[auto_execok start] {} [list [string map [list ^ ^^ & ^&] $url]]"
-          }
-       }
-     }
+	if { $misc(browserCmd) ne "" } {
+		#set command [string map [list %1 $url] $misc(browserCmd)]
+		# Try and parse out the command; this is up to the first space, if there's no leading quote, or
+		# the quoted string if there is.
+		if { [string index $misc(browserCmd) 0] eq {"} } {
+			# A quoted string.
+			set secondQuote [string first {"} $misc(browserCmd) 1]
+			if { $secondQuote != -1 } {
+				set lead [string range $misc(browserCmd) 1 [expr {$secondQuote - 1}]]
+				set rest [string range $misc(browserCmd) [expr {$secondQuote + 1}] end]
+			}
+		} else {
+			set space [string first " " $misc(browserCmd) ]
+			set lead [string range $misc(browserCmd) 0 [expr {$space - 1}]]
+			set rest [string range $misc(browserCmd) [expr {$space + 1}] end]
+		}
+		if { $lead ne "" } {
+			set prefix [auto_execok $lead]
+			if { $prefix ne "" } {
+				set command "$prefix [string map [list %1 $url] $rest]"
+			}
+		}
+	} else {
+		# Try and figure out what to do. From http://wiki.tcl.tk/557
+		switch $::tcl_platform(os) {
+			Darwin {
+				set command [list open $url]
+			}
+			HP-UX -
+			Linux  -
+			SunOS {
+				foreach executable [list firefox mozilla netscape iexplorer \
+					opera lynx w3m links epiphany galeon konqueror mosaic amaya \
+					browsex elinks] {
+					set executable [auto_execok $executable]
+					if { $executable ne "" } {
+						set command [list $executable $url]
+						break;
+					}
+				}
+			}
+			"Windows 95" {
+				set command "[auto_execok start] {} [list $url]"
+			}
+			"Windows NT" {
+				set command "[auto_execok start] {} [list [string map [list ^ ^^ & ^&] $url]]"
+			}
+		}
+	}
 
-  if { ![info exists command] || [catch {exec {*}$command &} err] } {
-       if { [info exists err] } {
-            errorLog "Unable to launch browser via \"$command\"" warning $err
-          }
-       bell -displayof .
-     }
+	if { ![info exists command] || [catch {exec {*}$command &} err] } {
+		if { [info exists err] } {
+			errorLog "Unable to launch browser via \"$command\"" warning $err
+		}
+		bell -displayof .
+	}
 
-  return;
+	return;
 
 };# ::potato::launchWebPage
 
@@ -2460,192 +2468,192 @@ proc ::potato::launchWebPage {url} {
 #: desc Delete everything from the output box for world 0, then insert the text shown.
 #: return nothing
 proc ::potato::connZero {} {
-  variable conn;
-  variable world;
-  variable potato;
-  variable menu;
+	variable conn;
+	variable world;
+	variable potato;
+	variable menu;
 
-  if { ![info exists conn(0,textWidget)] || ![winfo exists $conn(0,textWidget)] } {
-       return;
-     }
+	if { ![info exists conn(0,textWidget)] || ![winfo exists $conn(0,textWidget)] } {
+		return;
+	}
 
 
-  set canvas $conn(0,textWidget)
+	set canvas $conn(0,textWidget)
 
-  $canvas configure -background $world(0,top,bg)
+	$canvas configure -background $world(0,top,bg)
 
-  $canvas delete all
+	$canvas delete all
 
-  set fgcol $world(0,ansi,fg)
+	set fgcol $world(0,ansi,fg)
 
-  set logo ::potato::img::logoSmall
+	set logo ::potato::img::logoSmall
 
-  set x 25
-  set y 25
+	set x 25
+	set y 25
 
-  set linkcol $world(0,ansi,link)
+	set linkcol $world(0,ansi,link)
 
-  $canvas itemconfigure hoverTag -fill red
-  $canvas bind clickable <Enter> "[list %W addtag hoverTag withtag current] ; [list %W itemconfig hoverTag -fill red] ; [list %W configure -cursor hand2]"
-  set leave "[list %W itemconfig hoverTag -fill $linkcol] ; [list %W dtag hoverTag] ; [list %W configure -cursor {}]"
-  $canvas bind hoverTag <Leave> $leave
-  bind $canvas <MouseWheel> "[list ::potato::mouseWheel %W %D] ; $leave"
-  catch {bind $canvas <4> "[list ::potato::mouseWheel %W 120] ; $leave"}
-  catch {bind $canvas <5> "[list ::potato::mouseWheel %W -120 ; $leave"}
-  $canvas bind clickable <ButtonRelease-1> [list ::potato::connZeroClick %W %x %y]
+	$canvas itemconfigure hoverTag -fill red
+	$canvas bind clickable <Enter> "[list %W addtag hoverTag withtag current] ; [list %W itemconfig hoverTag -fill red] ; [list %W configure -cursor hand2]"
+	set leave "[list %W itemconfig hoverTag -fill $linkcol] ; [list %W dtag hoverTag] ; [list %W configure -cursor {}]"
+	$canvas bind hoverTag <Leave> $leave
+	bind $canvas <MouseWheel> "[list ::potato::mouseWheel %W %D] ; $leave"
+	catch {bind $canvas <4> "[list ::potato::mouseWheel %W 120] ; $leave"}
+	catch {bind $canvas <5> "[list ::potato::mouseWheel %W -120 ; $leave"}
+	$canvas bind clickable <ButtonRelease-1> [list ::potato::connZeroClick %W %x %y]
 
-  $canvas create image $x $y -anchor nw -image $logo -tags [list logo]
-  set textpos [expr {($x * 2) + [image width $logo]}]
+	$canvas create image $x $y -anchor nw -image $logo -tags [list logo]
+	set textpos [expr {($x * 2) + [image width $logo]}]
 
-  set textpos2 [expr {((700 - $textpos)/2)+$textpos}]
+	set textpos2 [expr {((700 - $textpos)/2)+$textpos}]
 
-  connZeroAddText $canvas $textpos2 y 1 $potato(name) [list Tahoma 18 bold] [list h1] -width 350
-  connZeroAddText $canvas $textpos2 y 1 [T "The Graphical MU* Client for Windows, Linux and MacOS X"] \
-    [list Tahoma 16 bold] [list h2] -width 350
-  connZeroAddText $canvas $textpos2 y 1 [T "Version %s. Written by Mike Griffiths (%s)" $potato(version) $potato(contact)] \
-    [list Tahoma 9 bold] [list h3] -width 350
+	connZeroAddText $canvas $textpos2 y 1 $potato(name) [list Tahoma 18 bold] [list h1] -width 350
+	connZeroAddText $canvas $textpos2 y 1 [T "The Graphical MU* Client for Windows, Linux and MacOS X"] \
+		[list Tahoma 16 bold] [list h2] -width 350
+	connZeroAddText $canvas $textpos2 y 1 [T "Version %s. Written by Mike Griffiths (%s)" $potato(version) $potato(contact)] \
+		[list Tahoma 9 bold] [list h3] -width 350
 
-  foreach {h1(x1) y1 h1(x2) -} [$canvas bbox h1] {break}
-  foreach {h2(x1) - h2(x2) -} [$canvas bbox h2] {break}
-  foreach {h3(x1) - h3(x2) y2} [$canvas bbox h3] {break}
+	foreach {h1(x1) y1 h1(x2) -} [$canvas bbox h1] {break}
+	foreach {h2(x1) - h2(x2) -} [$canvas bbox h2] {break}
+	foreach {h3(x1) - h3(x2) y2} [$canvas bbox h3] {break}
 
-  set textheight [expr {$y2 - $y1}]
-  foreach {- imgy1 - imgy2} [$canvas bbox logo] {break}
-  set imageheight [expr {$imgy2 - $imgy1}]
+	set textheight [expr {$y2 - $y1}]
+	foreach {- imgy1 - imgy2} [$canvas bbox logo] {break}
+	set imageheight [expr {$imgy2 - $imgy1}]
 
-  if { $imageheight > $textheight } {
-       set amount [expr {($imageheight - $textheight) / 2}]
-       $canvas move h1 0 $amount
-       $canvas move h2 0 $amount
-       $canvas move h3 0 $amount
-       set y [expr {$imgy2+20}]
-     } else {
-       set amount [expr {($textheight - $imageheight) / 2}]
-       $canvas move logo 0 $amount
-       set y [expr {$y2+20}]
-     }
+	if { $imageheight > $textheight } {
+		set amount [expr {($imageheight - $textheight) / 2}]
+		$canvas move h1 0 $amount
+		$canvas move h2 0 $amount
+		$canvas move h3 0 $amount
+		set y [expr {$imgy2+20}]
+	} else {
+		set amount [expr {($textheight - $imageheight) / 2}]
+		$canvas move logo 0 $amount
+		set y [expr {$y2+20}]
+	}
 
-  unset -nocomplain y1 y2 textheight imageheight imgy1 imgy2
+	unset -nocomplain y1 y2 textheight imageheight imgy1 imgy2
 
-  incr y 15 ;# margin
+	incr y 15 ;# margin
 
-  set font(link) [list -family Tahoma -size 12 -weight bold -underline 1]
-  set font(subhead) [list -family Tahoma -size 12 -weight bold]
-  set font(normal) [list -family Tahoma -size 12]
-  set font(world) [list -family Tahoma -size 10 -underline 1]
-  set font(dot) [list -family Tahoma -size 7]
+	set font(link) [list -family Tahoma -size 12 -weight bold -underline 1]
+	set font(subhead) [list -family Tahoma -size 12 -weight bold]
+	set font(normal) [list -family Tahoma -size 12]
+	set font(world) [list -family Tahoma -size 10 -underline 1]
+	set font(dot) [list -family Tahoma -size 7]
 
-  set backup_y $y
-  set addressbook [connZeroAddText $canvas 0 y 1 [T "Open Address Book"] $font(link) [list clickable addressbook]]
-  foreach {x1 y1 x2 y2} [$canvas bbox $addressbook] {break}
-  set width [expr {$x2-$x1}]
-  set lines 1
-  if { $width > 220 } {
-       connZeroAddText $canvas 25 backup_y 0 \u2022 $font(dot)
-       $canvas move $addressbook 35 0
-       $canvas itemconfigure $addressbook -justify left -anchor w
-       connZeroAddText $canvas 25 y 0 \u2022 $font(dot)
-       set addnewworld [connZeroAddText $canvas 35 y 1 [T "Add New World"] $font(link) [list clickable addnewworld]]
-       $canvas itemconfigure $addnewworld -justify left -anchor w
-       set lines 2
-     } else {
-       set backup_y2 $y
-       set addnewworld [connZeroAddText $canvas 0 y 1 [T "Add New World"] $font(link) [list clickable addnewworld]]
-       foreach {x1 y1 x2 y2} [$canvas bbox $addnewworld] {break}
-       set width [expr {$x2-$x1}]
-       if { $width > 220 || $lines > 1} {
-            $canvas move $addressbook 350 0
-            $canvas move $addnewworld 350 0
-            set lines 2
-          } else {
-            $canvas move $addressbook 233 0
-            $canvas coords $addnewworld 466 $backup_y
-            set y $backup_y2
-          }
-     }
-  set backup_y3 $y
-  set quickconnect [connZeroAddText $canvas 0 y 1 [T "Quick Connection"] $font(link) [list clickable quickconnect]]
+	set backup_y $y
+	set addressbook [connZeroAddText $canvas 0 y 1 [T "Open Address Book"] $font(link) [list clickable addressbook]]
+	foreach {x1 y1 x2 y2} [$canvas bbox $addressbook] {break}
+	set width [expr {$x2-$x1}]
+	set lines 1
+	if { $width > 220 } {
+		connZeroAddText $canvas 25 backup_y 0 \u2022 $font(dot)
+		$canvas move $addressbook 35 0
+		$canvas itemconfigure $addressbook -justify left -anchor w
+		connZeroAddText $canvas 25 y 0 \u2022 $font(dot)
+		set addnewworld [connZeroAddText $canvas 35 y 1 [T "Add New World"] $font(link) [list clickable addnewworld]]
+		$canvas itemconfigure $addnewworld -justify left -anchor w
+		set lines 2
+	} else {
+		set backup_y2 $y
+		set addnewworld [connZeroAddText $canvas 0 y 1 [T "Add New World"] $font(link) [list clickable addnewworld]]
+		foreach {x1 y1 x2 y2} [$canvas bbox $addnewworld] {break}
+		set width [expr {$x2-$x1}]
+		if { $width > 220 || $lines > 1} {
+			$canvas move $addressbook 350 0
+			$canvas move $addnewworld 350 0
+			set lines 2
+		} else {
+			$canvas move $addressbook 233 0
+			$canvas coords $addnewworld 466 $backup_y
+			set y $backup_y2
+		}
+	}
+	set backup_y3 $y
+	set quickconnect [connZeroAddText $canvas 0 y 1 [T "Quick Connection"] $font(link) [list clickable quickconnect]]
 
-  foreach {x1 y1 x2 y2} [$canvas bbox $quickconnect] {break}
-  set width [expr {$x2-$x1}]
-  if { $lines == 1 && $width < 220 } {
-       set y $backup_y
-       $canvas coords $addressbook 116 $backup_y
-       connZeroAddText $canvas 233 backup_y 0 \u2022 $font(dot)
-       $canvas coords $addnewworld 349 $backup_y
-       connZeroAddText $canvas 466 backup_y 0 \u2022 $font(dot)
-       $canvas coords $quickconnect 582 $backup_y
-     } elseif { $lines == 1 } {
-       $canvas move $quickconnect 350 0
-       connZeroAddText $canvas 350 backup_y 0 \u2022 $font(dot)
-     } else {
-       connZeroAddText $canvas 25 backup_y3 0 \u2022 $font(dot)
-       $canvas move $quickconnect 35 0
-       $canvas itemconfigure $quickconnect -justify left -anchor w
-     }
+	foreach {x1 y1 x2 y2} [$canvas bbox $quickconnect] {break}
+	set width [expr {$x2-$x1}]
+	if { $lines == 1 && $width < 220 } {
+		set y $backup_y
+		$canvas coords $addressbook 116 $backup_y
+		connZeroAddText $canvas 233 backup_y 0 \u2022 $font(dot)
+		$canvas coords $addnewworld 349 $backup_y
+		connZeroAddText $canvas 466 backup_y 0 \u2022 $font(dot)
+		$canvas coords $quickconnect 582 $backup_y
+	} elseif { $lines == 1 } {
+		$canvas move $quickconnect 350 0
+		connZeroAddText $canvas 350 backup_y 0 \u2022 $font(dot)
+	} else {
+		connZeroAddText $canvas 25 backup_y3 0 \u2022 $font(dot)
+		$canvas move $quickconnect 35 0
+		$canvas itemconfigure $quickconnect -justify left -anchor w
+	}
 
-  set y [expr {[lindex [$canvas bbox $quickconnect] 3] + 25}]
+	set y [expr {[lindex [$canvas bbox $quickconnect] 3] + 25}]
 
-  connZeroAddText $canvas $x y 1 [T "Existing Worlds:"] [list Tahoma 14] [list existing] -justify left -anchor nw
+	connZeroAddText $canvas $x y 1 [T "Existing Worlds:"] [list Tahoma 14] [list existing] -justify left -anchor nw
 
-  if { $potato(worlds) > 0 } {
-       set worldList [worldList]
-       set worldList [lsort -dictionary -index 1 $worldList]
-       set first 1
-       set height 0
-       set prevheight 0
-       set dotspace 3
-       set linespace 8
-       foreach winfo $worldList {
-          foreach {w name} $winfo {break}
-          if { $first } {
-               set startx 35
-             } else {
-               set startx 355
-             }
-          set dot [$canvas create text $startx $y -text \u2022 -font $font(dot) -justify left -anchor nw -fill $fgcol]
-          foreach {x1 - x2 -} [$canvas bbox $dot] {break}
-          set width [expr {$x2 - $x1}]
-          set entry [$canvas create text [expr {$startx + $width + $dotspace}] $y -text $name -font $font(world) -tags [list clickable world$w] -justify left -anchor nw -width 600]
-          foreach {x1 y1 x2 y2} [$canvas bbox $entry] {break}
-          incr width [expr {($x2 - $x1) + $dotspace}]
-          set height [expr {$y2 - $y1}]
-          if { $width > 310 } {
-               if { $first } {
-                    incr y [expr {$height + $linespace}]
-                  } else {
-                    set by [expr {$prevheight + $linespace}]
-                    incr y [expr {$by + $height + $linespace}]
-                    $canvas move $dot -330 $by
-                    $canvas move $entry -330 $by
-                    set prevheight 0
-                    set first 1
-                  }
-             } elseif { $first } {
-               set first 0
-               set prevheight $height
-             } else {
-               set first 1
-               incr y [expr {$height + $linespace}]
-               set prevheight 0
-             }
-       }
-     } else {
-       set noworlds [T "You don't have any worlds defined yet! Use one of the links above to add a world."]
-       connZeroAddText $canvas $x y 1 $noworlds $font(normal) [list] -justify left -anchor nw -width 600
-     }
+	if { $potato(worlds) > 0 } {
+		set worldList [worldList]
+		set worldList [lsort -dictionary -index 1 $worldList]
+		set first 1
+		set height 0
+		set prevheight 0
+		set dotspace 3
+		set linespace 8
+		foreach winfo $worldList {
+			foreach {w name} $winfo {break}
+			if { $first } {
+				set startx 35
+			} else {
+				set startx 355
+			}
+			set dot [$canvas create text $startx $y -text \u2022 -font $font(dot) -justify left -anchor nw -fill $fgcol]
+			foreach {x1 - x2 -} [$canvas bbox $dot] {break}
+			set width [expr {$x2 - $x1}]
+			set entry [$canvas create text [expr {$startx + $width + $dotspace}] $y -text $name -font $font(world) -tags [list clickable world$w] -justify left -anchor nw -width 600]
+			foreach {x1 y1 x2 y2} [$canvas bbox $entry] {break}
+			incr width [expr {($x2 - $x1) + $dotspace}]
+			set height [expr {$y2 - $y1}]
+			if { $width > 310 } {
+				if { $first } {
+					incr y [expr {$height + $linespace}]
+				} else {
+					set by [expr {$prevheight + $linespace}]
+					incr y [expr {$by + $height + $linespace}]
+					$canvas move $dot -330 $by
+					$canvas move $entry -330 $by
+					set prevheight 0
+					set first 1
+				}
+			} elseif { $first } {
+				set first 0
+				set prevheight $height
+			} else {
+				set first 1
+				incr y [expr {$height + $linespace}]
+				set prevheight 0
+			}
+		}
+	} else {
+		set noworlds [T "You don't have any worlds defined yet! Use one of the links above to add a world."]
+		connZeroAddText $canvas $x y 1 $noworlds $font(normal) [list] -justify left -anchor nw -width 600
+	}
 
-  incr y 50;# widen the gap
+	incr y 50;# widen the gap
 
-  # Fact of the Day
-  connZeroAddText $canvas $x y 1 [T "Did you know?"] $font(subhead) [list facthead] -justify left -anchor nw
-  connZeroAddText $canvas $x y 1 [connZeroFact] $font(normal) [list fact] -justify left -anchor nw -width 600
+	# Fact of the Day
+	connZeroAddText $canvas $x y 1 [T "Did you know?"] $font(subhead) [list facthead] -justify left -anchor nw
+	connZeroAddText $canvas $x y 1 [connZeroFact] $font(normal) [list fact] -justify left -anchor nw -width 600
 
-  foreach item [$canvas find withtag clickable] {
-    $canvas itemconfigure $item -fill $linkcol
-  }
+	foreach item [$canvas find withtag clickable] {
+		$canvas itemconfigure $item -fill $linkcol
+	}
 
-  $canvas configure -scrollregion [list 0 0 700 [expr {$y + 50}]]
+	$canvas configure -scrollregion [list 0 0 700 [expr {$y + 50}]]
 
 };# ::potato::connZero
 
@@ -2661,17 +2669,17 @@ proc ::potato::connZero {} {
 #: desc Add text to the connZero convas, possibly updaying the y position for the next insert
 #: return canvas id of new text
 proc ::potato::connZeroAddText {canvas x _y incry text font {tags ""} args} {
-  upvar 1 $_y y;
-  upvar 1 fgcol fgcol;
+	upvar 1 $_y y;
+	upvar 1 fgcol fgcol;
 
-  set id [$canvas create text $x $y -text $text -font $font -tags $tags -justify center -fill $fgcol -anchor n {*}$args]
-  if { $incry } {
-       set bbox [$canvas bbox $id]
-       set y [lindex $bbox 3]
-       incr y 8;# margin;
-     }
+	set id [$canvas create text $x $y -text $text -font $font -tags $tags -justify center -fill $fgcol -anchor n {*}$args]
+	if { $incry } {
+		set bbox [$canvas bbox $id]
+		set y [lindex $bbox 3]
+		incr y 8;# margin;
+	}
 
-  return $id;
+	return $id;
 
 };# ::potato::connZeroAdd
 
@@ -2680,43 +2688,43 @@ proc ::potato::connZeroAddText {canvas x _y incry text font {tags ""} args} {
 #: return string to use as a fact
 proc ::potato::connZeroFact {} {
 
-  set food [list \
-    "Potatoes were the first food to be grown in space, aboard the shuttle Columbia, in 1995." \
-    "Potatoes were first eaten more than 6,000 years ago by indigenous people living in the Andes mountains of Peru." \
-    "In 1778 Prussia and Austria fought the Potato War in which each side tried to starve the other by consuming their potato crop." \
-    "Potatoes are the world's fourth food staple - after wheat, corn and rice." \
-    "The world’s largest potato weighed in at 18 pounds, 4 ounces according to the Guinness Book of World Records. That’s enough for 73 portions of medium fries at McDonalds." \
-    "There are over 5,000 variety of Potato worldwide, not including MUSH clients." \
-  ]
+	set food [list \
+		"Potatoes were the first food to be grown in space, aboard the shuttle Columbia, in 1995." \
+		"Potatoes were first eaten more than 6,000 years ago by indigenous people living in the Andes mountains of Peru." \
+		"In 1778 Prussia and Austria fought the Potato War in which each side tried to starve the other by consuming their potato crop." \
+		"Potatoes are the world's fourth food staple - after wheat, corn and rice." \
+		"The world’s largest potato weighed in at 18 pounds, 4 ounces according to the Guinness Book of World Records. That’s enough for 73 portions of medium fries at McDonalds." \
+		"There are over 5,000 variety of Potato worldwide, not including MUSH clients." \
+	]
 
-  set client [list \
-    "Nearly all of Potato's keyboard shortcuts can be customised via the Options menu." \
-    "Potato is the only MUSH client with two input windows." \
-    "You can use /commands to perform custom actions when Events run." \
-    "You can make Potato your default Telnet client on Windows. You probably can on Linux, too, but I couldn't tell you how." \
-    "Potato runs on Windows, Linux and MacOS X." \
-    "You can force Potato to load/save its configuration and world files in the same directory as the Potato executable or source code by using the --local command line option. This is useful if you're running it on a flash drive." \
-    "Potato can run in any language, and there are now translations available for more than 2 languages! (OK, so that's not a lot.) If you'd like to help translate Potato into another language, please let us know." \
-    "If you have ASpell installed on your computer, Potato can use it to perform spellchecking." \
-    "Potato can log as HTML to preserve ANSI colours in the output." \
-    "Potato is the only modern graphical MU* client that runs on Windows, Linux and MacOS X natively." \
-    "Potato has full Unicode support, allowing you to MU* in any language on games which support it, such as TinyMUXes." \
-  ]
+	set client [list \
+		"Nearly all of Potato's keyboard shortcuts can be customised via the Options menu." \
+		"Potato is the only MUSH client with two input windows." \
+		"You can use /commands to perform custom actions when Events run." \
+		"You can make Potato your default Telnet client on Windows. You probably can on Linux, too, but I couldn't tell you how." \
+		"Potato runs on Windows, Linux and MacOS X." \
+		"You can force Potato to load/save its configuration and world files in the same directory as the Potato executable or source code by using the --local command line option. This is useful if you're running it on a flash drive." \
+		"Potato can run in any language, and there are now translations available for more than 4 languages! If you'd like to help translate Potato into another language, please let us know." \
+		"If you have ASpell installed on your computer, Potato can use it to perform spellchecking." \
+		"Potato can log as HTML to preserve ANSI colours in the output." \
+		"Potato is the only modern graphical MU* client that runs on Windows, Linux and MacOS X natively." \
+		"Potato has full Unicode support, allowing you to MU* in any language on games which support it, such as TinyMUXes." \
+	]
 
-  set stupid [list \
-    "Over 99% of the people we asked said Potato was their favourite MUSH client ever. (Survey included two people... they may both have been me.)" \
-    "Potato is one of the fastest growing clients on the intertubers." \
-    "If Potato can't do it, nobody can. Or maybe you'll want to submit a feature request." \
-    "'Potato' is the only word which is pronounced exactly the same in every language on the planet, except for the word 'gullible'." \
-    "It's rumoured that the man in our logo, Mr Potato, is the illegitimate son of Mr Peanut, though this has never been substantiated." \
-    "Anyone who donates towards Potato's development can request a signed photo of the Potato mascot, Mr Potato. Donations can be made through Paypal via the Help menu." \
-  ]
+	set stupid [list \
+		"Over 99% of the people we asked said Potato was their favourite MUSH client ever. (Survey included two people... they may both have been me.)" \
+		"Potato is one of the fastest growing clients on the intertubers." \
+		"If Potato can't do it, nobody can. Or maybe you'll want to submit a feature request." \
+		"'Potato' is the only word which is pronounced exactly the same in every language on the planet, except for the word 'gullible'." \
+		"It's rumoured that the man in our logo, Mr Potato, is the illegitimate son of Mr Peanut, though this has never been substantiated." \
+		"Anyone who donates towards Potato's development can request a signed photo of the Potato mascot, Mr Potato. Donations can be made through Paypal via the Help menu." \
+	]
 
-  set allfacts [concat $food $client $stupid]
+	set allfacts [concat $food $client $stupid]
 
-  set rand [expr {round(floor(rand() * [llength $allfacts]))}]
+	set rand [expr {round(floor(rand() * [llength $allfacts]))}]
 
-  return [lindex $allfacts $rand];
+	return [lindex $allfacts $rand];
 
 };# ::potato::connZeroFact
 
@@ -2727,39 +2735,39 @@ proc ::potato::connZeroFact {} {
 #: desc Handle a click on a link in the connZero canvas $win, either to connect to a world, open the address book or add a new world
 #: return nothing
 proc ::potato::connZeroClick {win x y} {
-  variable world;
+	variable world;
 
-  set index [$win find withtag hoverTag]
-  if { [llength $index] != 1 } {
-       return;
-     }
+	set index [$win find withtag hoverTag]
+	if { [llength $index] != 1 } {
+		return;
+	}
 
-  set tags [$win itemcget $index -tags]
-  set tags [lsearch -all -inline -regexp $tags {^(quickconnect|addnewworld|addressbook|world.*)$}]
-  if { [llength $tags] != 1 } {
-       return;
-     }
-  set tag [lindex $tags 0]
-  switch $tag {
-    quickconnect {newWorld 1 ; return}
-    addnewworld  {newWorld 0 ; return}
-    addressbook  {manageWorlds ; return}
-  }
+	set tags [$win itemcget $index -tags]
+	set tags [lsearch -all -inline -regexp $tags {^(quickconnect|addnewworld|addressbook|world.*)$}]
+	if { [llength $tags] != 1 } {
+		return;
+	}
+	set tag [lindex $tags 0]
+	switch $tag {
+		quickconnect {newWorld 1 ; return}
+		addnewworld  {newWorld 0 ; return}
+		addressbook  {manageWorlds ; return}
+	}
 
-  if { [string range $tag 0 4] == "world" } {
-       set id [string range $tag 5 end]
-       if { [string is integer -strict $id] } {
-            $win itemconfig $index -fill $world(0,ansi,link)
-            $win dtag hoverTag
-            $win config -cursor {}
-            potato::newConnectionDefault $id
-            return;
-          }
-     }
+	if { [string range $tag 0 4] == "world" } {
+		set id [string range $tag 5 end]
+		if { [string is integer -strict $id] } {
+			$win itemconfig $index -fill $world(0,ansi,link)
+			$win dtag hoverTag
+			$win config -cursor {}
+			potato::newConnectionDefault $id
+			return;
+		}
+	}
 
-  bell -displayof .
+	bell -displayof .
 
-  return;
+	return;
 
 };# ::potato::connZeroClick
 
@@ -2770,12 +2778,12 @@ proc ::potato::connZeroClick {win x y} {
 #: return Value of variable named in $_varname
 proc ::potato::!set {_varname value} {
 
-  upvar 1 $_varname varname
-  if { ![info exists varname] } {
-       set varname $value
-     }
+	upvar 1 $_varname varname
+	if { ![info exists varname] } {
+		set varname $value
+	}
 
-  return $varname;
+	return $varname;
 
 };# ::potato::!set
 
@@ -2785,15 +2793,15 @@ proc ::potato::!set {_varname value} {
 #: return 1 on successful attempt to reconnect, 0 on error
 proc ::potato::reconnect {{c ""}} {
 
-  if { $c eq "" } {
-       set c [up]
-     }
+	if { $c eq "" } {
+		set c [up]
+	}
 
-  if { $c == 0 } {
-       return 0;
-     }
+	if { $c == 0 } {
+		return 0;
+	}
 
-  return [connect $c 0];
+	return [connect $c 0];
 
 };# ::potato::reconnect
 
@@ -2802,14 +2810,14 @@ proc ::potato::reconnect {{c ""}} {
 #: return nothing
 proc ::potato::reconnectAll {} {
 
-  set ids [connIDs]
-  if { ![llength $ids] } {
-       bell -displayof .
-       return;
-     }
-  foreach c [connIDs] {
-    reconnect $c;
-  }
+	set ids [connIDs]
+	if { ![llength $ids] } {
+		bell -displayof .
+		return;
+	}
+	foreach c [connIDs] {
+		reconnect $c;
+	}
 
 };# ::potato::reconnectAll
 
@@ -2820,7 +2828,7 @@ proc ::potato::reconnectAll {} {
 #: return Socket id for reading/writing
 proc ::potato::ioOpen {host port} {
 
-  return [socket -async $host $port];
+	return [socket -async $host $port];
 
 };# ::potato::ioOpen
 
@@ -2830,7 +2838,7 @@ proc ::potato::ioOpen {host port} {
 #: return Result of [close]
 proc ::potato::ioClose {socket} {
 
-  return [close $socket];
+	return [close $socket];
 
 };# ::potato::ioClose
 
@@ -2840,7 +2848,7 @@ proc ::potato::ioClose {socket} {
 #: return Data read
 proc ::potato::ioRead {args} {
 
-  return [read {*}$args]
+	return [read {*}$args]
 
 };# ::potato::ioRead
 
@@ -2850,8 +2858,8 @@ proc ::potato::ioRead {args} {
 #: return Nothing
 proc ::potato::ioWrite {args} {
 
-  catch {puts {*}$args}
-  return;
+	catch {puts {*}$args}
+	return;
 
 };# ::potato::ioWrite
 
@@ -2862,237 +2870,237 @@ proc ::potato::ioWrite {args} {
 #: desc This connection may be to a proxy server, not the actual game.
 #: return 1 on successful connect, 0 otherwise
 proc ::potato::connect {c first} {
-  variable conn;
-  variable world;
-  variable potato;
+	variable conn;
+	variable world;
+	variable potato;
 
-  if { $c == 0 || $conn($c,connected) != 0 } {
-       return 0;# already connected or trying to connect
-     }
+	if { $c == 0 || $conn($c,connected) != 0 } {
+		return 0;# already connected or trying to connect
+	}
 
-  set w $conn($c,world)
+	set w $conn($c,world)
 
-  catch {after cancel $conn($c,reconnectId)}
-  set conn($c,reconnectId) ""
+	catch {after cancel $conn($c,reconnectId)}
+	set conn($c,reconnectId) ""
 
-  updateConnName $c
-  set conn($c,connected) -1 ;# trying to connect
+	updateConnName $c
+	set conn($c,connected) -1 ;# trying to connect
 
-  set up [up]
+	set up [up]
 
-  set tmplist [list]
-  set hostlist [list]
-  lappend tmplist [list $world($w,host) $world($w,port) $world($w,ssl)]
-  lappend tmplist [list $world($w,host2) $world($w,port2) $world($w,ssl2)]
+	set tmplist [list]
+	set hostlist [list]
+	lappend tmplist [list $world($w,host) $world($w,port) $world($w,ssl)]
+	lappend tmplist [list $world($w,host2) $world($w,port2) $world($w,ssl2)]
 
-  set empty [expr {[$conn($c,textWidget) count -chars 1.0 2.0] == 1}]
+	set empty [expr {[$conn($c,textWidget) count -chars 1.0 2.0] == 1}]
 
-  foreach x $tmplist {
-    foreach {host port ssl} $x {break}
-    if { $host eq "" || ![string is integer -strict $port] } {
-         continue; # skip quietly
-       }
-    if { $ssl && !$potato(hasTLS) } {
-         outputSystem $c [T "Unable to connect to %s:%d - SSL not available." $host $port]
-         continue;
-       }
-    lappend hostlist $x
-  }
+	foreach x $tmplist {
+		foreach {host port ssl} $x {break}
+		if { $host eq "" || ![string is integer -strict $port] } {
+			continue; # skip quietly
+		}
+		if { $ssl && !$potato(hasTLS) } {
+			outputSystem $c [T "Unable to connect to %s:%d - SSL not available." $host $port]
+			continue;
+		}
+		lappend hostlist $x
+	}
 
-  if { ![llength $hostlist] } {
-       outputSystem $c [T "No valid addresses to connect to."]
-       disconnect $c 0
-       skinStatus $c
-       return 0;
-     }
+	if { ![llength $hostlist] } {
+		outputSystem $c [T "No valid addresses to connect to."]
+		disconnect $c 0
+		skinStatus $c
+		return 0;
+	}
 
-  skinStatus $c
+	skinStatus $c
 
-  set connected 0
-  foreach x $hostlist {
-    foreach [list host port ssl] $x {break}
-    if { $world($w,proxy) ne "None" && $world($w,proxy,host) ne "" && [string is integer -strict $world($w,proxy,port)] } {
-           set has_proxy 1
-         } else {
-           set has_proxy 0
-     }
-    if { $has_proxy } {
-         set proxy $world($w,proxy)
-         outputSystem $c [set conn($c,address,disp) [T "Connecting to %s proxy at %s:%s..." $proxy $world($w,proxy,host) $world($w,proxy,port)]]
-         if { [catch {ioOpen $world($w,proxy,host) $world($w,proxy,port)} fid] } {
-              outputSystem $c $fid
-              disconnect $c 0
-              boot_reconnect $c
-              skinStatus $c
-              return 0;
-            }
-          set conn($c,id) $fid
-          set waitfor "[namespace which -variable conn]($c,fid,success)"
-          fileevent $fid writable [list ::potato::connectVerify $fid $waitfor]
-          vwait $waitfor
-          if { ![info exists conn($c,fid,success)] } {
-               set res -1
-             } else {
-               set res $conn($c,fid,success)
-             }
-          unset -nocomplain conn($c,fid,success)
-          switch -exact $res {
-            -1 {
-                catch {ioClose $fid}
-                disconnect $c 0;
-                return 0;
-               }
-             1 {
-                # Success
+	set connected 0
+	foreach x $hostlist {
+		foreach [list host port ssl] $x {break}
+		if { $world($w,proxy) ne "None" && $world($w,proxy,host) ne "" && [string is integer -strict $world($w,proxy,port)] } {
+			set has_proxy 1
+		} else {
+			set has_proxy 0
+		}
+		if { $has_proxy } {
+			set proxy $world($w,proxy)
+			outputSystem $c [set conn($c,address,disp) [T "Connecting to %s proxy at %s:%s..." $proxy $world($w,proxy,host) $world($w,proxy,port)]]
+			if { [catch {ioOpen $world($w,proxy,host) $world($w,proxy,port)} fid] } {
+				outputSystem $c $fid
+				disconnect $c 0
+				boot_reconnect $c
+				skinStatus $c
+				return 0;
+			}
+			set conn($c,id) $fid
+			set waitfor "[namespace which -variable conn]($c,fid,success)"
+			fileevent $fid writable [list ::potato::connectVerify $fid $waitfor]
+			vwait $waitfor
+			if { ![info exists conn($c,fid,success)] } {
+				set res -1
+			} else {
+				set res $conn($c,fid,success)
+			}
+			unset -nocomplain conn($c,fid,success)
+			switch -exact $res {
+				-1 {
+					catch {ioClose $fid}
+					disconnect $c 0;
+					return 0;
+				}
+				1 {
+					# Success
+				}
+				default {
+					# Error.
+					outputSystem $c [T "Unable to connect to proxy: %s" $res]
+					disconnect $c 0
+					boot_reconnect $c
+					skinStatus $c
+					return 0;
+				}
+			}
+		}
+		set conn($c,address) $x
+		outputSystem $c [set conn($c,address,disp) [T "Connecting to %s:%d..." $host $port]]
+		if { $has_proxy } {
+			if { [catch {::potato::proxy::${proxy}::connect $fid [lindex $x 0] [lindex $x 1]} msg] } {
+				outputSystem $c $msg
+				catch {ioClose $fid}
+				if { [info exists conn($c,id)] } {
+					set conn($c,id) ""
+				}
+				continue;
+			}
+			# Successful proxy connection! Huzzah!
+		} else {
+			if { [catch {::potato::ioOpen $host $port} fid] } {
+				outputSystem $c [T "Unable to connect to host %s:%d: %s" $host $port $fid]
+				continue;
+			}
+			set conn($c,id) $fid
+			set waitfor "[namespace which -variable conn]($c,fid,success)"
+			fileevent $fid writable [list ::potato::connectVerify $fid $waitfor]
+			vwait $waitfor
+			if { ![info exists conn($c,fid,success)] } {
+				set res -1
+			} else {
+				set res $conn($c,fid,success)
+			}
+			unset -nocomplain conn($c,fid,success)
+			switch $res {
+				-1 {
+					catch {ioClose $fid}
+					if { [info exists conn($c,id)] } {
+						set conn($c,id) ""
+					}
+					return 0;
+					# Cancelled
+				}
+				1 {
+					# Success!
+				}
+				default {# Error.
+					outputSystem $c [T "Unable to connect to host %s:%d: %s" $host $port $res]
+					catch {ioClose $fid}
+					if { [info exists conn($c,id)] } {
+						# In case the connection has been closed
+						set conn($c,id) ""
+					}
+					continue;
+				}
+			}
+		}
 
-               }
-             default {# Error.
-                      outputSystem $c [T "Unable to connect to proxy: %s" $res]
-                      disconnect $c 0
-                      boot_reconnect $c
-                      skinStatus $c
-                      return 0;
-                     }
-          }
-       }
-    set conn($c,address) $x
-    outputSystem $c [set conn($c,address,disp) [T "Connecting to %s:%d..." $host $port]]
-    if { $has_proxy } {
-         if { [catch {::potato::proxy::${proxy}::connect $fid [lindex $x 0] [lindex $x 1]} msg] } {
-              outputSystem $c $msg
-              catch {ioClose $fid}
-              if { [info exists conn($c,id)] } {
-                   set conn($c,id) ""
-                 }
-              continue;
-            }
-          # Successful proxy connection! Huzzah!
-       } else {
-         if { [catch {::potato::ioOpen $host $port} fid] } {
-              outputSystem $c [T "Unable to connect to host %s:%d: %s" $host $port $fid]
-              continue;
-            }
-          set conn($c,id) $fid
-          set waitfor "[namespace which -variable conn]($c,fid,success)"
-          fileevent $fid writable [list ::potato::connectVerify $fid $waitfor]
-          vwait $waitfor
-          if { ![info exists conn($c,fid,success)] } {
-               set res -1
-             } else {
-               set res $conn($c,fid,success)
-             }
-          unset -nocomplain conn($c,fid,success)
-          switch $res {
-            -1 {
-                catch {ioClose $fid}
-                if { [info exists conn($c,id)] } {
-                     set conn($c,id) ""
-                   }
-                return 0;
-                # Cancelled
-               }
-             1 {
-                # Success!
-               }
-             default {# Error.
-                      outputSystem $c [T "Unable to connect to host %s:%d: %s" $host $port $res]
-                      catch {ioClose $fid}
-                      if { [info exists conn($c,id)] } {
-                           # In case the connection has been closed
-                           set conn($c,id) ""
-                         }
-                      continue;
-                     }
-          }
-       }
+		if { $ssl } {
+			# We use -request 0 to not bother checking the certificate. Without this, self-signed certificates
+			# (which the majority of MUSHes use) fail by default. If we ever allow for more specific filtering
+			# of certificates, we'll need to -request 1 -require 1, and modify the verifySSL procedure to do
+			# more in-depth checks of the certificate, passing self-signed by default
+			# (And fix the error message below to only give the 'make sure port is enabled' message if we
+			# have an error, instead of a validation failure)
+			if { [catch {::tls::import $fid -command ::potato::connectVerifySSL -request 0 -cipher "ALL"} import] || \
+				($potato(hasTLS1.6) && [catch {fconfigure $fid -blocking 0 -buffering none} fconfig]) || \
+				[catch {::tls::handshake $fid} handshake] } {
+				set sslError "Unknown SSL Error";# do not translate
+				foreach errs [list import fconfig handshake] {
+					if { [info exists $errs] } {
+						set sslError [set $errs]
+					}
+				}
+				# -cipher can probably be ALL:!LOW:!EXP:+SSLv2:@STRENGTH but I'd rather be less secure than risk some games not working
+				outputSystem $c [T "Unable to negotiate SSL: %s. Please make sure the port is ssl-enabled." $sslError]
+				disconnect $c 0
+				continue;
+			} elseif { $handshake == 0 } {
+				# non-blocking connection, handshake not yet complete. Wait until it is.
+				while { $handshake == 0 } {
+					# So we can tell, programatically, that we're waiting for it
+					set conn($c,ssl-handshake) waiting
+					# When the socket becomes readable, the handshake is likely taking place
+					fileevent $fid readable [list ::potato::connectSSLHandshake $c $fid]
+					# connectSSLHandshake sets ssl-handshake to "complete"; wait for it
+					vwait ::potato::conn($c,ssl-handshake)
+					if { ![info exists conn($c,ssl-handshake)] } {
+						# Well, this shouldn't happen
+						catch {ioClose $fid}
+						if { [info exists conn($c,id)] } {
+							set conn($c,fid) ""
+						}
+						return;
+					} elseif { $conn($c,ssl-handshake) eq "disconnect" } {
+						# Connection has been disconnected by user
+						outputSystem $c [T "Connection cancelled."]
+						if { [info exists conn($c,id)] } {
+							set conn($c,id) "";# just to be safe
+						}
+						return;
+					}
+					if { $conn($c,ssl-handshake) ne "complete" } {
+						# Variable set by something other than our callback; error.
+						outputSystem $c [T "Unable to negotiate SSL: %s" $conn($c,ssl-handshake)]
+						disconnect $c 0
+						return;
+					} elseif { $fid ni [chan names] } {
+						# Connection has disappeared; weird.
+						set handshake_error "connection reset"
+						break;
+					} elseif { [catch {::tls::handshake $fid} handshake] } {
+						set handshake_error $handshake
+						break;
+					}
+				}
 
-    if { $ssl } {
-         # We use -request 0 to not bother checking the certificate. Without this, self-signed certificates
-         # (which the majority of MUSHes use) fail by default. If we ever allow for more specific filtering
-         # of certificates, we'll need to -request 1 -require 1, and modify the verifySSL procedure to do
-         # more in-depth checks of the certificate, passing self-signed by default
-         # (And fix the error message below to only give the 'make sure port is enabled' message if we
-         # have an error, instead of a validation failure)
-         if { [catch {::tls::import $fid -command ::potato::connectVerifySSL -request 0 -cipher "ALL"} import] || \
-              ($potato(hasTLS1.6) && [catch {fconfigure $fid -blocking 0 -buffering none} fconfig]) || \
-              [catch {::tls::handshake $fid} handshake] } {
-              set sslError "Unknown SSL Error";# do not translate
-              foreach errs [list import fconfig handshake] {
-                if { [info exists $errs] } {
-                     set sslError [set $errs]
-                   }
-              }
-              # -cipher can probably be ALL:!LOW:!EXP:+SSLv2:@STRENGTH but I'd rather be less secure than risk some games not working
-              outputSystem $c [T "Unable to negotiate SSL: %s. Please make sure the port is ssl-enabled." $sslError]
-              disconnect $c 0
-              continue;
-            } elseif { $handshake == 0 } {
-              # non-blocking connection, handshake not yet complete. Wait until it is.
-              while { $handshake == 0 } {
-                # So we can tell, programatically, that we're waiting for it
-                set conn($c,ssl-handshake) waiting
-                # When the socket becomes readable, the handshake is likely taking place
-                fileevent $fid readable [list ::potato::connectSSLHandshake $c $fid]
-                # connectSSLHandshake sets ssl-handshake to "complete"; wait for it
-                vwait ::potato::conn($c,ssl-handshake)
-                if { ![info exists conn($c,ssl-handshake)] } {
-                     # Well, this shouldn't happen
-                     catch {ioClose $fid}
-                     if { [info exists conn($c,id)] } {
-                          set conn($c,fid) ""
-                        }
-                     return;
-                   } elseif { $conn($c,ssl-handshake) eq "disconnect" } {
-                     # Connection has been disconnected by user
-                     outputSystem $c [T "Connection cancelled."]
-                     if { [info exists conn($c,id)] } {
-                          set conn($c,id) "";# just to be safe
-                        }
-                     return;
-                   }
-                if { $conn($c,ssl-handshake) ne "complete" } {
-                     # Variable set by something other than our callback; error.
-                     outputSystem $c [T "Unable to negotiate SSL: %s" $conn($c,ssl-handshake)]
-                     disconnect $c 0
-                     return;
-                   } elseif { $fid ni [chan names] } {
-                     # Connection has disappeared; weird.
-                     set handshake_error "connection reset"
-                     break;
-                   } elseif { [catch {::tls::handshake $fid} handshake] } {
-                     set handshake_error $handshake
-                     break;
-                   }
-               }
+				if { [info exists handshake_error] } {
+					outputSystem $c [T "Unable to negotiate SSL: %s" $handshake_error]
+					disconnect $c 0
+					continue;
+				}
+			}
+		}
 
-               if { [info exists handshake_error] } {
-                   outputSystem $c [T "Unable to negotiate SSL: %s" $handshake_error]
-                   disconnect $c 0
-                   continue;
-                 }
-            }
-       }
+		# Success!
+		set connected 1
+		break;
+	}
 
-    # Success!
-    set connected 1
-    break;
-  }
+	if { !$connected } {
+		# All hosts/ports failed. Boo. Try again later.
+		disconnect $c 0
+		boot_reconnect $c
+		skinStatus $c
+		return 0;
+	}
 
-  if { !$connected } {
-       # All hosts/ports failed. Boo. Try again later.
-       disconnect $c 0
-       boot_reconnect $c
-       skinStatus $c
-       return 0;
-     }
+	if { $ssl } {
+		addProtocol $c ssl
+	}
 
-  if { $ssl } {
-       addProtocol $c ssl
-     }
+	connectComplete $c
 
-  connectComplete $c
-
-  return 1;
+	return 1;
 
 };# ::potato::connect
 
@@ -3104,9 +3112,10 @@ proc ::potato::connect {c first} {
 #: return nothing
 proc ::potato::connectSSLHandshake {c fid} {
 
-  after 500 [list set ::potato::conn($c,ssl-handshake) "complete"]
-  catch {fileevent $fid readable {}}
-  return;
+	after 500 [list set ::potato::conn($c,ssl-handshake) "complete"]
+	catch {fileevent $fid readable {}}
+	return;
+
 };# ::potato::connectSSLHandshake
 
 #: proc ::potato::connectVerify
@@ -3116,19 +3125,19 @@ proc ::potato::connectSSLHandshake {c fid} {
 #: desc Verify whether the newly made connection to $fid worked. Set $statevar to 1 on success, or an error message on failure
 #: return nothing
 proc ::potato::connectVerify {fid statevar} {
-  variable conn;
-  variable world;
+	variable conn;
+	variable world;
 
-  catch {fileevent $fid writable {}}
-  if { [catch {fconfigure $fid -error} err] || $err ne "" } {
-       if { $err in [list 1 -1 ""] } {
-            set err "Unknown error"
-          }
-       set $statevar $err
-       return;
-     }
-  set $statevar 1
-  return;
+	catch {fileevent $fid writable {}}
+	if { [catch {fconfigure $fid -error} err] || $err ne "" } {
+		if { $err in [list 1 -1 ""] } {
+			set err "Unknown error"
+		}
+		set $statevar $err
+		return;
+	}
+	set $statevar 1
+	return;
 
 };# ::potato::connectVerify
 
@@ -3138,66 +3147,66 @@ proc ::potato::connectVerify {fid statevar} {
 #: desc Called when we've just successfully connected to a world (possibly through a proxy), to actually mark us as connected.
 #: return nothing
 proc ::potato::connectComplete {c} {
-  variable conn;
-  variable world;
+	variable conn;
+	variable world;
 
-  set w $conn($c,world)
-  set id $conn($c,id)
+	set w $conn($c,world)
+	set id $conn($c,id)
 
-  set conn($c,connected) 1
+	set conn($c,connected) 1
 
-  set conn($c,stats,connAt) [clock seconds]
-  set conn($c,stats,formatted) [statsFormat 0]
-  set conn($c,address,disp) "[lindex $conn($c,address) 0]:[lindex $conn($c,address) 1]"
-  incr conn($c,numConnects)
-  incr world($w,stats,conns)
+	set conn($c,stats,connAt) [clock seconds]
+	set conn($c,stats,formatted) [statsFormat 0]
+	set conn($c,address,disp) "[lindex $conn($c,address) 0]:[lindex $conn($c,address) 1]"
+	incr conn($c,numConnects)
+	incr world($w,stats,conns)
 
-  fileevent $id writable {}
-  fileevent $id readable {}
+	fileevent $id writable {}
+	fileevent $id readable {}
 
-  switch $world($w,type) {
-     "MUSH" {set translation "\r\n"}
-     "MUD"  {set translation "\n"}
-     default {set translation "\r\n"}
-  }
+	switch $world($w,type) {
+		"MUSH" {set translation "\r\n"}
+		"MUD"  {set translation "\n"}
+		default {set translation "\r\n"}
+	}
 
-  set conn($c,id,lineending) $translation
-  set conn($c,id,lineending,length) [string length $conn($c,id,lineending)]
-  set conn($c,id,lineending,length-1) [expr {[string length $conn($c,id,lineending)]-1}]
-  if { $world($w,encoding,start) in [encoding names] } {
-       set conn($c,id,encoding) $world($w,encoding,start)
-     } else {
-       set conn($c,id,encoding) iso8859-1
-     }
-  # Set encoding/translation to binary, otherwise Tcl will helpfully automatically translate
-  # \u00ff (y-umlaut) into char 255 (y-umlaut), and we can't distinguish between the unicode char
-  # and a telnet IAC. So, get data in binary format, and convert manually after telnet parsing.
-  fconfigure $id -translation binary -encoding binary -eof {} -blocking 0 -buffering none
+	set conn($c,id,lineending) $translation
+	set conn($c,id,lineending,length) [string length $conn($c,id,lineending)]
+	set conn($c,id,lineending,length-1) [expr {[string length $conn($c,id,lineending)]-1}]
+	if { $world($w,encoding,start) in [encoding names] } {
+		set conn($c,id,encoding) $world($w,encoding,start)
+	} else {
+		set conn($c,id,encoding) iso8859-1
+	}
+	# Set encoding/translation to binary, otherwise Tcl will helpfully automatically translate
+	# \u00ff (y-umlaut) into char 255 (y-umlaut), and we can't distinguish between the unicode char
+	# and a telnet IAC. So, get data in binary format, and convert manually after telnet parsing.
+	fconfigure $id -translation binary -encoding binary -eof {} -blocking 0 -buffering none
 
-  set peer [fconfigure $id -peername]
-  if { [lindex $peer 0] in [list "" [lindex $peer 1]] } {
-       set str [lindex $peer 0]
-     } else {
-       set str "[lindex $peer 0] ([lindex $peer 1])"
-     }
-  outputSystem $c [T "Connected - %s - %s" $str [timestamp]]
+	set peer [fconfigure $id -peername]
+	if { [lindex $peer 0] in [list "" [lindex $peer 1]] } {
+		set str [lindex $peer 0]
+	} else {
+		set str "[lindex $peer 0] ([lindex $peer 1])"
+	}
+	outputSystem $c [T "Connected - %s - %s" $str [timestamp]]
 
-  set conn($c,telnet,state) 0
-  set conn($c,telnet,subState) 0
-  set conn($c,telnet,buffer) ""
-  set conn($c,telnet,mssp) [list]
+	set conn($c,telnet,state) 0
+	set conn($c,telnet,subState) 0
+	set conn($c,telnet,buffer) ""
+	set conn($c,telnet,mssp) [list]
 
-  #abc handle stats for tracking time connected to world
-  fileevent $id readable [list ::potato::get_mushage $c]
-  timersStart $c
-  skinStatus $c
-  if { [hasProtocol $c ssl] } {
-       puts $id ""; # SSL connections seem to hang, so we send a newline and flush
-       flush $id
-     }
-  sendLoginInfo $c
+	#abc handle stats for tracking time connected to world
+	fileevent $id readable [list ::potato::get_mushage $c]
+	timersStart $c
+	skinStatus $c
+	if { [hasProtocol $c ssl] } {
+		puts $id ""; # SSL connections seem to hang, so we send a newline and flush
+		flush $id
+	}
+	sendLoginInfo $c
 
-  return;
+	return;
 
 };# ::potato::connectVerifyComplete
 
@@ -3207,39 +3216,40 @@ proc ::potato::connectComplete {c} {
 #: desc Callback function for tls::import, hacked from tls::callback
 #: return varies
 proc ::potato::connectVerifySSL {option args} {
-  switch -- $option {
-    "error" {
-      lassign $args chan msg
-      return $msg; # We don't use [error] or [return -code error] because
-                   # this is callback function, and we can't [catch] it
-    }
-    "verify" {
-      lassign $args chan dept cert rc err
-      return;
-      return $rc;
-      array set c $cert
-      if { $rc != 1 } {
-           puts "TLS/$chan: verify/$depth: Bad Cert: $err (rc = $rc)"
-         } else {
-           puts "TLS/$chan: verify/$depth: $c(subject)"
-         }
-      return $rc;
-    }
-    "info" {
-      lassign $args chan major minor state msg
+	switch -- $option {
+		"error" {
+			lassign $args chan msg
+			return $msg; 
+			# We don't use [error] or [return -code error] because
+			# this is callback function, and we can't [catch] it
+		}
+		"verify" {
+			lassign $args chan dept cert rc err
+			return;
+			return $rc;
+			array set c $cert
+			if { $rc != 1 } {
+				puts "TLS/$chan: verify/$depth: Bad Cert: $err (rc = $rc)"
+			} else {
+				puts "TLS/$chan: verify/$depth: $c(subject)"
+			}
+			return $rc;
+		}
+		"info" {
+			lassign $args chan major minor state msg
 
-      if { $msg ne "" } {
-           append state ": $msg"
-         }
-      # For tracing
-      upvar #0 tls::$chan cb
-      set cb($major) $minor
-      #puts "TLS/$chan: $major/$minor: $state"
-    }
-    default {
-      return -code error "bad option \"$option\": must be one of error, info, or verify"
-    }
-  }
+			if { $msg ne "" } {
+				append state ": $msg"
+			}
+			# For tracing
+			upvar #0 tls::$chan cb
+			set cb($major) $minor
+			#puts "TLS/$chan: $major/$minor: $state"
+		}
+		default {
+			return -code error "bad option \"$option\": must be one of error, info, or verify"
+		}
+	}
 
 };# ::potato::connectVerifySSL
 
@@ -3248,13 +3258,13 @@ proc ::potato::connectVerifySSL {option args} {
 #: desc If connection $c's world has login info, queue it to be sent after the required delay.
 #: return nothing
 proc ::potato::sendLoginInfo {c} {
-  variable world;
-  variable conn;
+	variable world;
+	variable conn;
 
-  after cancel $conn($c,loginInfoId)
-  set w $conn($c,world)
-  set conn($c,loginInfoId) [after [expr {round($world($w,loginDelay)*1000)}] [list ::potato::sendLoginInfoSub $c]]
-  return;
+	after cancel $conn($c,loginInfoId)
+	set w $conn($c,world)
+	set conn($c,loginInfoId) [after [expr {round($world($w,loginDelay)*1000)}] [list ::potato::sendLoginInfoSub $c]]
+	return;
 
 };# ::potato::sendLoginInfo
 
@@ -3263,31 +3273,31 @@ proc ::potato::sendLoginInfo {c} {
 #: desc Send the login info (and the autosends) for connection $c
 #: return nothing
 proc ::potato::sendLoginInfoSub {c} {
-  variable world;
-  variable conn;
+	variable world;
+	variable conn;
 
-  set w $conn($c,world)
-  if { [string length $world($w,autosend,firstconnect)] && $conn($c,numConnects) == 1 } {
-       send_to $c $world($w,autosend,firstconnect)
-     }
-  if { [string length $world($w,autosend,connect)] } {
-       send_to $c $world($w,autosend,connect)
-     }
-  # Don't check for pw being blank, as some games allow empty passwords
-  if { [string length $conn($c,char)] && \
-       [llength [set charinfo [lsearch -inline -index 0 $world($w,charList) $conn($c,char)]]] } {
-       if { ![catch {format $world($w,loginStr) [lindex $charinfo 0] [lindex $charinfo 1]} str] } {
-            send_to_real $c $str [format $world($w,loginStr) [lindex $charinfo 0] \
-                                 [string repeat \u25cf [string length [lindex $charinfo 1]]]]
-          } else {
-            errorLog "Invalid Connect String format for world $w ($world($w,name)): $str"
-          }
-     }
-  if { [string length $world($w,autosend,login)] } {
-       send_to $c $world($w,autosend,login)
-     }
+	set w $conn($c,world)
+	if { [string length $world($w,autosend,firstconnect)] && $conn($c,numConnects) == 1 } {
+		send_to $c $world($w,autosend,firstconnect)
+	}
+	if { [string length $world($w,autosend,connect)] } {
+		send_to $c $world($w,autosend,connect)
+	}
+	# Don't check for pw being blank, as some games allow empty passwords
+	if { [string length $conn($c,char)] && \
+		[llength [set charinfo [lsearch -inline -index 0 $world($w,charList) $conn($c,char)]]] } {
+		if { ![catch {format $world($w,loginStr) [lindex $charinfo 0] [lindex $charinfo 1]} str] } {
+			send_to_real $c $str [format $world($w,loginStr) [lindex $charinfo 0] \
+				[string repeat \u25cf [string length [lindex $charinfo 1]]]]
+		} else {
+			errorLog "Invalid Connect String format for world $w ($world($w,name)): $str"
+		}
+	}
+	if { [string length $world($w,autosend,login)] } {
+		send_to $c $world($w,autosend,login)
+	}
 
-  return;
+	return;
 
 };# ::potato::sendLoginInfoSub
 
@@ -3296,19 +3306,19 @@ proc ::potato::sendLoginInfoSub {c} {
 #: desc begin the timers set up for connection $c. Run at [re]connection, or on manual timer reset (ie, after timers are edited)
 #: return nothing
 proc ::potato::timersStart {c} {
-  variable world;
-  variable conn;
+	variable world;
+	variable conn;
 
-  timersStop $c; # cancel any already-running timers
+	timersStop $c; # cancel any already-running timers
 
-  foreach w [list 0 $conn($c,world)] {
-    foreach timerStr [array names world -regexp "^$w,timer,\[^,\]+,cmds\$"] {
-      scan $timerStr %*d,timer,%d,cmds timerId
-      timersStartOne $c $w $timerId
-    }
-  }
+	foreach w [list 0 $conn($c,world)] {
+		foreach timerStr [array names world -regexp "^$w,timer,\[^,\]+,cmds\$"] {
+			scan $timerStr %*d,timer,%d,cmds timerId
+			timersStartOne $c $w $timerId
+		}
+	}
 
-  return;
+	return;
 
 };# ::potato::timersStart
 
@@ -3320,20 +3330,20 @@ proc ::potato::timersStart {c} {
 #: desc [configureWorldCommit] for new timers. Note that the timer must not be running already, as this proc will not cancel the current instance.
 #: return nothing
 proc ::potato::timersStartOne {c w timer} {
-  variable world;
-  variable conn;
+	variable world;
+	variable conn;
 
-  if { !$world($w,timer,$timer,enabled) } {
-       return;
-     }
-  if { $world($w,timer,$timer,continuous) } {
-       set conn($c,timer,$timer-$w,count) -1
-     } else {
-       set conn($c,timer,$timer-$w,count) $world($w,timer,$timer,count)
-     }
-  timerQueue $c $w $timer 1
+	if { !$world($w,timer,$timer,enabled) } {
+		return;
+	}
+	if { $world($w,timer,$timer,continuous) } {
+		set conn($c,timer,$timer-$w,count) -1
+	} else {
+		set conn($c,timer,$timer-$w,count) $world($w,timer,$timer,count)
+	}
+	timerQueue $c $w $timer 1
 
-  return;
+	return;
 
 };# ::potato::timersStartOne
 
@@ -3346,13 +3356,13 @@ proc ::potato::timersStartOne {c w timer} {
 #: desc connection $c. If $first, use the timer's delay interval as the [after] time, otherwise use it's every interval.
 #: return nothing
 proc ::potato::timerQueue {c w timerId first} {
-  variable world;
-  variable conn;
+	variable world;
+	variable conn;
 
-  set type [expr {$first ? "delay" : "every"}]
-  set conn($c,timer,$timerId-$w,after) \
-           [after [expr {$world($w,timer,$timerId,$type) * 1000}] [list ::potato::timerRun $c $w $timerId]]
-  return;
+	set type [expr {$first ? "delay" : "every"}]
+	set conn($c,timer,$timerId-$w,after) \
+		[after [expr {$world($w,timer,$timerId,$type) * 1000}] [list ::potato::timerRun $c $w $timerId]]
+	return;
 
 };# ::potato::timerQueue
 
@@ -3363,24 +3373,24 @@ proc ::potato::timerQueue {c w timerId first} {
 #: desc Send the output associated with a particular timer and, if it hasn't run the max number of times, retrigger it
 #: return nothing
 proc ::potato::timerRun {c w timer} {
-  variable conn;
-  variable world;
+	variable conn;
+	variable world;
 
-  if { ![info exists conn($c,timer,$timer-$w,count)] || !$world($w,timer,$timer,enabled) } {
-       return;
-     }
+	if { ![info exists conn($c,timer,$timer-$w,count)] || !$world($w,timer,$timer,enabled) } {
+		return;
+	}
 
-  # Send the command
-  send_to $c $world($w,timer,$timer,cmds) "" [expr {$world($w,echo,timers)}]
+	# Send the command
+	send_to $c $world($w,timer,$timer,cmds) "" [expr {$world($w,echo,timers)}]
 
-  if { $conn($c,timer,$timer-$w,count) != 0 } {
-       timerQueue $c $w $timer 0
-       if { $conn($c,timer,$timer-$w,count) > 0 } {
-            incr conn($c,timer,$timer-$w,count) -1
-          }
-     }
+	if { $conn($c,timer,$timer-$w,count) != 0 } {
+		timerQueue $c $w $timer 0
+		if { $conn($c,timer,$timer-$w,count) > 0 } {
+			incr conn($c,timer,$timer-$w,count) -1
+		}
+	}
 
-  return;
+	return;
 
 };# ::potato::timerRun
 
@@ -3389,14 +3399,14 @@ proc ::potato::timerRun {c w timer} {
 #: desc if there are any timers running for connection $c, stop them. Run at disconnection, and just before timers are restarted for any reason.
 #: return nothing
 proc ::potato::timersStop {c} {
-  variable conn;
+	variable conn;
 
-  foreach x [array names conn $c,timer,*,after] {
-    after cancel $conn($x)
-  }
-  array unset conn $c,timer,*
+	foreach x [array names conn $c,timer,*,after] {
+		after cancel $conn($x)
+	}
+	array unset conn $c,timer,*
 
-  return;
+	return;
 
 };# ::potato::timersStop
 
@@ -3406,13 +3416,13 @@ proc ::potato::timersStop {c} {
 #: desc Cancel all instances of the timer being used currently by connections
 #: return nothing
 proc ::potato::timerCancel {w timer} {
-  variable world;
-  variable conn;
+	variable world;
+	variable conn;
 
-  foreach x [array names conn *,timer,$timer-$w,after] {
-    after cancel $conn($x)
-  }
-  array unset conn *,timer,$timer-$w,*
+	foreach x [array names conn *,timer,$timer-$w,after] {
+		after cancel $conn($x)
+	}
+	array unset conn *,timer,$timer-$w,*
 
 };# ::potato::timerCancel
 
@@ -3421,13 +3431,13 @@ proc ::potato::timerCancel {w timer} {
 #: desc notify the current skin that connection $c's status has changed
 #: return nothing
 proc ::potato::skinStatus {c} {
-  variable potato;
+	variable potato;
 
-  if { $potato(skin) ne "" && $c ne "" } {
-       ::skin::${potato(skin)}::status $c
-     }
+	if { $potato(skin) ne "" && $c ne "" } {
+		::skin::${potato(skin)}::status $c
+	}
 
-  return;
+	return;
 
 };# ::potato::skinStatus
 
@@ -3437,76 +3447,76 @@ proc ::potato::skinStatus {c} {
 #: desc connection $c is disconnected. Try to close the connection, clear the fid, set the state to disconnected, update the skin status, stop any running timers
 #: return nothing
 proc ::potato::disconnect {{c ""} {prompt 1}} {
-  variable conn;
-  variable potato;
-  variable world;
+	variable conn;
+	variable potato;
+	variable world;
 
-  set up [up]
+	set up [up]
 
-  if { $c eq "" } {
-       set c $up
-     }
-  if { $c == 0 } {
-       return;
-     }
+	if { $c eq "" } {
+		set c $up
+	}
+	if { $c == 0 } {
+		return;
+	}
 
-  set w $conn($c,world)
+	set w $conn($c,world)
 
-  if { $conn($c,connected) == 0 } {
-       # Make sure we don't auto-reconnect
-       cancel_reconnect $c
-       skinStatus $c
-       return;
-     }
+	if { $conn($c,connected) == 0 } {
+		# Make sure we don't auto-reconnect
+		cancel_reconnect $c
+		skinStatus $c
+		return;
+	}
 
-  if { $prompt } {
-       set ans [tk_messageBox -title $potato(name) -type yesno \
-                         -message [T "Disconnect from %d. %s?" $c $world($w,name)]]
-       if { $ans ne "yes" } {
-            return;
-          }
-     }
+	if { $prompt } {
+		set ans [tk_messageBox -title $potato(name) -type yesno \
+			-message [T "Disconnect from %d. %s?" $c $world($w,name)]]
+		if { $ans ne "yes" } {
+			return;
+		}
+	}
 
-  unset -nocomplain conn($c,fid,success)
-  catch {fileevent $conn($c,id) writable {}}
-  catch {fileevent $conn($c,id) readable {}}
-  uploadEnd $c 1;# cancel any in-progress file upload
-  catch {::potato::ioClose $conn($c,id)}
-  if { [info exists conn($c,ssl-handshake)] } {
-       set conn($c,ssl-handshake) "disconnect"
-     }
-  set conn($c,id) ""
-  set prevState $conn($c,connected)
-  if { $conn($c,connected) == 1 } {
-       outputSystem $c [T "Disconnected from host. - %s" [timestamp]]
-     } else {
-       outputSystem $c [T "Connection attempt cancelled. - %s" [timestamp]]
-     }
-  set conn($c,connected) 0
-  set conn($c,address) [list]
-  set conn($c,address,disp) [T "Not Connected"]
-  timersStop $c
-  set conn($c,protocols) [list]
-  catch {after cancel $conn($c,loginInfoId)}
-  set conn($c,loginInfoId) ""
-  set conn($c,outputBuffer) ""
-  set conn($c,telnet,buffer,line) ""
-  set conn($c,telnet,buffer,codes) ""
-  set conn($c,telnet,afterPrompt) 0
-  setPrompt $c ""
+	unset -nocomplain conn($c,fid,success)
+	catch {fileevent $conn($c,id) writable {}}
+	catch {fileevent $conn($c,id) readable {}}
+	uploadEnd $c 1;# cancel any in-progress file upload
+	catch {::potato::ioClose $conn($c,id)}
+	if { [info exists conn($c,ssl-handshake)] } {
+		set conn($c,ssl-handshake) "disconnect"
+	}
+	set conn($c,id) ""
+	set prevState $conn($c,connected)
+	if { $conn($c,connected) == 1 } {
+		outputSystem $c [T "Disconnected from host. - %s" [timestamp]]
+	} else {
+		outputSystem $c [T "Connection attempt cancelled. - %s" [timestamp]]
+	}
+	set conn($c,connected) 0
+	set conn($c,address) [list]
+	set conn($c,address,disp) [T "Not Connected"]
+	timersStop $c
+	set conn($c,protocols) [list]
+	catch {after cancel $conn($c,loginInfoId)}
+	set conn($c,loginInfoId) ""
+	set conn($c,outputBuffer) ""
+	set conn($c,telnet,buffer,line) ""
+	set conn($c,telnet,buffer,codes) ""
+	set conn($c,telnet,afterPrompt) 0
+	setPrompt $c ""
 
-  if { $conn($c,stats,connAt) > 0 } {
-       incr conn($c,stats,prev) [expr {[clock seconds] - $conn($c,stats,connAt)}]
-     }
-  set conn($c,stats,connAt) -1
-  set conn($c,stats,formatted) ""
-  if { [focus -displayof .] eq "" && $prevState == 1 } {
-       flash $w
-     }
+	if { $conn($c,stats,connAt) > 0 } {
+		incr conn($c,stats,prev) [expr {[clock seconds] - $conn($c,stats,connAt)}]
+	}
+	set conn($c,stats,connAt) -1
+	set conn($c,stats,formatted) ""
+	if { [focus -displayof .] eq "" && $prevState == 1 } {
+		flash $w
+	}
 
-  skinStatus $c
+	skinStatus $c
 
-  return;
+	return;
 
 };# ::potato::disconnect
 
@@ -3514,9 +3524,9 @@ proc ::potato::disconnect {{c ""} {prompt 1}} {
 #: desc Return the current time, appropriately formatted
 #: return time string
 proc ::potato::timestamp {} {
-  variable misc;
+	variable misc;
 
-  return [clock format [clock seconds] -format $misc(clockFormat)];
+	return [clock format [clock seconds] -format $misc(clockFormat)];
 
 };# ::potato::timestamp
 
@@ -3526,79 +3536,79 @@ proc ::potato::timestamp {} {
 #: arg text the text to print
 #: return nothing
 proc ::potato::debug_packet {c dir text} {
-  variable conn;
+	variable conn;
 
-  set win(toplevel) .debug_packet_$c
-  set win(txt,frame) $win(toplevel).txt
-  set win(txt,btxt) $win(txt,frame).btxt
-  set win(txt,bhex) $win(txt,frame).bhex
-  set win(txt,sb) $win(txt,frame).sb
-  if { ![winfo exists $win(toplevel)] } {
-       toplevel $win(toplevel)
-       wm title $win(toplevel) [T "Packet Debugger for \[%d. %s\]" $c [connInfo $c name]]
-       pack [::ttk::frame $win(txt,frame)] -side top -expand 1 -fill both
-       pack [text $win(txt,btxt) -wrap word] -side left -expand 0 -fill y
-       configureTextWidget $c $win(txt,btxt)
-       # Widths need to be set after running configureTextWidget.
-       $win(txt,btxt) configure -width 37
-       pack [text $win(txt,bhex) -wrap word] -side left -expand 0 -fill y
-       configureTextWidget $c $win(txt,bhex)
-       $win(txt,bhex) configure -width 102
-       pack [::ttk::scrollbar $win(txt,sb) -orient vertical -command [list ::potato::multiscroll [list $win(txt,btxt) $win(txt,bhex)] yview]] -side left -fill y
-       $win(txt,btxt) configure -yscrollcommand [list ::potato::multiscrollSet $win(txt,btxt) [list $win(txt,bhex)] $win(txt,sb)]
-       $win(txt,bhex) configure -yscrollcommand [list ::potato::multiscrollSet $win(txt,bhex) [list $win(txt,btxt)] $win(txt,sb)]
-       bind $win(toplevel) <Destroy> [list set ::potato::conn($c,debugPackets) 0]
-       update idletasks
-       wm maxsize $win(toplevel) [winfo reqwidth $win(toplevel)] 0
-     } else {
-       $win(txt,btxt) configure -state normal
-       $win(txt,bhex) configure -state normal
-     }
-  set aE [atEnd $win(txt,btxt)]
+	set win(toplevel) .debug_packet_$c
+	set win(txt,frame) $win(toplevel).txt
+	set win(txt,btxt) $win(txt,frame).btxt
+	set win(txt,bhex) $win(txt,frame).bhex
+	set win(txt,sb) $win(txt,frame).sb
+	if { ![winfo exists $win(toplevel)] } {
+		toplevel $win(toplevel)
+		wm title $win(toplevel) [T "Packet Debugger for \[%d. %s\]" $c [connInfo $c name]]
+		pack [::ttk::frame $win(txt,frame)] -side top -expand 1 -fill both
+		pack [text $win(txt,btxt) -wrap word] -side left -expand 0 -fill y
+		configureTextWidget $c $win(txt,btxt)
+		# Widths need to be set after running configureTextWidget.
+		$win(txt,btxt) configure -width 37
+		pack [text $win(txt,bhex) -wrap word] -side left -expand 0 -fill y
+		configureTextWidget $c $win(txt,bhex)
+		$win(txt,bhex) configure -width 102
+		pack [::ttk::scrollbar $win(txt,sb) -orient vertical -command [list ::potato::multiscroll [list $win(txt,btxt) $win(txt,bhex)] yview]] -side left -fill y
+		$win(txt,btxt) configure -yscrollcommand [list ::potato::multiscrollSet $win(txt,btxt) [list $win(txt,bhex)] $win(txt,sb)]
+		$win(txt,bhex) configure -yscrollcommand [list ::potato::multiscrollSet $win(txt,bhex) [list $win(txt,btxt)] $win(txt,sb)]
+		bind $win(toplevel) <Destroy> [list set ::potato::conn($c,debugPackets) 0]
+		update idletasks
+		wm maxsize $win(toplevel) [winfo reqwidth $win(toplevel)] 0
+	} else {
+		$win(txt,btxt) configure -state normal
+		$win(txt,bhex) configure -state normal
+	}
+	set aE [atEnd $win(txt,btxt)]
 
-  if { !$dir } {
-       $win(txt,bhex) insert end "\n"
-       $win(txt,btxt) insert end "\n"
-       set tag "echo"
-     } else {
-       set tag ""
-     }
-  set linelen [$win(txt,btxt) count -chars "end-1char linestart" "end-1char"]
-  set prev ""
-  for {set i 0} {$i < [string length $text]} {incr i} {
-    set char [string index $text $i]
-    scan $char %c num
-    $win(txt,bhex) insert end [format %02X $num] $tag
-    $win(txt,bhex) insert end " " $tag
-    switch -exact $char {
-      "\n"      {set dchar \u21B5}
-      "\r"      {set dchar \u240D}
-      "\u0020"  {set dchar \u2423}
-      "\0"      {set dchar \u2400}
-      default   {set dchar $char}
-    }
-    $win(txt,btxt) insert end $dchar $tag
-    incr linelen
-    if { $char eq $conn($c,id,lineending) || "$prev$char" eq $conn($c,id,lineending) ||
-         ($linelen > 0 && ($linelen % 32) == 0) } {
-         $win(txt,btxt) insert end "\n"
-         $win(txt,bhex) insert end "\n"
-         set linelen 0
-       }
-    set prev $char
-  }
-  if { !$dir } {
-       $win(txt,bhex) insert end "\n\n"
-       $win(txt,btxt) insert end "\n\n"
-     }
-  if { $aE } {
-       $win(txt,btxt) see end
-       $win(txt,bhex) see end
-     }
-  $win(txt,btxt) configure -state disabled
-  $win(txt,bhex) configure -state disabled
+	if { !$dir } {
+		$win(txt,bhex) insert end "\n"
+		$win(txt,btxt) insert end "\n"
+		set tag "echo"
+	} else {
+		set tag ""
+	}
+	set linelen [$win(txt,btxt) count -chars "end-1char linestart" "end-1char"]
+	set prev ""
+	for {set i 0} {$i < [string length $text]} {incr i} {
+		set char [string index $text $i]
+		scan $char %c num
+		$win(txt,bhex) insert end [format %02X $num] $tag
+		$win(txt,bhex) insert end " " $tag
+		switch -exact $char {
+			"\n"      {set dchar \u21B5}
+			"\r"      {set dchar \u240D}
+			"\u0020"  {set dchar \u2423}
+			"\0"      {set dchar \u2400}
+			default   {set dchar $char}
+		}
+		$win(txt,btxt) insert end $dchar $tag
+		incr linelen
+		if { $char eq $conn($c,id,lineending) || "$prev$char" eq $conn($c,id,lineending) ||
+			($linelen > 0 && ($linelen % 32) == 0) } {
+			$win(txt,btxt) insert end "\n"
+			$win(txt,bhex) insert end "\n"
+			set linelen 0
+		}
+		set prev $char
+	}
+	if { !$dir } {
+		$win(txt,bhex) insert end "\n\n"
+		$win(txt,btxt) insert end "\n\n"
+	}
+	if { $aE } {
+		$win(txt,btxt) see end
+		$win(txt,bhex) see end
+	}
+	$win(txt,btxt) configure -state disabled
+	$win(txt,bhex) configure -state disabled
 
-  return;
+	return;
 
 };# ::potato::debug_packet
 
@@ -3608,105 +3618,105 @@ proc ::potato::debug_packet {c dir text} {
 #: desc line is present, display it. Must also watch for the connection being closed and act accordingly.
 #: return nothing
 proc ::potato::get_mushage {c} {
-  variable conn;
-  variable world;
+	variable conn;
+	variable world;
 
-  if { $conn($c,id) eq "" || $conn($c,connected) != 1 } {
-       return;
-     }
+	if { $conn($c,id) eq "" || $conn($c,connected) != 1 } {
+		return;
+	}
 
-  if { [eof $conn($c,id)] } {
-       disconnect $c 0
-       return;
-     }
+	if { [eof $conn($c,id)] } {
+		disconnect $c 0
+		return;
+	}
 
-  set disc [catch {::potato::ioRead $conn($c,id) 10} text]
-  if { $disc } {
-       disconnect $c 0
-       boot_reconnect $c
-       skinStatus $c
-       return;
-     }
-  if { $conn($c,debugPackets) } {
-       debug_packet $c 1 $text
-     }
-  if { [hasProtocol $c telnet] || ($world($conn($c,world),telnet) && (!$world($conn($c,world),telnet,timeout) ||([clock seconds] - $conn($c,stats,connAt)) < 90))} {
-       set text [::potato::telnet::process $c $text]
-     }
+	set disc [catch {::potato::ioRead $conn($c,id) 10} text]
+	if { $disc } {
+		disconnect $c 0
+		boot_reconnect $c
+		skinStatus $c
+		return;
+	}
+	if { $conn($c,debugPackets) } {
+		debug_packet $c 1 $text
+	}
+	if { [hasProtocol $c telnet] || ($world($conn($c,world),telnet) && (!$world($conn($c,world),telnet,timeout) ||([clock seconds] - $conn($c,stats,connAt)) < 90))} {
+		set text [::potato::telnet::process $c $text]
+	}
 
-  append conn($c,outputBuffer) $text
-  while { [set nextNewline [string first $conn($c,id,lineending) $conn($c,outputBuffer)]] > -1 } {
-          set toProcess [encoding convertfrom $conn($c,id,encoding) [string range $conn($c,outputBuffer) 0 [expr {$nextNewline-1}]]]
-          set conn($c,outputBuffer) [string range $conn($c,outputBuffer) [expr {$nextNewline+$conn($c,id,lineending,length)}] end]
-          get_mushageProcess $c $toProcess
-        }
-  return;
+	append conn($c,outputBuffer) $text
+	while { [set nextNewline [string first $conn($c,id,lineending) $conn($c,outputBuffer)]] > -1 } {
+		set toProcess [encoding convertfrom $conn($c,id,encoding) [string range $conn($c,outputBuffer) 0 [expr {$nextNewline-1}]]]
+		set conn($c,outputBuffer) [string range $conn($c,outputBuffer) [expr {$nextNewline+$conn($c,id,lineending,length)}] end]
+		get_mushageProcess $c $toProcess
+	}
+	return;
 
 };# ::potato::get_mushage
 
 proc ::potato::parseANSI {line _arr c} {
-  upvar 1 $_arr arr;
+	upvar 1 $_arr arr;
 
-  set tagged [list]
-  while { [string length $line] } {
-           set tags [get_mushageColours arr $c]
-           set nextAnsi [string first \x1B $line]
-           if { $nextAnsi == -1 } {
-                # No more ANSI
-                foreach x [split $line ""] {
-                  lappend tagged [list $x $tags]
-                }
-                set line ""
-                break;
-              } else {
-                set curr [string range $line 0 $nextAnsi-1]
-                foreach x [split $curr ""] {
-                  lappend tagged [list $x $tags]
-                }
-                set nextM [string first "m" $line $nextAnsi]
-                if { $nextM == -1 } {
-                     # No 'm' to close ANSI - borked ANSI code received.
-                     # Process an ANSI Normal and abort the rest of the line.
-                     handleAnsiCodes arr $c 0;
-                     set line ""
-                     break;
-                   }
-                set codes [string range $line $nextAnsi+2 $nextM-1]
-                handleAnsiCodes arr $c [split $codes ";"]
-                set line [string range $line $nextM+1 end]
-              }
-         }
+	set tagged [list]
+	while { [string length $line] } {
+		set tags [get_mushageColours arr $c]
+		set nextAnsi [string first \x1B $line]
+		if { $nextAnsi == -1 } {
+			# No more ANSI
+			foreach x [split $line ""] {
+				lappend tagged [list $x $tags]
+			}
+			set line ""
+			break;
+		} else {
+			set curr [string range $line 0 $nextAnsi-1]
+			foreach x [split $curr ""] {
+				lappend tagged [list $x $tags]
+			}
+			set nextM [string first "m" $line $nextAnsi]
+			if { $nextM == -1 } {
+				# No 'm' to close ANSI - borked ANSI code received.
+				# Process an ANSI Normal and abort the rest of the line.
+				handleAnsiCodes arr $c 0;
+				set line ""
+				break;
+			}
+			set codes [string range $line $nextAnsi+2 $nextM-1]
+			handleAnsiCodes arr $c [split $codes ";"]
+			set line [string range $line $nextM+1 end]
+		}
+	}
 
-  return $tagged;
+	return $tagged;
 
 };# ::potato::parseANSI
 
 proc ::potato::flattenParsedANSI {tagged {extras ""}} {
 
-  set prevTags [list]
-  set flattened [list]
-  set curr ""
-  set count 0
-  foreach x $tagged {
-    incr count
+	set prevTags [list]
+	set flattened [list]
+	set curr ""
+	set count 0
+	foreach x $tagged {
+		incr count
 
-    set char [lindex $x 0]
-    set tags [concat [lindex $x 1 0] [lindex $x 1 1] [lindex $x 1 2]]
-    if { $tags == $prevTags } {
-         append curr $char
-       } else {
-         if { $curr ne "" || [llength $prevTags] } {
-              lappend flattened $curr [concat $prevTags $extras]
-            }
-         set curr $char
-         set prevTags $tags
-       }
-   }
-   if { $curr ne "" || [llength $prevTags] } {
-        lappend flattened $curr [concat $prevTags $extras]
-      }
+		set char [lindex $x 0]
+		set tags [concat [lindex $x 1 0] [lindex $x 1 1] [lindex $x 1 2]]
+		if { $tags == $prevTags } {
+			append curr $char
+		} else {
+			if { $curr ne "" || [llength $prevTags] } {
+				lappend flattened $curr [concat $prevTags $extras]
+			}
+			set curr $char
+			set prevTags $tags
+		}
+	}
+	if { $curr ne "" || [llength $prevTags] } {
+		lappend flattened $curr [concat $prevTags $extras]
+	}
 
-  return $flattened;
+	return $flattened;
 
 };# ::potato::flattenParsedANSI
 
@@ -3716,220 +3726,220 @@ proc ::potato::flattenParsedANSI {tagged {extras ""}} {
 #: desc parse $line and output it for connection $c, obeying triggers
 #: return nothing
 proc ::potato::get_mushageProcess {c line} {
-  variable conn;
-  variable world;
-  variable misc;
-  variable potato;
+	variable conn;
+	variable world;
+	variable misc;
+	variable potato;
 
-  set w $conn($c,world)
+	set w $conn($c,world)
 
-  if { $world($w,convertNonBreakingSpaces) } {
-       set line [string map [list [format %c 160] " "] $line]
-     }
+	if { $world($w,convertNonBreakingSpaces) } {
+		set line [string map [list [format %c 160] " "] $line]
+	}
 
-  # Handle beep chars
-  # '\a' is the beep char defined in PennMUSH in ansi.h. If a game has changed this, or another codebase uses something
-  # else, you can change it by.. hrm, nope, you're just screwed.
-  set beepCount [llength [lsearch -all [split $line ""] \a]]
-  if { $beepCount } {
-       # We have beeps. Figure out how many times to beep, and whether to display beeps.
-       if { !$world($w,beep,show) } {
-            regsub -all -- \a $line {} line;# remove beep chars from output
-          }
-        switch -exact $world($w,beep,sound) {
-          None {set beepCount 0}
-          Once {set beepCount 1}
-        }
-     }
+	# Handle beep chars
+	# '\a' is the beep char defined in PennMUSH in ansi.h. If a game has changed this, or another codebase uses something
+	# else, you can change it by.. hrm, nope, you're just screwed.
+	set beepCount [llength [lsearch -all [split $line ""] \a]]
+	if { $beepCount } {
+		# We have beeps. Figure out how many times to beep, and whether to display beeps.
+		if { !$world($w,beep,show) } {
+			regsub -all -- \a $line {} line;# remove beep chars from output
+		}
+		switch -exact $world($w,beep,sound) {
+			None {set beepCount 0}
+			Once {set beepCount 1}
+		}
+	}
 
-  # The format for $tagged is:
-  # [list "string" [list "fgTag" "bgTag" [list "other" "tags"]]]
-  set tagged [list]
-  # ANSI escape char is \x1B, char code 27
-  if { [regsub -all {\x1B.*?m} $line "" lineNoansi] } {
-       # We have ANSI
-       set toparse $line
-       set tagged [parseANSI $line conn $c]
-     } else {
-       # No ANSI
-       set tags [get_mushageColours conn $c]
-       foreach x [split $line ""] {
-         lappend tagged [list $x $tags]
-       }
-     }
+	# The format for $tagged is:
+	# [list "string" [list "fgTag" "bgTag" [list "other" "tags"]]]
+	set tagged [list]
+	# ANSI escape char is \x1B, char code 27
+	if { [regsub -all {\x1B.*?m} $line "" lineNoansi] } {
+		# We have ANSI
+		set toparse $line
+		set tagged [parseANSI $line conn $c]
+	} else {
+		# No ANSI
+		set tags [get_mushageColours conn $c]
+		foreach x [split $line ""] {
+			lappend tagged [list $x $tags]
+		}
+	}
 
-  set insertedAnything 0 ;# we only flash the window if we have
+	set insertedAnything 0 ;# we only flash the window if we have
 
-  eventsMatch $c tagged lineNoansi eventInfo
+	eventsMatch $c tagged lineNoansi eventInfo
 
-  set empty 0
-  if { $lineNoansi eq "" && $world($w,ignoreEmpty) } {
-       set empty 1
-     }
+	set empty 0
+	if { $lineNoansi eq "" && $world($w,ignoreEmpty) } {
+		set empty 1
+	}
 
-  if { !$eventInfo(matched) || !$eventInfo(log) } {
-       log $c $lineNoansi
-     }
+	if { !$eventInfo(matched) || !$eventInfo(log) } {
+		log $c $lineNoansi
+	}
 
-  set tagList [list margins]
-  set omit 0
-  set noActivity 0
-  if { $eventInfo(matched) } {
-       if { $eventInfo(omit) } {
-            set omit 1
-          }
-       if { $eventInfo(log) } {
-            lappend tagList nobacklog
-          }
-       if { $eventInfo(noActivity) } {
-            set noActivity 1
-          }
-     }
+	set tagList [list margins]
+	set omit 0
+	set noActivity 0
+	if { $eventInfo(matched) } {
+		if { $eventInfo(omit) } {
+			set omit 1
+		}
+		if { $eventInfo(log) } {
+			lappend tagList nobacklog
+		}
+		if { $eventInfo(noActivity) } {
+			set noActivity 1
+		}
+	}
 
-  # Check to see if the line is to be omitted due to a "/limit"
-  if { [llength $conn($c,limited)] } {
-       set limit [lindex $conn($c,limited) 3]
-       set case [lindex $conn($c,limited) 2]
-       switch -exact -- [lindex $conn($c,limited) 0] {
-         regexp {set limit [regexp {*}$case $limit $lineNoansi]}
-         literal {set limit [string equal {*}$case $limit $lineNoansi]}
-         glob {set limit [string match {*}$case $limit $lineNoansi]}
-       }
-       if { ![lindex $conn($c,limited) 1] } {
-            set limit [expr {!$limit}]
-          }
-       if { $limit } {
-            lappend tagList "limited"
-          }
-     } else {
-       set limit 0
-     }
+	# Check to see if the line is to be omitted due to a "/limit"
+	if { [llength $conn($c,limited)] } {
+		set limit [lindex $conn($c,limited) 3]
+		set case [lindex $conn($c,limited) 2]
+		switch -exact -- [lindex $conn($c,limited) 0] {
+			regexp {set limit [regexp {*}$case $limit $lineNoansi]}
+			literal {set limit [string equal {*}$case $limit $lineNoansi]}
+			glob {set limit [string match {*}$case $limit $lineNoansi]}
+		}
+		if { ![lindex $conn($c,limited) 1] } {
+			set limit [expr {!$limit}]
+		}
+		if { $limit } {
+			lappend tagList "limited"
+		}
+	} else {
+		set limit 0
+	}
 
 
-  # Flatten
-  set inserts [flattenParsedANSI $tagged $tagList]
-  if { [llength $inserts] % 2 } {
-       # Make sure $inserts always has an even number of elements.
-       # If the final element has no tags, add an empty element to
-       # signify that.
-       lappend inserts ""
-     }
+	# Flatten
+	set inserts [flattenParsedANSI $tagged $tagList]
+	if { [llength $inserts] % 2 } {
+		# Make sure $inserts always has an even number of elements.
+		# If the final element has no tags, add an empty element to
+		# signify that.
+		lappend inserts ""
+	}
 
-  if { !$empty && $world($w,ansi,force-normal) } {
-       # Force explicit ANSI-normal at the end of the line
-       handleAnsiCodes conn $c 0
-     }
+	if { !$empty && $world($w,ansi,force-normal) } {
+		# Force explicit ANSI-normal at the end of the line
+		handleAnsiCodes conn $c 0
+	}
 
-  set up [up]
-  if { !$empty && $world($w,act,newActNotice) && ([focus -displayof .] eq "" || $up != $c) && !$conn($c,idle) } {
-       set showNewAct 1
-     } else {
-       set showNewAct 0
-     }
-  if { !$empty && !$noActivity && $up != $c && $world($w,act,actInWorldNotice) } {
-       deleteSystemMessage $up actIn$c
-       outputSystem $up [T "----- Activity in %d. %s -----" $c $world($w,name)] [list center actIn$c]
-     }
-  set newActStr [T "--------- New Activity ---------"]
-  set t $conn($c,textWidget)
-  if { [llength [$t tag ranges prompt]] } {
-       set endPos prompt.first
-     } else {
-       set endPos end
-     }
-  set aE [atEnd $t]
-  if { !$empty && !$omit && !$limit && $showNewAct } {
-       if { $world($w,act,clearOldNewActNotices) && [llength [$t tag nextrange newact 1.0]] } {
-            $t delete {*}[$t tag ranges newact]
-          }
-       $t insert $endPos "\n" [list newact] $newActStr [list system center newact] [clock seconds] [list newact timestamp]
-       set insertedAnything 1
-     }
+	set up [up]
+	if { !$empty && $world($w,act,newActNotice) && ([focus -displayof .] eq "" || $up != $c) && !$conn($c,idle) } {
+		set showNewAct 1
+	} else {
+		set showNewAct 0
+	}
+	if { !$empty && !$noActivity && $up != $c && $world($w,act,actInWorldNotice) } {
+		deleteSystemMessage $up actIn$c
+		outputSystem $up [T "----- Activity in %d. %s -----" $c $world($w,name)] [list center actIn$c]
+	}
+	set newActStr [T "--------- New Activity ---------"]
+	set t $conn($c,textWidget)
+	if { [llength [$t tag ranges prompt]] } {
+		set endPos prompt.first
+	} else {
+		set endPos end
+	}
+	set aE [atEnd $t]
+	if { !$empty && !$omit && !$limit && $showNewAct } {
+		if { $world($w,act,clearOldNewActNotices) && [llength [$t tag nextrange newact 1.0]] } {
+			$t delete {*}[$t tag ranges newact]
+		}
+		$t insert $endPos "\n" [list newact] $newActStr [list system center newact] [clock seconds] [list newact timestamp]
+		set insertedAnything 1
+	}
 
-  if { !$empty && !$omit } {
-       $t insert $endPos "\n" [lindex [list "" limited] $limit] {*}$inserts
-       $t insert $endPos  [clock seconds] [list timestamp]
-       set insertedAnything 1
-       if { $aE } {
-            $t see end
-          }
-     }
+	if { !$empty && !$omit } {
+		$t insert $endPos "\n" [lindex [list "" limited] $limit] {*}$inserts
+		$t insert $endPos  [clock seconds] [list timestamp]
+		set insertedAnything 1
+		if { $aE } {
+			$t see end
+		}
+	}
 
-  if { !$empty && !$omit } {
-       set spawns $conn($c,spawnAll)
-     } else {
-       set spawns [list]
-     }
-  if { !$empty && $eventInfo(matched) && $eventInfo(spawnTo) ne "" } {
-       lappend spawns $eventInfo(spawnTo)
-     }
-  if { !$empty && [llength $spawns] } {
-       set limit [expr {$world($w,spawnLimit,on) ? $world($w,spawnLimit,to) : 0}]
-       set insertedAnything 1
-       foreach x [parseSpawnList $c $spawns] {
-         set sname [lindex $x 0]
-         set swidget [lindex $x 1]
-         set aE [atEnd $swidget]
-         if { [$swidget count -chars 1.0 3.0] != 1 } {
-              $swidget insert end "\n" "" {*}$inserts [clock seconds] [list timestamp]
-            } else {
-              $swidget insert end {*}$inserts [clock seconds] [list timestamp]
-            }
-         if { !$noActivity } {
-              ::skin::$potato(skin)::spawnUpdate $c $sname
-            }
-         if { $aE } {
-              $swidget see end
-            }
-         if { $limit } {
-              $swidget delete 1.0 end-${limit}lines
-            }
-       }
-     }
+	if { !$empty && !$omit } {
+		set spawns $conn($c,spawnAll)
+	} else {
+		set spawns [list]
+	}
+	if { !$empty && $eventInfo(matched) && $eventInfo(spawnTo) ne "" } {
+		lappend spawns $eventInfo(spawnTo)
+	}
+	if { !$empty && [llength $spawns] } {
+		set limit [expr {$world($w,spawnLimit,on) ? $world($w,spawnLimit,to) : 0}]
+		set insertedAnything 1
+		foreach x [parseSpawnList $c $spawns] {
+			set sname [lindex $x 0]
+			set swidget [lindex $x 1]
+			set aE [atEnd $swidget]
+			if { [$swidget count -chars 1.0 3.0] != 1 } {
+				$swidget insert end "\n" "" {*}$inserts [clock seconds] [list timestamp]
+			} else {
+				$swidget insert end {*}$inserts [clock seconds] [list timestamp]
+			}
+			if { !$noActivity } {
+				::skin::$potato(skin)::spawnUpdate $c $sname
+			}
+			if { $aE } {
+				$swidget see end
+			}
+			if { $limit } {
+				$swidget delete 1.0 end-${limit}lines
+			}
+		}
+	}
 
-  if { $eventInfo(matched) && [info exists eventInfo(send)] } {
-       foreach x $eventInfo(send) {
-         send_to_noparse $c $x
-       }
-     }
+	if { $eventInfo(matched) && [info exists eventInfo(send)] } {
+		foreach x $eventInfo(send) {
+			send_to_noparse $c $x
+		}
+	}
 
-  if { $eventInfo(matched) && [info exists eventInfo(input)] } {
-       foreach x $eventInfo(input) {
-         foreach {window text} $x {break}
-         if { $window == 3 } {
-              set window [connInfo $c inputFocus]
-            }
-         showInput $c $window $text 1
-         if { $window == 2 } {
-              # Make sure the second input window is visible, because we've just put stuff in it
-              set conn($c,twoInputWindows) 1
-              toggleInputWindows $c 0
-            }
-        }
-     }
+	if { $eventInfo(matched) && [info exists eventInfo(input)] } {
+		foreach x $eventInfo(input) {
+			foreach {window text} $x {break}
+			if { $window == 3 } {
+				set window [connInfo $c inputFocus]
+			}
+			showInput $c $window $text 1
+			if { $window == 2 } {
+				# Make sure the second input window is visible, because we've just put stuff in it
+				set conn($c,twoInputWindows) 1
+				toggleInputWindows $c 0
+			}
+		}
+	}
 
-  if { !$noActivity && $insertedAnything } {
-       if { $up != $c } {
-            idle $c
-          } elseif { $showNewAct } {
-            set conn($c,idle) 1
-          }
-       if { [focus -displayof .] eq "" } {
-            flash $w
-          }
-     }
+	if { !$noActivity && $insertedAnything } {
+		if { $up != $c } {
+			idle $c
+		} elseif { $showNewAct } {
+			set conn($c,idle) 1
+		}
+		if { [focus -displayof .] eq "" } {
+			flash $w
+		}
+	}
 
-  if { $insertedAnything && !$world($w,telnet,promptsPersist) } {
-       setPrompt $c ""
-     }
+	if { $insertedAnything && !$world($w,telnet,promptsPersist) } {
+		setPrompt $c ""
+	}
 
-  beepNumTimes $beepCount
+	beepNumTimes $beepCount
 
-  skinStatus $c
+	skinStatus $c
 
-  update idletasks
+	update idletasks
 
-  return;
+	return;
 
 };# ::potato::get_mushageProcess
 
@@ -3939,15 +3949,15 @@ proc ::potato::get_mushageProcess {c line} {
 #: return nothing
 proc ::potato::beepNumTimes {{num 1}} {
 
-  if { $num == 0 } {
-       return;
-     }
+	if { $num == 0 } {
+		return;
+	}
 
-  bell -displayof .
+	bell -displayof .
 
-  after 125 [list ::potato::beepNumTimes [expr {$num - 1}]];
+	after 125 [list ::potato::beepNumTimes [expr {$num - 1}]];
 
-  return;
+	return;
 
 };# ::potato::beepNumTimes
 
@@ -3957,29 +3967,29 @@ proc ::potato::beepNumTimes {{num 1}} {
 #: desc For each spawn window name given in $spawns, create a spawn window (if it doesn't exist and we have space), using the info from the connection $c
 #: return the list of text-widget and spawn names paths for all the spawn windows successfully created/existing
 proc ::potato::parseSpawnList {c spawns} {
-  variable conn;
+	variable conn;
 
-  if { ![llength $spawns] } {
-       return; # Optimize for cases when there is no spawning
-     }
+	if { ![llength $spawns] } {
+		return; # Optimize for cases when there is no spawning
+	}
 
-  set returnList [list]
+	set returnList [list]
 
-  # OK, first, let's go through and get a list of valid names
-  foreach x $spawns {
-    if { $x eq "" } {
-         # Ignore empty ones silently
-         continue;
-       }
-       set this [createSpawnWindow $c $x]
-       if { [llength $this] == 1 } {
-            outputSystem $c [T "Unable to create new spawn window \"%s\": %s" $x [lindex $this 0]]
-          } else {
-            lappend returnList $this
-          }
-  }
-  # Return the list of successful ones
-  return $returnList;
+	# OK, first, let's go through and get a list of valid names
+	foreach x $spawns {
+		if { $x eq "" } {
+			# Ignore empty ones silently
+			continue;
+		}
+		set this [createSpawnWindow $c $x]
+		if { [llength $this] == 1 } {
+			outputSystem $c [T "Unable to create new spawn window \"%s\": %s" $x [lindex $this 0]]
+		} else {
+			lappend returnList $this
+		}
+	}
+	# Return the list of successful ones
+	return $returnList;
 
 };# ::potato::parseSpawnList
 
@@ -3990,23 +4000,23 @@ proc ::potato::parseSpawnList {c spawns} {
 #: return empty string if invalid, lower-cased $name if valid
 proc ::potato::validSpawnName {name {onlyspawns 0}} {
 
-  if { ![string length [string trim $name]] } {
-       return "";
-     }
+	if { ![string length [string trim $name]] } {
+		return "";
+	}
 
-  set name [string tolower $name]
+	set name [string tolower $name]
 
-  if { [string index $name 0] eq "_" } {
-       if { $onlyspawns } {
-            return "";
-          }
-       if { $name ni [list "_main" "_all" "_none"] } {
-            return "";
-          }
-       return $name;
-     }
+	if { [string index $name 0] eq "_" } {
+		if { $onlyspawns } {
+			return "";
+		}
+		if { $name ni [list "_main" "_all" "_none"] } {
+			return "";
+		}
+		return $name;
+	}
 
-  return $name;
+	return $name;
 
 };# ::potato::validSpawnName
 
@@ -4016,9 +4026,9 @@ proc ::potato::validSpawnName {name {onlyspawns 0}} {
 #: desc Find the specified spawn for the connection
 #: return position of the spawn in the spawnlist for conn $c
 proc ::potato::findSpawn {c name} {
-  variable conn;
+	variable conn;
 
-  return [lsearch -exact -nocase -index 0 $conn($c,spawns) $name];
+	return [lsearch -exact -nocase -index 0 $conn($c,spawns) $name];
 
 };# ::potato::findSpawn
 
@@ -4028,25 +4038,25 @@ proc ::potato::findSpawn {c name} {
 #: desc Attempt to create a spawn window $name using settings from connection $c
 #: return empty string on success, error message on failure
 proc ::potato::createSpawnWindow {c name} {
-  variable misc;
-  variable conn;
-  variable potato;
+	variable misc;
+	variable conn;
+	variable potato;
 
-  if { [set name [validSpawnName $name 1]] eq "" } {
-       return [list [T "Invalid Spawn Name"]];
-     } elseif { [set find [findSpawn $c $name]] != -1 } {
-       # Already exists
-       return [lindex $conn($c,spawns) $find];
-     } elseif { $misc(maxSpawns) > 0 && [llength $conn($c,spawns)] >= $misc(maxSpawns) } {
-       return [list [T "Too many spawns"]];
-     } else {
-       # set it up.
-       set made [makeTextFrames $c]
-       set made [linsert $made 0 $name]
-       lappend conn($c,spawns) $made
-       ::skin::$potato(skin)::addSpawn $c $made
-       return $made;
-     }
+	if { [set name [validSpawnName $name 1]] eq "" } {
+		return [list [T "Invalid Spawn Name"]];
+	} elseif { [set find [findSpawn $c $name]] != -1 } {
+		# Already exists
+		return [lindex $conn($c,spawns) $find];
+	} elseif { $misc(maxSpawns) > 0 && [llength $conn($c,spawns)] >= $misc(maxSpawns) } {
+		return [list [T "Too many spawns"]];
+	} else {
+		# set it up.
+		set made [makeTextFrames $c]
+		set made [linsert $made 0 $name]
+		lappend conn($c,spawns) $made
+		::skin::$potato(skin)::addSpawn $c $made
+		return $made;
+	}
 
 };# ::potato::createSpawnWindow
 
@@ -4056,22 +4066,22 @@ proc ::potato::createSpawnWindow {c name} {
 #: desc Destroy the spawn window $name from connection $c. We also notify the skin of its impending destruction
 #: return nothing
 proc ::potato::destroySpawnWindow {c name} {
-  variable conn
-  variable potato;
+	variable conn
+	variable potato;
 
-  set pos [findSpawn $c $name]
-  if { $pos == -1 } {
-       return; # no such spawn
-     }
+	set pos [findSpawn $c $name]
+	if { $pos == -1 } {
+		return; # no such spawn
+	}
 
-  set spawn [lindex $conn($c,spawns) $pos]
-  set conn($c,spawns) [lreplace $conn($c,spawns) $pos $pos]
-  ::skin::$potato(skin)::delSpawn $c $name
-  foreach x [lrange $spawn 1 end] {
-    destroy $x
-  }
+	set spawn [lindex $conn($c,spawns) $pos]
+	set conn($c,spawns) [lreplace $conn($c,spawns) $pos $pos]
+	::skin::$potato(skin)::delSpawn $c $name
+	foreach x [lrange $spawn 1 end] {
+		destroy $x
+	}
 
-  return;
+	return;
 
 };# ::potato::destroySpawnWindow
 
@@ -4081,11 +4091,11 @@ proc ::potato::destroySpawnWindow {c name} {
 #: return 1 or 0
 proc ::potato::atEnd {t} {
 
-  set yview [$t yview]
-  if { [lindex $yview 1] == 1.0 } {
-       return 1;
-     }
-  return 0;
+	set yview [$t yview]
+	if { [lindex $yview 1] == 1.0 } {
+		return 1;
+	}
+	return 0;
 
 };# ::potato::atEnd
 
@@ -4096,96 +4106,96 @@ proc ::potato::atEnd {t} {
 #: desc adjust the conn($c,ansi,*) variables to change the colours for ansi code $code
 #: return nothing
 proc ::potato::handleAnsiCodes {_arr c codes} {
-  upvar 1 $_arr arr;
+	upvar 1 $_arr arr;
 
-  set xtermStarts [list 38 48]
-  set ansiColors [list x r g y b m c w]
-  set highlightable [concat $ansiColors [list fg bg]]
-  while { [llength $codes] } {
-    set curr [lindex $codes 0]
-    set codes [lrange $codes 1 end]
-    # We have to use a while loop, not a foreach, because XTerm/FANSI codes eat more than one
-    # list element. Boo.
+	set xtermStarts [list 38 48]
+	set ansiColors [list x r g y b m c w]
+	set highlightable [concat $ansiColors [list fg bg]]
+	while { [llength $codes] } {
+		set curr [lindex $codes 0]
+		set codes [lrange $codes 1 end]
+		# We have to use a while loop, not a foreach, because XTerm/FANSI codes eat more than one
+		# list element. Boo.
 
-    switch -exact -- $curr {
-       0 { # ANSI Normal
-          set arr($c,ansi,fg) fg
-          set arr($c,ansi,bg) bg
-          set arr($c,ansi,highlight) 0
-          set arr($c,ansi,underline) 0
-          set arr($c,ansi,flash) 0
-          set arr($c,ansi,inverse) 0
-         }
-       1 { # ANSI Highlight
-           if { !$arr($c,ansi,highlight) } {
-                set arr($c,ansi,highlight) 1
-                # Only add "h" if we have a normal ANSI (not XTerm/FANSI) color or normal fg/bg
-                if { $arr($c,ansi,fg) in $highlightable } {
-                     append arr($c,ansi,fg) h
-                   }
-                if { $arr($c,ansi,bg) in $highlightable } {
-                     append arr($c,ansi,bg) h
-                   }
-              }
-         }
-       4 { # ANSI Underline
-           set arr($c,ansi,underline) 1
-         }
-       5 { # ANSI Flash
-           set arr($c,ansi,flash) 1
-         }
-       7 { # ANSI Inverse
-           set arr($c,ansi,inverse) 1
-         }
-      30 -
-      31 -
-      32 -
-      33 -
-      34 -
-      35 -
-      36 -
-      37 {# ANSI foreground color
-          if { $arr($c,ansi,highlight) } {
-               set arr($c,ansi,fg) "[lindex $ansiColors [expr {$curr - 30}]]h"
-             } else {
-               set arr($c,ansi,fg) [lindex $ansiColors [expr {$curr - 30}]]
-             }
-         }
-      40 -
-      41 -
-      42 -
-      43 -
-      44 -
-      45 -
-      46 -
-      47 {# ANSI background color
-          if { $arr($c,ansi,highlight) } {
-               set arr($c,ansi,bg) "[lindex $ansiColors [expr {$curr - 40}]]h"
-             } else {
-               set arr($c,ansi,bg) [lindex $ansiColors [expr {$curr - 40}]]
-             }
-         }
-      38 -
-      48 {# XTerm color code (used by FANSI)
-          if { [llength $codes] < 2 || [lindex $codes 0] ne "5" } {
-               return;# FANSI codes are 38;5;<fgcolor> or 48;5;<bgcolor>. Abort on invalid code
-             }
-          set xterm [lindex $codes 1]
-          set codes [lrange $codes 2 end]
-          if { ![string is integer -strict $xterm] || $xterm < 0 || $xterm > 255 } {
-               return;# Invalid XTerm color
-             }
-          if { $curr == 38 } {
-               set which fg
-             } else {
-               set which bg
-             }
-          set arr($c,ansi,$which) "xterm$xterm"
-         }
-    };# switch
-  };# while
+		switch -exact -- $curr {
+			0 { # ANSI Normal
+				set arr($c,ansi,fg) fg
+				set arr($c,ansi,bg) bg
+				set arr($c,ansi,highlight) 0
+				set arr($c,ansi,underline) 0
+				set arr($c,ansi,flash) 0
+				set arr($c,ansi,inverse) 0
+			}
+			1 { # ANSI Highlight
+				if { !$arr($c,ansi,highlight) } {
+					set arr($c,ansi,highlight) 1
+					# Only add "h" if we have a normal ANSI (not XTerm/FANSI) color or normal fg/bg
+					if { $arr($c,ansi,fg) in $highlightable } {
+						append arr($c,ansi,fg) h
+					}
+					if { $arr($c,ansi,bg) in $highlightable } {
+						append arr($c,ansi,bg) h
+					}
+				}
+			}
+			4 { # ANSI Underline
+				set arr($c,ansi,underline) 1
+			}
+			5 { # ANSI Flash
+				set arr($c,ansi,flash) 1
+			}
+			7 { # ANSI Inverse
+				set arr($c,ansi,inverse) 1
+			}
+			30 -
+			31 -
+			32 -
+			33 -
+			34 -
+			35 -
+			36 -
+			37 { # ANSI foreground color
+				if { $arr($c,ansi,highlight) } {
+					set arr($c,ansi,fg) "[lindex $ansiColors [expr {$curr - 30}]]h"
+				} else {
+					set arr($c,ansi,fg) [lindex $ansiColors [expr {$curr - 30}]]
+				}
+			}
+			40 -
+			41 -
+			42 -
+			43 -
+			44 -
+			45 -
+			46 -
+			47 { # ANSI background color
+				if { $arr($c,ansi,highlight) } {
+					set arr($c,ansi,bg) "[lindex $ansiColors [expr {$curr - 40}]]h"
+				} else {
+					set arr($c,ansi,bg) [lindex $ansiColors [expr {$curr - 40}]]
+				}
+			}
+			38 -
+			48 { # XTerm color code (used by FANSI)
+				if { [llength $codes] < 2 || [lindex $codes 0] ne "5" } {
+					return;# FANSI codes are 38;5;<fgcolor> or 48;5;<bgcolor>. Abort on invalid code
+					}
+				set xterm [lindex $codes 1]
+				set codes [lrange $codes 2 end]
+				if { ![string is integer -strict $xterm] || $xterm < 0 || $xterm > 255 } {
+					return;# Invalid XTerm color
+				}
+				if { $curr == 38 } {
+					set which fg
+				} else {
+					set which bg
+				}
+				set arr($c,ansi,$which) "xterm$xterm"
+			}
+		};# switch
+	};# while
 
-  return;
+	return;
 
 };# ::potato::handleAnsiCodes
 
@@ -4197,49 +4207,49 @@ proc ::potato::handleAnsiCodes {_arr c codes} {
 #: and other tags are the tags for applying ANSI underline, flash, etc.
 #: return [list] of text widget tags
 proc ::potato::get_mushageColours {_arr c} {
-  upvar 1 $_arr arr;
-  variable conn;
-  variable world;
+	upvar 1 $_arr arr;
+	variable conn;
+	variable world;
 
-  set w $conn($c,world)
-  set downgrade [expr {!$world($w,ansi,xterm)}]
+	set w $conn($c,world)
+	set downgrade [expr {!$world($w,ansi,xterm)}]
 
-  set fg $arr($c,ansi,fg)
-  set bg $arr($c,ansi,bg)
-  set other [list]
-  if { $arr($c,ansi,inverse) } {
-       # Invert colors
-       foreach [list fg bg] [list $bg $fg] {break;}
-     }
+	set fg $arr($c,ansi,fg)
+	set bg $arr($c,ansi,bg)
+	set other [list]
+	if { $arr($c,ansi,inverse) } {
+		# Invert colors
+		foreach [list fg bg] [list $bg $fg] {break;}
+	}
 
-  if { $fg in [list "bg" "bgh"] } {
-       set fg ANSI_fg_bg
-     } elseif { $fg in [list "" "fg"] } {
-       set fg ""
-     } else {
-       if { $downgrade } {
-            set fg [downgradeXTERM $fg 0]
-          }
-       set fg ANSI_fg_$fg
-     }
-  if { $bg in [list "bg" "bgh" ""] } {
-       # Nothing. Normal BG is the default.
-       set bg ""
-     } else {
-       if { $downgrade } {
-            set bg [downgradeXTERM $bg 1]
-          }
-       set bg ANSI_bg_$bg
-     }
+	if { $fg in [list "bg" "bgh"] } {
+		set fg ANSI_fg_bg
+	} elseif { $fg in [list "" "fg"] } {
+		set fg ""
+	} else {
+		if { $downgrade } {
+			set fg [downgradeXTERM $fg 0]
+		}
+		set fg ANSI_fg_$fg
+	}
+	if { $bg in [list "bg" "bgh" ""] } {
+		# Nothing. Normal BG is the default.
+		set bg ""
+	} else {
+		if { $downgrade } {
+			set bg [downgradeXTERM $bg 1]
+		}
+		set bg ANSI_bg_$bg
+	}
 
-  if { $arr($c,ansi,flash) } {
-       lappend other ANSI_flash
-     }
-  if { $arr($c,ansi,underline) } {
-       lappend other ANSI_underline
-     }
+	if { $arr($c,ansi,flash) } {
+		lappend other ANSI_flash
+	}
+	if { $arr($c,ansi,underline) } {
+		lappend other ANSI_underline
+	}
 
-  return [list $fg $bg $other];
+	return [list $fg $bg $other];
 
 };# ::potato::get_mushageColours
 
@@ -4251,35 +4261,37 @@ proc ::potato::get_mushageColours {_arr c} {
 #: return downgraded color
 proc ::potato::downgradeXTERM {col bg} {
 
-  if { [string range $col 0 4] ne "xterm" } {
-       return $col;# not xterm anyway
-     }
+	if { [string range $col 0 4] ne "xterm" } {
+		return $col;# not xterm anyway
+	}
 
-  set col [string range $col 5 end]
+	set col [string range $col 5 end]
 
-  set downgrades [list x r g y b m c w xh rh gh yh bh mh ch wh \
-                       x b b b bh bh g c b bh bh bh gh g c bh \
-                       bh bh gh gh ch ch bh bh gh gh gh ch ch ch gh gh \
-                       gh ch ch ch r m m bh bh bh g g c bh bh bh \
-                       g g g c c bh gh g g c ch ch gh gh gh ch \
-                       ch ch gh gh gh gh ch ch r r m m mh mh g r \
-                       m m mh mh g g g c bh bh g g g c ch ch \
-                       gh gh gh gh ch ch gh gh gh gh wh wh r m m mh \
-                       mh mh rh rh rh mh mh mh y y mh mh mh mh y y \
-                       y mh mh mh yh yh yh wh wh wh yh yh yh yh wh wh \
-                       r rh mh mh mh mh rh rh rh mh mh mh y y y mh \
-                       mh mh y y yh mh mh mh y y yh wh wh wh yh yh \
-                       yh wh wh wh rh rh rh mh mh mh rh rh rh mh mh mh \
-                       rh rh mh mh mh mh yh yh wh wh wh wh yh yh yh wh \
-                       wh wh yh yh yh yh wh wh x x xh xh xh xh xh xh \
-                       xh w w w w w w w wh wh wh wh wh wh wh wh]
+	set downgrades [list \
+		x r g y b m c w xh rh gh yh bh mh ch wh \
+		x b b b bh bh g c b bh bh bh gh g c bh \
+		bh bh gh gh ch ch bh bh gh gh gh ch ch ch gh gh \
+		gh ch ch ch r m m bh bh bh g g c bh bh bh \
+		g g g c c bh gh g g c ch ch gh gh gh ch \
+		ch ch gh gh gh gh ch ch r r m m mh mh g r \
+		m m mh mh g g g c bh bh g g g c ch ch \
+		gh gh gh gh ch ch gh gh gh gh wh wh r m m mh \
+		mh mh rh rh rh mh mh mh y y mh mh mh mh y y \
+		y mh mh mh yh yh yh wh wh wh yh yh yh yh wh wh \
+		r rh mh mh mh mh rh rh rh mh mh mh y y y mh \
+		mh mh y y yh mh mh mh y y yh wh wh wh yh yh \
+		yh wh wh wh rh rh rh mh mh mh rh rh rh mh mh mh \
+		rh rh mh mh mh mh yh yh wh wh wh wh yh yh yh wh \
+		wh wh yh yh yh yh wh wh x x xh xh xh xh xh xh \
+		xh w w w w w w w wh wh wh wh wh wh wh wh \
+	]
 
-  set col [lindex $downgrades $col]
-  if { $bg } {
-       set col [string index $col 0]
-     }
+	set col [lindex $downgrades $col]
+	if { $bg } {
+		set col [string index $col 0]
+	}
 
-  return $col;
+	return $col;
 
 };# ::potato::downgradeXTERM
 
@@ -4289,22 +4301,22 @@ proc ::potato::downgradeXTERM {col bg} {
 #: desc Return a list of all the elements in the array $_arrName in the caller's space which match the {^$prefix,[^,]+$}. If none, check for unique ^$prefix,[^,]+ prefixes to keys.
 #: return List of matching array elements
 proc ::potato::arraySubelem {_arrName prefix} {
-  upvar 1 $_arrName arrName
+	upvar 1 $_arrName arrName
 
-  set first [array names arrName -regexp "^[regsub -all {[^[:alnum:]]} $prefix {\\&}],\[^,\]+$"]
-  if { [llength $first] } {
-       return $first;
-     }
-  set ret [list]
-  set len [string length $prefix]
-  incr len
-  foreach x [array names arrName -regexp "^[regsub -all {[^[:alnum:]]} $prefix {\\&}],\[^,\]+,.*$"] {
-    set str [string range $x 0 [string first "," $x $len]-1]
-    if { $str ne "" && $str ni $ret } {
-         lappend ret $str
-       }
-  }
-  return $ret;
+	set first [array names arrName -regexp "^[regsub -all {[^[:alnum:]]} $prefix {\\&}],\[^,\]+$"]
+	if { [llength $first] } {
+		return $first;
+	}
+	set ret [list]
+	set len [string length $prefix]
+	incr len
+	foreach x [array names arrName -regexp "^[regsub -all {[^[:alnum:]]} $prefix {\\&}],\[^,\]+,.*$"] {
+		set str [string range $x 0 [string first "," $x $len]-1]
+		if { $str ne "" && $str ni $ret } {
+			lappend ret $str
+		}
+	}
+	return $ret;
 
 };# ::potato::arraySubelem
 
@@ -4315,18 +4327,18 @@ proc ::potato::arraySubelem {_arrName prefix} {
 #: return Modified list
 proc ::potato::removePrefix {list prefix} {
 
-  if { ![llength $list] } {
-       return;
-     }
+	if { ![llength $list] } {
+		return;
+	}
 
-  set return [list]
-  set length [string length $prefix]
-  incr length
-  foreach x $list {
-     lappend return [string range $x $length end]
-  }
+	set return [list]
+	set length [string length $prefix]
+	incr length
+	foreach x $list {
+		lappend return [string range $x $length end]
+	}
 
-  return $return;
+	return $return;
 
 };# ::potato::removePrefix
 
@@ -4335,20 +4347,20 @@ proc ::potato::removePrefix {list prefix} {
 #: desc if auto reconnect is on for this connection, set up the reconnection.
 #: return nothing
 proc ::potato::boot_reconnect {c} {
-  variable conn;
-  variable world;
+	variable conn;
+	variable world;
 
-  after cancel conn($c,reconnectId)
-  set w $conn($c,world)
-  if { $world($w,autoreconnect) && $world($w,autoreconnect,time) > 0 } {
-       set conn($c,reconnectId) [after [expr { $world($w,autoreconnect,time) * 1000}] [list ::potato::reconnect $c]]
-       outputSystem $c [T "Auto-reconnect in %s..." [timeFmt $world($w,autoreconnect,time) 1]]
-     } else {
-       set conn($c,reconnectId) ""
-     }
+	after cancel conn($c,reconnectId)
+	set w $conn($c,world)
+	if { $world($w,autoreconnect) && $world($w,autoreconnect,time) > 0 } {
+		set conn($c,reconnectId) [after [expr { $world($w,autoreconnect,time) * 1000}] [list ::potato::reconnect $c]]
+		outputSystem $c [T "Auto-reconnect in %s..." [timeFmt $world($w,autoreconnect,time) 1]]
+	} else {
+		set conn($c,reconnectId) ""
+	}
 
-  skinStatus $c
-  return;
+	skinStatus $c
+	return;
 
 };# ::potato::boot_reconnect
 
@@ -4357,15 +4369,15 @@ proc ::potato::boot_reconnect {c} {
 #: desc an auto-reconnect has been scheduled for connection $c; cancel it.
 #: return nothing
 proc ::potato::cancel_reconnect {c} {
-  variable conn;
+	variable conn;
 
-  if { $conn($c,reconnectId) ne "" } {
-       after cancel $conn($c,reconnectId)
-       set conn($c,reconnectId) ""
-       outputSystem $c [T "Auto-reconnect cancelled."]
-     }
+	if { $conn($c,reconnectId) ne "" } {
+		after cancel $conn($c,reconnectId)
+		set conn($c,reconnectId) ""
+		outputSystem $c [T "Auto-reconnect cancelled."]
+	}
 
-  return;
+	return;
 
 };# cancel_reconnect
 
@@ -4376,50 +4388,50 @@ proc ::potato::cancel_reconnect {c} {
 #: desc Show a system message for connection $c (possibly printing to it's spawn windows, too, dependent on the user setting)
 #: return nothing
 proc ::potato::outputSystem {c msg {tags ""}} {
-  variable conn;
-  variable world;
+	variable conn;
+	variable world;
 
-  if { $c == 0 || ![info exists conn($c,textWidget)] || ![winfo exists $conn($c,textWidget)] } {
-       return;
-     }
-  set alltags [concat $tags [list system margins]]
-  set aE [atEnd $conn($c,textWidget)]
-  set empty [expr {[$conn($c,textWidget) count -chars 1.0 2.0] == 1}]
+	if { $c == 0 || ![info exists conn($c,textWidget)] || ![winfo exists $conn($c,textWidget)] } {
+		return;
+	}
+	set alltags [concat $tags [list system margins]]
+	set aE [atEnd $conn($c,textWidget)]
+	set empty [expr {[$conn($c,textWidget) count -chars 1.0 2.0] == 1}]
 
-  if { [llength [$conn($c,textWidget) tag ranges prompt]] } {
-       set endPos "prompt.first"
-     } else {
-       set endPos "end"
-     }
-  if { [$conn($c,textWidget) count -chars 1.0 3.0] > 1 } {
-       set inserts [list "\n" $tags $msg $alltags [clock seconds] [concat $tags timestamp]]
-     } else {
-       set inserts [list $msg $alltags [clock seconds] [concat $tags timestamp]]
-     }
-  $conn($c,textWidget) insert $endPos {*}$inserts
-  if { $aE } {
-       $conn($c,textWidget) see end
-     }
+	if { [llength [$conn($c,textWidget) tag ranges prompt]] } {
+		set endPos "prompt.first"
+	} else {
+		set endPos "end"
+	}
+	if { [$conn($c,textWidget) count -chars 1.0 3.0] > 1 } {
+		set inserts [list "\n" $tags $msg $alltags [clock seconds] [concat $tags timestamp]]
+	} else {
+		set inserts [list $msg $alltags [clock seconds] [concat $tags timestamp]]
+	}
+	$conn($c,textWidget) insert $endPos {*}$inserts
+	if { $aE } {
+		$conn($c,textWidget) see end
+	}
 
-  if { $world($conn($c,world),spawnSystem) } {
-       foreach x $conn($c,spawns) {
-         set t [lindex $x 1]
-          set aE [atEnd $t]
-          if { [$t count -chars 1.0 3.0] > 1 } {
-               set newline "\n"
-             } else {
-               set newline ""
-             }
-          $t insert end $newline $tags $msg $alltags [clock seconds] [concat timestamp $tags]
-          if { $aE } {
-               $t see end
-             }
-       }
-     }
+	if { $world($conn($c,world),spawnSystem) } {
+		foreach x $conn($c,spawns) {
+			set t [lindex $x 1]
+			set aE [atEnd $t]
+			if { [$t count -chars 1.0 3.0] > 1 } {
+				set newline "\n"
+			} else {
+				set newline ""
+			}
+			$t insert end $newline $tags $msg $alltags [clock seconds] [concat timestamp $tags]
+			if { $aE } {
+				$t see end
+			}
+		}
+	}
 
-  update idletasks
+	update idletasks
 
-  return;
+	return;
 
 };# ::potato::outputSystem
 
@@ -4429,15 +4441,15 @@ proc ::potato::outputSystem {c msg {tags ""}} {
 #: desc If conn $c is set to display verbose messages, output $msg as a system message
 #: return 1 if message was displayed, 0 if not
 proc ::potato::verbose {c msg} {
-  variable world;
-  variable conn;
+	variable world;
+	variable conn;
 
-  if { $c < 1 || !$world($conn($c,world),verbose) } {
-       return 0;
-     }
+	if { $c < 1 || !$world($conn($c,world),verbose) } {
+		return 0;
+	}
 
-  ::potato::outputSystem $c $msg
-  return 1;
+	::potato::outputSystem $c $msg
+	return 1;
 
 };# ::potato::verbose
 
@@ -4447,20 +4459,20 @@ proc ::potato::verbose {c msg} {
 #: desc For connection $c, delete all messages with the tag $tag, including in spawn windows if system messages are spawned
 #: return nothing
 proc ::potato::deleteSystemMessage {c tag} {
-  variable conn;
-  variable world;
+	variable conn;
+	variable world;
 
-  if { ![info exists conn($c,textWidget)] || ![winfo exists $conn($c,textWidget)] } {
-       return;
-     }
-  catch {$conn($c,textWidget) delete {*}[$conn($c,textWidget) tag ranges $tag]}
-  if { $world($conn($c,world),spawnSystem) } {
-       foreach x $conn($c,spawns) {
-          catch {[lindex $x 1] delete {*}[[lindex $x 1] tag ranges $tag]}
-       }
-     }
+	if { ![info exists conn($c,textWidget)] || ![winfo exists $conn($c,textWidget)] } {
+		return;
+	}
+	catch {$conn($c,textWidget) delete {*}[$conn($c,textWidget) tag ranges $tag]}
+	if { $world($conn($c,world),spawnSystem) } {
+		foreach x $conn($c,spawns) {
+			catch {[lindex $x 1] delete {*}[[lindex $x 1] tag ranges $tag]}
+		}
+	}
 
-  return;
+	return;
 
 };# ::potato::deleteSystemMessage
 
@@ -4469,34 +4481,34 @@ proc ::potato::deleteSystemMessage {c tag} {
 #: desc go to the next (1) or previous (-1) connection, or do nothing if there is only one connection
 #: return nothing
 proc ::potato::toggleConn {dir} {
-  variable conn;
+	variable conn;
 
-  set up [up]
+	set up [up]
 
-  if { $up == 0 } {
-       return;
-     }
+	if { $up == 0 } {
+		return;
+	}
 
-  set list [connIDs]
-  if { [llength $list] < 2 } {
-       return;
-     }
-  set pos [lsearch -exact -integer -sorted $list $up]
-  if { $pos == -1 } {
-       return; # should never happen
-     }
+	set list [connIDs]
+	if { [llength $list] < 2 } {
+		return;
+	}
+	set pos [lsearch -exact -integer -sorted $list $up]
+	if { $pos == -1 } {
+		return; # should never happen
+	}
 
-  if { $pos == 0 && $dir == -1 } {
-       showConn [lindex $list end]
-     } elseif { $pos == [expr {[llength $list]-1}] && $dir == 1 } {
-       showConn [lindex $list 0]
-     } else {
-       incr pos $dir
-       showConn [lindex $list $pos]
-     }
+	if { $pos == 0 && $dir == -1 } {
+		showConn [lindex $list end]
+	} elseif { $pos == [expr {[llength $list]-1}] && $dir == 1 } {
+		showConn [lindex $list 0]
+	} else {
+		incr pos $dir
+		showConn [lindex $list $pos]
+	}
 
-  tooltipLeave .
-  return;
+	tooltipLeave .
+	return;
 
 };# ::potato::toggleConn
 
@@ -4507,43 +4519,43 @@ proc ::potato::toggleConn {dir} {
 #: desc with new activity (and setting the idle var for the connection), and so on (meaning: maybe more?).
 #: return nothing
 proc ::potato::showConn {c {main 1}} {
-  variable potato;
-  variable world;
-  variable conn;
-  variable menu;
-  variable misc;
+	variable potato;
+	variable world;
+	variable conn;
+	variable menu;
+	variable misc;
 
-  if { $c eq "" || ![info exists conn($c,world)] } {
-       bell -displayof .
-       return;
-     }
+	if { $c eq "" || ![info exists conn($c,world)] } {
+		bell -displayof .
+		return;
+	}
 
-  set prevUp [up]
-  if { $prevUp ne "" } {
-       ::skin::$potato(skin)::unshow $prevUp
-     }
+	set prevUp [up]
+	if { $prevUp ne "" } {
+		::skin::$potato(skin)::unshow $prevUp
+	}
 
-  set state [expr {$c != 0 && $conn($c,connected) == 1}]
+	set state [expr {$c != 0 && $conn($c,connected) == 1}]
 
-  set potato(up) $c
-  ::skin::$potato(skin)::show $c
-  setAppTitle
-  skinStatus $c
-  if { $prevUp ne "" } {
-       unidle $c
-       skinStatus $prevUp
-     }
-  if { $misc(toggleShowMainWindow) && $main } {
-       showSpawn $c _main
-     }
-  if { $c < 1 } {
-       connZero
-     }
-  ::skin::$potato(skin)::inputWindows $c [expr {$conn($c,twoInputWindows) + 1}]
+	set potato(up) $c
+	::skin::$potato(skin)::show $c
+	setAppTitle
+	skinStatus $c
+	if { $prevUp ne "" } {
+		unidle $c
+		skinStatus $prevUp
+	}
+	if { $misc(toggleShowMainWindow) && $main } {
+		showSpawn $c _main
+	}
+	if { $c < 1 } {
+		connZero
+	}
+	::skin::$potato(skin)::inputWindows $c [expr {$conn($c,twoInputWindows) + 1}]
 
-  connMaybeNAWS $c
+	connMaybeNAWS $c
 
-  return;
+	return;
 
 };# ::potato::showConn
 
@@ -4553,25 +4565,25 @@ proc ::potato::showConn {c {main 1}} {
 #: desc active, and has negotiated NAWS via telnet, send the window size if it's changed.
 #: return nothing
 proc ::potato::connMaybeNAWS {{c ""}} {
-  variable conn;
+	variable conn;
 
-  if { $c eq "" } {
-       set c [up]
-     }
+	if { $c eq "" } {
+		set c [up]
+	}
 
-  if { $c != 0 && [info exists conn($c,textWidget)] && \
-       [winfo exists $conn($c,textWidget)] && \
-       [winfo viewable $conn($c,textWidget)] && \
-       ![catch {countWindowHeight $conn($c,textWidget)} height] && \
-       $height > 0 } {
-       set oldheight $conn($c,nawsheight)
-       set conn($c,nawsheight) $height
-       if { $conn($c,connected) == 1 && [hasProtocol $c telnet,NAWS] } {
-            ::potato::telnet::do_NAWS $c $height
-          }
-     }
+	if { $c != 0 && [info exists conn($c,textWidget)] && \
+		[winfo exists $conn($c,textWidget)] && \
+		[winfo viewable $conn($c,textWidget)] && \
+		![catch {countWindowHeight $conn($c,textWidget)} height] && \
+		$height > 0 } {
+		set oldheight $conn($c,nawsheight)
+		set conn($c,nawsheight) $height
+		if { $conn($c,connected) == 1 && [hasProtocol $c telnet,NAWS] } {
+			::potato::telnet::do_NAWS $c $height
+		}
+	}
 
-  return;
+	return;
 
 };# ::potato::connMaybeNAWS
 
@@ -4581,11 +4593,11 @@ proc ::potato::connMaybeNAWS {{c ""}} {
 #: return number of lines
 proc ::potato::countWindowHeight {win} {
 
-  update
-  set winheight [winfo height $win]
-  set metrics [font metrics [$win cget -font]]
-  set lineheight [dict get $metrics -linespace]
-  return [expr {int($winheight / $lineheight)}];
+	update
+	set winheight [winfo height $win]
+	set metrics [font metrics [$win cget -font]]
+	set lineheight [dict get $metrics -linespace]
+	return [expr {int($winheight / $lineheight)}];
 
 };# ::potato::countWindowHeight
 
@@ -4595,49 +4607,49 @@ proc ::potato::countWindowHeight {win} {
 #: desc Assuming it exists, switch to connection $c and show it's spawn window $spawn. Otherwise, beep.
 #: return nothing
 proc ::potato::showSpawn {c spawn} {
-  variable conn;
-  variable potato;
+	variable conn;
+	variable potato;
 
-  if { $c eq "" } {
-       set c [up]
-     }
+	if { $c eq "" } {
+		set c [up]
+	}
 
-  if { [lsearch -nocase -exact [list "" "_main" {Main Window}] $spawn] > -1 } {
-       # Actually requesting main window, not a spawn
-       showConn $c 0
-       ::skin::$potato(skin)::showSpawn $c ""
-       return;
-     }
+	if { [lsearch -nocase -exact [list "" "_main" {Main Window}] $spawn] > -1 } {
+		# Actually requesting main window, not a spawn
+		showConn $c 0
+		::skin::$potato(skin)::showSpawn $c ""
+		return;
+	}
 
-  if { $c == 0 } {
-       # Impossible to have spawns
-       bell -displayof .
-       return;
-     }
+	if { $c == 0 } {
+		# Impossible to have spawns
+		bell -displayof .
+		return;
+	}
 
-  if { ![info exists conn($c,id)] } {
-       # No such connection
-       bell -displayof .
-       return;
-     }
+	if { ![info exists conn($c,id)] } {
+		# No such connection
+		bell -displayof .
+		return;
+	}
 
-  # We have two choices here:
-  # 1) Show connection $c, then request that spawn $spawn be shown. If $spawn is not an existing spawn,
-  #    we'll end up viewing connection $c's main window.
-  # 2) Check to see if spawn $spawn exists in conn $c, and only show the conn/request the spawn be shown
-  #    if it does. If the spawn does not exist, we keep viewing whichever window is currently up.
-  # Both require confirmation that conn $c exists before they do anything (else buggy things happen).
-  # For now, favour option 2.
+	# We have two choices here:
+	# 1) Show connection $c, then request that spawn $spawn be shown. If $spawn is not an existing spawn,
+	#    we'll end up viewing connection $c's main window.
+	# 2) Check to see if spawn $spawn exists in conn $c, and only show the conn/request the spawn be shown
+	#    if it does. If the spawn does not exist, we keep viewing whichever window is currently up.
+	# Both require confirmation that conn $c exists before they do anything (else buggy things happen).
+	# For now, favour option 2.
 
-  if { [findSpawn $c $spawn] == -1 } {
-       bell -displayof .
-       return;
-     } else {
-       showConn $c
-       ::skin::$potato(skin)::showSpawn $c $spawn
-    }
+	if { [findSpawn $c $spawn] == -1 } {
+		bell -displayof .
+		return;
+	} else {
+		showConn $c
+		::skin::$potato(skin)::showSpawn $c $spawn
+	}
 
-  return;
+	return;
 
 };# ::potato::showSpawn
 
@@ -4645,18 +4657,18 @@ proc ::potato::showSpawn {c spawn} {
 #: desc Set the title for the main window .
 #: return nothing
 proc ::potato::setAppTitle {} {
-  variable potato;
-  variable world;
-  variable conn;
+	variable potato;
+	variable world;
+	variable conn;
 
-  set c [up]
-  if { $c eq "" || $c == 0 } {
-       wm title . [T "%s Version %s" $potato(name) $potato(version)]
-     } else {
-       wm title . "$potato(name) - \[$c. $world($conn($c,world),name)\]"
-     }
+	set c [up]
+	if { $c eq "" || $c == 0 } {
+		wm title . [T "%s Version %s" $potato(name) $potato(version)]
+	} else {
+		wm title . "$potato(name) - \[$c. $world($conn($c,world),name)\]"
+	}
 
-  return;
+	return;
 
 };# ::potato::setAppTitle
 
@@ -4665,30 +4677,30 @@ proc ::potato::setAppTitle {} {
 #: desc Do everything necessary to show the skin $skin. The previous skin, if any, is already unpacked.
 #: return nothing
 proc ::potato::showSkin {skin} {
-  variable menu;
-  variable potato;
-  variable running;
+	variable menu;
+	variable potato;
+	variable running;
 
-  ::skin::${skin}::packskin
-  set potato(skin) $skin
-  set potato(skin,version) [set ::skin::${skin}::skin(version)]
+	::skin::${skin}::packskin
+	set potato(skin) $skin
+	set potato(skin,version) [set ::skin::${skin}::skin(version)]
 
-  if { $running } {
-       set conns [concat 0 [connIDs]]
-       foreach c $conns {
-         ::skin::${skin}::import $c
-       }
-       set c [up]
-       if { $c eq "" } {
-            set c [lindex $conns end]
-          } else {
-            set potato(up) ""
-            showConn $c
-          }
-     }
+	if { $running } {
+		set conns [concat 0 [connIDs]]
+		foreach c $conns {
+			::skin::${skin}::import $c
+		}
+		set c [up]
+		if { $c eq "" } {
+			set c [lindex $conns end]
+		} else {
+			set potato(up) ""
+			showConn $c
+		}
+	}
 
 
-  return;
+	return;
 
 };# ::potato::showSkin
 
@@ -4696,14 +4708,14 @@ proc ::potato::showSkin {skin} {
 #: desc Unshow the current skin
 #: return nothing
 proc ::potato::unshowSkin {} {
-  variable potato;
-  variable menu;
+	variable potato;
+	variable menu;
 
-  if { $potato(skin) ne "" } {
-       ::skin::$potato(skin)::unpackskin
-     }
+	if { $potato(skin) ne "" } {
+		::skin::$potato(skin)::unpackskin
+	}
 
-  return;
+	return;
 
 };# ::potato::unshowSkin
 
@@ -4714,101 +4726,101 @@ proc ::potato::unshowSkin {} {
 #: desc close connection $c, or the current connection if $c is "". Never close connection 0.
 #: return nothing
 proc ::potato::closeConn {{c ""} {autoDisconnect 0} {prompt 1}} {
-  variable conn;
-  variable potato;
-  variable world;
-  variable misc;
+	variable conn;
+	variable potato;
+	variable world;
+	variable misc;
 
-  if { $c eq "" } {
-       set c [up]
-     }
+	if { $c eq "" } {
+		set c [up]
+	}
 
-  if { $c == 0 } {
-       return;
-     }
+	if { $c == 0 } {
+		return;
+	}
 
-  set w $conn($c,world)
-  set worldname $world($w,name)
-  if { $conn($c,connected) == 0 } {
-       set disconnect 0
-     } elseif { $autoDisconnect } {
-       set disconnect 1
-     } else {
-       set ans [tk_messageBox -title "$potato(name) - \[$c. $worldname\]" -type yesno \
-           -message [T "Disconnect and close the window?"]]
-       if { $ans eq "yes" } {
-            set disconnect 1
-          } else {
-            return;
-          }
-     }
+	set w $conn($c,world)
+	set worldname $world($w,name)
+	if { $conn($c,connected) == 0 } {
+		set disconnect 0
+	} elseif { $autoDisconnect } {
+		set disconnect 1
+	} else {
+		set ans [tk_messageBox -title "$potato(name) - \[$c. $worldname\]" -type yesno \
+			-message [T "Disconnect and close the window?"]]
+		if { $ans eq "yes" } {
+			set disconnect 1
+		} else {
+			return;
+		}
+	}
 
-  if { [info exists conn($c,stats,prev)] && [string is integer -strict $conn($c,stats,prev)] && $conn($c,stats,prev) > 0 } {
-       incr world($w,stats,time) $conn($c,stats,prev)
-     }
+	if { [info exists conn($c,stats,prev)] && [string is integer -strict $conn($c,stats,prev)] && $conn($c,stats,prev) > 0 } {
+		incr world($w,stats,time) $conn($c,stats,prev)
+	}
 
-  if { $world($w,temp) } {
-       if { $prompt == 2 } {
-            set world($w,temp) 0
-          } elseif { $prompt == 1 } {
-            if { $autoDisconnect } {
-                 set type "yesno"
-               } else {
-                 set type "yesnocancel"
-               }
-            set ans [tk_messageBox -title "$potato(name) - \[$c. $worldname\]" -type $type \
-                -message [T "Do you want to save this world for later?"]]
-            if { $ans eq "yes" } {
-                 set world($w,temp) 0
-                 saveWorlds
-               } elseif { $ans eq "cancel" } {
-                 return;
-               }
-          }
-     }
+	if { $world($w,temp) } {
+		if { $prompt == 2 } {
+			set world($w,temp) 0
+		} elseif { $prompt == 1 } {
+			if { $autoDisconnect } {
+				set type "yesno"
+			} else {
+				set type "yesnocancel"
+			}
+			set ans [tk_messageBox -title "$potato(name) - \[$c. $worldname\]" -type $type \
+				-message [T "Do you want to save this world for later?"]]
+			if { $ans eq "yes" } {
+				set world($w,temp) 0
+				saveWorlds
+			} elseif { $ans eq "cancel" } {
+				return;
+			}
+		}
+	}
 
-  if { $disconnect } {
-       disconnect $c 0
-     } else {
-       cancel_reconnect $c
-     }
-  if { $c == [up] } {
-       set allconns [lsort -integer -index 0 [connList]]
-       if { [llength $allconns] == 1 } {
-            showConn 0
-          } else {
-            if { [set pos [lsearch -exact -index 0 $allconns $c]] == 0 } {
-                 set next [lindex [lindex $allconns 1] 0]
-               } else {
-                 set next [lindex [lindex $allconns [expr {$pos-1}]] 0]
-               }
-            showConn $next
-         }
-     } else {
-       skinStatus [up]
-     }
-  foreach x $conn($c,spawns) {
-    destroySpawnWindow $c [lindex $x 0]
-  }
+	if { $disconnect } {
+		disconnect $c 0
+	} else {
+		cancel_reconnect $c
+	}
+	if { $c == [up] } {
+		set allconns [lsort -integer -index 0 [connList]]
+		if { [llength $allconns] == 1 } {
+			showConn 0
+		} else {
+			if { [set pos [lsearch -exact -index 0 $allconns $c]] == 0 } {
+				set next [lindex [lindex $allconns 1] 0]
+			} else {
+				set next [lindex [lindex $allconns [expr {$pos-1}]] 0]
+			}
+			showConn $next
+		}
+	} else {
+		skinStatus [up]
+	}
+	foreach x $conn($c,spawns) {
+		destroySpawnWindow $c [lindex $x 0]
+	}
 
-  ::skin::$potato(skin)::export $c
-  set t $conn($c,textWidget)
-  foreach x [removePrefix [arraySubelem conn $c,log] $c,log] {
-    catch {flush $x}
-    catch {close $x}
-    unset conn($c,log,$x)
-  }
-  catch {destroy {*}$conn($c,widgets) $conn($c,input1) $conn($c,input2)}
-  if { [info exists conn($c,userAfterIDs)] } {
-       foreach x $conn($c,userAfterIDs) {
-         after cancel $x ;# Cancel all "/at"s.
-       }
-     }
-  array unset conn $c,*
-  ::skin::$potato(skin)::status $c
-  destroy $t
+	::skin::$potato(skin)::export $c
+	set t $conn($c,textWidget)
+	foreach x [removePrefix [arraySubelem conn $c,log] $c,log] {
+		catch {flush $x}
+		catch {close $x}
+		unset conn($c,log,$x)
+	}
+	catch {destroy {*}$conn($c,widgets) $conn($c,input1) $conn($c,input2)}
+	if { [info exists conn($c,userAfterIDs)] } {
+		foreach x $conn($c,userAfterIDs) {
+			after cancel $x ;# Cancel all "/at"s.
+		}
+	}
+	array unset conn $c,*
+	::skin::$potato(skin)::status $c
+	destroy $t
 
-  return;
+	return;
 
 };# ::potato::closeConn
 
@@ -4817,15 +4829,15 @@ proc ::potato::closeConn {{c ""} {autoDisconnect 0} {prompt 1}} {
 #: desc mark a connection as not being idle, by setting it's idle var to 0 and notifying the current skin to remove it from the list of idle worlds
 #: return nothing
 proc ::potato::unidle {c} {
-  variable conn;
+	variable conn;
 
-  if { !$conn($c,idle) } {
-       return; # not idle anyway
-     }
-  set conn($c,idle) 0
-  skinStatus $c
+	if { !$conn($c,idle) } {
+		return; # not idle anyway
+	}
+	set conn($c,idle) 0
+	skinStatus $c
 
-  return;
+	return;
 
 };# ::potato::unidle
 
@@ -4834,15 +4846,15 @@ proc ::potato::unidle {c} {
 #: desc mark a connection as being idle (having new activity), by setting it's idle var to 1 and notifying the current skin to add it to the list of idle worlds
 #: return nothing
 proc ::potato::idle {c} {
-  variable conn;
+	variable conn;
 
-  if { $conn($c,idle) } {
-       return; # already idle
-     }
-  set conn($c,idle) 1
-  skinStatus $c
+	if { $conn($c,idle) } {
+		return; # already idle
+	}
+	set conn($c,idle) 1
+	skinStatus $c
 
-  return;
+	return;
 
 };# ::potato::idle
 
@@ -4850,15 +4862,15 @@ proc ::potato::idle {c} {
 #: desc returns a list, where each element is a sublist of connection id, world name and status. The list is not sorted in any particular order
 #: return [list] of connection [list]s
 proc ::potato::connList {} {
-  variable conn;
-  variable world;
+	variable conn;
+	variable world;
 
-  set retlist [list];
-  foreach c [connIDs] {
-     lappend retlist [list $c $world($conn($c,world),name) [potato::status $c]]
-  }
+	set retlist [list];
+	foreach c [connIDs] {
+		lappend retlist [list $c $world($conn($c,world),name) [potato::status $c]]
+	}
 
-  return $retlist;
+	return $retlist;
 
 };# ::potato::connList
 
@@ -4867,18 +4879,18 @@ proc ::potato::connList {} {
 #: desc Does not include world "0", which is internal and used for "connection 0", the welcome screen.
 #: return [list] of world [list]s
 proc ::potato::worldList {} {
-  variable world;
+	variable world;
 
-  set worldList [list]
-  foreach w [worldIDs] {
-       set name $world($w,name)
-       if { $world($w,temp) } {
-            append name " " [T "(Temp)"]
-          }
-       lappend worldList [list $w $name]
-  }
+	set worldList [list]
+	foreach w [worldIDs] {
+		set name $world($w,name)
+		if { $world($w,temp) } {
+			append name " " [T "(Temp)"]
+		}
+		lappend worldList [list $w $name]
+	}
 
-  return $worldList;
+	return $worldList;
 
 };# ::potato::worldList
 
@@ -4886,121 +4898,137 @@ proc ::potato::worldList {} {
 #: desc Show the "Manage Worlds" window
 #: return nothing
 proc ::potato::manageWorlds {} {
-  variable world;
-  variable manageWorlds;
+	variable world;
+	variable manageWorlds;
 
-  set win .manageWorlds
-  if { [winfo exists $win] } {
-       reshowWindow $win
-       return;
-     }
+	set win .manageWorlds
+	if { [winfo exists $win] } {
+		reshowWindow $win
+		return;
+	}
 
-  toplevel $win
-  wm withdraw $win
-  wm title $win [T "Address Book"]
-  set manageWorlds(toplevel) $win
+	toplevel $win
+	wm withdraw $win
+	wm title $win [T "Address Book"]
+	set manageWorlds(toplevel) $win
 
-  pack [set frame [::ttk::frame $win.f]] -side left -expand 1 -fill both
-  pack [set top [::ttk::frame $frame.top]] -side top -expand 1 -fill both
-  pack [set btm [::ttk::frame $frame.btm]] -side top -expand 0 -fill both
-  pack [set left [::ttk::frame $top.left]] -side left -expand 0 -fill both
-  set gTree [::ttk::treeview $left.gtree -columns Group -show tree -selectmode browse]
-  set manageWorlds(gTree) $gTree
-  $gTree tag configure "flashed" -image ::potato::img::add
-  if { ![catch {ttk::style map Treeview} selcols] } {
-       foreach {opt vals} $selcols {
-         if { $opt in [list -background -foreground] } {
-              foreach {when what} $vals {
-                if { $when eq "selected" } {
-                     $gTree tag configure "flashed" $opt $what
-                   }
-              }
-            }
-       }
-     }
-  $gTree tag configure internal -image [getImage world]
-  $gTree tag configure user -image ::potato::img::folder
-  set sbX [::ttk::scrollbar $left.sbX -orient horizontal -command [list $gTree xview]]
-  set sbY [::ttk::scrollbar $left.sbY -orient vertical -command [list $gTree yview]]
-  grid_with_scrollbars $gTree $sbX $sbY
-  $gTree configure -xscrollcommand [list $sbX set]
-  $gTree configure -yscrollcommand [list $sbY set]
+	pack [set frame [::ttk::frame $win.f]] -side left -expand 1 -fill both
+	pack [set top [::ttk::frame $frame.top]] -side top -expand 1 -fill both
+	pack [set btm [::ttk::frame $frame.btm]] -side top -expand 0 -fill both
+	pack [set left [::ttk::frame $top.left]] -side left -expand 0 -fill both
+	set gTree [::ttk::treeview $left.gtree -columns Group -show tree -selectmode browse]
+	set manageWorlds(gTree) $gTree
+	$gTree tag configure "flashed" -image ::potato::img::add
+	if { ![catch {ttk::style map Treeview} selcols] } {
+		foreach {opt vals} $selcols {
+			if { $opt in [list -background -foreground] } {
+				foreach {when what} $vals {
+					if { $when eq "selected" } {
+						$gTree tag configure "flashed" $opt $what
+					}
+				}
+			}
+		}
+	}
+	$gTree tag configure internal -image [getImage world]
+	$gTree tag configure user -image ::potato::img::folder
+	set sbX [::ttk::scrollbar $left.sbX -orient horizontal -command [list $gTree xview]]
+	set sbY [::ttk::scrollbar $left.sbY -orient vertical -command [list $gTree yview]]
+	grid_with_scrollbars $gTree $sbX $sbY
+	$gTree configure -xscrollcommand [list $sbX set]
+	$gTree configure -yscrollcommand [list $sbY set]
 
-  $gTree column #0 -width 65
-  $gTree column Group -stretch 1 -width 115
+	$gTree column #0 -width 65
+	$gTree column Group -stretch 1 -width 115
 
-  pack [set right [::ttk::frame $top.right]] -side left -expand 1 -fill both
-  set wTree [::ttk::treeview $right.wtree -columns [list "World Name" "Address" "Char"] \
-         -show "headings" -selectmode browse]
-  set manageWorlds(wTree) $wTree
-  set sbX [::ttk::scrollbar $right.sbX -orient horizontal -command [list $wTree xview]]
-  set sbY [::ttk::scrollbar $right.sbY -orient vertical -command [list $wTree yview]]
-  $wTree heading "World Name" -text [T "World Name"] \
-    -image ::treeviewUtils::HeaderSort::arrow(0) \
-    -command [list ::treeviewUtils::HeaderSort::SortBy $wTree "World Name" 1]
-  $wTree heading "Address" -text [T "Address"] \
-    -image ::treeviewUtils::HeaderSort::arrowBlank \
-    -command [list ::treeviewUtils::HeaderSort::SortBy $wTree "Address" 0]
-  $wTree heading "Char" -text [T "Char"] \
-    -image ::treeviewUtils::HeaderSort::arrowBlank \
-    -command [list ::treeviewUtils::HeaderSort::SortBy $wTree "Char" 0]
+	pack [set right [::ttk::frame $top.right]] -side left -expand 1 -fill both
+	set wTree [::ttk::treeview $right.wtree -columns [list "World Name" "Address" "Char"] \
+		-show "headings" -selectmode browse]
+	set manageWorlds(wTree) $wTree
+	set sbX [::ttk::scrollbar $right.sbX -orient horizontal -command [list $wTree xview]]
+	set sbY [::ttk::scrollbar $right.sbY -orient vertical -command [list $wTree yview]]
+	$wTree heading "World Name" -text [T "World Name"] \
+		-image ::treeviewUtils::HeaderSort::arrow(0) \
+		-command [list ::treeviewUtils::HeaderSort::SortBy $wTree "World Name" 1]
+	$wTree heading "Address" -text [T "Address"] \
+		-image ::treeviewUtils::HeaderSort::arrowBlank \
+		-command [list ::treeviewUtils::HeaderSort::SortBy $wTree "Address" 0]
+	$wTree heading "Char" -text [T "Char"] \
+		-image ::treeviewUtils::HeaderSort::arrowBlank \
+		-command [list ::treeviewUtils::HeaderSort::SortBy $wTree "Char" 0]
 
-  $wTree column "World Name" -stretch 1 -width 170
-  $wTree column "Address" -stretch 1 -width 160
-  $wTree column "Char" -stretch 0 -width 75
-  grid_with_scrollbars $wTree $sbX $sbY
-  $wTree configure -xscrollcommand [list $sbX set]
-  $wTree configure -yscrollcommand [list $sbY set]
+	$wTree column "World Name" -stretch 1 -width 170
+	$wTree column "Address" -stretch 1 -width 160
+	$wTree column "Char" -stretch 0 -width 75
+	grid_with_scrollbars $wTree $sbX $sbY
+	$wTree configure -xscrollcommand [list $sbX set]
+	$wTree configure -yscrollcommand [list $sbY set]
 
-  $wTree tag configure deleted -foreground red
-  pack [set btnFrame [::ttk::frame $btm.btns]] -side top -anchor n -expand 0 -fill none -pady 10 -padx 10
-  pack [::ttk::button $btnFrame.add -text [T "New World"] -command [list ::potato::newWorld 0]] -side left -padx 5
-  pack [set copy [::ttk::button $btnFrame.copy -text [T "Copy World"] \
-           -command [list ::potato::manageWorldsBtn "copyworld" $win]]] -side left -padx 5
-  pack [set edit [::ttk::button $btnFrame.edit -text [T "Edit World"] \
-           -command [list ::potato::manageWorldsBtn "editworld" $win]]] -side left -padx 5
-  pack [set connect [::ttk::button $btnFrame.connect -text [T "Connect To World"] \
-           -command [list ::potato::manageWorldsBtn "connect" $win]]] -side left -padx 5
-  pack [set del [::ttk::button $btnFrame.del -text [T "Delete World"] \
-           -command [list ::potato::manageWorldsBtn "delworld" $win]]] -side left -padx 5
-  set manageWorlds(copyBtn) $copy
-  set manageWorlds(editBtn) $edit
-  set manageWorlds(delBtn) $del
-  set manageWorlds(connectBtn) $connect
+	$wTree tag configure deleted -foreground red
+	pack [set btnFrame [::ttk::frame $btm.btns]] -side top -anchor n -expand 0 -fill none -pady 10 -padx 10
+	pack [::ttk::button $btnFrame.add -text [T "New World"] -command [list ::potato::newWorld 0]] -side left -padx 5
+	pack [set copy [::ttk::button $btnFrame.copy -text [T "Copy World"] \
+		-command [list ::potato::manageWorldsBtn "copyworld" $win]]] -side left -padx 5
+	pack [set edit [::ttk::button $btnFrame.edit -text [T "Edit World"] \
+		-command [list ::potato::manageWorldsBtn "editworld" $win]]] -side left -padx 5
+	pack [set connect [::ttk::button $btnFrame.connect -text [T "Connect To World"] \
+		-command [list ::potato::manageWorldsBtn "connect" $win]]] -side left -padx 5
+	pack [set del [::ttk::button $btnFrame.del -text [T "Delete World"] \
+		-command [list ::potato::manageWorldsBtn "delworld" $win]]] -side left -padx 5
+	set manageWorlds(copyBtn) $copy
+	set manageWorlds(editBtn) $edit
+	set manageWorlds(delBtn) $del
+	set manageWorlds(connectBtn) $connect
 
-  pack [set btnFrame2 [::ttk::frame $btm.btns2]] -side top -anchor n -expand 0 -fill none -pady 10 -padx 10
-  pack [set newGroup [::ttk::button $btnFrame2.new -text [T "New Group"] \
-           -command [list ::potato::manageWorldsNewGroup $win]]] -side left -padx 5
-  pack [set delGroup [::ttk::button $btnFrame2.del -text [T "Delete Group"] \
-           -command [list ::potato::manageWorldsBtn "delgroup" $win]]] -side left -padx 5
-  set manageWorlds(delGroupBtn) $delGroup
-  pack [set close [::ttk::button $btnFrame2.close -text [T "Close"] -width 8 \
-           -command [list destroy $win]]] -side left -padx 5
+	pack [set btnFrame2 [::ttk::frame $btm.btns2]] -side top -anchor n -expand 0 -fill none -pady 10 -padx 10
+	pack [set newGroup [::ttk::button $btnFrame2.new -text [T "New Group"] \
+		-command [list ::potato::manageWorldsNewGroup $win]]] -side left -padx 5
+	pack [set delGroup [::ttk::button $btnFrame2.del -text [T "Delete Group"] \
+		-command [list ::potato::manageWorldsBtn "delgroup" $win]]] -side left -padx 5
+	set manageWorlds(delGroupBtn) $delGroup
+	pack [set close [::ttk::button $btnFrame2.close -text [T "Close"] -width 8 \
+		-command [list destroy $win]]] -side left -padx 5
 
 
-  bind $gTree <<TreeviewSelect>> [list ::potato::manageWorldsSelectGroup]
-  bind $wTree <FocusIn> [list ::potato::manageWorldsUpdateWorlds]
-  bind $wTree <<TreeviewSelect>> [list ::potato::manageWorldsSelectWorld]
-  bind $wTree <ButtonPress-3> "[bind Treeview <ButtonPress-1>] ; [list ::potato::manageWorldsRightClickWorld %X %Y]"
+	bind $gTree <<TreeviewSelect>> [list ::potato::manageWorldsSelectGroup]
+	bind $wTree <FocusIn> [list ::potato::manageWorldsUpdateWorlds]
+	bind $wTree <<TreeviewSelect>> [list ::potato::manageWorldsSelectWorld]
+	bind $wTree <ButtonPress-3> "[bind Treeview <ButtonPress-1>] ; [list ::potato::manageWorldsRightClickWorld %X %Y]"
 
-  bind $wTree <ButtonPress-1> [list ::potato::manageWorldsDragStart %x %y %X %Y]
-  bind $wTree <B1-Motion> [list ::potato::manageWorldsDrag %x %y %X %Y]
-  bind $wTree <ButtonRelease-1> [list ::potato::manageWorldsDragDrop]
-  bind $wTree <Escape> [list ::potato::manageWorldsDragDrop 1]
+	bind $wTree <ButtonPress-1> [list ::potato::manageWorldsDragStart %x %y %X %Y]
+	bind $wTree <B1-Motion> [list ::potato::manageWorldsDrag %x %y %X %Y]
+	bind $wTree <ButtonRelease-1> [list ::potato::manageWorldsDragDrop]
+	bind $wTree <Escape> "[list ::potato::manageWorldsEscapeKey $win] ; break"
 
-  bind $gTree <Destroy> [list array unset ::potato::manageWorlds]
+	bind $gTree <Destroy> [list array unset ::potato::manageWorlds]
 
-  manageWorldsUpdateGroups
+	manageWorldsUpdateGroups
 
-  update idletasks
-  center $win
-  wm deiconify $win
-  reshowWindow $win 0
-  focus $wTree
+	update idletasks
+	center $win
+	wm deiconify $win
+	reshowWindow $win 0
+	focus $wTree
 
-  return;
+	return;
 
 };# ::potato::manageWorlds
+
+#: proc ::potato::manageWorldsEscapeKey
+#: arg win Window to destroy
+#: desc Process an Escape key press in the Manage Worlds window. If we're currently
+#: desc drag-and-dropping, cancel it. If not, close the window.
+#: return nothing
+proc ::potato::manageWorldsEscapeKey {win} {
+	variable manageWorlds;
+
+	if { ![info exists manageWorlds(wTree,drag,id)] || $manageWorlds(wTree,drag,id) eq "" } {
+		destroy $win;
+	} else {
+		manageWorldsDragDrop 1
+	}
+	return;
+};# ::potato::manageWorldsEscapeKey
 
 #: proc ::potato::manageWorldsDragStart
 #: arg x The x-coord relative to the Manage Worlds tree
@@ -5010,19 +5038,19 @@ proc ::potato::manageWorlds {} {
 #: desc Start dragging a world from the Worlds list in the Manage Worlds window, to add to a Group
 #: return nothing
 proc ::potato::manageWorldsDragStart {x y gx gy} {
-  variable manageWorlds;
+	variable manageWorlds;
 
-  set manageWorlds(wTree,drag,x) $gx
-  set manageWorlds(wTree,drag,y) $gy
-  set manageWorlds(wTree,drag,popup) ""
-  if { [$manageWorlds(wTree) identify region $x $y] eq "cell" } {
-       set manageWorlds(wTree,drag,id) [$manageWorlds(wTree) identify item $x $y]
-     } else {
-       set manageWorlds(wTree,drag,id) ""
-     }
-  set manageWorlds(wTree,drag,target) "INT:wTree"
+	set manageWorlds(wTree,drag,x) $gx
+	set manageWorlds(wTree,drag,y) $gy
+	set manageWorlds(wTree,drag,popup) ""
+	if { [$manageWorlds(wTree) identify region $x $y] eq "cell" } {
+		set manageWorlds(wTree,drag,id) [$manageWorlds(wTree) identify item $x $y]
+	} else {
+		set manageWorlds(wTree,drag,id) ""
+	}
+	set manageWorlds(wTree,drag,target) "INT:wTree"
 
-  return;
+	return;
 }
 
 #: proc ::potato::manageWorldsDrag
@@ -5033,103 +5061,103 @@ proc ::potato::manageWorldsDragStart {x y gx gy} {
 #: desc Update the DND window for Manage Worlds based on where the cursor has been moved to
 #: return nothing
 proc ::potato::manageWorldsDrag {x y gx gy} {
-  variable manageWorlds;
+	variable manageWorlds;
 
-  if { $manageWorlds(wTree,drag,id) eq "" } {
-       return;
-     }
+	if { $manageWorlds(wTree,drag,id) eq "" } {
+		return;
+	}
 
-  set win .manageWorldsDrag
-  if { $manageWorlds(wTree,drag,popup) eq "" } {
-       set min_offset 5
-       set diff [expr {abs($manageWorlds(wTree,drag,x) - $gx) + abs($manageWorlds(wTree,drag,y) - $gy)}]
-       if { $diff < $min_offset } {
-            return;
-          }
-       toplevel $win
-       wm withdraw $win
-       wm title $win [T "Address Book"]
-       wm overrideredirect $win 1
-       if { [tk windowingsystem] eq "x11" } {
-            catch {wm attributes $win -type dnd}
-          }
-       wm attributes $win -alpha 0.7
-       set transcol #ff69b4 ;# thanks, Walker.
-       if { ![catch {wm attributes $win -transparentcolor $transcol}] && [wm attributes $win -transparentcolor] ne "" } {
-            $win configure -background $transcol
-            set label [label $win.l -background $transcol]
-          } else {
-            # Since we don't have the option of making it transparent, let's try and make it look good
-            set label [::ttk::label $win.l]
-          }
-       $label configure -text " [lindex [$manageWorlds(wTree) item $manageWorlds(wTree,drag,id) -values] 0]" \
-         -image [getImage world] -compound left
-       pack $label
+	set win .manageWorldsDrag
+	if { $manageWorlds(wTree,drag,popup) eq "" } {
+		set min_offset 5
+		set diff [expr {abs($manageWorlds(wTree,drag,x) - $gx) + abs($manageWorlds(wTree,drag,y) - $gy)}]
+		if { $diff < $min_offset } {
+			return;
+		}
+		toplevel $win
+		wm withdraw $win
+		wm title $win [T "Address Book"]
+		wm overrideredirect $win 1
+		if { [tk windowingsystem] eq "x11" } {
+			catch {wm attributes $win -type dnd}
+		}
+		wm attributes $win -alpha 0.7
+		set transcol #ff69b4 ;# thanks, Walker.
+		if { ![catch {wm attributes $win -transparentcolor $transcol}] && [wm attributes $win -transparentcolor] ne "" } {
+			$win configure -background $transcol
+			set label [label $win.l -background $transcol]
+		} else {
+			# Since we don't have the option of making it transparent, let's try and make it look good
+			set label [::ttk::label $win.l]
+		}
+		$label configure -text " [lindex [$manageWorlds(wTree) item $manageWorlds(wTree,drag,id) -values] 0]" \
+			-image [getImage world] -compound left
+		pack $label
 
-       set manageWorlds(wTree,drag,popup) $win
-       set posx [expr {$gx - 15}]
-       set posy [expr {$gy - ([winfo reqheight $win.l]/2)}]
-       set bbox [$manageWorlds(wTree) bbox $manageWorlds(wTree,drag,id)]
-       if { 0 && [llength $bbox] } {
-            foreach {bbox_x bbox_y bbox_w bbox_h} $bbox {break}
-            incr bbox_x [expr {$gx - $x}]
-            incr bbox_y [expr {$gy - $y}]
-            set pointx [winfo pointerx $manageWorlds(wTree)]
-            set pointy [winfo pointery $manageWorlds(wTree)]
-            if { $pointx > ($bbox_x - $min_offset) && $pointx < ($bbox_x + $bbox_w + $min_offset) &&
-                 $pointy > ($bbox_y - $min_offset) && $pointy < ($bbox_y + $bbox_h + $min_offset) } {
-                 # Center the new window on the bbox position
-                 set posx [expr {$bbox_x + ($gx - $manageWorlds(wTree,drag,x))}]
-                 set posy [expr {$bbox_y + ($gy - $manageWorlds(wTree,drag,y))}]
-               }
-          }
-       wm geometry $win "+$posx+$posy"
-       set manageWorlds(wTree,drag,startx) $posx
-       set manageWorlds(wTree,drag,starty) $posy
-       wm deiconify $win
-    } else {
-      wm geometry $win "+[expr {$manageWorlds(wTree,drag,startx) + ($gx - $manageWorlds(wTree,drag,x))}]+[expr {$manageWorlds(wTree,drag,starty) + ($gy - $manageWorlds(wTree,drag,y))}]"
-      set groups $manageWorlds(gTree)
-      set groupsx [list [winfo rootx $groups] [expr {[winfo rootx $groups] + [winfo width $groups]}]]
-      set groupsy [list [winfo rooty $groups] [expr {[winfo rooty $groups] + [winfo height $groups]}]]
-      set px [winfo pointerx $groups]
-      set py [winfo pointery $groups]
-      # We don't use [winfo containing] because it will usually be the popup
-      if { $px < [lindex $groupsx 0] || $px > [lindex $groupsx 1] || $py < [lindex $groupsy 0] || $py > [lindex $groupsy 1] } {
-           set manageWorlds(wTree,drag,target) ""
-           set worlds $manageWorlds(wTree)
-           set worldsx [list [winfo rootx $worlds] [expr {[winfo rootx $worlds] + [winfo width $worlds]}]]
-           set worldsy [list [winfo rooty $worlds] [expr {[winfo rooty $worlds] + [winfo height $worlds]}]]
-           if { $px >= [lindex $worldsx 0] && $px <= [lindex $worldsx 1] && $py >= [lindex $worldsy 0] && $py <= [lindex $worldsy 1] } {
-                $manageWorlds(wTree,drag,popup).l config -image [getImage world]
-                set manageWorlds(wTree,drag,target) "INT:wTree"
-              } else {
-                $manageWorlds(wTree,drag,popup).l config -image [getImage exclamation]
-              }
-           return;
-         }
+		set manageWorlds(wTree,drag,popup) $win
+		set posx [expr {$gx - 15}]
+		set posy [expr {$gy - ([winfo reqheight $win.l]/2)}]
+		set bbox [$manageWorlds(wTree) bbox $manageWorlds(wTree,drag,id)]
+		if { 0 && [llength $bbox] } {
+			foreach {bbox_x bbox_y bbox_w bbox_h} $bbox {break}
+			incr bbox_x [expr {$gx - $x}]
+			incr bbox_y [expr {$gy - $y}]
+			set pointx [winfo pointerx $manageWorlds(wTree)]
+			set pointy [winfo pointery $manageWorlds(wTree)]
+			if { $pointx > ($bbox_x - $min_offset) && $pointx < ($bbox_x + $bbox_w + $min_offset) &&
+				$pointy > ($bbox_y - $min_offset) && $pointy < ($bbox_y + $bbox_h + $min_offset) } {
+				# Center the new window on the bbox position
+				set posx [expr {$bbox_x + ($gx - $manageWorlds(wTree,drag,x))}]
+				set posy [expr {$bbox_y + ($gy - $manageWorlds(wTree,drag,y))}]
+			}
+		}
+		wm geometry $win "+$posx+$posy"
+		set manageWorlds(wTree,drag,startx) $posx
+		set manageWorlds(wTree,drag,starty) $posy
+		wm deiconify $win
+	} else {
+		wm geometry $win "+[expr {$manageWorlds(wTree,drag,startx) + ($gx - $manageWorlds(wTree,drag,x))}]+[expr {$manageWorlds(wTree,drag,starty) + ($gy - $manageWorlds(wTree,drag,y))}]"
+		set groups $manageWorlds(gTree)
+		set groupsx [list [winfo rootx $groups] [expr {[winfo rootx $groups] + [winfo width $groups]}]]
+		set groupsy [list [winfo rooty $groups] [expr {[winfo rooty $groups] + [winfo height $groups]}]]
+		set px [winfo pointerx $groups]
+		set py [winfo pointery $groups]
+		# We don't use [winfo containing] because it will usually be the popup
+		if { $px < [lindex $groupsx 0] || $px > [lindex $groupsx 1] || $py < [lindex $groupsy 0] || $py > [lindex $groupsy 1] } {
+		set manageWorlds(wTree,drag,target) ""
+		set worlds $manageWorlds(wTree)
+		set worldsx [list [winfo rootx $worlds] [expr {[winfo rootx $worlds] + [winfo width $worlds]}]]
+		set worldsy [list [winfo rooty $worlds] [expr {[winfo rooty $worlds] + [winfo height $worlds]}]]
+		if { $px >= [lindex $worldsx 0] && $px <= [lindex $worldsx 1] && $py >= [lindex $worldsy 0] && $py <= [lindex $worldsy 1] } {
+				$manageWorlds(wTree,drag,popup).l config -image [getImage world]
+				set manageWorlds(wTree,drag,target) "INT:wTree"
+				} else {
+				$manageWorlds(wTree,drag,popup).l config -image [getImage exclamation]
+				}
+		return;
+			}
 
-      set groupsx [expr {$gx - [winfo rootx $groups]}]
-      set groupsy [expr {$gy - [winfo rooty $groups]}]
-      set groupid [$groups identify item $groupsx $groupsy]
-      if { $groupid eq "INT:Ungrouped" || $groupid eq ""} {
-           if { [string match "INT:*" [lindex [$manageWorlds(gTree) selection] 0]] } {
-                set manageWorlds(wTree,drag,target) ""
-                $manageWorlds(wTree,drag,popup).l config -image [getImage exclamation]
-              } else {
-                set manageWorlds(wTree,drag,target) "INT:Ungrouped"
-                $manageWorlds(wTree,drag,popup).l config -image [getImage world_delete]
-              }
-         } elseif { $groupid eq "INT:Temp" } {
-           set manageWorlds(wTree,drag,target) $groupid
-           $manageWorlds(wTree,drag,popup).l config -image [getImage cross]
-         } else {
-           set manageWorlds(wTree,drag,target) $groupid
-           $manageWorlds(wTree,drag,popup).l config -image [getImage world_add]
-         }
-    }
+		set groupsx [expr {$gx - [winfo rootx $groups]}]
+		set groupsy [expr {$gy - [winfo rooty $groups]}]
+		set groupid [$groups identify item $groupsx $groupsy]
+		if { $groupid eq "INT:Ungrouped" || $groupid eq ""} {
+			if { [string match "INT:*" [lindex [$manageWorlds(gTree) selection] 0]] } {
+				set manageWorlds(wTree,drag,target) ""
+				$manageWorlds(wTree,drag,popup).l config -image [getImage exclamation]
+			} else {
+				set manageWorlds(wTree,drag,target) "INT:Ungrouped"
+				$manageWorlds(wTree,drag,popup).l config -image [getImage world_delete]
+			}
+		} elseif { $groupid eq "INT:Temp" } {
+			set manageWorlds(wTree,drag,target) $groupid
+			$manageWorlds(wTree,drag,popup).l config -image [getImage cross]
+		} else {
+			set manageWorlds(wTree,drag,target) $groupid
+			$manageWorlds(wTree,drag,popup).l config -image [getImage world_add]
+		}
+	}
 
-  return;
+	return;
 
 };# ::potato::manageWorldsDrag
 
@@ -5137,64 +5165,64 @@ proc ::potato::manageWorldsDrag {x y gx gy} {
 #: desc Handle the drop from the Manage Worlds drag-and-drop, possibly altering groups for the world being dragged.
 #: return nothing
 proc ::potato::manageWorldsDragDrop {{cancel 0}} {
-  variable manageWorlds;
-  variable world;
+	variable manageWorlds;
+	variable world;
 
-  catch {destroy $manageWorlds(wTree,drag,popup)}
+	catch {destroy $manageWorlds(wTree,drag,popup)}
 
-  if { ![info exists manageWorlds(wTree,drag,id)] || $manageWorlds(wTree,drag,id) eq "" || $cancel } {
-       set manageWorlds(wTree,drag,id) ""
-       return;
-     }
+	if { ![info exists manageWorlds(wTree,drag,id)] || $manageWorlds(wTree,drag,id) eq "" || $cancel } {
+		set manageWorlds(wTree,drag,id) ""
+		return;
+	}
 
-  set currgroup [lindex [$manageWorlds(gTree) selection] 0]
-  if { $currgroup eq "" } {
-       return;
-     }
+	set currgroup [lindex [$manageWorlds(gTree) selection] 0]
+	if { $currgroup eq "" } {
+		return;
+	}
 
-  set new $manageWorlds(wTree,drag,target)
-  if { $new eq "INT:wTree" } {
-       return;
-     }
+	set new $manageWorlds(wTree,drag,target)
+	if { $new eq "INT:wTree" } {
+		return;
+	}
 
-  set w $manageWorlds(wTree,drag,id)
-  if { $new eq "" } {
-       return;
-     }
+	set w $manageWorlds(wTree,drag,id)
+	if { $new eq "" } {
+		return;
+	}
 
-  if { $new eq "INT:Ungrouped" } {
-       if {  [string match "INT:*" $currgroup] } {
-             bell -displayof $manageWorlds(wTree)
-             return;
-          }
-       # Delete from the current group
-       set pos [lsearch -exact $world($w,groups) $currgroup]
-       if { $pos != -1 } {
-            set world($w,groups) [lreplace $world($w,groups) $pos $pos]
-          }
-       manageWorldsUpdateWorlds
-     } elseif { $new eq "INT:Temp" } {
-       if { ![manageWorldsBtn "delworld" $manageWorlds(toplevel)] } {
-            return;
-          }
-     } else {
-       if { $new ni $world($w,groups) } {
-            lappend world($w,groups) $new
-          }
-     }
+	if { $new eq "INT:Ungrouped" } {
+		if {  [string match "INT:*" $currgroup] } {
+			bell -displayof $manageWorlds(wTree)
+			return;
+		}
+		# Delete from the current group
+		set pos [lsearch -exact $world($w,groups) $currgroup]
+		if { $pos != -1 } {
+			set world($w,groups) [lreplace $world($w,groups) $pos $pos]
+		}
+		manageWorldsUpdateWorlds
+	} elseif { $new eq "INT:Temp" } {
+		if { ![manageWorldsBtn "delworld" $manageWorlds(toplevel)] } {
+			return;
+		}
+	} else {
+		if { $new ni $world($w,groups) } {
+			lappend world($w,groups) $new
+		}
+	}
 
-  manageWorldsUpdateWorlds
+	manageWorldsUpdateWorlds
 
-  if { [info exists manageWorlds(wTree,drag,after)] } {
-       catch {after cancel $manageWorlds(wTree,drag,after)}
-     }
+	if { [info exists manageWorlds(wTree,drag,after)] } {
+		catch {after cancel $manageWorlds(wTree,drag,after)}
+	}
 
-  $manageWorlds(gTree) tag remove "flashed"
-  if { $new ne "" && [$manageWorlds(gTree) exists $new] } {
-       manageWorldsTwiddleGroup $manageWorlds(gTree) $new
-     }
+	$manageWorlds(gTree) tag remove "flashed"
+	if { $new ne "" && [$manageWorlds(gTree) exists $new] } {
+		manageWorldsTwiddleGroup $manageWorlds(gTree) $new
+	}
 
-  return;
+	return;
 
 };# ::potato::manageWorldsDragDrop
 
@@ -5206,27 +5234,27 @@ proc ::potato::manageWorldsDragDrop {{cancel 0}} {
 #: desc Calls itself recursively to flash on and off several times.
 #: return nothing
 proc ::potato::manageWorldsTwiddleGroup {groups groupid {count 0}} {
-  variable manageWorlds;
+	variable manageWorlds;
 
-  if { ![winfo exists $groups] || ![$groups exists $groupid] || [string match "INT:*" $groupid] } {
-       return;
-     }
+	if { ![winfo exists $groups] || ![$groups exists $groupid] || [string match "INT:*" $groupid] } {
+		return;
+	}
 
-  if { $count % 2 } {
-       $groups tag remove "flashed" [list $groupid]
-     } else {
-       $groups tag add "flashed" [list $groupid]
-     }
+	if { $count % 2 } {
+		$groups tag remove "flashed" [list $groupid]
+	} else {
+		$groups tag add "flashed" [list $groupid]
+	}
 
-  # A nop to force the treeview to be redrawn with the tag
-  $groups configure -cursor [$groups cget -cursor]
+	# A nop to force the treeview to be redrawn with the tag
+	$groups configure -cursor [$groups cget -cursor]
 
-  if { $count < 5 } {
-       incr count
-       set manageWorlds(wTree,drag,after) [after 250 [list ::potato::manageWorldsTwiddleGroup $groups $groupid $count]]
-     }
+	if { $count < 5 } {
+		incr count
+		set manageWorlds(wTree,drag,after) [after 250 [list ::potato::manageWorldsTwiddleGroup $groups $groupid $count]]
+	}
 
-  return;
+	return;
 
 };# ::potato::manageWorldsTwiddleGroup
 
@@ -5236,32 +5264,32 @@ proc ::potato::manageWorldsTwiddleGroup {groups groupid {count 0}} {
 #: desc Handle the right-clicking of the mouse over the World Tree; pop up a menu to allow the selection of groups for the world.
 #: return nothing
 proc ::potato::manageWorldsRightClickWorld {xcoord ycoord} {
-  variable world;
-  variable manageWorlds;
+	variable world;
+	variable manageWorlds;
 
-  array unset manageWorlds popupMenuGroups,*
-  set sel [$manageWorlds(wTree) sel]
-  if { [llength $sel] == 0 } {
-       return;
-     }
-  set sel [lindex $sel 0]
-  set menu $manageWorlds(wTree).menu
-  if { [winfo exists $menu] } {
-       $menu delete 0 end
-     } else {
-       menu $manageWorlds(wTree).menu -tearoff 0
-     }
-  set i 0
-  foreach x $world(0,groups) {
-     set manageWorlds(popupMenuGroups,$i) [expr {$x in $world($sel,groups)}]
-     $menu add checkbutton -variable ::potato::manageWorlds(popupMenuGroups,$i) -label $x \
-         -command [list ::potato::manageWorldsRightClickWorldToggle $sel $x  $menu]
-     incr i
-  }
+	array unset manageWorlds popupMenuGroups,*
+	set sel [$manageWorlds(wTree) sel]
+	if { [llength $sel] == 0 } {
+		return;
+	}
+	set sel [lindex $sel 0]
+	set menu $manageWorlds(wTree).menu
+	if { [winfo exists $menu] } {
+		$menu delete 0 end
+	} else {
+		menu $manageWorlds(wTree).menu -tearoff 0
+	}
+	set i 0
+	foreach x $world(0,groups) {
+		set manageWorlds(popupMenuGroups,$i) [expr {$x in $world($sel,groups)}]
+		$menu add checkbutton -variable ::potato::manageWorlds(popupMenuGroups,$i) -label $x \
+			-command [list ::potato::manageWorldsRightClickWorldToggle $sel $x  $menu]
+		incr i
+	}
 
-  tk_popup $menu $xcoord $ycoord
+	tk_popup $menu $xcoord $ycoord
 
-  return;
+	return;
 
 };# ::potato::manageWorldsRightClickWorld
 
@@ -5272,20 +5300,20 @@ proc ::potato::manageWorldsRightClickWorld {xcoord ycoord} {
 #: desc Toggle whether world $w is in group $group, and then destroy $menu
 #: return nothing
 proc ::potato::manageWorldsRightClickWorldToggle {w group menu} {
-  variable world;
-  variable manageWorlds;
+	variable world;
+	variable manageWorlds;
 
-  array unset manageWorlds popupMenuGroups,*
-  set pos [lsearch -exact $world($w,groups) $group]
-  if { $pos == -1 } {
-       lappend world($w,groups) $group
-     } else {
-       set world($w,groups) [lreplace $world($w,groups) $pos $pos]
-     }
-  manageWorldsUpdateWorlds
-  destroy $menu
+	array unset manageWorlds popupMenuGroups,*
+	set pos [lsearch -exact $world($w,groups) $group]
+	if { $pos == -1 } {
+		lappend world($w,groups) $group
+	} else {
+		set world($w,groups) [lreplace $world($w,groups) $pos $pos]
+	}
+	manageWorldsUpdateWorlds
+	destroy $menu
 
-  return;
+	return;
 
 };# ::potato::manageWorldsRightClickWorldToggle
 
@@ -5294,52 +5322,52 @@ proc ::potato::manageWorldsRightClickWorldToggle {w group menu} {
 #: desc Show a pop-up window allowing the user to enter a name for a new World Group
 #: return nothing
 proc ::potato::manageWorldsNewGroup {parent} {
-  variable world;
-  variable manageWorlds;
+	variable world;
+	variable manageWorlds;
 
-  set win .manageWorldsNewGroup
-  if { [winfo exists $win] } {
-       reshowWindow $win
-       return;
-     }
+	set win .manageWorldsNewGroup
+	if { [winfo exists $win] } {
+		reshowWindow $win
+		return;
+	}
 
-  toplevel $win
-  wm withdraw $win
-  wm title $win [T "Add New Group"]
-  set manageWorlds(newGroupWin) $win
+	toplevel $win
+	wm withdraw $win
+	wm title $win [T "Add New Group"]
+	set manageWorlds(newGroupWin) $win
 
-  pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both
-  pack [::ttk::label $frame.l -text [T "Enter the name for the new Group, and click Add."]] -side top -padx 3 -pady 5
-  set name [T "New Group"]
-  if { $name in $world(0,groups) } {
-       set num 1
-       while { "$name ($num)" in $world(0,groups) && $num < 1000 } {
-               incr num
-             }
-       if { $num < 1000 } {
-            set name "$name ($num)"
-          }
-     }
-  set manageWorlds(newGroupName) $name
-  pack [::ttk::entry $frame.e -textvariable ::potato::manageWorlds(newGroupName) \
-          -validate none -invalidcommand [list bell -displayof $win] \
-          -validatecommand {expr {![string match "INT:*" %P]}} -width 30] -side top -padx 3 -pady 5
-  pack [set btns [::ttk::frame $frame.btns]] -side top -anchor n -padx 3 -pady 5
-  pack [::ttk::button $btns.add -text [T "Add"] -width 8 -command ::potato::manageWorldsNewGroupAdd] -side left -padx 7
-  pack [::ttk::button $btns.cancel -text [T "Cancel"] -width 8 -command [list destroy $win]] -side left -padx 7
-  $frame.e selection range 0 end
-  $frame.e icursor end
+	pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both
+	pack [::ttk::label $frame.l -text [T "Enter the name for the new Group, and click Add."]] -side top -padx 3 -pady 5
+	set name [T "New Group"]
+	if { $name in $world(0,groups) } {
+		set num 1
+		while { "$name ($num)" in $world(0,groups) && $num < 1000 } {
+			incr num
+			}
+		if { $num < 1000 } {
+			set name "$name ($num)"
+		}
+	}
+	set manageWorlds(newGroupName) $name
+	pack [::ttk::entry $frame.e -textvariable ::potato::manageWorlds(newGroupName) \
+		-validate none -invalidcommand [list bell -displayof $win] \
+		-validatecommand {expr {![string match "INT:*" %P]}} -width 30] -side top -padx 3 -pady 5
+	pack [set btns [::ttk::frame $frame.btns]] -side top -anchor n -padx 3 -pady 5
+	pack [::ttk::button $btns.add -text [T "Add"] -width 8 -command ::potato::manageWorldsNewGroupAdd] -side left -padx 7
+	pack [::ttk::button $btns.cancel -text [T "Cancel"] -width 8 -command [list destroy $win]] -side left -padx 7
+	$frame.e selection range 0 end
+	$frame.e icursor end
 
-  bind $win <Escape> [list $btns.cancel invoke]
-  bind $win <Return> [list $btns.add invoke]
+	bind $win <Escape> [list $btns.cancel invoke]
+	bind $win <Return> [list $btns.add invoke]
 
-  wm transient $win $parent
-  center $win
-  wm deiconify $win
-  reshowWindow $win 0
-  focus $frame.e
+	wm transient $win $parent
+	center $win
+	wm deiconify $win
+	reshowWindow $win 0
+	focus $frame.e
 
-  return;
+	return;
 
 };# ::potato::manageWorldsNewGroup
 
@@ -5347,26 +5375,26 @@ proc ::potato::manageWorldsNewGroup {parent} {
 #: desc A new group name has been entered; add it
 #: return 1 if it was added, 0 if not (because it had an invalid name)
 proc ::potato::manageWorldsNewGroupAdd {} {
-  variable world;
-  variable manageWorlds;
+	variable world;
+	variable manageWorlds;
 
-  set group $manageWorlds(newGroupName)
-  if { [string trim $group] eq "" || [string match "INT:*" group] } {
-       tk_messageBox -parent $manageWorlds(newGroupWin) -title [T "Add New Group"] -icon error -type ok \
-               -message [T "That is not a valid name."]
-       return 0;
-     }
+	set group $manageWorlds(newGroupName)
+	if { [string trim $group] eq "" || [string match "INT:*" group] } {
+		tk_messageBox -parent $manageWorlds(newGroupWin) -title [T "Add New Group"] -icon error -type ok \
+			-message [T "That is not a valid name."]
+		return 0;
+	}
 
-  if { $group ni $world(0,groups) } {
-       lappend world(0,groups) $group
-       set world(0,groups) [lsort -dictionary $world(0,groups)]
-     }
+	if { $group ni $world(0,groups) } {
+		lappend world(0,groups) $group
+		set world(0,groups) [lsort -dictionary $world(0,groups)]
+	}
 
-  destroy $manageWorlds(newGroupWin)
+	destroy $manageWorlds(newGroupWin)
 
-  manageWorldsUpdateGroups
+	manageWorldsUpdateGroups
 
-  return 1;
+	return 1;
 
 };# ::potato::manageWorldsNewGroupAdd
 
@@ -5374,27 +5402,27 @@ proc ::potato::manageWorldsNewGroupAdd {} {
 #: desc Build the list of Groups in the Manage Worlds window
 #: return nothing
 proc ::potato::manageWorldsUpdateGroups {} {
-  variable manageWorlds;
-  variable world;
+	variable manageWorlds;
+	variable world;
 
-  if { ![info exists manageWorlds(toplevel)] } {
-       return;
-     }
+	if { ![info exists manageWorlds(toplevel)] } {
+		return;
+	}
 
-  set gTree $manageWorlds(gTree);
-  $gTree delete [$gTree children {}]
-  set gTreeAll [$gTree insert {} end -id INT:All -tags [list internal] -values [list [T "All Worlds"]] -open true]
+	set gTree $manageWorlds(gTree);
+	$gTree delete [$gTree children {}]
+	set gTreeAll [$gTree insert {} end -id INT:All -tags [list internal] -values [list [T "All Worlds"]] -open true]
 
-  foreach x $world(0,groups) {
-    $gTree insert $gTreeAll end -id $x -tags [list user] -values [list $x] -open true
-  }
-  $gTree insert $gTreeAll end -id INT:Ungrouped -tags [list internal] -values [list [T "Ungrouped"]] -open true
-  $gTree insert $gTreeAll end -id INT:Temp -tags [list internal] -values [list [T "Temp/Deleted"]] -open true
+	foreach x $world(0,groups) {
+		$gTree insert $gTreeAll end -id $x -tags [list user] -values [list $x] -open true
+	}
+	$gTree insert $gTreeAll end -id INT:Ungrouped -tags [list internal] -values [list [T "Ungrouped"]] -open true
+	$gTree insert $gTreeAll end -id INT:Temp -tags [list internal] -values [list [T "Temp/Deleted"]] -open true
 
-  $gTree selection set INT:All
-  manageWorldsSelectGroup
+	$gTree selection set INT:All
+	manageWorldsSelectGroup
 
-  return;
+	return;
 
 };# ::potato::manageWorldsUpdateGroups
 
@@ -5402,29 +5430,29 @@ proc ::potato::manageWorldsUpdateGroups {} {
 #: desc Handle the selection of a new group in the Group Tree; [de]activate buttons as appropriate and update the World Tree.
 #: return nothing
 proc ::potato::manageWorldsSelectGroup {} {
-  variable manageWorlds;
-  variable world;
+	variable manageWorlds;
+	variable world;
 
-  if { ![info exists manageWorlds(toplevel)] } {
-       return;
-     }
+	if { ![info exists manageWorlds(toplevel)] } {
+		return;
+	}
 
-  set tree $manageWorlds(gTree);
-  set sel [lindex [$tree sel] 0]
-  if { $sel eq "" } {
-       $tree selection set [list "INT:All"]
-       $tree focus INT:All
-       manageWorldsUpdateWorlds 0
-       return;
-     }
-  if { [string match "INT:*" $sel] } {
-       $manageWorlds(delGroupBtn) state disabled
-     } else {
-       $manageWorlds(delGroupBtn) state !disabled
-     }
+	set tree $manageWorlds(gTree);
+	set sel [lindex [$tree sel] 0]
+	if { $sel eq "" } {
+		$tree selection set [list "INT:All"]
+		$tree focus INT:All
+		manageWorldsUpdateWorlds 0
+		return;
+	}
+	if { [string match "INT:*" $sel] } {
+		$manageWorlds(delGroupBtn) state disabled
+	} else {
+		$manageWorlds(delGroupBtn) state !disabled
+	}
 
-  manageWorldsUpdateWorlds 0
-  return;
+	manageWorldsUpdateWorlds 0
+	return;
 
 };# ::potato::manageWorldsSelectGroup
 
@@ -5434,66 +5462,66 @@ proc ::potato::manageWorldsSelectGroup {} {
 #: desc Handle the click of a button in the Manage Worlds window.
 #: return 1 if button action succeeded, 0 if it failed/was cancelled
 proc ::potato::manageWorldsBtn {type win} {
-  variable world;
-  variable manageWorlds;
+	variable world;
+	variable manageWorlds;
 
-  if { ![info exists manageWorlds(toplevel)] } {
-       return 0;
-     }
+	if { ![info exists manageWorlds(toplevel)] } {
+		return 0;
+	}
 
-  set succ 1
-  if { $type eq "copyworld" } {
-       foreach w [$manageWorlds(wTree) selection] {
-          copyWorld $w
-       }
-     } elseif { $type eq "editworld" } {
-       foreach w [$manageWorlds(wTree) selection] {
-          configureWorld $w
-       }
-     } elseif { $type eq "connect" } {
-       foreach w [$manageWorlds(wTree) selection] {
-          newConnectionDefault $w
-       }
-       destroy $win
-     } elseif { $type eq "delworld" } {
-       foreach w [$manageWorlds(wTree) selection] {
-          if { $world($w,temp) } {
-               set world($w,temp) 0
-             } else {
-               set ans [tk_messageBox -parent $manageWorlds(toplevel) -title [T "Delete World?"] \
-                           -icon question -type yesno -message [T "Do you really want to delete \"%s\"?" $world($w,name)]]
-               if { $ans eq "yes" } {
-                    set world($w,temp) 1
-                  } else {
-                    set succ 0
-                  }
-             }
-       }
-     } elseif { $type eq "delgroup" } {
-       set sel [lindex [$manageWorlds(gTree) sel] 0]
-       if { [string match "INT:*" $sel] || $sel eq "" } {
-            tk_messageBox -parent $manageWorlds(toplevel) -title [T "Delete Group?"] \
-              -icon error -type ok -message [T "You cannot delete that group."]
-            return 0;
-          }
-       set ans [tk_messageBox -parent $manageWorlds(toplevel) -title [T "Delete Group?"] \
-             -icon question -type yesno -message [T "Do you really want to delete the group \"%s\"?" $sel]]
-       if { $ans eq "yes" } {
-            foreach x [array names world -regexp {^[0-9]+,groups}] {
-               set index [lsearch -exact $world($x) $sel]
-               if { $index > -1 } {
-                    set world($x) [lreplace $world($x) $index $index]
-                  }
-            }
-            manageWorldsUpdateGroups
-          } else {
-            set succ 0
-          }
-     }
+	set succ 1
+	if { $type eq "copyworld" } {
+		foreach w [$manageWorlds(wTree) selection] {
+			copyWorld $w
+		}
+	} elseif { $type eq "editworld" } {
+		foreach w [$manageWorlds(wTree) selection] {
+		configureWorld $w
+		}
+	} elseif { $type eq "connect" } {
+		foreach w [$manageWorlds(wTree) selection] {
+			newConnectionDefault $w
+		}
+		destroy $win
+	} elseif { $type eq "delworld" } {
+		foreach w [$manageWorlds(wTree) selection] {
+			if { $world($w,temp) } {
+				set world($w,temp) 0
+			} else {
+				set ans [tk_messageBox -parent $manageWorlds(toplevel) -title [T "Delete World?"] \
+					-icon question -type yesno -message [T "Do you really want to delete \"%s\"?" $world($w,name)]]
+				if { $ans eq "yes" } {
+					set world($w,temp) 1
+				} else {
+					set succ 0
+				}
+			}
+		}
+	} elseif { $type eq "delgroup" } {
+		set sel [lindex [$manageWorlds(gTree) sel] 0]
+		if { [string match "INT:*" $sel] || $sel eq "" } {
+			tk_messageBox -parent $manageWorlds(toplevel) -title [T "Delete Group?"] \
+				-icon error -type ok -message [T "You cannot delete that group."]
+			return 0;
+		}
+		set ans [tk_messageBox -parent $manageWorlds(toplevel) -title [T "Delete Group?"] \
+			-icon question -type yesno -message [T "Do you really want to delete the group \"%s\"?" $sel]]
+		if { $ans eq "yes" } {
+			foreach x [array names world -regexp {^[0-9]+,groups}] {
+				set index [lsearch -exact $world($x) $sel]
+				if { $index > -1 } {
+					set world($x) [lreplace $world($x) $index $index]
+				}
+			}
+			manageWorldsUpdateGroups
+		} else {
+			set succ 0
+		}
+	}
 
-  manageWorldsUpdateWorlds
+	manageWorldsUpdateWorlds
 
-  return $succ;
+	return $succ;
 
 };# ::potato::manageWorldsBtn
 
@@ -5501,39 +5529,39 @@ proc ::potato::manageWorldsBtn {type win} {
 #: desc Update the Manage World buttons to reflect the currently selected world
 #: return nothing
 proc ::potato::manageWorldsSelectWorld {} {
-  variable manageWorlds;
-  variable world;
+	variable manageWorlds;
+	variable world;
 
-  if { ![info exists manageWorlds(toplevel)] } {
-       return;
-     }
+	if { ![info exists manageWorlds(toplevel)] } {
+		return;
+	}
 
-  set tree $manageWorlds(wTree)
-  set sel [$tree selection]
+	set tree $manageWorlds(wTree)
+	set sel [$tree selection]
 
-  if { [llength $sel] == 0 } {
-       # No selection, deactivate buttons
-       $manageWorlds(copyBtn) state disabled
-       $manageWorlds(editBtn) state disabled
-       $manageWorlds(connectBtn) state disabled
-       $manageWorlds(delBtn) state disabled
-       $manageWorlds(delBtn) configure -text [T "Delete"]
-     } else {
-       $manageWorlds(copyBtn) state !disabled
-       $manageWorlds(editBtn) state !disabled
-       $manageWorlds(connectBtn) state !disabled
-       $manageWorlds(delBtn) state !disabled
-       set text [T "Undelete"]
-       foreach w $sel {
-          if { !$world($w,temp) } {
-               set text [T "Delete"]
-               break;
-             }
-       }
-       $manageWorlds(delBtn) configure -text $text
-     }
+	if { [llength $sel] == 0 } {
+		# No selection, deactivate buttons
+		$manageWorlds(copyBtn) state disabled
+		$manageWorlds(editBtn) state disabled
+		$manageWorlds(connectBtn) state disabled
+		$manageWorlds(delBtn) state disabled
+		$manageWorlds(delBtn) configure -text [T "Delete"]
+	} else {
+		$manageWorlds(copyBtn) state !disabled
+		$manageWorlds(editBtn) state !disabled
+		$manageWorlds(connectBtn) state !disabled
+		$manageWorlds(delBtn) state !disabled
+		set text [T "Undelete"]
+		foreach w $sel {
+			if { !$world($w,temp) } {
+				set text [T "Delete"]
+				break;
+			}
+		}
+		$manageWorlds(delBtn) configure -text $text
+	}
 
-  return;
+	return;
 
 };# ::potato::manageWorldsSelectWorld
 
@@ -5542,48 +5570,48 @@ proc ::potato::manageWorldsSelectWorld {} {
 #: desc Check the selection in the Group Tree and update the World Tree with the appropriate list of worlds
 #: return nothing
 proc ::potato::manageWorldsUpdateWorlds {{keepSel 1}} {
-  variable world;
-  variable manageWorlds;
+	variable world;
+	variable manageWorlds;
 
-  if { ![info exists manageWorlds(toplevel)] } {
-       return;
-     }
+	if { ![info exists manageWorlds(toplevel)] } {
+		return;
+	}
 
-  foreach x [list gTree wTree] {set $x $manageWorlds($x)}
+	foreach x [list gTree wTree] {set $x $manageWorlds($x)}
 
-  set wSel [$wTree selection]
-  $wTree delete [$wTree children {}]
-  set sel [$gTree selection]
-  if { $sel eq "" } {
-       set sel "INT:All"
-     }
-  set worlds [list]
-  foreach w [worldIDs] {
-    if { $sel eq "INT:All" || \
-         ( $sel eq "INT:Ungrouped" && [llength $world($w,groups)] == 0) || \
-         ( $sel eq "INT:Temp" && $world($w,temp) ) || \
-         [lindex $sel 0] in $world($w,groups) } {
-         lappend worlds [list $world($w,name) "$world($w,host):$world($w,port)" $world($w,charDefault) $w]
-       }
-  }
-  set worlds [lsort -dictionary -index 0 $worlds]
-  foreach x $worlds {
-    set w [lindex $x end]
-    $wTree insert {} end -id $w -values $x
-    if { $world($w,temp) } {
-         $wTree item $w -tags deleted
-       }
-  }
+	set wSel [$wTree selection]
+	$wTree delete [$wTree children {}]
+	set sel [$gTree selection]
+	if { $sel eq "" } {
+		set sel "INT:All"
+	}
+	set worlds [list]
+	foreach w [worldIDs] {
+		if { $sel eq "INT:All" || \
+			( $sel eq "INT:Ungrouped" && [llength $world($w,groups)] == 0) || \
+			( $sel eq "INT:Temp" && $world($w,temp) ) || \
+			[lindex $sel 0] in $world($w,groups) } {
+			lappend worlds [list $world($w,name) "$world($w,host):$world($w,port)" $world($w,charDefault) $w]
+		}
+	}
+	set worlds [lsort -dictionary -index 0 $worlds]
+	foreach x $worlds {
+	set w [lindex $x end]
+	$wTree insert {} end -id $w -values $x
+	if { $world($w,temp) } {
+			$wTree item $w -tags deleted
+		}
+	}
 
-  if { !$keepSel || $wSel eq "" || ![$wTree exists $wSel] } {
-       set wSel [lindex [$wTree children {}] 0]
-     }
-  $wTree selection set $wSel
-  $wTree focus $wSel
-  $wTree see $wSel
-  manageWorldsSelectWorld
+	if { !$keepSel || $wSel eq "" || ![$wTree exists $wSel] } {
+		set wSel [lindex [$wTree children {}] 0]
+	}
+	$wTree selection set $wSel
+	$wTree focus $wSel
+	$wTree see $wSel
+	manageWorldsSelectWorld
 
-  return;
+	return;
 
 };# ::potato::manageWorldsUpdateWorlds
 
@@ -5594,75 +5622,76 @@ proc ::potato::manageWorldsUpdateWorlds {{keepSel 1}} {
 #: desc Show the dialog for adding a new world.
 #: return nothing.
 proc ::potato::newWorld {quick {hostAddr ""} {portNum ""}} {
-  variable potato;
-  variable newWorld;
+	variable potato;
+	variable newWorld;
 
-  set win .newWorld
-  if { [winfo exists $win] } {
-       reshowWindow $win
-       return;
-     }
+	set win .newWorld
+	if { [winfo exists $win] } {
+		reshowWindow $win
+		return;
+	}
 
-  toplevel $win
-  wm withdraw $win
-  #wm transient $win .
-  if { $quick } {
-       set title [T "Quick Connect"]
-     } else {
-       set title [T "Add New World"]
-     }
-  wm title $win "$title - $potato(name)"
+	toplevel $win
+	wm withdraw $win
+	#wm transient $win .
+	if { $quick } {
+		set title [T "Quick Connect"]
+	} else {
+		set title [T "Add New World"]
+	}
+	wm title $win "$title - $potato(name)"
 
-  pack [set frame [::ttk::frame $win.frame]] -side left -expand 1 -fill both -anchor nw
+	pack [set frame [::ttk::frame $win.frame]] -side left -expand 1 -fill both -anchor nw
 
-  set newWorld(name) ""
-  set newWorld(host) ""
-  set newWorld(port) ""
+	set newWorld(name) ""
+	set newWorld(host) ""
+	set newWorld(port) ""
 
-  set info [::ttk::label $frame.info -text [T "Enter the connection information\nfor the new world below."]]
-  $info configure -font [list [lindex [$info cget -font] 0] 11]
-  pack $info -side top -anchor n -fill none -padx 4 -pady 4
+	set info [::ttk::label $frame.info -text [T "Enter the connection information\nfor the new world below."]]
+	$info configure -font [list [lindex [$info cget -font] 0] 11]
+	pack $info -side top -anchor n -fill none -padx 4 -pady 4
 
-  set name [::ttk::frame $frame.name]
-  pack $name -side top -fill x -anchor nw -padx 5 -pady 1
-  pack [::ttk::label $name.l -text [T "Name:"] -width 7 -justify left -anchor w] -side left -anchor nw
-  pack [::ttk::entry $name.e -textvariable ::potato::newWorld(name) -width 35] -side left -anchor nw -fill x
+	set name [::ttk::frame $frame.name]
+	pack $name -side top -fill x -anchor nw -padx 5 -pady 1
+	pack [::ttk::label $name.l -text [T "Name:"] -width 7 -justify left -anchor w] -side left -anchor nw
+	pack [::ttk::entry $name.e -textvariable ::potato::newWorld(name) -width 35] -side left -anchor nw -fill x
 
-  set host [::ttk::frame $frame.host]
-  pack $host -side top -fill x -anchor nw -padx 5 -pady 1
-  pack [::ttk::label $host.l -text [T "Host:"] -width 7 -justify left -anchor w] -side left -anchor nw
-  pack [::ttk::entry $host.e -textvariable ::potato::newWorld(host) -width 35] -side left -anchor nw -fill x
-  set potato::newWorld(host) $hostAddr
+	set host [::ttk::frame $frame.host]
+	pack $host -side top -fill x -anchor nw -padx 5 -pady 1
+	pack [::ttk::label $host.l -text [T "Host:"] -width 7 -justify left -anchor w] -side left -anchor nw
+	pack [::ttk::entry $host.e -textvariable ::potato::newWorld(host) -width 35] -side left -anchor nw -fill x
+	set potato::newWorld(host) $hostAddr
 
-  set port [::ttk::frame $frame.port]
-  pack $port -side top -fill x -anchor nw -padx 5 -pady 1
-  pack [::ttk::label $port.l -text [T "Port:"] -width 7 -justify left -anchor w] -side left -anchor nw
-  pack [::ttk::entry $port.e -textvariable ::potato::newWorld(port) -width 35] -side left -anchor nw -fill x
-  set potato::newWorld(port) $portNum
+	set port [::ttk::frame $frame.port]
+	pack $port -side top -fill x -anchor nw -padx 5 -pady 1
+	pack [::ttk::label $port.l -text [T "Port:"] -width 7 -justify left -anchor w] -side left -anchor nw
+	pack [::ttk::entry $port.e -textvariable ::potato::newWorld(port) -width 35] -side left -anchor nw -fill x
+	set potato::newWorld(port) $portNum
 
-  set btns [::ttk::frame $frame.btns]
-  pack $btns -side top -fill x -anchor n -pady 6
-  set ok [::ttk::frame $btns.ok]
-  pack $ok -side left -expand 1 -fill x -anchor n
-  pack [::ttk::button $ok.btn -text [T "OK"] -width 8 -command [list ::potato::newWorldAdd $quick $win] \
-                       -underline 0 -default active] -side top -anchor n
+	set btns [::ttk::frame $frame.btns]
+	pack $btns -side top -fill x -anchor n -pady 6
+	set ok [::ttk::frame $btns.ok]
+	pack $ok -side left -expand 1 -fill x -anchor n
+	pack [::ttk::button $ok.btn -text [T "OK"] -width 8 \
+		-command [list ::potato::newWorldAdd $quick $win] -underline 0 \
+		-default active] -side top -anchor n
 
-  set cancel [::ttk::frame $btns.cancel]
-  pack $cancel -side left -expand 1 -fill x -anchor n
-  pack [::ttk::button $cancel.btn -text [T "Cancel"] -width 8 -command [list destroy $win] \
-                              -underline 0] -side top -anchor n
+	set cancel [::ttk::frame $btns.cancel]
+	pack $cancel -side left -expand 1 -fill x -anchor n
+	pack [::ttk::button $cancel.btn -text [T "Cancel"] -width 8 \
+		-command [list destroy $win] -underline 0] -side top -anchor n
 
-  bind $win <Return> [list $ok.btn invoke]
-  bind $win <Alt-o> [list $ok.btn invoke]
-  bind $win <Alt-c> [list $cancel.btn invoke]
-  bind $win <Escape> [list $cancel.btn invoke]
+	bind $win <Return> [list $ok.btn invoke]
+	bind $win <Alt-o> [list $ok.btn invoke]
+	bind $win <Alt-c> [list $cancel.btn invoke]
+	bind $win <Escape> [list $cancel.btn invoke]
 
-  update idletasks
-  center $win
-  wm deiconify $win
-  focus $name.e
-  connZero
-  return;
+	update idletasks
+	center $win
+	wm deiconify $win
+	focus $name.e
+	connZero
+	return;
 
 };# ::potato::newWorld
 
@@ -5672,27 +5701,27 @@ proc ::potato::newWorld {quick {hostAddr ""} {portNum ""}} {
 #: desc After the 'new world' dialog has been filled out, create the new world, and connect (for "quick connect") or show the configure world dialog (for "add new world")
 #: return nothing
 proc ::potato::newWorldAdd {quick dialog} {
-  variable potato;
-  variable world;
-  variable newWorld;
+	variable potato;
+	variable world;
+	variable newWorld;
 
-  destroy $dialog
+	destroy $dialog
 
-  if { [string trim $newWorld(name)] eq "" } {
-       set name [T "New World"]
-     } else {
-       set name $newWorld(name)
-     }
+	if { [string trim $newWorld(name)] eq "" } {
+		set name [T "New World"]
+	} else {
+		set name $newWorld(name)
+	}
 
-  set w [addNewWorld $name $newWorld(host) $newWorld(port) $quick]
+	set w [addNewWorld $name $newWorld(host) $newWorld(port) $quick]
 
-  if { $quick } {
-       newConnection $w
-     } else {
-       configureWorld $w
-     }
+	if { $quick } {
+		newConnection $w
+	} else {
+		configureWorld $w
+	}
 
-  return;
+	return;
 
 };# ::potato::newWorldAdd
 
@@ -5704,59 +5733,59 @@ proc ::potato::newWorldAdd {quick dialog} {
 #: desc Do the real business (setting vars, etc) of adding a new world
 #: return world id
 proc ::potato::addNewWorld {name host port temp} {
-  variable potato;
-  variable world;
+	variable potato;
+	variable world;
 
-  set w [incr potato(worlds)]
+	set w [incr potato(worlds)]
 
-  loadWorldDefaults $w 0
+	loadWorldDefaults $w 0
 
-  # Add a /grab slash command, and an event for matching it.
-  # We do it here so they can delete/edit it if they want,
-  # without us automatically re-adding it.
-  set world($w,events) [list 0]
-  set world($w,events,0,bg) ""
-  set world($w,events,0,case) 1
-  set world($w,events,0,continue) 0
-  set world($w,events,0,enabled) 1
-  set world($w,events,0,fg) ""
-  set world($w,events,0,inactive) "always"
-  set world($w,events,0,input,string) {[/get 0]}
-  set world($w,events,0,input,window) 3
-  set world($w,events,0,log) 0
-  set world($w,events,0,matchtype) "wildcard"
-  set world($w,events,0,omit) 1
-  set world($w,events,0,noActivity) 0
-  set world($w,events,0,pattern) "FugueEdit > *"
-  set world($w,events,0,pattern,int) "^FugueEdit > (.*)$"
-  set world($w,events,0,send) ""
-  set world($w,events,0,spawn) 0
-  set world($w,events,0,spawnTo) ""
-  set world($w,events,0,matchAll) 0
-  set world($w,events,0,replace) 0
-  set world($w,events,0,replace,with) ""
-  set world($w,events,0,name) "grabber"
+	# Add a /grab slash command, and an event for matching it.
+	# We do it here so they can delete/edit it if they want,
+	# without us automatically re-adding it.
+	set world($w,events) [list 0]
+	set world($w,events,0,bg) ""
+	set world($w,events,0,case) 1
+	set world($w,events,0,continue) 0
+	set world($w,events,0,enabled) 1
+	set world($w,events,0,fg) ""
+	set world($w,events,0,inactive) "always"
+	set world($w,events,0,input,string) {[/get 0]}
+	set world($w,events,0,input,window) 3
+	set world($w,events,0,log) 0
+	set world($w,events,0,matchtype) "wildcard"
+	set world($w,events,0,omit) 1
+	set world($w,events,0,noActivity) 0
+	set world($w,events,0,pattern) "FugueEdit > *"
+	set world($w,events,0,pattern,int) "^FugueEdit > (.*)$"
+	set world($w,events,0,send) ""
+	set world($w,events,0,spawn) 0
+	set world($w,events,0,spawnTo) ""
+	set world($w,events,0,matchAll) 0
+	set world($w,events,0,replace) 0
+	set world($w,events,0,replace,with) ""
+	set world($w,events,0,name) "grabber"
 
-  set world($w,slashcmd) [list grab]
-  set world($w,slashcmd,grab) "^(.+)$"
-  set world($w,slashcmd,grab,type) "regexp"
-  set world($w,slashcmd,grab,send) "@decompile/tf %0"
-  set world($w,slashcmd,grab,case) 1
+	set world($w,slashcmd) [list grab]
+	set world($w,slashcmd,grab) "^(.+)$"
+	set world($w,slashcmd,grab,type) "regexp"
+	set world($w,slashcmd,grab,send) "@decompile/tf %0"
+	set world($w,slashcmd,grab,case) 1
 
-  set world($w,name) $name
-  set world($w,temp) $temp
-  set world($w,host) $host
-  set world($w,port) $port
-  set world($w,id) $w
+	set world($w,name) $name
+	set world($w,temp) $temp
+	set world($w,host) $host
+	set world($w,port) $port
+	set world($w,id) $w
 
-  set world($w,stats,conns) 0
-  set world($w,stats,time) 0
-  set world($w,stats,added) [clock seconds]
+	set world($w,stats,conns) 0
+	set world($w,stats,time) 0
+	set world($w,stats,added) [clock seconds]
 
-  saveWorlds
-  connZero
+	saveWorlds
+	connZero
 
-  return $w;
+	return $w;
 
 };# ::potato::addNewWorld
 
@@ -5765,59 +5794,59 @@ proc ::potato::addNewWorld {name host port temp} {
 #: desc Make a copy of world $w, and return it's new id.
 #: return Id number of new world
 proc ::potato::copyWorld {w} {
-  variable world;
-  variable potato;
+	variable world;
+	variable potato;
 
-  set new [incr potato(worlds)]
+	set new [incr potato(worlds)]
 
-  foreach x [removePrefix [array names world $w,*] $w] {
-    set world($new,$x) $world($w,$x)
-  }
+	foreach x [removePrefix [array names world $w,*] $w] {
+		set world($new,$x) $world($w,$x)
+	}
 
-  # Reset stats...
-  set world($new,stats,conns) 0
-  set world($new,stats,time) 0
-  set world($new,stats,added) [clock seconds]
+	# Reset stats...
+	set world($new,stats,conns) 0
+	set world($new,stats,time) 0
+	set world($new,stats,added) [clock seconds]
 
-  # Make sure it's not set temp...
-  set world($new,temp) 0
+	# Make sure it's not set temp...
+	set world($new,temp) 0
 
-  # And now fix the name...
-  # Possible formats:
-  # Copy of OriginalName[ (X)]
-  # OriginalName (Copy[ X]) <-- current favourite
-  set copyWord [T "Copy"]
-  set copyWordRe [regsub -all {([^a-zA-Z0-9?*])} $copyWord {\\\1}]
-  set hasCopy 0
-  set copyCount [list]
-  set namePtn "^[regsub -all {([^a-zA-Z0-9?*])} $world($new,name) {\\\1}] \\($copyWordRe (\[0-9\]+)\\)$"
-  foreach x [array names world *,name] {
-    if { $x eq "$w,name" || $x eq "$new,name" } {
-         continue;
-       }
-    if { $world($x) eq "$world($new,name) ($copyWord)" } {
-         set hasCopy 1
-       } elseif { [regexp $namePtn $world($x) {} num] } {
-         lappend copyCount $num
-       }
-  }
-  if { !$hasCopy } {
-       set world($new,name) "$world($new,name) ($copyWord)"
-     } else {
-       # First available number...
-       set copyCount [lsort -integer $copyCount]
-       for {set num 1} {$num < 100 && $num in $copyCount} {incr num} {continue}
-       if { $num == 100 } {
-            # We already have 99 copies. Feh, just use (Copy) again
-            set world($new,name) "$world($new,name) ($copyWord)"
-          } else {
-            set world($new,name) "$world($new,name) ($copyWord $num)"
-          }
-     }
+	# And now fix the name...
+	# Possible formats:
+	# Copy of OriginalName[ (X)]
+	# OriginalName (Copy[ X]) <-- current favourite
+	set copyWord [T "Copy"]
+	set copyWordRe [regsub -all {([^a-zA-Z0-9?*])} $copyWord {\\\1}]
+	set hasCopy 0
+	set copyCount [list]
+	set namePtn "^[regsub -all {([^a-zA-Z0-9?*])} $world($new,name) {\\\1}] \\($copyWordRe (\[0-9\]+)\\)$"
+	foreach x [array names world *,name] {
+		if { $x eq "$w,name" || $x eq "$new,name" } {
+			continue;
+		}
+		if { $world($x) eq "$world($new,name) ($copyWord)" } {
+			set hasCopy 1
+		} elseif { [regexp $namePtn $world($x) {} num] } {
+			lappend copyCount $num
+		}
+	}
+	if { !$hasCopy } {
+		set world($new,name) "$world($new,name) ($copyWord)"
+	} else {
+		# First available number...
+		set copyCount [lsort -integer $copyCount]
+		for {set num 1} {$num < 100 && $num in $copyCount} {incr num} {continue}
+		if { $num == 100 } {
+			# We already have 99 copies. Feh, just use (Copy) again
+			set world($new,name) "$world($new,name) ($copyWord)"
+		} else {
+			set world($new,name) "$world($new,name) ($copyWord $num)"
+		}
+	}
 
-  connZero;
+	connZero;
 
-  return $new;
+	return $new;
 
 };# ::potato::copyWorld
 
@@ -5826,83 +5855,83 @@ proc ::potato::copyWorld {w} {
 #: desc Show the window for configuring Macros for world $w.
 #: return nothing
 proc ::potato::macroWindow {{w ""}} {
-  variable conn;
-  variable world;
-  variable macroWindow
+	variable conn;
+	variable world;
+	variable macroWindow
 
-  if { $w eq "" } {
-       set w $conn([up],world)
-     }
+	if { $w eq "" } {
+		set w $conn([up],world)
+	}
 
-  set win .macroWindow$w
-  if { [winfo exists $win] } {
-       reshowWindow $win
-       return;
-     }
+	set win .macroWindow$w
+	if { [winfo exists $win] } {
+		reshowWindow $win
+		return;
+	}
 
-  if { $w == 0 } {
-       set title [T "Global Macros"]
-     } else {
-       set title [T "Macros for %s" $world($w,name)]
-     }
+	if { $w == 0 } {
+		set title [T "Global Macros"]
+	} else {
+		set title [T "Macros for %s" $world($w,name)]
+	}
 
-  toplevel $win
-  wm title $win $title
+	toplevel $win
+	wm title $win $title
 
-  pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both
+	pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both
 
-  pack [set top [::ttk::frame $frame.top]] -side left -expand 1 -fill both
+	pack [set top [::ttk::frame $frame.top]] -side left -expand 1 -fill both
 
-  pack [set left [::ttk::frame $top.left]] -side left -expand 1 -fill both
-  pack [set right [::ttk::frame $top.right]] -side left -expand 1 -fill both
+	pack [set left [::ttk::frame $top.left]] -side left -expand 1 -fill both
+	pack [set right [::ttk::frame $top.right]] -side left -expand 1 -fill both
 
-  set tframe [::ttk::frame $left.tframe]
-  set tree [::ttk::treeview $tframe.tree -show [list headings] -columns [list Name Commands] \
-               -yscrollcommand [list $tframe.y set] \
-               -xscrollcommand [list $tframe.x set] -selectmode browse]
-  set x [::ttk::scrollbar $tframe.x -orient horizontal -command [list $tree xview]]
-  set y [::ttk::scrollbar $tframe.y -orient vertical -command [list $tree xview]]
-  grid_with_scrollbars $tree $x $y
+	set tframe [::ttk::frame $left.tframe]
+	set tree [::ttk::treeview $tframe.tree -show [list headings] -columns [list Name Commands] \
+		-yscrollcommand [list $tframe.y set] \
+		-xscrollcommand [list $tframe.x set] -selectmode browse]
+	set x [::ttk::scrollbar $tframe.x -orient horizontal -command [list $tree xview]]
+	set y [::ttk::scrollbar $tframe.y -orient vertical -command [list $tree xview]]
+	grid_with_scrollbars $tree $x $y
 
-  $tree heading Name -text [T "Name"]
-  $tree heading Commands -text [T "Commands"]
-  $tree column Name -width 80 -stretch 0
-  $tree column Commands -width 150 -stretch 1
-  bind $tree <<TreeviewSelect>> [list ::potato::macroWindowState $w]
+	$tree heading Name -text [T "Name"]
+	$tree heading Commands -text [T "Commands"]
+	$tree column Name -width 80 -stretch 0
+	$tree column Commands -width 150 -stretch 1
+	bind $tree <<TreeviewSelect>> [list ::potato::macroWindowState $w]
 
-  pack $tframe -side top -padx 10 -pady 10 -expand 1 -fill both
+	pack $tframe -side top -padx 10 -pady 10 -expand 1 -fill both
 
-  pack [set bframe [::ttk::frame $left.bframe]] -side top -anchor n -pady 13
+	pack [set bframe [::ttk::frame $left.bframe]] -side top -anchor n -pady 13
 
-  pack [set add [::ttk::button $bframe.add -image ::potato::img::event-new \
-            -command [list ::potato::macroWindowAdd $w]]] -side left -padx 8
-  tooltip $add [T "Add Macro"]
-  pack [set edit [::ttk::button $bframe.edit -image ::potato::img::event-edit \
-            -command [list ::potato::macroWindowEdit $w]]] -side left -padx 8
-  tooltip $edit [T "Edit Macro"]
-  pack [set delete [::ttk::button $bframe.delete -image ::potato::img::event-delete \
-            -command [list ::potato::macroWindowDelete $w]]] -side top -padx 8
-  tooltip $delete [T "Delete Macro"]
+	pack [set add [::ttk::button $bframe.add -image ::potato::img::event-new \
+		-command [list ::potato::macroWindowAdd $w]]] -side left -padx 8
+	tooltip $add [T "Add Macro"]
+	pack [set edit [::ttk::button $bframe.edit -image ::potato::img::event-edit \
+		-command [list ::potato::macroWindowEdit $w]]] -side left -padx 8
+	tooltip $edit [T "Edit Macro"]
+	pack [set delete [::ttk::button $bframe.delete -image ::potato::img::event-delete \
+		-command [list ::potato::macroWindowDelete $w]]] -side top -padx 8
+	tooltip $delete [T "Delete Macro"]
 
-  pack [set nframe [::ttk::frame $right.name]] -side top -anchor w -padx 10 -pady 10 -expand 1 -fill x
-  pack [::ttk::label $nframe.l -text [T "Name:"]] -side left -anchor w
-  pack [set name [::ttk::entry $nframe.e]] -side left -anchor w -expand 1 -fill x
-  pack [set tframe [::ttk::frame $right.text]] -side top -anchor w -padx 10 -pady 10
-  pack [::ttk::label $tframe.l -text [T "Commands:"]] -anchor w
-  pack [set commands [text $tframe.txt -height 10 -width 40 -wrap word -font TkFixedFont]] -anchor w
-  pack [set bframe [::ttk::frame $right.btns]] -side top -anchor e -padx 10 -pady 10
-  pack [set save [::ttk::button $bframe.save -text [T "Save"] -command [list ::potato::macroWindowFinish $w 1]]] -side left -padx 8
-  pack [set cancel [::ttk::button $bframe.cancel -text [T "Cancel"] -command [list ::potato::macroWindowFinish $w 0]]] -side left -padx 8
+	pack [set nframe [::ttk::frame $right.name]] -side top -anchor w -padx 10 -pady 10 -expand 1 -fill x
+	pack [::ttk::label $nframe.l -text [T "Name:"]] -side left -anchor w
+	pack [set name [::ttk::entry $nframe.e]] -side left -anchor w -expand 1 -fill x
+	pack [set tframe [::ttk::frame $right.text]] -side top -anchor w -padx 10 -pady 10
+	pack [::ttk::label $tframe.l -text [T "Commands:"]] -anchor w
+	pack [set commands [text $tframe.txt -height 10 -width 40 -wrap word -font TkFixedFont]] -anchor w
+	pack [set bframe [::ttk::frame $right.btns]] -side top -anchor e -padx 10 -pady 10
+	pack [set save [::ttk::button $bframe.save -text [T "Save"] -command [list ::potato::macroWindowFinish $w 1]]] -side left -padx 8
+	pack [set cancel [::ttk::button $bframe.cancel -text [T "Cancel"] -command [list ::potato::macroWindowFinish $w 0]]] -side left -padx 8
 
-  foreach x [list tree add edit delete name commands save cancel] {
-    set macroWindow($w,path,$x) [set $x]
-  }
+	foreach x [list tree add edit delete name commands save cancel] {
+		set macroWindow($w,path,$x) [set $x]
+	}
 
-  macroWindowPopulate $w
+	macroWindowPopulate $w
 
-  bind $win <Destroy> [list array unset macroWindow $w,*]
+	bind $win <Destroy> [list array unset macroWindow $w,*]
 
-  return;
+	return;
 
 };# ::potato::macroWindow
 
@@ -5911,17 +5940,17 @@ proc ::potato::macroWindow {{w ""}} {
 #: desc Delete the currently selected macro
 #: return nothing
 proc ::potato::macroWindowDelete {w} {
-  variable macroWindow;
-  variable world;
+	variable macroWindow;
+	variable world;
 
-  set sel [lindex [$macroWindow($w,path,tree) selection] 0]
-  if { $sel eq "" } {
-       return;
-     }
-  unset world($w,macro,$sel)
-  macroWindowPopulate $w
+	set sel [lindex [$macroWindow($w,path,tree) selection] 0]
+	if { $sel eq "" } {
+		return;
+	}
+	unset world($w,macro,$sel)
+	macroWindowPopulate $w
 
-  return;
+	return;
 
 };# ::potato::macroWindowDelete
 
@@ -5931,40 +5960,40 @@ proc ::potato::macroWindowDelete {w} {
 #: desc Possibly save the currently edited macro, then clear the window
 #: return nothing
 proc ::potato::macroWindowFinish {w save} {
-  variable macroWindow;
-  variable world;
+	variable macroWindow;
+	variable world;
 
-  if { $save } {
-       set name [$macroWindow($w,path,name) get]
-       set commands [$macroWindow($w,path,commands) get 1.0 end-1c]
-       if { ![regexp {^[a-zA-Z0-9!._-]{1,49}$} $name] } {
-            tk_messageBox -message [T "Invalid name."] -icon error \
-                          -title [T "Macros"] \
-                          -type ok -parent $macroWindow($w,path,commands)
-            return;
-          }
-       if { $name ne $macroWindow($w,editing) } {
-            # Using a different name.
-            if { [info exists world($w,macro,$name)] } {
-                 set ans [tk_messageBox -icon warning -title [T "Macros"] -type yesno \
-                            -parent $macroWindow($w,path,commands) \
-                            -message [T "A Macro with that name already exists. Override?"]]
-                 if { $ans ne "yes" } {
-                      return;
-                    }
-                 unset world($w,macro,$macroWindow($w,editing))
-               }
-          }
-       set world($w,macro,$name) $commands
-     }
-  $macroWindow($w,path,name) delete 0 end
-  $macroWindow($w,path,commands) delete 1.0 end
-  macroWindowState $w
-  if { $save } {
-       macroWindowPopulate $w $name
-     }
+	if { $save } {
+		set name [$macroWindow($w,path,name) get]
+		set commands [$macroWindow($w,path,commands) get 1.0 end-1c]
+		if { ![regexp {^[a-zA-Z0-9!._-]{1,49}$} $name] } {
+			tk_messageBox -message [T "Invalid name."] -icon error \
+				-title [T "Macros"] -type ok \
+				-parent $macroWindow($w,path,commands)
+			return;
+		}
+		if { $name ne $macroWindow($w,editing) } {
+			# Using a different name.
+			if { [info exists world($w,macro,$name)] } {
+				set ans [tk_messageBox -icon warning -title [T "Macros"] 
+					-type yesno -parent $macroWindow($w,path,commands) \
+					-message [T "A Macro with that name already exists. Override?"]]
+				if { $ans ne "yes" } {
+					return;
+				}
+				unset world($w,macro,$macroWindow($w,editing))
+			}
+		}
+		set world($w,macro,$name) $commands
+	}
+	$macroWindow($w,path,name) delete 0 end
+	$macroWindow($w,path,commands) delete 1.0 end
+	macroWindowState $w
+	if { $save } {
+		macroWindowPopulate $w $name
+	}
 
-  return;
+	return;
 
 };# ::potato::macroWindowFinish
 
@@ -5973,12 +6002,12 @@ proc ::potato::macroWindowFinish {w save} {
 #: desc Set up Macro Window for world $w for adding a new macro
 #: return nothing
 proc ::potato::macroWindowAdd {w} {
-  variable macroWindow;
+	variable macroWindow;
 
-  set macroWindow($w,editing) ""
-  macroWindowState $w 2
+	set macroWindow($w,editing) ""
+	macroWindowState $w 2
 
-  return;
+	return;
 
 };# ::potato::macroWindowAdd
 
@@ -5987,17 +6016,17 @@ proc ::potato::macroWindowAdd {w} {
 #: desc Set up Macro Window for world $w for editing the currently selected macro
 #: return nothing
 proc ::potato::macroWindowEdit {w} {
-  variable macroWindow;
-  variable world;
+	variable macroWindow;
+	variable world;
 
-  set which [lindex [$macroWindow($w,path,tree) selection] 0]
+	set which [lindex [$macroWindow($w,path,tree) selection] 0]
 
-  set macroWindow($w,editing) $which
-  macroWindowState $w 2
-  $macroWindow($w,path,name) insert end $which
-  $macroWindow($w,path,commands) insert end $world($w,macro,$which)
+	set macroWindow($w,editing) $which
+	macroWindowState $w 2
+	$macroWindow($w,path,name) insert end $which
+	$macroWindow($w,path,commands) insert end $world($w,macro,$which)
 
-  return;
+	return;
 
 };# ::potato::macroWindowEdit
 
@@ -6007,26 +6036,26 @@ proc ::potato::macroWindowEdit {w} {
 #: desc Populate the Macro Window list for world $w and select the specified item
 #: return nothing
 proc ::potato::macroWindowPopulate {w {sel ""}} {
-  variable macroWindow;
-  variable world;
+	variable macroWindow;
+	variable world;
 
-  set tree $macroWindow($w,path,tree)
-  $tree delete [$tree children {}]
-  foreach x [lsort -dictionary [removePrefix [arraySubelem world $w,macro] $w,macro]] {
-    $tree insert {} end -id $x -values [list $x [string map [list \n " \b "] $world($w,macro,$x)]]
-  }
-  if { $sel eq "" || ![$tree exists $sel] } {
-       set sel [lindex [$tree children {}] 0]
-     }
-  if { $sel eq "" } {
-       macroWindowState $w 0
-     } else {
-       $tree selection set $sel
-       $tree focus $sel
-       macroWindowState $w 1
-     }
+	set tree $macroWindow($w,path,tree)
+	$tree delete [$tree children {}]
+	foreach x [lsort -dictionary [removePrefix [arraySubelem world $w,macro] $w,macro]] {
+		$tree insert {} end -id $x -values [list $x [string map [list \n " \b "] $world($w,macro,$x)]]
+	}
+	if { $sel eq "" || ![$tree exists $sel] } {
+		set sel [lindex [$tree children {}] 0]
+	}
+	if { $sel eq "" } {
+		macroWindowState $w 0
+	} else {
+		$tree selection set $sel
+		$tree focus $sel
+		macroWindowState $w 1
+	}
 
-  return;
+	return;
 
 };# ::potato::macroWindowPopulate
 
@@ -6036,37 +6065,37 @@ proc ::potato::macroWindowPopulate {w {sel ""}} {
 #: desc Set widget states in the Macro Window for world $w.
 #: return nothing
 proc ::potato::macroWindowState {w {state -1}} {
-  variable macroWindow;
+	variable macroWindow;
 
-  if { $state == -1 } {
-       if { [llength [$macroWindow($w,path,tree) selection]] } {
-            set state 1
-          } else {
-            set state 0
-          }
-     }
+	if { $state == -1 } {
+		if { [llength [$macroWindow($w,path,tree) selection]] } {
+			set state 1
+		} else {
+			set state 0
+		}
+	}
 
-  if { $state == 2 } {
-       foreach x [list tree add edit delete] {
-         $macroWindow($w,path,$x) state disabled
-       }
-       foreach x [list name save cancel] {
-         $macroWindow($w,path,$x) state !disabled
-       }
-       $macroWindow($w,path,commands) configure -state normal
-       focus $macroWindow($w,path,name)
-     } else {
-       foreach x [list tree edit delete] {
-         $macroWindow($w,path,$x) state [lindex [list disabled !disabled] $state]
-       }
-       $macroWindow($w,path,add) state !disabled
-       foreach x [list name save cancel] {
-         $macroWindow($w,path,$x) state disabled
-       }
-       $macroWindow($w,path,commands) configure -state disabled
-       focus $macroWindow($w,path,tree)
-     }
-  return;
+	if { $state == 2 } {
+		foreach x [list tree add edit delete] {
+			$macroWindow($w,path,$x) state disabled
+		}
+		foreach x [list name save cancel] {
+			$macroWindow($w,path,$x) state !disabled
+		}
+		$macroWindow($w,path,commands) configure -state normal
+		focus $macroWindow($w,path,name)
+	} else {
+		foreach x [list tree edit delete] {
+			$macroWindow($w,path,$x) state [lindex [list disabled !disabled] $state]
+		}
+		$macroWindow($w,path,add) state !disabled
+		foreach x [list name save cancel] {
+			$macroWindow($w,path,$x) state disabled
+		}
+		$macroWindow($w,path,commands) configure -state disabled
+		focus $macroWindow($w,path,tree)
+	}
+	return;
 
 };# ::potato::macroWindowState
 
@@ -6078,12 +6107,12 @@ proc ::potato::macroWindowState {w {state -1}} {
 #: return nothing
 proc ::potato::grid_with_scrollbars {widget x y} {
 
-  set frame [winfo parent $widget]
-  grid $widget $y -sticky nsew
-  grid $x -sticky nswe
-  grid rowconfigure $frame $widget -weight 1
-  grid columnconfigure $frame $widget -weight 1
-  return;
+	set frame [winfo parent $widget]
+	grid $widget $y -sticky nsew
+	grid $x -sticky nswe
+	grid rowconfigure $frame $widget -weight 1
+	grid columnconfigure $frame $widget -weight 1
+	return;
 
 };# ::potato::grid_with_scrollbars
 
@@ -6093,23 +6122,23 @@ proc ::potato::grid_with_scrollbars {widget x y} {
 #: return nothing
 proc ::potato::center {win} {
 
-  update
-  if { ![winfo exists $win] } {
-       return;
-     }
-  set w [winfo reqwidth $win]
-  set h [winfo reqheight $win]
+	update
+	if { ![winfo exists $win] } {
+		return;
+	}
+	set w [winfo reqwidth $win]
+	set h [winfo reqheight $win]
 
-  set sh [winfo screenheight $win]
-  set sw [winfo screenwidth $win]
+	set sh [winfo screenheight $win]
+	set sw [winfo screenwidth $win]
 
-  set reqX [expr {($sw-$w)/2}]
-  set reqY [expr {($sh-$h)/2}]
+	set reqX [expr {($sw-$w)/2}]
+	set reqY [expr {($sh-$h)/2}]
 
-  wm geometry $win +$reqX+$reqY
-  update idletasks
-  after 10
-  return;
+	wm geometry $win +$reqX+$reqY
+	update idletasks
+	after 10
+	return;
 
 };# ::potato::center
 
@@ -6118,19 +6147,19 @@ proc ::potato::center {win} {
 #: desc returns the status (normal, disconnected, idle, closed) for a connection
 #: return "normal", "disconnected", "idle", "closed"
 proc ::potato::status {c} {
-  variable conn;
+	variable conn;
 
-  if { $c == 0 } {
-       return "normal";
-     } elseif { ![info exists conn($c,connected)] } {
-       return "closed";
-     } elseif { $conn($c,connected) == 0 } {
-       return "disconnected";
-     } elseif { $conn($c,idle) == 1 } {
-       return "idle";
-     } else {
-       return "normal";
-     }
+	if { $c == 0 } {
+		return "normal";
+	} elseif { ![info exists conn($c,connected)] } {
+		return "closed";
+	} elseif { $conn($c,connected) == 0 } {
+		return "disconnected";
+	} elseif { $conn($c,idle) == 1 } {
+		return "idle";
+	} else {
+		return "normal";
+	}
 
 };# ::potato::status
 
@@ -6139,19 +6168,19 @@ proc ::potato::status {c} {
 #: desc returns the connection status (connected, disconnected, connecting, closed) for a connection
 #: return "connected", "disconnected", "connecting", "closed"
 proc ::potato::connStatus {c} {
-  variable conn;
+	variable conn;
 
-  if { $c == 0 } {
-       return "connected";
-     } elseif { ![info exists conn($c,connected)] } {
-       return "closed";
-     } elseif { $conn($c,connected) == 0 } {
-       return "disconnected";
-     } elseif { $conn($c,connected) == -1 } {
-       return "connecting";
-     } else {
-       return "connected";
-     }
+	if { $c == 0 } {
+		return "connected";
+	} elseif { ![info exists conn($c,connected)] } {
+		return "closed";
+	} elseif { $conn($c,connected) == 0 } {
+		return "disconnected";
+	} elseif { $conn($c,connected) == -1 } {
+		return "connecting";
+	} else {
+		return "connected";
+	}
 
 };# ::potato::connStatus
 
@@ -6161,54 +6190,54 @@ proc ::potato::connStatus {c} {
 #: desc return info about the $type for connection $c
 #: return string containing the $type info for the connection
 proc ::potato::connInfo {c type} {
-  variable conn;
-  variable world;
+	variable conn;
+	variable world;
 
-  if { $c eq "" } {
-       set c [up]
-     }
+	if { $c eq "" } {
+		set c [up]
+	}
 
-  switch -glob -- $type {
-    name -
-    host -
-    port -
-    top,bg -
-    bottom,bg -
-    bottom,fg { return $world($conn($c,world),$type); }
-    top,font -
-    bottom,font { return $world($conn($c,world),$type,created); }
-    text -
-    widget -
-    textWidget -
-    textwidget { return $conn($c,textWidget);}
-    connname { return [lindex $conn($c,name) 1];}
-    input1 { return $conn($c,input1);}
-    input2 { return $conn($c,input2);}
-    input3 { return $conn($c,input[connInfo $c inputFocus]);}
-    inputFocus { return [expr {[focus -displayof $conn($c,input2)] eq $conn($c,input2) ? 2 : 1}]; }
-    autoreconnect { return [expr {$world($conn($c,world),autoreconnect) && $conn($c,reconnectId) ne ""}]; }
-    world {return $conn($c,world);}
-    address {return $conn($c,address);}
-    spawns {return $conn($c,spawns);}
-  }
+	switch -glob -- $type {
+		name -
+		host -
+		port -
+		top,bg -
+		bottom,bg -
+		bottom,fg { return $world($conn($c,world),$type); }
+		top,font -
+		bottom,font { return $world($conn($c,world),$type,created); }
+		text -
+		widget -
+		textWidget -
+		textwidget { return $conn($c,textWidget);}
+		connname { return [lindex $conn($c,name) 1];}
+		input1 { return $conn($c,input1);}
+		input2 { return $conn($c,input2);}
+		input3 { return $conn($c,input[connInfo $c inputFocus]);}
+		inputFocus { return [expr {[focus -displayof $conn($c,input2)] eq $conn($c,input2) ? 2 : 1}]; }
+		autoreconnect { return [expr {$world($conn($c,world),autoreconnect) && $conn($c,reconnectId) ne ""}]; }
+		world {return $conn($c,world);}
+		address {return $conn($c,address);}
+		spawns {return $conn($c,spawns);}
+	}
 
-  # Note: "input1" and "input2" return the WIDGET PATH of those input windows.
-  # "inputFocus" returns a NUMBER, 1 or 2, telling which has focus. "input3" returns the widget path of "inputFocus"
+	# Note: "input1" and "input2" return the WIDGET PATH of those input windows.
+	# "inputFocus" returns a NUMBER, 1 or 2, telling which has focus. "input3" returns the widget path of "inputFocus"
 
-  if { $type eq "autoreconnect,time" } {
-       if { !$world($conn($c,world),autoreconnect) } {
-            return 0;
-          } else {
-            set num $world($conn($c,world),autoreconnect,time)
-            if { ![string is integer -strict $num] } {
-                 return 0;
-               } else {
-                 return $num;
-               }
-          }
-     }
+	if { $type eq "autoreconnect,time" } {
+		if { !$world($conn($c,world),autoreconnect) } {
+			return 0;
+		} else {
+			set num $world($conn($c,world),autoreconnect,time)
+			if { ![string is integer -strict $num] } {
+				return 0;
+			} else {
+				return $num;
+			}
+		}
+	}
 
-  return "";
+	return "";
 
 };# ::potato::connInfo
 
@@ -6218,13 +6247,13 @@ proc ::potato::connInfo {c type} {
 #: return the opposite colour, in #RRRRGGGGBBBB notation
 proc ::potato::reverseColour {col} {
 
-  foreach [list red green blue] [winfo rgb . $col] {break}
+	foreach [list red green blue] [winfo rgb . $col] {break}
 
-  set red [expr {65535 - $red}]
-  set blue [expr {65535 - $blue}]
-  set green [expr {65535 - $green}]
+	set red [expr {65535 - $red}]
+	set blue [expr {65535 - $blue}]
+	set green [expr {65535 - $green}]
 
-  return [format "#%04x%04x%04x" $red $green $blue];
+	return [format "#%04x%04x%04x" $red $green $blue];
 
 };# ::potato::reverseColour
 
@@ -6233,26 +6262,26 @@ proc ::potato::reverseColour {col} {
 #: desc when $win is ., twiddle the idle flag for the current connection to show activity
 #: return nothing
 proc ::potato::focusIn {win} {
-  variable conn;
+	variable conn;
 
-  if { [winfo toplevel $win] ne $win || $win ne "." } {
-       return;
-     }
+	if { [winfo toplevel $win] ne $win || $win ne "." } {
+		return;
+	}
 
-  set focus [focus -displayof .]
-  set c [up]
+	set focus [focus -displayof .]
+	set c [up]
 
-  if { $c ne "" && $focus ne "" } {
-       set conn($c,idle) 0
-       if { $focus ni [list $conn($c,input1) $conn($c,input2)] } {
-            focus $conn($c,input1)
-          }
-     }
+	if { $c ne "" && $focus ne "" } {
+		set conn($c,idle) 0
+		if { $focus ni [list $conn($c,input1) $conn($c,input2)] } {
+			focus $conn($c,input1)
+		}
+	}
 
-  catch {unflashTaskbar $win}
-  catch {unflashSystrayIcon}
+	catch {unflashTaskbar $win}
+	catch {unflashSystrayIcon}
 
-  return;
+	return;
 
 };# ::potato::focusIn
 
@@ -6261,20 +6290,20 @@ proc ::potato::focusIn {win} {
 #: desc and queue an update in 1 second. Also set the formatted connection stats.
 #: return nothing
 proc ::potato::setClock {} {
-  variable potato;
-  variable misc;
-  variable conn;
+	variable potato;
+	variable misc;
+	variable conn;
 
-  after 1000 potato::setClock
-  set potato(clock) [clock format [set secs [clock seconds]] -format $misc(clockFormat)]
-  foreach x [array names conn -regexp {^[1-9][0-9]*,stats,formatted$}] {
-     scan $x %d,stats,formatted c
-     if { $conn($c,stats,connAt) != -1 } {
-          set conn($c,stats,formatted) [statsFormat [expr {$secs - $conn($c,stats,connAt)}]]
-        }
-  }
+	after 1000 potato::setClock
+	set potato(clock) [clock format [set secs [clock seconds]] -format $misc(clockFormat)]
+	foreach x [array names conn -regexp {^[1-9][0-9]*,stats,formatted$}] {
+		scan $x %d,stats,formatted c
+		if { $conn($c,stats,connAt) != -1 } {
+			set conn($c,stats,formatted) [statsFormat [expr {$secs - $conn($c,stats,connAt)}]]
+		}
+	}
 
-  return;
+	return;
 
 };# ::potato::setClock
 
@@ -6284,12 +6313,12 @@ proc ::potato::setClock {} {
 #: return Formatted time
 proc ::potato::statsFormat {secs} {
 
-  #set h [expr {($secs % 86400) / 3600}]
-  set h [expr {$secs / 3600}]
-  #set m [expr {($secs % 86400) % 3600) / 60}]
-  set m [expr {($secs % 3600) / 60}]
+	#set h [expr {($secs % 86400) / 3600}]
+	set h [expr {$secs / 3600}]
+	#set m [expr {($secs % 86400) % 3600) / 60}]
+	set m [expr {($secs % 3600) / 60}]
 
-  return [T "%dh %dm" $h $m];
+	return [T "%dh %dm" $h $m];
 
 };# ::potato::statsFormat
 
@@ -6299,67 +6328,67 @@ proc ::potato::statsFormat {secs} {
 #: return path to toplevel
 proc ::potato::errorLogWindow {} {
 
-  set win .errorLogWin
-  if { [winfo exists $win] } {
-       # These messages are reset because we create the window, initially, before translation files are loaded
-       # (so we can report errors in doing so), so need to be translated later, when the window is displayed.
-       wm title $win [T "Potato Debugging Log"]
-       $win.frame.btm.buttons.close configure -text [T "Close"]
-       $win.frame.btm.report configure -text [T "Report Errors?"]
-       $win.frame.btm.buttons.copy configure -text [T "Copy to Clipboard"]
-       $win.frame.btm.buttons.packages configure -text [T "Show Package Info"]
-       reshowWindow $win 0
-       focus $win.frame.btm.buttons.close
-       return $win;
-     }
+	set win .errorLogWin
+	if { [winfo exists $win] } {
+		# These messages are reset because we create the window, initially, before translation files are loaded
+		# (so we can report errors in doing so), so need to be translated later, when the window is displayed.
+		wm title $win [T "Potato Debugging Log"]
+		$win.frame.btm.buttons.close configure -text [T "Close"]
+		$win.frame.btm.report configure -text [T "Report Errors?"]
+		$win.frame.btm.buttons.copy configure -text [T "Copy to Clipboard"]
+		$win.frame.btm.buttons.packages configure -text [T "Show Package Info"]
+		reshowWindow $win 0
+		focus $win.frame.btm.buttons.close
+		return $win;
+	}
 
-  toplevel $win
-  wm withdraw $win
-  wm title $win [T "Potato Debugging Log"]
+	toplevel $win
+	wm withdraw $win
+	wm title $win [T "Potato Debugging Log"]
 
-  pack [set frame [::ttk::frame $win.frame]] -side left -anchor nw -expand 1 -fill both
-  pack [set cont [::ttk::frame $frame.top]] -side top -anchor nw -expand 1 -fill both
+	pack [set frame [::ttk::frame $win.frame]] -side left -anchor nw -expand 1 -fill both
+	pack [set cont [::ttk::frame $frame.top]] -side top -anchor nw -expand 1 -fill both
 
-  set text [text $cont.text -width 100 -height 20 -wrap word -undo 0]
-  set sbY [::ttk::scrollbar $cont.sbY -orient vertical -command [list $text yview]]
-  set sbX [::ttk::scrollbar $cont.sbX -orient horizontal -command [list $text xview]]
-  $text configure -yscrollcommand [list $sbY set] -xscrollcommand [list $sbX set]
-  grid_with_scrollbars $text $sbX $sbY
+	set text [text $cont.text -width 100 -height 20 -wrap word -undo 0]
+	set sbY [::ttk::scrollbar $cont.sbY -orient vertical -command [list $text yview]]
+	set sbX [::ttk::scrollbar $cont.sbX -orient horizontal -command [list $text xview]]
+	$text configure -yscrollcommand [list $sbY set] -xscrollcommand [list $sbX set]
+	grid_with_scrollbars $text $sbX $sbY
 
-  $text tag configure error -foreground #ee0000 -lmargin2 25
-  $text tag configure warning -foreground #4f4fff -lmargin2 25
-  $text tag configure message -foreground #00c131 -lmargin2 25
+	$text tag configure error -foreground #ee0000 -lmargin2 25
+	$text tag configure warning -foreground #4f4fff -lmargin2 25
+	$text tag configure message -foreground #00c131 -lmargin2 25
 
-  $text tag configure margin -lmargin1 15
+	$text tag configure margin -lmargin1 15
 
-  $text tag configure toggleBtn -lmargin1 2 -elide 0
-  $text tag bind toggleBtn <ButtonRelease-1> [list ::potato::errorLogToggle $text]
-  $text tag bind toggleBtn <Enter> [list $text configure -cursor arrow]
-  $text tag bind toggleBtn <Leave> [list $text configure -cursor xterm]
-  $text tag configure errorTrace -lmargin1 20 -lmargin2 25
+	$text tag configure toggleBtn -lmargin1 2 -elide 0
+	$text tag bind toggleBtn <ButtonRelease-1> [list ::potato::errorLogToggle $text]
+	$text tag bind toggleBtn <Enter> [list $text configure -cursor arrow]
+	$text tag bind toggleBtn <Leave> [list $text configure -cursor xterm]
+	$text tag configure errorTrace -lmargin1 20 -lmargin2 25
 
-  $text tag configure errorTraceHidden -elide 1
-  $text tag raise toggleBtn
+	$text tag configure errorTraceHidden -elide 1
+	$text tag raise toggleBtn
 
-  pack [set btm [frame $frame.btm]] -side top -anchor nw -expand 0 -fill x -pady 10
-  pack [set btns [frame $btm.buttons]] -side top -anchor center
-  pack [::ttk::button $btns.close -text [T "Close"] -takefocus 1 -underline 0 -default active \
-               -command "[list wm withdraw $win] ; [list set ::potato::bgError 0]"] -side left -padx 7
-  pack [::ttk::button $btns.copy -text [T "Copy to Clipboard"] \
-       -command [list ::potato::copyAllTextToClipboard $text] -takefocus 1] -side left -padx 7
-  pack [::ttk::button $btns.packages -text [T "Show Package Info"] \
-             -command [list ::potato::showPackageInfo] -takefocus 1] -side left -padx 7
+	pack [set btm [frame $frame.btm]] -side top -anchor nw -expand 0 -fill x -pady 10
+	pack [set btns [frame $btm.buttons]] -side top -anchor center
+	pack [::ttk::button $btns.close -text [T "Close"] -takefocus 1 -underline 0 -default active \
+		-command "[list wm withdraw $win] ; [list set ::potato::bgError 0]"] -side left -padx 7
+	pack [::ttk::button $btns.copy -text [T "Copy to Clipboard"] \
+		-command [list ::potato::copyAllTextToClipboard $text] -takefocus 1] -side left -padx 7
+	pack [::ttk::button $btns.packages -text [T "Show Package Info"] \
+		-command [list ::potato::showPackageInfo] -takefocus 1] -side left -padx 7
 
-  place [::ttk::checkbutton $btm.report -text [T "Report Errors?"] \
-            -variable ::potato::potato(report_errors)] -anchor e -rely 0.5 -relx 1 -x -10
+	place [::ttk::checkbutton $btm.report -text [T "Report Errors?"] \
+		-variable ::potato::potato(report_errors)] -anchor e -rely 0.5 -relx 1 -x -10
 
-  $text configure -state disabled
+	$text configure -state disabled
 
-  wm protocol $win WM_DELETE_WINDOW [list $btns.close invoke];# don't destroy, just hide
+	wm protocol $win WM_DELETE_WINDOW [list $btns.close invoke];# don't destroy, just hide
 
-  bind $win <1> [list ::potato::errorLogClick %W]
+	bind $win <1> [list ::potato::errorLogClick %W]
 
-  return $win;
+	return $win;
 
 };# ::potato::errorLogWindow
 
@@ -6369,12 +6398,12 @@ proc ::potato::errorLogWindow {} {
 #: return nothing
 proc ::potato::errorLogClick {win} {
 
-  set where [winfo containing {*}[winfo pointerxy $win]]
-  if { $where eq "" || [winfo toplevel $win] ne [winfo toplevel $where] } {
-       bell -displayof $win
-     }
+	set where [winfo containing {*}[winfo pointerxy $win]]
+	if { $where eq "" || [winfo toplevel $win] ne [winfo toplevel $where] } {
+		bell -displayof $win
+	}
 
-  return;
+	return;
 };# ::potato::errorLogClick
 
 #: proc ::potato::errorLog
@@ -6385,52 +6414,52 @@ proc ::potato::errorLogClick {win} {
 #: desc Print the given message to the Error Log window with the given priority level
 #: return nothing
 proc ::potato::errorLog {msg {level "error"} {trace ""} {report 0}} {
-  variable potato;
+	variable potato;
 
-  set win .errorLogWin.frame.top.text
+	set win .errorLogWin.frame.top.text
 
-  if { !$potato(report_errors) } {
-       set report 0
-     }
+	if { !$potato(report_errors) } {
+		set report 0
+	}
 
-  $win configure -state normal
+	$win configure -state normal
 
-  if { $trace ne "" } {
-       set tags [list $level errorTrace margin]
-       if { $report } {
-            set img ::potato::img::contract
-            # Close any previously-opened errors
-            foreach x [$win image names] {
-              set index [$win index $x]
-              if { "errorTraceHidden" ni [$win tag names $index] } {
-                   errorLogToggle $win $index
-                 }
-            }
-          } else {
-            set img ::potato::img::expand
-            lappend tags "errorTraceHidden"
-          }
+	if { $trace ne "" } {
+		set tags [list $level errorTrace margin]
+		if { $report } {
+			set img ::potato::img::contract
+			# Close any previously-opened errors
+			foreach x [$win image names] {
+				set index [$win index $x]
+				if { "errorTraceHidden" ni [$win tag names $index] } {
+					errorLogToggle $win $index
+				}
+			}
+		} else {
+			set img ::potato::img::expand
+			lappend tags "errorTraceHidden"
+		}
 
-       $win image create end -image $img -align center -padx 2 -pady 2
-       $win tag add toggleBtn end-2c end-1c
-       if { "errorTraceHidden" in $tags } {
-            $win tag add errorTraceHidden end-2c end-1c
-          }
-       $win insert end $msg [list $level margin] \n "" "   $trace\n" $tags
-     } else {
-       $win insert end $msg [list $level margin] \n
-     }
-  $win see end
-  $win configure -state disabled
+		$win image create end -image $img -align center -padx 2 -pady 2
+		$win tag add toggleBtn end-2c end-1c
+		if { "errorTraceHidden" in $tags } {
+			$win tag add errorTraceHidden end-2c end-1c
+		}
+		$win insert end $msg [list $level margin] \n "" "   $trace\n" $tags
+	} else {
+		$win insert end $msg [list $level margin] \n
+	}
+	$win see end
+	$win configure -state disabled
 
-  if { $report } {
-       set win [errorLogWindow]
-       grab set $win
-       tkwait variable ::potato::bgError
-       grab release $win
-     }
+	if { $report } {
+		set win [errorLogWindow]
+		grab set $win
+		tkwait variable ::potato::bgError
+		grab release $win
+	}
 
-  return;
+	return;
 
 };# ::potato::errorLog
 
@@ -6441,22 +6470,21 @@ proc ::potato::errorLog {msg {level "error"} {trace ""} {report 0}} {
 #: return nothing
 proc ::potato::errorLogToggle {win {index current}} {
 
-  set image [$win index $index]
-  set tracerange [$win tag nextrange errorTrace $image]
-  if { ![llength $tracerange] } {
-       return;
-     }
-  foreach {start end} $tracerange {break}
-  if { "errorTraceHidden" in [$win tag names $index] } {
-       $win tag remove "errorTraceHidden" $start $end $index
+	set image [$win index $index]
+	set tracerange [$win tag nextrange errorTrace $image]
+	if { ![llength $tracerange] } {
+		return;
+	}
+	foreach {start end} $tracerange {break}
+	if { "errorTraceHidden" in [$win tag names $index] } {
+		$win tag remove "errorTraceHidden" $start $end $index
+		$win image configure $image -image ::potato::img::contract
+	} else {
+		$win tag add "errorTraceHidden" $start $end $index
+		$win image configure $image -image ::potato::img::expand
+	}
 
-       $win image configure $image -image ::potato::img::contract
-     } else {
-       $win tag add "errorTraceHidden" $start $end $index
-       $win image configure $image -image ::potato::img::expand
-     }
-
-  return;
+	return;
 };# ::potato::errorLogToggle
 
 #: proc ::potato::bgError
@@ -6466,9 +6494,9 @@ proc ::potato::errorLogToggle {win {index current}} {
 #: return nothing
 proc ::potato::bgError {msg errdict} {
 
-  errorLog $msg "error" [errorTrace $errdict] 1
+	errorLog $msg "error" [errorTrace $errdict] 1
 
-  return;
+	return;
 
 };# ::potato::bgError
 
@@ -6477,25 +6505,25 @@ proc ::potato::bgError {msg errdict} {
 #: the result in a variable. This uses far too much guess-work for my liking.
 #: return 32 or 64
 proc ::potato::checkbits {} {
-  global tcl_platform;
-  variable potato;
+	global tcl_platform;
+	variable potato;
 
-  if { $tcl_platform(platform) eq "windows" } {
-       if { $tcl_platform(machine) eq "amd64" } {
-            set bits 64
-          } else {
-            set bits 32
-          }
-     } else {
-       if { $tcl_platform(wordSize) == 8 } {
-            set bits 64
-          } else {
-            set bits 32
-          }
-     }
+	if { $tcl_platform(platform) eq "windows" } {
+		if { $tcl_platform(machine) eq "amd64" } {
+			set bits 64
+		} else {
+			set bits 32
+		}
+	} else {
+		if { $tcl_platform(wordSize) == 8 } {
+			set bits 64
+		} else {
+			set bits 32
+		}
+	}
 
-  set potato(bits) $bits
-  return $bits;
+	set potato(bits) $bits
+	return $bits;
 
 };# ::potato::checkbits
 
@@ -6514,295 +6542,298 @@ proc ::potato::os {} {
 	} else {
 		return "linux";
 	}
+
 };# ::potato::os
 
 #: proc ::potato::main
 #: desc called when the program starts, to do some basic init
 #: return nothing
 proc ::potato::main {} {
-  variable potato;
-  variable path;
-  variable skins;
-  variable misc;
-  variable running;
-  variable overtype;
-  global argc;
-  global argv;
+	variable potato;
+	variable path;
+	variable skins;
+	variable misc;
+	variable running;
+	variable overtype;
+	global argc;
+	global argv;
 
-  set running 0;
+	set running 0;
 
-  set potato(name) "Potato MU* Client"
-  set potato(version) [source [file join [file dirname [info script]] "potato-version.tcl"]]
-  set potato(contact) "mike@keyboardzombie.com"
-  set potato(webpage) "http://www.potatomushclient.com/"
+	set potato(name) "Potato MU* Client"
+	set potato(version) [source [file join [file dirname [info script]] "potato-version.tcl"]]
+	set potato(contact) "mike@keyboardzombie.com"
+	set potato(webpage) "http://www.potatomushclient.com/"
 
-  checkbits
+	checkbits
 
-  set potato(appPrefVersion) 2
+	set potato(appPrefVersion) 2
 
-  if { [info exists ::starkit::mode] && $::starkit::mode eq "starpack" } {
-       set path(homedir) [file dirname [info nameofexecutable]]
-       set path(vfsdir) [info nameofexecutable]
-       set potato(wrapped) 1
-     } else {
-       set path(homedir) [file join [file dirname [info script]] .. ..]
-       set path(vfsdir) [file join [file dirname [info script]] ..]
-       set potato(wrapped) 0
-     }
-  set path(lib) [file join $path(vfsdir) lib]
-  set path(help) [file join $path(lib) help]
-  set path(i18n_int) [file join $path(lib) i18n]
+	if { [info exists ::starkit::mode] && $::starkit::mode eq "starpack" } {
+		set path(homedir) [file dirname [info nameofexecutable]]
+		set path(vfsdir) [info nameofexecutable]
+		set potato(wrapped) 1
+	} else {
+		set path(homedir) [file join [file dirname [info script]] .. ..]
+		set path(vfsdir) [file join [file dirname [info script]] ..]
+		set potato(wrapped) 0
+	}
+	set path(lib) [file join $path(vfsdir) lib]
+	set path(help) [file join $path(lib) help]
+	set path(i18n_int) [file join $path(lib) i18n]
 
-  set overtype 0;# are text widgets in overtype mode?
+	set overtype 0;# are text widgets in overtype mode?
 
-  set potato(report_errors) 1;# Report bg errors.
+	set potato(report_errors) 1;# Report bg errors.
 
-  # The version of the world files.
-  # This is an incrementing integer, not a bit flag.
-  # See ::potato::manageWorldVersionNew
-  set potato(worldVersion) 2
+	# The version of the world files.
+	# This is an incrementing integer, not a bit flag.
+	# See ::potato::manageWorldVersionNew
+	set potato(worldVersion) 2
 
-  # Number of connections made
-  set potato(conns) 0
-  # Number of saved worlds
-  set potato(worlds) 0
-  # The current skin on display
-  set potato(skin) ""
-  # The current connection on display
-  set potato(up) ""
-  # Are we running in local mode?
-  set potato(local) 0
+	# Number of connections made
+	set potato(conns) 0
+	# Number of saved worlds
+	set potato(worlds) 0
+	# The current skin on display
+	set potato(skin) ""
+	# The current connection on display
+	set potato(up) ""
+	# Are we running in local mode?
+	set potato(local) 0
 
-  set potato(locale) "en_gb"
+	set potato(locale) "en_gb"
 
-  # Regexp which spawn names must match
-  set potato(spawnRegexp) {^[A-Za-z][A-Za-z0-9_!+=""*#@'-]{0,49}$};# doubled-up " for syntax highlighting
+	# Regexp which spawn names must match
+	set potato(spawnRegexp) {^[A-Za-z][A-Za-z0-9_!+=""*#@'-]{0,49}$};# doubled-up " for syntax highlighting
 
-  set potato(skinMinVersion) "1.4" ;# The minimum version of the skin spec this Potato supports.
-                                   ;# All skins must be at least this to be usable.
+	# The minimum version of the skin spec this Potato supports.
+	# All skins must be at least this to be usable.
+	set potato(skinMinVersion) "1.4"
+	
+	# The current version of the skin spec. If changes made aren't
+	# incompatible, this may be higher than skinMinVersion
+	set potato(skinCurrVersion) "1.5"
 
-  set potato(skinCurrVersion) "1.5" ;# The current version of the skin spec. If changes made aren't
-                                    ;# incompatible, this may be higher than skinMinVersion
-  catch {cd $path(homedir)}
+	catch {cd $path(homedir)}
 
-  set path(log) $path(homedir)
-  set path(upload) $path(homedir)
+	set path(log) $path(homedir)
+	set path(upload) $path(homedir)
 
-  basic_reqs
+	basic_reqs
 
-  after idle [list ::potato::center [errorLogWindow]];# create a window for displaying error log messages
+	after idle [list ::potato::center [errorLogWindow]];# create a window for displaying error log messages
 
-  # Parse command-line options
-  # Ignore an initial -psn argument; this is sent on MacOS but we don't care about it.
-  if { [string match "-psn*" [lindex $argv 0]] } {
-       set argv [lrange $argv 1 end]
-       incr argc -1
-     }
-  foreach x $argv {
-    if { [string range $x 0 1] ne "--" } {
-         break;
-       } else {
-         set argv [lrange $argv 1 end]
-         incr argc -1
-         if { $x eq "--local" } {
-              set potato(local) 1
-            } else {
-              errorLog "Unknown command line paramater: $x" warning
-            }
-       }
-  }
+	# Parse command-line options
+	# Ignore an initial -psn argument; this is sent on MacOS but we don't care about it.
+	if { [string match "-psn*" [lindex $argv 0]] } {
+		set argv [lrange $argv 1 end]
+		incr argc -1
+	}
+	foreach x $argv {
+		if { [string range $x 0 1] ne "--" } {
+			break;
+		} else {
+			set argv [lrange $argv 1 end]
+			incr argc -1
+			if { $x eq "--local" } {
+				set potato(local) 1
+			} else {
+				errorLog "Unknown command line paramater: $x" warning
+			}
+		}
+	}
 
-  if { $potato(local) } {
-       set path(world) [file join $path(homedir) worlds]
-       set path(skins) [file join $path(homedir) skins]
-       set path(userlib) [file join $path(homedir) lib]
-       set path(preffile) [file join $path(homedir) potato.ini]
-       set path(custom) [file join $path(homedir) potato.custom]
-       set path(startupCmds) [file join $path(homedir) potato.startup]
-       set path(i18n) [file join $path(homedir) i18n]
-     } elseif { $::tcl_platform(platform) eq "windows" } {
-       set path(world) [file join $path(homedir) worlds]
-       set path(skins) [file join $path(homedir) skins]
-       set path(userlib) [file join $path(homedir) lib]
-       set path(preffile) [file join $path(homedir) potato.ini]
-       set path(custom) [file join $path(homedir) potato.custom]
-       set path(startupCmds) [file join $path(homedir) potato.startup]
-       set path(i18n) [file join $path(homedir) i18n]
-     } else {
-       set path(world) [file join ~ .potato worlds]
-       set path(skins) [file join ~ .potato skins]
-       set path(userlib) [file join ~ .potato lib]
-       set path(preffile) [file join ~ .potato config]
-       set path(custom) [file join ~ .potato potato.custom]
-       set path(startupCmds) [file join ~ .potato potato.startup]
-       set path(i18n) [file join ~ .potato i18n]
-     }
-  set dev [file join $path(homedir) potato.dev]
+	if { $potato(local) } {
+		set path(world) [file join $path(homedir) worlds]
+		set path(skins) [file join $path(homedir) skins]
+		set path(userlib) [file join $path(homedir) lib]
+		set path(preffile) [file join $path(homedir) potato.ini]
+		set path(custom) [file join $path(homedir) potato.custom]
+		set path(startupCmds) [file join $path(homedir) potato.startup]
+		set path(i18n) [file join $path(homedir) i18n]
+	} elseif { $::tcl_platform(platform) eq "windows" } {
+		set path(world) [file join $path(homedir) worlds]
+		set path(skins) [file join $path(homedir) skins]
+		set path(userlib) [file join $path(homedir) lib]
+		set path(preffile) [file join $path(homedir) potato.ini]
+		set path(custom) [file join $path(homedir) potato.custom]
+		set path(startupCmds) [file join $path(homedir) potato.startup]
+		set path(i18n) [file join $path(homedir) i18n]
+	} else {
+		set path(world) [file join ~ .potato worlds]
+		set path(skins) [file join ~ .potato skins]
+		set path(userlib) [file join ~ .potato lib]
+		set path(preffile) [file join ~ .potato config]
+		set path(custom) [file join ~ .potato potato.custom]
+		set path(startupCmds) [file join ~ .potato potato.startup]
+		set path(i18n) [file join ~ .potato i18n]
+	}
+	set dev [file join $path(homedir) potato.dev]
 
-  # This MUST be after basic_reqs, as the [tk] command isn't available on
-  # linux until that's called.
-  set potato(windowingsystem) [tk windowingsystem]
+	# This MUST be after basic_reqs, as the [tk] command isn't available on
+	# linux until that's called.
+	set potato(windowingsystem) [tk windowingsystem]
 
-  treeviewHack;# hackily fix the fact that Treeviews can still be played with when disabled
+	treeviewHack;# hackily fix the fact that Treeviews can still be played with when disabled
 
-  option add *Listbox.activeStyle dotbox
-  option add *TEntry.Cursor xterm
-  createImages
+	option add *Listbox.activeStyle dotbox
+	option add *TEntry.Cursor xterm
+	createImages
 
-  if { [catch {package require http} errmsg errdict] } {
-       errorLog "Unable to load http package: $err" warning [errorTrace $errdict]
-     }
+	if { [catch {package require http} errmsg errdict] } {
+		errorLog "Unable to load http package: $err" warning [errorTrace $errdict]
+	}
 
-  if { ![file exists $dev] } {
-       errorLog "Dev file \"[file nativename [file normalize $dev]]\" does not exist." message
-     } elseif { [catch {source $dev} err errdict] } {
-       errorLog "Unable to source \"[file nativename [file normalize $dev]]\": $err" warning [errorTrace $errdict]
-     }
-  foreach x [list world skins lib] {
-     catch {file mkdir $path($x)}
-  }
-  catch {file mkdir $paths(world)}
-  lappend ::auto_path $path(userlib)
-  if { $::tcl_platform(platform) eq "windows" } {
-       lappend ::auto_path [file join $path(lib) app-potato windows]
-     } elseif { $::tcl_platform(os) eq "Darwin" } {
-       lappend ::auto_path [file join $path(lib) app-potato macosx]
-     } else {
-       lappend ::auto_path [file join $path(lib) app-potato linux]
-     }
+	if { ![file exists $dev] } {
+		errorLog "Dev file \"[file nativename [file normalize $dev]]\" does not exist." message
+	} elseif { [catch {source $dev} err errdict] } {
+		errorLog "Unable to source \"[file nativename [file normalize $dev]]\": $err" warning [errorTrace $errdict]
+	}
+	foreach x [list world skins lib] {
+		catch {file mkdir $path($x)}
+	}
+	catch {file mkdir $paths(world)}
+	lappend ::auto_path $path(userlib)
+	if { $::tcl_platform(platform) eq "windows" } {
+		lappend ::auto_path [file join $path(lib) app-potato windows]
+	} elseif { $::tcl_platform(os) eq "Darwin" } {
+		lappend ::auto_path [file join $path(lib) app-potato macosx]
+	} else {
+		lappend ::auto_path [file join $path(lib) app-potato linux]
+	}
 
-  catch {package require potato-flash 1.0}
-  catch {package require potato-systray 1.0}
+	catch {package require potato-flash 1.0}
+	catch {package require potato-systray 1.0}
 
-  catch {::tcl::tm::path add $path(userlib)}
+	catch {::tcl::tm::path add $path(userlib)}
 
-  # We need to set the prefs before we load anything...
-  setPrefs 1
-  if { ![info exists potato(loadedPrefVersion)] } {
-       set potato(loadedPrefVersion) $potato(appPrefVersion)
-     }
+	# We need to set the prefs before we load anything...
+	setPrefs 1
+	if { ![info exists potato(loadedPrefVersion)] } {
+		set potato(loadedPrefVersion) $potato(appPrefVersion)
+	}
 
-  # Now set up translation stuff
-  i18nPotato
+	# Now set up translation stuff
+	i18nPotato
 
-  tasksInit
+	tasksInit
 
-  # Load TLS if available, for SSL connections
-  if { [catch {package require tls 1.5-} reqtls errdict] } {
-       set potato(hasTLS) 0
-       set potato(hasTLS1.6) 0
-       set tlserr "Unable to load TLS for SSL connections: $reqtls"
-       if { $::tcl_platform(platform) eq "linux" } {
-            append tlserr "  (You may need to install the 'tcl-tls' package from your package manager.)"
-          }
-       errorLog $tlserr warning [errorTrace $errdict]
-     } else {
-       set potato(hasTLS) 1
-       # For some reason, some TLS 1.5.0s in Linux apparantly report themselves as
-       # TLS 1.50. Lying bastards.
-       if { [package vsatisfies $reqtls 1.6-] && ![package vsatisfies $reqtls 1.50-1.59] } {
-            set potato(hasTLS1.6) 1
-          } else {
-            set potato(hasTLS1.6) 0
-            errorLog "TLS 1.6 or higher is recommended, but you only have TLS $reqtls. Consider upgrading." warning
-          }
-     }
+	# Load TLS if available, for SSL connections
+	if { [catch {package require tls 1.5-} reqtls errdict] } {
+		set potato(hasTLS) 0
+		set potato(hasTLS1.6) 0
+		set tlserr "Unable to load TLS for SSL connections: $reqtls"
+		if { $::tcl_platform(platform) eq "linux" } {
+			append tlserr "  (You may need to install the 'tcl-tls' package from your package manager.)"
+		}
+		errorLog $tlserr warning [errorTrace $errdict]
+	} else {
+		set potato(hasTLS) 1
+		# For some reason, some TLS 1.5.0s in Linux apparantly report themselves as
+		# TLS 1.50. Lying bastards.
+		if { [package vsatisfies $reqtls 1.6-] && ![package vsatisfies $reqtls 1.50-1.59] } {
+			set potato(hasTLS1.6) 1
+		} else {
+			set potato(hasTLS1.6) 0
+			errorLog "TLS 1.6 or higher is recommended, but you only have TLS $reqtls. Consider upgrading." warning
+		}
+	}
 
-  # Set the ttk theme to use
-  setTheme
-  loadSkins
-  loadWorlds
+	# Set the ttk theme to use
+	setTheme
+	loadSkins
+	loadWorlds
 
-  tooltipInit
+	tooltipInit
 
-  if { $misc(windowSize) eq "zoomed" || $misc(startMaximized) } {
-       set zoom 1
-     } else {
-       set zoom 0
-     }
-  if { !$zoom || [catch {wm state . zoomed}] } {
-       catch {wm geometry . $misc(windowSize)}
-     }
-  wm protocol . WM_DELETE_WINDOW [list ::potato::chk_exit]
-  setUpMenu
+	if { $misc(windowSize) eq "zoomed" || $misc(startMaximized) } {
+		set zoom 1
+	} else {
+		set zoom 0
+	}
+	if { !$zoom || [catch {wm state . zoomed}] } {
+		catch {wm geometry . $misc(windowSize)}
+	}
+	wm protocol . WM_DELETE_WINDOW [list ::potato::chk_exit]
+	setUpMenu
 
-  if { $misc(skin) in $skins(int) } {
-       set potato(skin) $misc(skin)
-     } else {
-       errorLog "Requested skin, $misc(skin), is not available. Switching to default skin, potato, instead." warning
-       set potato(skin) "potato";# default skin
-     }
-  showSkin $potato(skin)
+	if { $misc(skin) in $skins(int) } {
+		set potato(skin) $misc(skin)
+	} else {
+		errorLog "Requested skin, $misc(skin), is not available. Switching to default skin, potato, instead." warning
+		set potato(skin) "potato";# default skin
+	}
+	showSkin $potato(skin)
 
-  setClock
+	setClock
 
-  set running 1;# so potato.tcl can be re-sourced without re-running this proc
+	set running 1;# so potato.tcl can be re-sourced without re-running this proc
 
-  newConnection 0
+	newConnection 0
 
-  # This must come before setUpBindings
-  setUpFlash
-  setupSystray
-  
-  # We do this after newConnection, or the <FocusIn> binding comes up wrong
-  setUpBindings
+	# This must come before setUpBindings
+	setUpFlash
+	setupSystray
 
-  if { $::tcl_platform(platform) eq "windows" } {
-       if { ![catch {package require dde 1.3} err errdict] } {
-            # Start the DDE server in case we're the default telnet app.
-            # Only do this on Windows when DDE is available
-            ::potato::ddeStart
-          } else {
-            errorLog "Unable to load DDE extension: $err" warning [errorTrace $errdict]
-          }
-     }
+	# We do this after newConnection, or the <FocusIn> binding comes up wrong
+	setUpBindings
 
-  if { ![file exists $path(custom)] } {
-       errorLog "Custom code file \"[file nativename [file normalize $path(custom)]]\" does not exist." message
-     } elseif { [catch {source $path(custom)} err errdict] } {
-       errorLog "Unable to source Custom file \"[file nativename [file normalize $path(custom)]]\": $err" warning [errorTrace $errdict]
-     }
+	if { $::tcl_platform(platform) eq "windows" } {
+		if { ![catch {package require dde 1.3} err errdict] } {
+			# Start the DDE server in case we're the default telnet app.
+			# Only do this on Windows when DDE is available
+			::potato::ddeStart
+		} else {
+			errorLog "Unable to load DDE extension: $err" warning [errorTrace $errdict]
+		}
+	}
 
-  loadPotatoModules
+	if { ![file exists $path(custom)] } {
+		errorLog "Custom code file \"[file nativename [file normalize $path(custom)]]\" does not exist." message
+	} elseif { [catch {source $path(custom)} err errdict] } {
+		errorLog "Unable to source Custom file \"[file nativename [file normalize $path(custom)]]\": $err" warning [errorTrace $errdict]
+	}
 
-  if { ![file exists $path(startupCmds)] } {
-       errorLog "Startup Commands file \"[file nativename [file normalize $path(startupCmds)]]\" does not exist." message
-     } elseif { [catch {open $path(startupCmds) r} fid errdict] } {
-       errorLog "Unable to open Startup Commands file \"[file nativename [file normalize $path(startupCmds)]]\": $fid" [errorTrace $errdict]
-     } else {
-       set startup [split [read $fid] "\n"]
-       if { [llength $startup] > 1 && [lindex $startup end] eq "" } {
-            set startup [join [lrange $startup 0 end-1] \n]
-          } else {
-            set startup [join $startup \n]
-          }
-       catch {close $fid}
-       send_to "" $startup "" 0
-     }
+	loadPotatoModules
 
-  # Attempt to parse out connection paramaters
-  switch $::argc {
-    0 {}
-    1 {handleOutsideRequest cl [lindex $::argv 0]}
-    default {parseCommandLine $::argv $::argc}
-  }
+	if { ![file exists $path(startupCmds)] } {
+		errorLog "Startup Commands file \"[file nativename [file normalize $path(startupCmds)]]\" does not exist." message
+	} elseif { [catch {open $path(startupCmds) r} fid errdict] } {
+		errorLog "Unable to open Startup Commands file \"[file nativename [file normalize $path(startupCmds)]]\": $fid" [errorTrace $errdict]
+	} else {
+		set startup [split [read $fid] "\n"]
+		if { [llength $startup] > 1 && [lindex $startup end] eq "" } {
+			set startup [join [lrange $startup 0 end-1] \n]
+		} else {
+			set startup [join $startup \n]
+		}
+		catch {close $fid}
+		send_to "" $startup "" 0
+	}
 
-
-  after idle [list ::potato::autoConnect]
-
-  after idle [list ::potato::keepalive]
-
-  if { $misc(checkForUpdates) } {
-       after 3500 [list ::potato::checkForUpdates 1]
-     }
+	# Attempt to parse out connection paramaters
+	switch $::argc {
+		0 {}
+		1 {handleOutsideRequest cl [lindex $::argv 0]}
+		default {parseCommandLine $::argv $::argc}
+	}
 
 
-  # Start ANSI-flashing
-  after $misc(ansiFlashDelay,on) ::potato::flashANSI 1
+	after idle [list ::potato::autoConnect]
 
-  interp bgerror {} ::potato::bgError
+	after idle [list ::potato::keepalive]
 
-  return;
+	if { $misc(checkForUpdates) } {
+		after 3500 [list ::potato::checkForUpdates 1]
+	}
+
+	# Start ANSI-flashing
+	after $misc(ansiFlashDelay,on) ::potato::flashANSI 1
+
+	interp bgerror {} ::potato::bgError
+
+	return;
 
 };# ::potato::main
 
@@ -6810,19 +6841,19 @@ proc ::potato::main {} {
 #: desc Load any code files in the userlib directory stored as Tcl modules
 #: return nothing
 proc ::potato::loadPotatoModules {} {
-  variable path;
+	variable path;
 
-  foreach x [glob -nocomplain -directory $path(userlib) -tails *.tm] {
-    if { ![regexp {^([_[:alpha:]][:_[:alnum:]]*)-([[:digit:]].*)\.tm$} $x - name vers] } {
-         continue;
-       } elseif { [catch {package require $name $vers} err errdict] } {
-         errorLog "Unable to load Module '$name' version '$vers': $err" error [errorTrace $errdict]
-       } else {
-         errorLog "Module $name version $vers loaded." message
-       }
-  }
+	foreach x [glob -nocomplain -directory $path(userlib) -tails *.tm] {
+		if { ![regexp {^([_[:alpha:]][:_[:alnum:]]*)-([[:digit:]].*)\.tm$} $x - name vers] } {
+			continue;
+		} elseif { [catch {package require $name $vers} err errdict] } {
+			errorLog "Unable to load Module '$name' version '$vers': $err" error [errorTrace $errdict]
+		} else {
+			errorLog "Module $name version $vers loaded." message
+		}
+	}
 
-  return;
+	return;
 
 };# ::potato::loadPotatoModules
 
@@ -6832,25 +6863,25 @@ proc ::potato::loadPotatoModules {} {
 #: desc with that enabled.
 #: return nothing
 proc ::potato::keepalive {} {
-  variable world;
-  variable conn;
+	variable world;
+	variable conn;
 
-  foreach c [connIDs] {
-    if { $conn($c,connected) != 1 } {
-         continue;
-       }
-    if { [hasProtocol $c telnet] &&
-         $world($conn($c,world),telnet,keepalive) } {
-         ::potato::telnet::send_keepalive $c
-       }
-    if { $world($conn($c,world),nbka) } {
-         sendRaw $c "\0" 0
-       }
-  }
+	foreach c [connIDs] {
+		if { $conn($c,connected) != 1 } {
+			continue;
+		}
+		if { [hasProtocol $c telnet] &&
+			$world($conn($c,world),telnet,keepalive) } {
+			::potato::telnet::send_keepalive $c
+		}
+		if { $world($conn($c,world),nbka) } {
+			sendRaw $c "\0" 0
+		}
+	}
 
-  after 45000 [list ::potato::keepalive]
+	after 45000 [list ::potato::keepalive]
 
-  return;
+	return;
 
 };# ::potato::keepalive
 
@@ -6858,71 +6889,71 @@ proc ::potato::keepalive {} {
 #: desc Set up the translation stuff.
 #: return nothing
 proc ::potato::i18nPotato {} {
-  variable misc;
-  variable path;
-  variable potato;
-  variable locales;
+	variable misc;
+	variable path;
+	variable potato;
+	variable locales;
 
-  if { [catch {package require msgcat 1.4.2} err errdict] } {
-       errorLog "Unable to load msgcat for translations: $err" error [errorTrace $errdict]
-       return;
-     }
+	if { [catch {package require msgcat 1.4.2} err errdict] } {
+		errorLog "Unable to load msgcat for translations: $err" error [errorTrace $errdict]
+		return;
+	}
 
-  # Some English "translations".
-  # This is where we've used more verbose messages in some places to make phrases which are repeated in English, but with
-  # different context, translatable as different strings in other languages. In English we convert the verbose form back to
-  # the shorter version. NOTE: Must be done before we load translations, otherwise we may clobber the user's preferred translation.
-  namespace eval :: {::msgcat::mcmset en [list "Convert To:" "To:" "Recipient:" "To:" "Limit To:" "To:" "Spawn To:" "To:"]}
+	# Some English "translations".
+	# This is where we've used more verbose messages in some places to make phrases which are repeated in English, but with
+	# different context, translatable as different strings in other languages. In English we convert the verbose form back to
+	# the shorter version. NOTE: Must be done before we load translations, otherwise we may clobber the user's preferred translation.
+	namespace eval :: {::msgcat::mcmset en [list "Convert To:" "To:" "Recipient:" "To:" "Limit To:" "To:" "Spawn To:" "To:"]}
 
-  set loclist [list en_gb]
+	set loclist [list en_gb]
 
-  # Load translation files. We do this in two steps:
-  # 1) Load *.ptf files using [::potato::loadTranslationFile]. These are just message catalogues.
-  # 2) Use ::msgcat::mcload, which loads *.msg files containing Tcl code for translations
-  foreach x [glob -nocomplain -dir $path(i18n_int) -- *.ptf] {
-    lappend loclist [loadTranslationFile $x]
-  }
+	# Load translation files. We do this in two steps:
+	# 1) Load *.ptf files using [::potato::loadTranslationFile]. These are just message catalogues.
+	# 2) Use ::msgcat::mcload, which loads *.msg files containing Tcl code for translations
+	foreach x [glob -nocomplain -dir $path(i18n_int) -- *.ptf] {
+		lappend loclist [loadTranslationFile $x]
+	}
 
-  if { [file exists $path(i18n)] && [file isdir $path(i18n)] } {
-       foreach x [glob -nocomplain -dir $path(i18n) -- *.ptf] {
-         lappend loclist [loadTranslationFile $x]
-       }
-     }
+	if { [file exists $path(i18n)] && [file isdir $path(i18n)] } {
+		foreach x [glob -nocomplain -dir $path(i18n) -- *.ptf] {
+			lappend loclist [loadTranslationFile $x]
+		}
+	}
 
-  array set locales [list \
-     map,en      "English" \
-     map,en_gb   "English (British)" \
-     map,en_us   "English (United States)" \
-     map,hr_hr   "Hrvatski (Croatian)" \
-     map,es      "Espa\u00f1ol (Spanish)" \
-     map,se      "Svenska (Swedish)" \
-     map,no      "Norwegian" \
-  ]
+	array set locales [list \
+		map,en      "English" \
+		map,en_gb   "English (British)" \
+		map,en_us   "English (United States)" \
+		map,hr_hr   "Hrvatski (Croatian)" \
+		map,es      "Espa\u00f1ol (Spanish)" \
+		map,se      "Svenska (Swedish)" \
+		map,no      "Norwegian" \
+	]
 
-  set loclist [lsearch -all -inline -not -regexp $loclist {^(.*,.*)?$}]
+	set loclist [lsearch -all -inline -not -regexp $loclist {^(.*,.*)?$}]
 
-  foreach x $loclist {
-    if { [info exists locales(map,$x)] } {
-         set locales($x) $locales(map,$x)
-       } else {
-         set locales($x) $x
-       }
-  }
+	foreach x $loclist {
+		if { [info exists locales(map,$x)] } {
+			set locales($x) $locales(map,$x)
+		} else {
+			set locales($x) $x
+		}
+	}
 
-  ::potato::setLocale
+	::potato::setLocale
 
-  return;
+	return;
 
-  # These lines are for the benefit of the script which builds the translation template.
-  # They are not necessarily used by Potato directly, but shown in Tcl/Tk by widgets (message dialogs, etc)
-  # so we include the strings to ensure they get offered for translation
-  # [T "&Yes"]
-  # [T "&No"]
-  # [T "&OK"]
-  # [T "&Retry"]
-  # [T "&Abort"]
-  # [T "&Ignore"]
-  # [T "&Cancel"] from tk_messageBox
+	# These lines are for the benefit of the script which builds the translation template.
+	# They are not necessarily used by Potato directly, but shown in Tcl/Tk by widgets (message dialogs, etc)
+	# so we include the strings to ensure they get offered for translation
+	# [T "&Yes"]
+	# [T "&No"]
+	# [T "&OK"]
+	# [T "&Retry"]
+	# [T "&Abort"]
+	# [T "&Ignore"]
+	# [T "&Cancel"] from tk_messageBox
 
 };# ::potato::i18nPotato
 
@@ -6930,42 +6961,42 @@ proc ::potato::i18nPotato {} {
 #: desc Using $misc(locale) - the desired locale - set potato(locale) to the best possible locale, update the display everywhere to show stuff in the new language.
 #: return nothing
 proc ::potato::setLocale {} {
-  variable misc;
-  variable potato;
-  variable locales;
+	variable misc;
+	variable potato;
+	variable locales;
 
-  set split [split $misc(locale) "_"]
-  set preflist [list]
-  for {set i 0} {$i < [llength $split]} {incr i} {
-    lappend preflist [join [lrange $split 0 end-$i] "_"]
-  }
+	set split [split $misc(locale) "_"]
+	set preflist [list]
+	for {set i 0} {$i < [llength $split]} {incr i} {
+		lappend preflist [join [lrange $split 0 end-$i] "_"]
+	}
 
-  set potato(locale) ""
-  foreach x $preflist {
-    if { [info exists locales($x)] } {
-         set potato(locale) $x
-         break;
-       }
-  }
+	set potato(locale) ""
+	foreach x $preflist {
+		if { [info exists locales($x)] } {
+			set potato(locale) $x
+			break;
+		}
+	}
 
-  if { ![info exists potato(locale)] || $potato(locale) eq "" } {
-       set potato(locale) "en_GB"
-     }
+	if { ![info exists potato(locale)] || $potato(locale) eq "" } {
+		set potato(locale) "en_GB"
+	}
 
-  # Set our best available
-  ::msgcat::mclocale $potato(locale)
+	# Set our best available
+	::msgcat::mclocale $potato(locale)
 
-  # Update display to make sure we're using it
-  if { $potato(skin) ne "" } {
-       ::skin::${potato(skin)}::locale
-     }
-  setUpMenu
-  setAppTitle
-  if { [up] == 0 } {
-       connZero
-     }
+	# Update display to make sure we're using it
+	if { $potato(skin) ne "" } {
+		::skin::${potato(skin)}::locale
+	}
+	setUpMenu
+	setAppTitle
+	if { [up] == 0 } {
+		connZero
+	}
 
-  return;
+	return;
 
 };# ::potato::setLocale
 
@@ -6975,65 +7006,65 @@ proc ::potato::setLocale {} {
 #: return locale on success, empty string on failure
 proc ::potato::loadTranslationFile {file} {
 
-  # The format for these files is:
-  # <originalMsg>
-  # <translatedMsg>
-  # <originalMsg>
-  # <translatedMsg>
-  # etc.
-  #
-  # All files should be in utf-8 or 7bit ascii - extended characters can be specified via \xHH or \uHHHH syntax.
-  # File names are <locale>.ptf
-  # All strings are evaluated with [subst -nocommands -novariables] to parse \-syntax.
-  #
-  # Any empty lines, lines containing only white space, and lines starting with '#' will
-  # be ignored as comments/whitespace to make the .ptf file clearer. A <translatedMsg> containing
-  # the single character "-" will cause that original message to be skipped, so I can build a template
-  # of translatable messages which will "work" but do nothing.
+	# The format for these files is:
+	# <originalMsg>
+	# <translatedMsg>
+	# <originalMsg>
+	# <translatedMsg>
+	# etc.
+	#
+	# All files should be in utf-8 or 7bit ascii - extended characters can be specified via \xHH or \uHHHH syntax.
+	# File names are <locale>.ptf
+	# All strings are evaluated with [subst -nocommands -novariables] to parse \-syntax.
+	#
+	# Any empty lines, lines containing only white space, and lines starting with '#' will
+	# be ignored as comments/whitespace to make the .ptf file clearer. A <translatedMsg> containing
+	# the single character "-" will cause that original message to be skipped, so I can build a template
+	# of translatable messages which will "work" but do nothing.
 
-  if { [catch {open $file r} fid] } {
-       errorLog "Unable to load translation file \"[file nativename [file normalize $file]]\": $fid" warning
-       return "";
-     }
+	if { [catch {open $file r} fid] } {
+		errorLog "Unable to load translation file \"[file nativename [file normalize $file]]\": $fid" warning
+		return "";
+	}
 
-  if { [catch {gets $fid line} count] || $count < 0 } {
-       catch {close $fid}
-       errorLog "Translation file \"[file nativename [file normalize $file]]\" is empty." warning
-       return "";
-     }
+	if { [catch {gets $fid line} count] || $count < 0 } {
+		catch {close $fid}
+		errorLog "Translation file \"[file nativename [file normalize $file]]\" is empty." warning
+		return "";
+	}
 
-  # msgcat uses lower-case names, so we will too.
-  set locale [string tolower [file rootname [file tail $file]]]
+	# msgcat uses lower-case names, so we will too.
+	set locale [string tolower [file rootname [file tail $file]]]
 
-  fconfigure $fid -encoding utf-8
+	fconfigure $fid -encoding utf-8
 
-  set i 0
-  set translations [list]
-  while { 1 } {
-    if { [string trim $line] ne "" && [string index $line 0] ne "#" } {
-            if { $i } {
-              set i 0;
-              if { $line ne "-" } {
-                   lappend translations [subst -nocommands -novariables $msg] [subst -nocommands -novariables $line]
-                 }
-            } else {
-              set msg $line
-              set i 1
-            }
-       }
-    if { [catch {gets $fid line} count] || $count < 0 } {
-         break;
-       }
-  }
-  close $fid;
-  set count [namespace eval :: [list ::msgcat::mcmset $locale $translations]]
-  errorLog "$count translations set for $locale." message
+	set i 0
+	set translations [list]
+	while { 1 } {
+		if { [string trim $line] ne "" && [string index $line 0] ne "#" } {
+			if { $i } {
+				set i 0;
+				if { $line ne "-" } {
+					lappend translations [subst -nocommands -novariables $msg] [subst -nocommands -novariables $line]
+				}
+			} else {
+				set msg $line
+				set i 1
+			}
+		}
+		if { [catch {gets $fid line} count] || $count < 0 } {
+			break;
+		}
+	}
+	close $fid;
+	set count [namespace eval :: [list ::msgcat::mcmset $locale $translations]]
+	errorLog "$count translations set for $locale." message
 
-  if { $count > 0 } {
-       return $locale;
-     } else {
-       return "";
-     }
+	if { $count > 0 } {
+		return $locale;
+	} else {
+		return "";
+	}
 
 };# ::potato::loadTranslationFile
 
@@ -7042,17 +7073,18 @@ proc ::potato::loadTranslationFile {file} {
 #: return nothing
 proc ::potato::treeviewHack {} {
 
-  foreach x [list Control-Button-1 Shift-Button-1 Key-space Key-Return Key-Left Key-Right \
-                  Key-Down Key-Up B1-Motion Double-Button-1 ButtonRelease-1 Button-1] {
-     bind Treeview <$x> [format {if { ![%%W instate disabled] } { %s }} [bind Treeview <$x>]]
-  }
+	foreach x [list \
+		Control-Button-1 Shift-Button-1 Key-space Key-Return Key-Left Key-Right \
+		Key-Down Key-Up B1-Motion Double-Button-1 ButtonRelease-1 Button-1] {
+		bind Treeview <$x> [format {if { ![%%W instate disabled] } { %s }} [bind Treeview <$x>]]
+	}
 
-  if { ![package vsatisfies [package present Tk] 8.6-] } {
-       # Clear MouseWheel binding in favour of our own binding on "all"
-       bind Treeview <MouseWheel> {}
-     }
+	if { ![package vsatisfies [package present Tk] 8.6-] } {
+		# Clear MouseWheel binding in favour of our own binding on "all"
+		bind Treeview <MouseWheel> {}
+	}
 
-  return;
+	return;
 
 };# ::potato::treeviewHack
 
@@ -7060,22 +7092,22 @@ proc ::potato::treeviewHack {} {
 #: desc Set the ttk/tile theme
 #: return nothing
 proc ::potato::setTheme {} {
-  variable misc;
+	variable misc;
 
-  if { [catch {::ttk::style theme use $misc(tileTheme)} err1] && [catch {::ttk::setTheme $misc(tileTheme)} err2] } {
-       errorLog "Unable to set style: $err1 // $err2" error
-     }
+	if { [catch {::ttk::style theme use $misc(tileTheme)} err1] && [catch {::ttk::setTheme $misc(tileTheme)} err2] } {
+		errorLog "Unable to set style: $err1 // $err2" error
+	}
 
-  ::ttk::style configure error.TLabel -foreground red
-  ::ttk::style layout Plain.TNotebook.Tab null
+	::ttk::style configure error.TLabel -foreground red
+	::ttk::style layout Plain.TNotebook.Tab null
 
-  treeviewHack
+	treeviewHack
 
-  foreach x [namespace children ::skin] {
-    catch {${x}::setTheme $misc(tileTheme)}
-  }
+	foreach x [namespace children ::skin] {
+		catch {${x}::setTheme $misc(tileTheme)}
+	}
 
-  return;
+	return;
 
 };# ::potato::setTheme
 
@@ -7083,16 +7115,16 @@ proc ::potato::setTheme {} {
 #: desc Initialise the vars, widgets, etc, used by tooltips
 #: return nothing
 proc ::potato::tooltipInit {} {
-  variable tooltip;
+	variable tooltip;
 
-  set tooltip(up) ""
-  set tooltip(after) ""
-  set tooltip(widget) .potato_tooltip
-  bind PotatoToolTip <Enter> [list ::potato::tooltipEnter %W]
-  bind PotatoToolTip <Leave> [list ::potato::tooltipLeave %W]
-  bind PotatoToolTip <Destroy> [list ::potato::tooltip %W ""]
+	set tooltip(up) ""
+	set tooltip(after) ""
+	set tooltip(widget) .potato_tooltip
+	bind PotatoToolTip <Enter> [list ::potato::tooltipEnter %W]
+	bind PotatoToolTip <Leave> [list ::potato::tooltipLeave %W]
+	bind PotatoToolTip <Destroy> [list ::potato::tooltip %W ""]
 
-  return;
+	return;
 
 };# ::potato::tooltipInit
 
@@ -7102,31 +7134,31 @@ proc ::potato::tooltipInit {} {
 #: desc Add a tooltip for $widget (or remove an existing one, if $txt is empty)
 #: return nothing
 proc ::potato::tooltip {widget txt} {
-  variable tooltip;
+	variable tooltip;
 
-  if { $txt == "" } {
-       unset -nocomplain tooltop(for,$widget)
-       if { ![winfo exists $widget] } {
-            return;# widget is being destroyed
-          }
-       set pos [lsearch -exact [bindtags $widget] "PotatoToolTip"]
-       if { $pos == -1 } {
-            return;
-          }
-       bindtags $widget [lreplace [bindtags $widget] $pos $pos]
-       if { $tooltip(up) == $widget } {
-            after cancel $tooltip(after)
-            catch {destroy $tooltip(widget)};
-          }
-       return;
-     }
+	if { $txt == "" } {
+		unset -nocomplain tooltop(for,$widget)
+		if { ![winfo exists $widget] } {
+			return;# widget is being destroyed
+		}
+		set pos [lsearch -exact [bindtags $widget] "PotatoToolTip"]
+		if { $pos == -1 } {
+			return;
+		}
+		bindtags $widget [lreplace [bindtags $widget] $pos $pos]
+		if { $tooltip(up) == $widget } {
+			after cancel $tooltip(after)
+			catch {destroy $tooltip(widget)};
+		}
+		return;
+	}
 
-  set tooltip(for,$widget) $txt
-  if { [set pos [lsearch -exact [bindtags $widget] "PotatoToolTip"]] == -1 } {
-       bindtags $widget [linsert [bindtags $widget] 0 "PotatoToolTip"]
-     }
+	set tooltip(for,$widget) $txt
+	if { [set pos [lsearch -exact [bindtags $widget] "PotatoToolTip"]] == -1 } {
+		bindtags $widget [linsert [bindtags $widget] 0 "PotatoToolTip"]
+	}
 
-  return;
+	return;
 
 };# ::potato::tooltip
 
@@ -7137,54 +7169,54 @@ proc ::potato::tooltip {widget txt} {
 #: desc Wrapper to show a tooltip with the timestamp of the message being hovered in text widget $widget, when the mouse moves in widger $t
 #: return nothing
 proc ::potato::showMessageTimestamp {widget x y} {
-  variable tooltip;
-  variable misc;
+	variable tooltip;
+	variable misc;
 
-  if { ![info exists tooltip($widget)] } {
-       set tooltip($widget) 0
-     }
+	if { ![info exists tooltip($widget)] } {
+		set tooltip($widget) 0
+	}
 
-  if { !$misc(showTimestamps) } {
-       # Don't display it
-       tooltipLeave $widget
-       return;
-     }
+	if { !$misc(showTimestamps) } {
+		# Don't display it
+		tooltipLeave $widget
+		return;
+	}
 
-  set index [$widget index @$x,$y]
-  if { $index eq [$widget index end-1char] } {
-       # Not over a line
-       tooltipLeave $widget
-       return;
-     }
-  scan $index %d.%*d line
-  if { $line == $tooltip($widget) } {
-       # Do nothing, we're already showing the right timestamp
-       return;
-     }
+	set index [$widget index @$x,$y]
+	if { $index eq [$widget index end-1char] } {
+		# Not over a line
+		tooltipLeave $widget
+		return;
+	}
+	scan $index %d.%*d line
+	if { $line == $tooltip($widget) } {
+		# Do nothing, we're already showing the right timestamp
+		return;
+	}
 
-  set stamp [$widget tag nextrange timestamp $index]
-  if { $stamp eq "" } {
-       # No timestamp for line
-       tooltipLeave $widget
-       return;
-     }
-  set timestamp [$widget get {*}$stamp]
-  if { $timestamp eq "" || [catch {clock format $timestamp -format $misc(clockFormat)} disp] } {
-       # No timestamp
-       return;
-     }
-  # Find coords to show it
-  set coords [$widget bbox $index]
-  if { [llength $coords] < 2 || [lindex $coords 0] eq "" || [lindex $coords 1] eq "" } {
-       tooltipLeave $widget
-       return;
-     }
-  set x [expr {[lindex $coords 0] + [winfo rootx $widget]}]
-  set y [expr {[lindex $coords 1] + [winfo rooty $widget]}]
+	set stamp [$widget tag nextrange timestamp $index]
+	if { $stamp eq "" } {
+		# No timestamp for line
+		tooltipLeave $widget
+		return;
+	}
+	set timestamp [$widget get {*}$stamp]
+	if { $timestamp eq "" || [catch {clock format $timestamp -format $misc(clockFormat)} disp] } {
+		# No timestamp
+		return;
+	}
+	# Find coords to show it
+	set coords [$widget bbox $index]
+	if { [llength $coords] < 2 || [lindex $coords 0] eq "" || [lindex $coords 1] eq "" } {
+		tooltipLeave $widget
+		return;
+	}
+	set x [expr {[lindex $coords 0] + [winfo rootx $widget]}]
+	set y [expr {[lindex $coords 1] + [winfo rooty $widget]}]
 
-  tooltipEnter $widget 900 $disp $x $y
+	tooltipEnter $widget 900 $disp $x $y
 
-  return;
+	return;
 
 };# ::potato::showMessageTimestamp
 
@@ -7197,14 +7229,14 @@ proc ::potato::showMessageTimestamp {widget x y} {
 #: desc Called when a widget with a tooltip has an <Enter> event. Set up an [after] to display the tooltip
 #: return nothing
 proc ::potato::tooltipEnter {widget {time 450} {text ""} {x ""} {y ""}} {
-  variable tooltip;
+	variable tooltip;
 
-  after cancel $tooltip(after)
-  catch {destroy $tooltip(widget)}
-  set tooltip(up) $widget
-  set tooltip(after) [after $time [list ::potato::tooltipShow $widget $text $x $y]]
+	after cancel $tooltip(after)
+	catch {destroy $tooltip(widget)}
+	set tooltip(up) $widget
+	set tooltip(after) [after $time [list ::potato::tooltipShow $widget $text $x $y]]
 
-  return;
+	return;
 
 };# ::potato::tooltipEnter
 
@@ -7213,14 +7245,14 @@ proc ::potato::tooltipEnter {widget {time 450} {text ""} {x ""} {y ""}} {
 #: desc Called when a tooltip'd widget has a <Leave> event. Cancel impending/destroy current tooltip
 #: return nothing
 proc ::potato::tooltipLeave {widget} {
-  variable tooltip;
+	variable tooltip;
 
-  after cancel $tooltip(after)
-  catch {destroy $tooltip(widget)}
-  set tooltip(up) ""
-  set tooltip(after) ""
+	after cancel $tooltip(after)
+	catch {destroy $tooltip(widget)}
+	set tooltip(up) ""
+	set tooltip(after) ""
 
-  return;
+	return;
 
 };# ::potato::tooltipLeave
 
@@ -7232,58 +7264,58 @@ proc ::potato::tooltipLeave {widget} {
 #: desc Actually show the tooltip for $widget, if we're still in it.
 #: return nothing
 proc ::potato::tooltipShow {widget {text ""} {x ""} {y ""}} {
-  variable tooltip;
+	variable tooltip;
 
-  if { ![winfo exists $widget] || [winfo containing {*}[winfo pointerxy $widget]] ne $widget } {
-       return;
-     }
-  if { $text eq "" } {
-       if { ![info exists tooltip(for,$widget)] } {
-            return;
-          }
-       set text $tooltip(for,$widget);
-       set pos 1
-     } else {
-       set pos 0
-     }
-  set top $tooltip(widget)
-  catch {destroy $top}
-  toplevel $top
-  wm title $top $text
-  if { [tk windowingsystem] eq "X11" } {
-       catch {wm attributes $top -type tooltip};# Tk 8.6 and higher
-     }
-  $top configure -borderwidth 1 -background black
-  wm overrideredirect $top 1
-  pack [message $top.txt -aspect 10000 -background lightyellow \
-        -font {"" 8} -text $text -padx 1 -pady 0]
-  bind $top <ButtonPress-1> [list catch [list destroy $tooltip(widget)]]
-  if { $x eq "" } {
-       set wmx [winfo pointerx $widget]
-     } else {
-       set wmx $x
-     }
-  if { $y eq "" } {
-       if { $pos } {
-            set wmy [expr [winfo rooty $widget]+[winfo height $widget]]
-          } else {
-            set wmy [expr {[winfo pointery $widget] - 25}]
-          }
-     } else {
-       set wmy [expr {$y - [winfo reqheight $top.txt] - 5}]
-     }
-  if {[expr $wmy+([winfo reqheight $top.txt]*2)]>[winfo screenheight $top]} {
-      incr wmy -[expr [winfo reqheight $top.txt]*2]
-     }
-  if {[expr $wmx+([winfo reqwidth $top.txt]+5)]>[winfo screenwidth $top]} {
-      incr wmx -[expr [winfo reqwidth $top.txt]*2]
-      set wmx [expr [winfo screenwidth $top]-[winfo reqwidth $top.txt]-7]
-     }
-  wm geometry $top \
-     [winfo reqwidth $top.txt]x[winfo reqheight $top.txt]+$wmx+$wmy
-  raise $top
+	if { ![winfo exists $widget] || [winfo containing {*}[winfo pointerxy $widget]] ne $widget } {
+		return;
+	}
+	if { $text eq "" } {
+		if { ![info exists tooltip(for,$widget)] } {
+			return;
+		}
+		set text $tooltip(for,$widget);
+		set pos 1
+	} else {
+		set pos 0
+	}
+	set top $tooltip(widget)
+	catch {destroy $top}
+	toplevel $top
+	wm title $top $text
+	if { [tk windowingsystem] eq "X11" } {
+		catch {wm attributes $top -type tooltip};# Tk 8.6 and higher
+	}
+	$top configure -borderwidth 1 -background black
+	wm overrideredirect $top 1
+	pack [message $top.txt -aspect 10000 -background lightyellow \
+		-font {"" 8} -text $text -padx 1 -pady 0]
+	bind $top <ButtonPress-1> [list catch [list destroy $tooltip(widget)]]
+	if { $x eq "" } {
+		set wmx [winfo pointerx $widget]
+	} else {
+		set wmx $x
+	}
+	if { $y eq "" } {
+		if { $pos } {
+			set wmy [expr [winfo rooty $widget]+[winfo height $widget]]
+		} else {
+			set wmy [expr {[winfo pointery $widget] - 25}]
+		}
+	} else {
+		set wmy [expr {$y - [winfo reqheight $top.txt] - 5}]
+	}
+	if {[expr $wmy+([winfo reqheight $top.txt]*2)]>[winfo screenheight $top]} {
+		incr wmy -[expr [winfo reqheight $top.txt]*2]
+	}
+	if {[expr $wmx+([winfo reqwidth $top.txt]+5)]>[winfo screenwidth $top]} {
+		incr wmx -[expr [winfo reqwidth $top.txt]*2]
+		set wmx [expr [winfo screenwidth $top]-[winfo reqwidth $top.txt]-7]
+	}
+	wm geometry $top \
+		[winfo reqwidth $top.txt]x[winfo reqheight $top.txt]+$wmx+$wmy
+	raise $top
 
-  return;
+	return;
 
 };# ::potato::tooltipShow
 
@@ -7292,16 +7324,16 @@ proc ::potato::tooltipShow {widget {text ""} {x ""} {y ""}} {
 #: desc Return a list of all currently defined world's ids, possibly including 0
 #: return list of world ids
 proc ::potato::worldIDs {{includeDefault 0}} {
-  variable world;
+	variable world;
 
-  if { $includeDefault } {
-       set pattern {^[0-9]+,id$}
-     } else {
-       set pattern {^[1-9][0-9]*,id$}
-     }
-  set ids [array names world -regexp $pattern]
+	if { $includeDefault } {
+		set pattern {^[0-9]+,id$}
+	} else {
+		set pattern {^[1-9][0-9]*,id$}
+	}
+	set ids [array names world -regexp $pattern]
 
-  return [lsort -integer [split [string map [list ",id" ""] [join $ids " "]] " "]];
+	return [lsort -integer [split [string map [list ",id" ""] [join $ids " "]] " "]];
 
 };# ::potato::worldIDs
 
@@ -7310,16 +7342,16 @@ proc ::potato::worldIDs {{includeDefault 0}} {
 #: desc Return a list of all current connections, possibly including the connection screen 0
 #: return list of connection ids
 proc ::potato::connIDs {{includeDefault 0}} {
-  variable conn;
+	variable conn;
 
-  if { $includeDefault } {
-       set pattern {^[0-9]+,id$}
-     } else {
-       set pattern {^[1-9][0-9]*,id$}
-     }
-  set ids [array names conn -regexp $pattern]
+	if { $includeDefault } {
+		set pattern {^[0-9]+,id$}
+	} else {
+		set pattern {^[1-9][0-9]*,id$}
+	}
+	set ids [array names conn -regexp $pattern]
 
-  return [lsort -integer [split [string map [list ",id" ""] [join $ids " "]] " "]];
+	return [lsort -integer [split [string map [list ",id" ""] [join $ids " "]] " "]];
 
 };# ::potato::connIDs
 
@@ -7328,41 +7360,42 @@ proc ::potato::connIDs {{includeDefault 0}} {
 #: desc Show MSSP info for connection $c.
 #: return nothing
 proc ::potato::showMSSP {{c ""}} {
-  variable conn;
-  variable world;
+	variable conn;
+	variable world;
 
-  if { $c eq "" } {
-       set c [up]
-     }
-  if { ![info exists conn($c,telnet,mssp)] || ![llength $conn($c,telnet,mssp)] } {
-       bell -displayof .
-       return;
-     }
+	if { $c eq "" } {
+		set c [up]
+	}
+	if { ![info exists conn($c,telnet,mssp)] || ![llength $conn($c,telnet,mssp)] } {
+		bell -displayof .
+		return;
+	}
 
-  set win .mssp$c
-  catch {destroy $win}
-  toplevel $win
-  registerWindow $c $win
-  wm title $win [T "MSSP Info for \[%d. %s\]" $c $world($conn($c,world),name)]
+	set win .mssp$c
+	catch {destroy $win}
+	toplevel $win
+	registerWindow $c $win
+	wm title $win [T "MSSP Info for \[%d. %s\]" $c $world($conn($c,world),name)]
 
-  set tree [::ttk::treeview $win.tree -columns [list Variable Value] -show [list headings] \
-                  -xscrollcommand [list $win.x set] -yscrollcommand [list $win.y set]]
-  set y [::ttk::scrollbar $win.y -orient vertical -command [list $tree yview]]
-  set x [::ttk::scrollbar $win.x -orient horizontal -command [list $tree xview]]
-  grid_with_scrollbars $tree $x $y
+	set tree [::ttk::treeview $win.tree -columns [list Variable Value]\
+		-show [list headings] \
+		-xscrollcommand [list $win.x set] -yscrollcommand [list $win.y set]]
+	set y [::ttk::scrollbar $win.y -orient vertical -command [list $tree yview]]
+	set x [::ttk::scrollbar $win.x -orient horizontal -command [list $tree xview]]
+	grid_with_scrollbars $tree $x $y
 
 
-  $tree heading Variable -text [T "Variable"] -anchor w
-  $tree heading Value -text [T "Value"] -anchor w
-  $tree column Variable -width 100
-  $tree column Value -width 250
+	$tree heading Variable -text [T "Variable"] -anchor w
+	$tree heading Value -text [T "Value"] -anchor w
+	$tree column Variable -width 100
+	$tree column Value -width 250
 
-  # Build list
-  foreach x [lsort -dictionary -index 0 $conn($c,telnet,mssp)] {
-     $tree insert {} end -values $x
-  }
+	# Build list
+	foreach x [lsort -dictionary -index 0 $conn($c,telnet,mssp)] {
+		$tree insert {} end -values $x
+	}
 
-  return;
+	return;
 
 };# ::potato::showMSSP
 
@@ -7370,94 +7403,95 @@ proc ::potato::showMSSP {{c ""}} {
 #: desc Show a window of connection stats for each world.
 #: return nothing
 proc ::potato::showStats {} {
-  variable world;
-  variable conn;
+	variable world;
+	variable conn;
 
-  foreach w [worldIDs] {
-     set times($w) $world($w,stats,time)
-  }
+	foreach w [worldIDs] {
+		set times($w) $world($w,stats,time)
+	}
 
-  foreach c [connIDs] {
-     set w $conn($c,world)
-     if { [info exists conn($c,stats,prev)] && [string is integer -strict $conn($c,stats,prev)] && $conn($c,stats,prev) > 0 } {
-          incr times($w) $conn($c,stats,prev)
-        }
-     if { $conn($c,stats,connAt) > 0 } {
-          incr times($w) [expr {[clock seconds] - $conn($c,stats,connAt)}]
-        }
-  }
+	foreach c [connIDs] {
+		set w $conn($c,world)
+		if { [info exists conn($c,stats,prev)] && [string is integer -strict $conn($c,stats,prev)] && $conn($c,stats,prev) > 0 } {
+			incr times($w) $conn($c,stats,prev)
+		}
+		if { $conn($c,stats,connAt) > 0 } {
+			incr times($w) [expr {[clock seconds] - $conn($c,stats,connAt)}]
+		}
+	}
 
-  set win .connStats
-  destroy $win;# if it exists, destroy it; we'll remake it with up-to-date stats
+	set win .connStats
+	destroy $win;# if it exists, destroy it; we'll remake it with up-to-date stats
 
-  toplevel $win
-  wm title $win [T "Connection Statistics"]
-  wm withdraw $win
+	toplevel $win
+	wm title $win [T "Connection Statistics"]
+	wm withdraw $win
 
-  if { [catch {::ttk::style lookup Treeview -font} font] } {
-       set font TkDefaultFont
-     }
+	if { [catch {::ttk::style lookup Treeview -font} font] } {
+		set font TkDefaultFont
+	}
 
-  pack [set frame [::ttk::frame $win.f]] -side left -expand 1 -fill both
+	pack [set frame [::ttk::frame $win.f]] -side left -expand 1 -fill both
 
-  pack [set top [::ttk::frame $frame.top]] -side top -expand 1 -fill both -anchor nw -padx 0 -pady 3
+	pack [set top [::ttk::frame $frame.top]] -side top -expand 1 -fill both -anchor nw -padx 0 -pady 3
 
-  set columns [list [X "MU* Name"] \
-                    [X "No of Connections"] \
-                    [X "Total Connection Time"] \
-              ]
+	set columns [list \
+		[X "MU* Name"] \
+		[X "No of Connections"] \
+		[X "Total Connection Time"] \
+	]
 
-  set tree [::ttk::treeview $top.tree \
-    -xscrollcommand [list $top.x set] \
-    -yscrollcommand [list $top.y set] \
-    -columns $columns \
-    -selectmode browse -show [list headings] \
-  ]
+	set tree [::ttk::treeview $top.tree \
+		-xscrollcommand [list $top.x set] \
+		-yscrollcommand [list $top.y set] \
+		-columns $columns \
+		-selectmode browse -show [list headings] \
+	]
 
-  set x [lindex $columns 0]
-  $tree heading $x -text [T $x] -anchor w \
-    -image ::treeviewUtils::HeaderSort::arrow(0) \
-    -command [list ::treeviewUtils::HeaderSort::SortBy $tree $x 1 ""]
-  $tree column $x -anchor w -stretch 1
+	set x [lindex $columns 0]
+	$tree heading $x -text [T $x] -anchor w \
+		-image ::treeviewUtils::HeaderSort::arrow(0) \
+		-command [list ::treeviewUtils::HeaderSort::SortBy $tree $x 1 ""]
+	$tree column $x -anchor w -stretch 1
 
-  foreach x [lrange $columns 1 end] y [list "" "TIME:"] {
-    $tree heading $x -text [T $x] -anchor e \
-      -image ::treeviewUtils::HeaderSort::arrowBlank \
-      -command [list ::treeviewUtils::HeaderSort::SortBy $tree $x 0 $y]
-    $tree column $x -anchor e -stretch 0
-  }
+	foreach x [lrange $columns 1 end] y [list "" "TIME:"] {
+	$tree heading $x -text [T $x] -anchor e \
+		-image ::treeviewUtils::HeaderSort::arrowBlank \
+		-command [list ::treeviewUtils::HeaderSort::SortBy $tree $x 0 $y]
+	$tree column $x -anchor e -stretch 0
+	}
 
-  set xs [::ttk::scrollbar $top.x -orient horizontal -command [list $tree xview]]
-  set ys [::ttk::scrollbar $top.y -orient vertical -command [list $tree yview]]
+	set xs [::ttk::scrollbar $top.x -orient horizontal -command [list $tree xview]]
+	set ys [::ttk::scrollbar $top.y -orient vertical -command [list $tree yview]]
 
-  set col0 150
-  set col1 115
-  set col2 125
+	set col0 150
+	set col1 115
+	set col2 125
 
-  foreach w [worldIDs] {
-    set vals [list $world($w,name) $world($w,stats,conns) [timeFmt $times($w) 0]]
-    $tree insert {} end -values $vals -tags [list TIME:$times($w)]
-    foreach col {col0 col1 col2} x $vals {
-      set $col [expr {max([set $col], [font measure $font -displayof $tree $x])}]
-    }
-  }
+	foreach w [worldIDs] {
+		set vals [list $world($w,name) $world($w,stats,conns) [timeFmt $times($w) 0]]
+		$tree insert {} end -values $vals -tags [list TIME:$times($w)]
+		foreach col {col0 col1 col2} x $vals {
+			set $col [expr {max([set $col], [font measure $font -displayof $tree $x])}]
+		}
+	}
 
-  foreach x {0 1 2} {
-    $tree column [lindex $columns $x] -width [set col$x] -minwidth [set col $x]
-  }
+	foreach x {0 1 2} {
+		$tree column [lindex $columns $x] -width [set col$x] -minwidth [set col $x]
+	}
 
-  grid_with_scrollbars $tree $xs $ys
+	grid_with_scrollbars $tree $xs $ys
 
-  pack [::ttk::frame $frame.btm] -side top -expand 0 -fill none -anchor center -pady 10
-  pack [::ttk::button $frame.btm.close -text [T "Close"] -command [list destroy $win] -default active]
+	pack [::ttk::frame $frame.btm] -side top -expand 0 -fill none -anchor center -pady 10
+	pack [::ttk::button $frame.btm.close -text [T "Close"] -command [list destroy $win] -default active]
 
-  bind $win <Escape> [list destroy $win]
-  center $win
-  wm deiconify $win
-  raise $win
-  focus $frame.btm.close
+	bind $win <Escape> [list destroy $win]
+	center $win
+	wm deiconify $win
+	raise $win
+	focus $frame.btm.close
 
-  return;
+	return;
 
 };# ::potato::showStats
 
@@ -7470,12 +7504,12 @@ proc ::potato::showStats {} {
 #: return nothing
 proc ::potato::multiscrollSet {src dst sb args} {
 
-  foreach x $dst {
-    $x yview moveto [lindex $args 0]
-  }
-  $sb set {*}$args
+	foreach x $dst {
+		$x yview moveto [lindex $args 0]
+	}
+	$sb set {*}$args
 
-  return;
+	return;
 }
 
 #: proc ::potato::multiscroll
@@ -7486,11 +7520,11 @@ proc ::potato::multiscrollSet {src dst sb args} {
 #: return nothing
 proc ::potato::multiscroll {widgets subcmd args} {
 
-  foreach x $widgets {
-     $x $subcmd {*}$args
-  }
+	foreach x $widgets {
+		$x $subcmd {*}$args
+	}
 
-  return;
+	return;
 
 };# ::potato::multiscroll
 
@@ -7501,7 +7535,7 @@ proc ::potato::multiscroll {widgets subcmd args} {
 #: return nothing
 proc ::potato::minimizeToSystrayDefault {win} {
 
-  return;
+	return;
 
 };# ::potato::minimizeToSystrayDefault
 
@@ -7513,7 +7547,7 @@ proc ::potato::minimizeToSystrayDefault {win} {
 #: return nothing
 proc ::potato::showSystrayIconDefault {} {
 
-  return;
+	return;
 
 };# ::potato::showSystrayIconDefault
 
@@ -7523,7 +7557,7 @@ proc ::potato::showSystrayIconDefault {} {
 #: return nothing
 proc ::potato::hideSystrayIconDefault {} {
 
-  return;
+	return;
 
 };# ::potato::hideSystrayIconDefault
 
@@ -7534,29 +7568,29 @@ proc ::potato::hideSystrayIconDefault {} {
 #: desc When complete, show the systray icon if so configured.
 #: return nothing
 proc ::potato::setupSystray {{skippackages 0}} {
-  variable misc;
+	variable misc;
 
-  foreach x [list minimizeToSystray flashSystrayIcon unflashSystrayIcon showSystrayIcon hideSystrayIcon] {
-    if { $skippackages || ![llength [info procs ::potato::$x]] } {
-         set args [list]
-         set defcmd ::potato::${x}Default
-         foreach y [info args $defcmd] {
-           if { [info default $defcmd $y defarg] } {
-                lappend args [list $y $defarg]
-              } else {
-                lappend args $y
-              }
-         }
-         proc ::potato::$x $args [info body $defcmd]
-       }
-  }
+	foreach x [list minimizeToSystray flashSystrayIcon unflashSystrayIcon showSystrayIcon hideSystrayIcon] {
+		if { $skippackages || ![llength [info procs ::potato::$x]] } {
+			set args [list]
+			set defcmd ::potato::${x}Default
+			foreach y [info args $defcmd] {
+				if { [info default $defcmd $y defarg] } {
+					lappend args [list $y $defarg]
+				} else {
+					lappend args $y
+				}
+			}
+			proc ::potato::$x $args [info body $defcmd]
+		}
+	}
 
 
-  if { $misc(showSysTray) } {
-       showSystrayIcon
-     }
+	if { $misc(showSysTray) } {
+		showSystrayIcon
+	}
 
-  return;
+	return;
 
 };# ::potato::setupSystray
 
@@ -7564,31 +7598,31 @@ proc ::potato::setupSystray {{skippackages 0}} {
 #: desc load all the skins available, adding them to the $::potato::skins list
 #: return nothing
 proc ::potato::loadSkins {} {
-  variable path;
-  variable skins;
+	variable path;
+	variable skins;
 
-  if { ![info exists skins(int)] } {
-       set skins(int) [list]
-       set skins(display) [list]
-     }
+	if { ![info exists skins(int)] } {
+		set skins(int) [list]
+		set skins(display) [list]
+	}
 
-  #package require potato-skin
-  source [file join [file dirname [info script]] potato-skin.tcl]
-  registerSkin potato
+	#package require potato-skin
+	source [file join [file dirname [info script]] potato-skin.tcl]
+	registerSkin potato
 
-  set files [glob -nocomplain -type d -directory $path(skins) *.skn]
-  if { [llength $files] == 0 } {
-       return;
-     }
+	set files [glob -nocomplain -type d -directory $path(skins) *.skn]
+	if { [llength $files] == 0 } {
+		return;
+	}
 
-  foreach SKINDIR $files {
-     if { ![catch {source [lindex [glob -dir $SKINDIR *.init] 0]} value] && \
-          $value eq [file rootname [file tail $SKINDIR]] } {
-          registerSkin $value
-        }
-  }
+	foreach SKINDIR $files {
+		if { ![catch {source [lindex [glob -dir $SKINDIR *.init] 0]} value] && \
+			$value eq [file rootname [file tail $SKINDIR]] } {
+			registerSkin $value
+		}
+	}
 
-  return;
+	return;
 
 };# ::potato::loadSkins
 
@@ -7597,14 +7631,14 @@ proc ::potato::loadSkins {} {
 #: desc add the skin $skin to any appropriate lists to make it show up as available
 #: return nothing
 proc ::potato::registerSkin {skin} {
-  variable skins;
+	variable skins;
 
-  if { $skin ni $skins(int) && "[set ::skin::${skin}::skin(name)] ($skin [set ::skin::${skin}::skin(version)])" ni $skins(display)} {
-       lappend skins(int) $skin
-       lappend skins(display) "[set ::skin::${skin}::skin(name)] ($skin [set ::skin::${skin}::skin(version)])"
-     }
+	if { $skin ni $skins(int) && "[set ::skin::${skin}::skin(name)] ($skin [set ::skin::${skin}::skin(version)])" ni $skins(display)} {
+		lappend skins(int) $skin
+		lappend skins(display) "[set ::skin::${skin}::skin(name)] ($skin [set ::skin::${skin}::skin(version)])"
+	}
 
-  return;
+	return;
 
 };# ::potato::registerSkin
 
@@ -7612,91 +7646,92 @@ proc ::potato::registerSkin {skin} {
 #: arg c connection id. Defaults to ""
 #: desc Show the input history window for connection $c, or the currently displayed connection if $c is empty
 proc ::potato::history {{c ""}} {
-  variable conn;
+	variable conn;
 
-  if { $c eq "" } {
-       set c [up]
-     }
+	if { $c eq "" } {
+		set c [up]
+	}
 
-  set win .input_history_$c
-  if { [winfo exists $win] } {
-       reshowWindow $win
-       return;
-     }
+	set win .input_history_$c
+	if { [winfo exists $win] } {
+		reshowWindow $win
+		return;
+	}
 
-  toplevel $win
-  registerWindow $c $win
-  wm withdraw $win
-  wm title $win [T "Input History for %d. %s" $c [connInfo $c name]]
+	toplevel $win
+	registerWindow $c $win
+	wm withdraw $win
+	wm title $win [T "Input History for %d. %s" $c [connInfo $c name]]
 
-  pack [set frame [::ttk::frame $win.frame]] -side left -expand 1 -fill both -anchor nw
+	pack [set frame [::ttk::frame $win.frame]] -side left -expand 1 -fill both -anchor nw
 
-  set text [T "Select a command and press 1 to place it in the top input window, 2 to place it in the lower input window, or 3 to send it directly to the MU*. Press 4 to copy it to the clipboard. Press escape to close the window."]
-  ::ttk::label $frame.label -text $text -wraplength 350
-  pack $frame.label -side top -pady 5 -padx 10 -fill x
+	set text [T "Select a command and press 1 to place it in the top input window, 2 to place it in the lower input window, or 3 to send it directly to the MU*. Press 4 to copy it to the clipboard. Press escape to close the window."]
+	::ttk::label $frame.label -text $text -wraplength 350
+	pack $frame.label -side top -pady 5 -padx 10 -fill x
 
-  set cmds [::ttk::frame $frame.cmds]
-  pack $cmds -side top -padx 10 -pady 5 -expand 1 -fill both
-  set tree [::ttk::treeview $cmds.lb -height 15 -show headings -selectmode browse \
-          -yscrollcommand [list $cmds.sby set] -xscrollcommand [list $cmds.sbx set] \
-          -columns [list ID Command]]
-  $tree heading ID -text "[T "ID"] " -anchor e
-  $tree heading Command -text [T "Command"]
-  $tree column ID -anchor e -stretch 0 -width 25
-  $tree column Command -anchor w -stretch 1
-  foreach x $conn($c,inputHistory) {
-     $tree insert {} end -id [lindex $x 0] -values $x
-  }
-  ::ttk::scrollbar $cmds.sby -orient vertical -command [list $cmds.lb yview]
-  ::ttk::scrollbar $cmds.sbx -orient horizontal -command [list $cmds.lb xview]
-  grid_with_scrollbars $cmds.lb $cmds.sbx $cmds.sby
-  pack $cmds -expand 1 -fill both
+	set cmds [::ttk::frame $frame.cmds]
+	pack $cmds -side top -padx 10 -pady 5 -expand 1 -fill both
+	set tree [::ttk::treeview $cmds.lb -height 15 -show headings -selectmode browse \
+		-yscrollcommand [list $cmds.sby set] -xscrollcommand [list $cmds.sbx set] \
+		-columns [list ID Command]]
+	$tree heading ID -text "[T "ID"] " -anchor e
+	$tree heading Command -text [T "Command"]
+	$tree column ID -anchor e -stretch 0 -width 25
+	$tree column Command -anchor w -stretch 1
+	foreach x $conn($c,inputHistory) {
+		$tree insert {} end -id [lindex $x 0] -values $x
+	}
+	::ttk::scrollbar $cmds.sby -orient vertical -command [list $cmds.lb yview]
+	::ttk::scrollbar $cmds.sbx -orient horizontal -command [list $cmds.lb xview]
+	grid_with_scrollbars $cmds.lb $cmds.sbx $cmds.sby
+	pack $cmds -expand 1 -fill both
 
-  pack [::ttk::frame $frame.filter] -side top -fill x -anchor n -padx 5 -pady 3
-  pack [set filter [::ttk::entry $frame.filter.e -validate key \
-           -validatecommand [list ::potato::historyFilter $tree %P %s]]] -expand 1 -fill x
-  # Switcheroo
-  set bindtags [bindtags $filter]
-  bindtags $filter [lreplace $bindtags 0 1 [lindex $bindtags 1] [lindex $bindtags 0]]
+	pack [::ttk::frame $frame.filter] -side top -fill x -anchor n -padx 5 -pady 3
+	pack [set filter [::ttk::entry $frame.filter.e -validate key \
+		-validatecommand [list ::potato::historyFilter $tree %P %s]]] -expand 1 -fill x
+	# Switcheroo
+	set bindtags [bindtags $filter]
+	bindtags $filter [lreplace $bindtags 0 1 [lindex $bindtags 1] [lindex $bindtags 0]]
 
-  pack [::ttk::frame $frame.btns1] -side top -anchor nw -expand 0 -fill x -pady 3
-  foreach {x y z} [list 1 top [T "Top Input"] \
-                        2 btm [T "Bottom Input"] \
-                        3 send [T "Send to MUSH"]] {
-      pack [::ttk::frame $frame.btns1.$y] -side left -expand 1 -fill x -anchor n
-      pack [set btn($y) [::ttk::button $frame.btns1.$y.btn -text $z \
-                -command [list ::potato::historySub $c $win $tree $x]]] -side top -anchor center
-  }
-  pack [::ttk::frame $frame.btns2] -side top -anchor nw -expand 0 -fill x -pady 3
-  foreach {x y z} [list 4 copy [T "Copy to Clipboard"] \
-                        5 close [T "Close"]] {
-      pack [::ttk::frame $frame.btns2.$y] -side left -expand 1 -fill x -anchor n
-      pack [set btn($y) [::ttk::button $frame.btns2.$y.btn -text $z \
-                -command [list ::potato::historySub $c $win $tree $x]]] -side top -anchor center
-  }
-  $btn(close) configure -command [list destroy $win]
+	pack [::ttk::frame $frame.btns1] -side top -anchor nw -expand 0 -fill x -pady 3
+	foreach {x y z} [list \
+		1 top [T "Top Input"] \
+		2 btm [T "Bottom Input"] \
+		3 send [T "Send to MUSH"]] {
+		pack [::ttk::frame $frame.btns1.$y] -side left -expand 1 -fill x -anchor n
+		pack [set btn($y) [::ttk::button $frame.btns1.$y.btn -text $z \
+			-command [list ::potato::historySub $c $win $tree $x]]] \
+			-side top -anchor center
+	}
+	pack [::ttk::frame $frame.btns2] -side top -anchor nw -expand 0 -fill x -pady 3
+	foreach {x y z} [list 4 copy [T "Copy to Clipboard"] 5 close [T "Close"]] {
+		pack [::ttk::frame $frame.btns2.$y] -side left -expand 1 -fill x -anchor n
+		pack [set btn($y) [::ttk::button $frame.btns2.$y.btn -text $z \
+			-command [list ::potato::historySub $c $win $tree $x]]] -side top -anchor center
+	}
+	$btn(close) configure -command [list destroy $win]
 
-  bind $win <Return> [list $btn(close) invoke]
-  bind $win <Escape> [list $btn(close) invoke]
+	bind $win <Return> [list $btn(close) invoke]
+	bind $win <Escape> [list $btn(close) invoke]
 
-  foreach x [list 1 2 3 4] {
-    bind $win <KeyPress-$x> [list ::potato::historySub $c $win $tree $x]
-    bind $filter <KeyPress-$x> {break}
-  }
-  bind $tree <Double-ButtonPress-1> [list ::potato::historySub $c $win $tree 5]
+	foreach x [list 1 2 3 4] {
+		bind $win <KeyPress-$x> [list ::potato::historySub $c $win $tree $x]
+		bind $filter <KeyPress-$x> {break}
+	}
+	bind $tree <Double-ButtonPress-1> [list ::potato::historySub $c $win $tree 5]
 
 
-  update idletasks
+	update idletasks
 
-  center $win
-  reshowWindow $win 0
-  # This is annoying...
-  after 25 [list $tree yview moveto 1.0]
+	center $win
+	reshowWindow $win 0
+	# This is annoying...
+	after 25 [list $tree yview moveto 1.0]
 
-  bind $win <Destroy> [list ::potato::unregisterWindow $c $win]
-  focus $tree
+	bind $win <Destroy> [list ::potato::unregisterWindow $c $win]
+	focus $tree
 
-  return;
+	return;
 
 };# ::potato::history
 
@@ -7708,29 +7743,29 @@ proc ::potato::history {{c ""}} {
 #: return 1
 proc ::potato::historyFilter {tree filter change} {
 
-  set id 1
-  set items [list]
-  while { [$tree exists $id] } {
-     lappend items $id
-     $tree detach $id
-     incr id
-  }
+	set id 1
+	set items [list]
+	while { [$tree exists $id] } {
+	lappend items $id
+	$tree detach $id
+	incr id
+	}
 
-  if { $filter eq "" } {
-       # Special check for empty string, since it's likely the most common
-       $tree children {} $items
-     } else {
-       set matches [list]
-       foreach x $items {
-         set value [lindex [$tree item $x -values] 1]
-         if { [string match "*$filter*" $value] } {
-              lappend matches $x
-            }
-       }
-       $tree children {} $matches
-     }
+	if { $filter eq "" } {
+		# Special check for empty string, since it's likely the most common
+		$tree children {} $items
+	} else {
+		set matches [list]
+		foreach x $items {
+			set value [lindex [$tree item $x -values] 1]
+			if { [string match "*$filter*" $value] } {
+				lappend matches $x
+			}
+		}
+		$tree children {} $matches
+	}
 
-  return 1;
+	return 1;
 
 };# ::potato::historyFilter
 
@@ -7743,33 +7778,33 @@ proc ::potato::historyFilter {tree filter change} {
 #: return nothing
 proc ::potato::historySub {c top lb key} {
 
-  set index [$lb selection]
-  if { $index == "" } {
-       bell -displayof $top
-       return;
-     }
-  set cmd [lindex [$lb item $index -values] 1]
-  if { $cmd eq "" } {
-       return;
-     }
+	set index [$lb selection]
+	if { $index == "" } {
+		bell -displayof $top
+		return;
+	}
+	set cmd [lindex [$lb item $index -values] 1]
+	if { $cmd eq "" } {
+		return;
+	}
 
-  set cmd [string map [list \b \n] $cmd]
-  if { $key == 1 || $key == 2 } {
-       showInput $c $key $cmd 0
-       destroy $top
-     } elseif { $key == 3 } {
-       addToInputHistory $c $cmd
-       send_to $c $cmd
-       destroy $top
-     } elseif { $key == 5 } {
-       send_to $c $cmd
-     } elseif { $key == 4 } {
-       clipboard clear -displayof $top
-       clipboard append -displayof $top $cmd $cmd]
-       bell -displayof $top
-     }
+	set cmd [string map [list \b \n] $cmd]
+	if { $key == 1 || $key == 2 } {
+		showInput $c $key $cmd 0
+		destroy $top
+	} elseif { $key == 3 } {
+		addToInputHistory $c $cmd
+		send_to $c $cmd
+		destroy $top
+	} elseif { $key == 5 } {
+		send_to $c $cmd
+	} elseif { $key == 4 } {
+		clipboard clear -displayof $top
+		clipboard append -displayof $top $cmd $cmd]
+		bell -displayof $top
+	}
 
-  return;
+	return;
 
 };# ::potato::historySub
 
@@ -7777,19 +7812,19 @@ proc ::potato::historySub {c top lb key} {
 #: desc create the images, in the ::potato::img namespace, used by the app
 #: return nothing
 proc ::potato::createImages {} {
-  variable path;
+	variable path;
 
-  namespace eval ::potato::img {}
-  namespace eval ::potato::img::16 {}
-  namespace eval ::potato::img::32 {}
+	namespace eval ::potato::img {}
+	namespace eval ::potato::img::16 {}
+	namespace eval ::potato::img::32 {}
 
-  set imgPath [file join $path(lib) images]
+	set imgPath [file join $path(lib) images]
 
-  foreach x [glob -dir $imgPath -tails *.gif] {
-    image create photo ::potato::img::[file rootname $x] -file [file join $imgPath $x]
-  }
+	foreach x [glob -dir $imgPath -tails *.gif] {
+		image create photo ::potato::img::[file rootname $x] -file [file join $imgPath $x]
+	}
 
-  return;
+	return;
 
 };# ::potato::createImages
 
@@ -7799,34 +7834,34 @@ proc ::potato::createImages {} {
 #: desc If it doesn't already exist, create the given image from a file in the requested size.
 #: return name of created [image]
 proc ::potato::getImage {name {size 16}} {
-  variable path;
+	variable path;
 
-  if { $size ni [list 16 32] } {
-       return "";
-     }
+	if { $size ni [list 16 32] } {
+		return "";
+	}
 
-  set targetImg "::potato::img::${size}::$name"
-  if { $targetImg in [image names] } {
-       return $targetImg;
-     }
+	set targetImg "::potato::img::${size}::$name"
+	if { $targetImg in [image names] } {
+		return $targetImg;
+	}
 
-  if { [package vsatisfies [package present Tk] 8.6-] } {
-       set ext [list .png .gif]
-     } else {
-       # No PNG support in Tk 8.5
-       set ext [list .gif]
-     }
+	if { [package vsatisfies [package present Tk] 8.6-] } {
+		set ext [list .png .gif]
+	} else {
+		# No PNG support in Tk 8.5
+		set ext [list .gif]
+	}
 
-  set dir [file join $path(lib) images "${size}x$size"]
-  foreach x $ext {
-    if { [file exists [set file [file join $dir $name$x]]] } {
-         return [image create photo $targetImg -file $file];
-       } else {
-       puts "No $file"
-       }
-  }
+	set dir [file join $path(lib) images "${size}x$size"]
+	foreach x $ext {
+		if { [file exists [set file [file join $dir $name$x]]] } {
+			return [image create photo $targetImg -file $file];
+		} else {
+			puts "No $file" ;#abc this should error log?
+		}
+	}
 
-  return "";
+	return "";
 
 };# ::potato::getImage
 
@@ -7836,30 +7871,29 @@ proc ::potato::getImage {name {size 16}} {
 #: return error trace, or empty string
 proc ::potato::errorTrace {errdict} {
 
+	if { [dict exists $errdict -errorinfo] } {
+		set trace [dict get $errdict -errorinfo]
+	} else {
+		set trace ""
+	}
 
-  if { [dict exists $errdict -errorinfo] } {
-       set trace [dict get $errdict -errorinfo]
-     } else {
-       set trace ""
-     }
-
-  return $trace;
+	return $trace;
 
 };# ::potato::errorTrace
 
 proc ::potato::flash {w} {
-   variable world;
-   variable misc;
+	variable world;
+	variable misc;
 
-   if { $world($w,act,flashTaskbar) } {
-        catch {flashTaskbar .}
-      }
+	if { $world($w,act,flashTaskbar) } {
+		catch {flashTaskbar .}
+	}
 
-   if { $misc(showSysTray) && $world($w,act,flashSysTray) } {
-        catch {flashSystrayIcon}
-      }
+	if { $misc(showSysTray) && $world($w,act,flashSysTray) } {
+		catch {flashSystrayIcon}
+	}
 
-   return;
+	return;
 
 };# ::potato::flash
 
@@ -7869,9 +7903,9 @@ proc ::potato::flash {w} {
 #: return nothing
 proc ::potato::flashTaskbarDefault {win} {
 
-  wm deiconify $win
+	wm deiconify $win
 
-  return;
+	return;
 
 };# ::potato::flashTaskbarDefault
 
@@ -7881,19 +7915,19 @@ proc ::potato::flashTaskbarDefault {win} {
 #: return nothing
 proc ::potato::unflashTaskbarDefault {win} {
 
-  return;
+	return;
 
 };# ::potato::unflashTaskbarDefault
 
 proc ::potato::flashSystrayIconDefault {win} {
 
-  return;
+	return;
 
 };# ::potato::flashSystrayIconDefault
 
 proc ::potato::unflashSystrayIconDefault {win} {
 
-  return;
+	return;
 
 };# ::potato::unflashSystrayIconDefault
 
@@ -7902,25 +7936,25 @@ proc ::potato::unflashSystrayIconDefault {win} {
 #: desc Set up the ::potato::[un]flashTaskbar procs, for flashing the taskbar for a given window, from defaults
 #: return nothing
 proc ::potato::setUpFlash {{skippackages 0}} {
-  variable potato;
-  variable path;
+	variable potato;
+	variable path;
 
-  foreach x [list flashTaskbar unflashTaskbar] {
-    if { $skippackages || ![llength [info procs ::potato::$x]] } {
-         set args [list]
-         set defcmd ::potato::${x}Default
-         foreach y [info args $defcmd] {
-           if { [info default $defcmd $y defarg] } {
-                lappend args [list $y $defarg]
-              } else {
-                lappend args $y
-              }
-         }
-         proc ::potato::$x $args [info body $defcmd]
-       }
-  }
+	foreach x [list flashTaskbar unflashTaskbar] {
+		if { $skippackages || ![llength [info procs ::potato::$x]] } {
+			set args [list]
+			set defcmd ::potato::${x}Default
+			foreach y [info args $defcmd] {
+				if { [info default $defcmd $y defarg] } {
+					lappend args [list $y $defarg]
+				} else {
+					lappend args $y
+				}
+			}
+			proc ::potato::$x $args [info body $defcmd]
+		}
+	}
 
-  return;
+	return;
 
 };# ::potato::setUpFlash
 
@@ -7930,62 +7964,62 @@ proc ::potato::setUpFlash {{skippackages 0}} {
 #: desc if they want to quit, do so correctly
 #: return nothing
 proc ::potato::chk_exit {{prompt 0}} {
-  variable potato;
-  variable conn;
-  variable misc;
-  variable skins;
+	variable potato;
+	variable conn;
+	variable misc;
+	variable skins;
 
-  set connected 0
-  if { $prompt == 0 } {
-       set ask 0
-     } elseif { $prompt == 1 || ($prompt == -1 && [llength [connIDs]]) } {
-       set ask 1
-     } else {
-       set ask $misc(confirmExit)
-     }
+	set connected 0
+	if { $prompt == 0 } {
+		set ask 0
+	} elseif { $prompt == 1 || ($prompt == -1 && [llength [connIDs]]) } {
+		set ask 1
+	} else {
+		set ask $misc(confirmExit)
+	}
 
-  foreach c [connIDs] {
-     if { $conn($c,connected) } {
-          set ask 1
-          set connected 1
-          break;
-        }
-  }
+	foreach c [connIDs] {
+		if { $conn($c,connected) } {
+			set ask 1
+			set connected 1
+			break;
+		}
+	}
 
 
-  if { $ask } {
-       if { $connected } {
-            set msg [T "Are you sure you want to quit? There are still open connections!"]
-          } else {
-            set msg [T "Are you sure you want to quit?"]
-          }
-       set ans [tk_messageBox -title $potato(name) -type yesno -message $msg]
-       if { $ans ne "yes" } {
-            return;
-          }
-     }
+	if { $ask } {
+		if { $connected } {
+			set msg [T "Are you sure you want to quit? There are still open connections!"]
+		} else {
+			set msg [T "Are you sure you want to quit?"]
+		}
+		set ans [tk_messageBox -title $potato(name) -type yesno -message $msg]
+		if { $ans ne "yes" } {
+			return;
+		}
+	}
 
-  # Although Tcl will automatically close any open socket connections,
-  # our close world/disconnect procs handle stats checking, saving of temporary
-  # worlds, etc, so we need to use them.
-  foreach c [connIDs] {
-     closeConn $c 1 1
-  }
+	# Although Tcl will automatically close any open socket connections,
+	# our close world/disconnect procs handle stats checking, saving of temporary
+	# worlds, etc, so we need to use them.
+	foreach c [connIDs] {
+		closeConn $c 1 1
+	}
 
-  # Save any global prefs not covered by 'saveWorlds'.
-  savePrefs
+	# Save any global prefs not covered by 'saveWorlds'.
+	savePrefs
 
-  # Save skin prefs
-  foreach x $skins(int) {
-    catch {::skin::${x}::savePrefs}
-  }
+	# Save skin prefs
+	foreach x $skins(int) {
+		catch {::skin::${x}::savePrefs}
+	}
 
-  # Save the cheerleader. Save the world(s).
-  saveWorlds
+	# Save the cheerleader. Save the world(s).
+	saveWorlds
 
-  hideSystrayIcon
+	hideSystrayIcon
 
-  exit;
+	exit;
 
 };# ::potato::chk_exit
 
@@ -7996,8 +8030,8 @@ proc ::potato::chk_exit {{prompt 0}} {
 #: return Tcl list of -label $label -underline $position
 proc ::potato::menu_label {str} {
 
-  set first [string first "&" $str]
-  return [list -label [string replace $str $first $first] -underline $first];
+	set first [string first "&" $str]
+	return [list -label [string replace $str $first $first] -underline $first];
 
 };# ::potato::menu_label
 
@@ -8009,29 +8043,30 @@ proc ::potato::menu_label {str} {
 #: desc Add a menu entry for the task $task to menu $m, using the tasks's label, cmd, etc.
 #: return nothing
 proc ::potato::createMenuTask {m task {c ""} args} {
-  variable menu;
+	variable menu;
 
-  set vars [taskVars $task]
-  set command [list -command [concat [list ::potato::taskRun $task $c] $args]]
-  if { [llength $vars] != 0 } {
-       set type "checkbutton"
-       foreach {a b c} $vars {break;}
-       set extras [list -variable $a -onvalue $b -offvalue $c]
-     } elseif { $task eq "connectMenu" } {
-       # Feh! This is a sucky way to do this. It should be recorded in the task somewhere that
-       # this is a cascade.
-       set type cascade
-       set command [list]
-       set extras [list -menu $menu(connect,path)]
-     } else {
-       set type "command"
-       set extras [list]
-     }
+	set vars [taskVars $task]
+	set command [list -command [concat [list ::potato::taskRun $task $c] $args]]
+	if { [llength $vars] != 0 } {
+		set type "checkbutton"
+		foreach {a b c} $vars {break;}
+		set extras [list -variable $a -onvalue $b -offvalue $c]
+	} elseif { $task eq "connectMenu" } {
+		# Feh! This is a sucky way to do this. It should be recorded in the task somewhere that
+		# this is a cascade.
+		set type cascade
+		set command [list]
+		set extras [list -menu $menu(connect,path)]
+	} else {
+		set type "command"
+		set extras [list]
+	}
 
-  $m add $type {*}[menu_label [taskLabel $task 1]] {*}$command {*}$extras \
-         -state [lindex [list disabled normal] [taskState $task $c]] -accelerator [taskAccelerator $task]
+	$m add $type {*}[menu_label [taskLabel $task 1]] {*}$command {*}$extras \
+		-state [lindex [list disabled normal] [taskState $task $c]] \
+		-accelerator [taskAccelerator $task]
 
-  return;
+	return;
 
 };# ::potato::createMenuTask
 
@@ -8040,39 +8075,40 @@ proc ::potato::createMenuTask {m task {c ""} args} {
 #: desc The File menu is about to be posted. Create its entries appropriately.
 #: return nothing
 proc ::potato::build_menu_file {m} {
-  variable potato;
-  variable menu;
-  variable conn;
+	variable potato;
+	variable menu;
+	variable conn;
 
-  $m delete 0 end
+	$m delete 0 end
 
-  if { $potato(worlds) > 0 } {
-       set state "normal"
-     } else {
-       set state "disabled"
-     }
-  createMenuTask $m manageWorlds
-  createMenuTask $m connectMenu
-  createMenuTask $m autoConnects
+	if { $potato(worlds) > 0 } {
+		set state "normal"
+	} else {
+		set state "disabled"
+	}
+	createMenuTask $m manageWorlds
+	createMenuTask $m connectMenu
+	createMenuTask $m autoConnects
 
-  $m add separator
-  createMenuTask $m reconnect
-  createMenuTask $m disconnect
-  createMenuTask $m close
+	$m add separator
+	createMenuTask $m reconnect
+	createMenuTask $m disconnect
+	createMenuTask $m close
 
-  $m add separator
-  createMenuTask $m reconnectAll
+	$m add separator
+	createMenuTask $m reconnectAll
 
-  $m add separator
-  $m add command {*}[menu_label [T "&Show Connection Stats"]] \
-              -command ::potato::showStats -state $state
-  $m add command {*}[menu_label [T "Show &MSSP Info"]] \
-              -command ::potato::showMSSP -state [expr {[llength $conn([up],telnet,mssp)] ? "normal" : "disabled"}]
+	$m add separator
+	$m add command {*}[menu_label [T "&Show Connection Stats"]] \
+		-command ::potato::showStats -state $state
+	$m add command {*}[menu_label [T "Show &MSSP Info"]] \
+		-command ::potato::showMSSP \
+		-state [expr {[llength $conn([up],telnet,mssp)] ? "normal" : "disabled"}]
 
-  $m add separator
-  createMenuTask $m exit
+	$m add separator
+	createMenuTask $m exit
 
-  return;
+	return;
 
 };# ::potato::build_menu_file
 
@@ -8081,26 +8117,26 @@ proc ::potato::build_menu_file {m} {
 #: desc The Edit menu is about to be posted. Create its entries appropriately.
 #: return nothing
 proc ::potato::build_menu_edit {m} {
-  variable potato;
-  variable menu;
+	variable potato;
+	variable menu;
 
-  $m delete 0 end
-  set c [up]
+	$m delete 0 end
+	set c [up]
 
-  createMenuTask $m spellcheck
-  $m add command {*}[menu_label [T "Configure &Prefixes/Auto-Say"]] \
-              -command ::potato::prefixWindow
+	createMenuTask $m spellcheck
+	$m add command {*}[menu_label [T "Configure &Prefixes/Auto-Say"]] \
+		-command ::potato::prefixWindow
 
-  $m add cascade -menu $menu(edit,convert,path) {*}[menu_label [T "&Convert..."]]
+	$m add cascade -menu $menu(edit,convert,path) {*}[menu_label [T "&Convert..."]]
 
-  $menu(edit,convert,path) delete 0 end
-  createMenuTask $menu(edit,convert,path) convertNewlines
-  createMenuTask $menu(edit,convert,path) convertSpaces
-  createMenuTask $menu(edit,convert,path) convertChars
-  $menu(edit,convert,path) add command {*}[menu_label [T "&Strip Empty Lines"]] -command "::potato::textSquishReturns"
-  $menu(edit,convert,path) add command {*}[menu_label [T "Remove &All Carriage Returns"]] -command "::potato::textStripReturns"
+	$menu(edit,convert,path) delete 0 end
+	createMenuTask $menu(edit,convert,path) convertNewlines
+	createMenuTask $menu(edit,convert,path) convertSpaces
+	createMenuTask $menu(edit,convert,path) convertChars
+	$menu(edit,convert,path) add command {*}[menu_label [T "&Strip Empty Lines"]] -command "::potato::textSquishReturns"
+	$menu(edit,convert,path) add command {*}[menu_label [T "Remove &All Carriage Returns"]] -command "::potato::textStripReturns"
 
-  return;
+	return;
 
 };# ::potato::build_menu_edit
 
@@ -8109,17 +8145,18 @@ proc ::potato::build_menu_edit {m} {
 #: desc The "View" menu ($m) is about to be posted. Configure it's entries appropriately. Unlike other menus, this one also has entries appended by the skin.
 #: return nothing
 proc ::potato::build_menu_view {m} {
-  variable potato;
+	variable potato;
 
-  $m delete 0 end
+	$m delete 0 end
 
-  createMenuTask $m twoInputWins
+	createMenuTask $m twoInputWins
 
-  ::skin::$potato(skin)::viewMenuPost $m
-  $m insert end checkbutton {*}[menu_label [T "&Debug Packets?"]] -variable ::potato::conn([up],debugPackets) \
-                     -onvalue 1 -offvalue 0 -state [lindex [list normal disabled] [expr {[up] == 0}]]
+	::skin::$potato(skin)::viewMenuPost $m
+	$m insert end checkbutton {*}[menu_label [T "&Debug Packets?"]] \
+		-variable ::potato::conn([up],debugPackets) -onvalue 1 -offvalue 0 \
+		-state [lindex [list normal disabled] [expr {[up] == 0}]]
 
-  return;
+	return;
 
 };# ::potato::build_menu_view
 
@@ -8128,22 +8165,22 @@ proc ::potato::build_menu_view {m} {
 #: desc The "Logging" menu (.m.log) is about to be posted. Configure it's entries appropriately.
 #: return nothing
 proc ::potato::build_menu_log {m} {
-  variable conn;
-  variable menu;
+	variable conn;
+	variable menu;
 
-  $m delete 0 end
+	$m delete 0 end
 
-  set c [up]
+	set c [up]
 
-  createMenuTask $m log
-  $m add cascade {*}[menu_label [T "&Stop Logging"]] -menu $menu(log,stop,path)
-  if { ![llength [array names conn $c,log,*]] } {
-       $m entryconfigure end -state disabled
-     }
-  $m add separator
-  createMenuTask $m upload
+	createMenuTask $m log
+	$m add cascade {*}[menu_label [T "&Stop Logging"]] -menu $menu(log,stop,path)
+	if { ![llength [array names conn $c,log,*]] } {
+		$m entryconfigure end -state disabled
+	}
+	$m add separator
+	createMenuTask $m upload
 
-  return;
+	return;
 
 };# ::potato::build_menu_log
 
@@ -8152,23 +8189,23 @@ proc ::potato::build_menu_log {m} {
 #: desc The "Stop Logging" (.m.log.stop) menu is about to be posted. Configure its entries appropriately.
 #: return nothing
 proc ::potato::build_menu_log_stop {m} {
-  variable conn;
+	variable conn;
 
-  set c [up]
+	set c [up]
 
-  $m delete 0 end
+	$m delete 0 end
 
-  createMenuTask $m logStop
-  set ids [removePrefix [arraySubelem conn $c,log] $c,log]
-  if { [llength $ids] } {
-       $m add separator
-       foreach x $ids {
-         createMenuTask $m logStop $c $c $x
-         $m entryconfigure end -label [file nativename [file normalize $conn($c,log,$x)]]
-       }
-     }
+	createMenuTask $m logStop
+	set ids [removePrefix [arraySubelem conn $c,log] $c,log]
+	if { [llength $ids] } {
+		$m add separator
+		foreach x $ids {
+			createMenuTask $m logStop $c $c $x
+			$m entryconfigure end -label [file nativename [file normalize $conn($c,log,$x)]]
+		}
+	}
 
-  return;
+	return;
 
 };# ::potato::build_menu_log_stop
 
@@ -8177,33 +8214,33 @@ proc ::potato::build_menu_log_stop {m} {
 #: desc Rebuild the Options menu when it's posted
 #: return nothing
 proc ::potato::build_menu_options {m} {
-  variable conn;
+	variable conn;
 
-  set c [up]
+	set c [up]
 
-  $m delete 0 end
+	$m delete 0 end
 
-  createMenuTask $m programConfig
-  createMenuTask $m globalEvents
-  createMenuTask $m globalSlashCmds
-  createMenuTask $m globalMacros
+	createMenuTask $m programConfig
+	createMenuTask $m globalEvents
+	createMenuTask $m globalSlashCmds
+	createMenuTask $m globalMacros
 
-  $m add separator
+	$m add separator
 
-  createMenuTask $m customKeyboard
+	createMenuTask $m customKeyboard
 
-  $m add separator
+	$m add separator
 
-  createMenuTask $m config
-  createMenuTask $m events
-  createMenuTask $m slashCmds
-  createMenuTask $m macroWindow
+	createMenuTask $m config
+	createMenuTask $m events
+	createMenuTask $m slashCmds
+	createMenuTask $m macroWindow
 
-  $m add separator
+	$m add separator
 
-  createMenuTask $m pickLocale
+	createMenuTask $m pickLocale
 
-  return;
+	return;
 
 };# ::potato::build_menu_options
 
@@ -8213,13 +8250,13 @@ proc ::potato::build_menu_options {m} {
 #: return nothing
 proc ::potato::build_menu_tools {m} {
 
-  $m delete 0 end
+	$m delete 0 end
 
-  createMenuTask $m inputHistory
-  createMenuTask $m mailWindow
-  createMenuTask $m textEd
+	createMenuTask $m inputHistory
+	createMenuTask $m mailWindow
+	createMenuTask $m textEd
 
-  return;
+	return;
 
 };# ::potato::build_menu_tools
 
@@ -8229,28 +8266,28 @@ proc ::potato::build_menu_tools {m} {
 #: return nothing
 proc ::potato::build_menu_help {m} {
 
-  $m delete 0 end
+	$m delete 0 end
 
-  createMenuTask $m help
-  $m add separator
-  $m add command {*}[menu_label [T "Tcl Code &Console"]] -command [list console show]
-  if { [catch {console title "$::potato::potato(name) - Tcl Code Console"}] } {
-       $m entryconfigure end -state disabled
-     }
-  $m add separator
-  $m add command {*}[menu_label [T "&Debugging Log Window"]] -command [list ::potato::errorLogWindow]
-  $m add separator
-  createMenuTask $m about
-  $m add command {*}[menu_label [T "Check for &Updates"]] -command [list ::potato::checkForUpdates]
-  set ver $::potato::potato(version)
-  if { [set changelog [::wikihelp::findTopic $ver]] ne "" || [set changelog [::wikihelp::findTopic [string map [list "." ""] $ver]]] ne "" } {
-       $m add command {*}[menu_label [T "View Changelog"]] -command [list ::wikihelp::help $changelog]
-     }
-  $m add separator
-  $m add command {*}[menu_label [T "&Donate to Potato's Development"]] -command [list ::potato::launchWebPage "http://www.potatomushclient.com/contact/donate"]
-  $m add command {*}[menu_label [T "Visit Potato &Website"]] -command [list ::potato::launchWebPage $::potato::potato(webpage)]
+	createMenuTask $m help
+	$m add separator
+	$m add command {*}[menu_label [T "Tcl Code &Console"]] -command [list console show]
+	if { [catch {console title "$::potato::potato(name) - Tcl Code Console"}] } {
+		$m entryconfigure end -state disabled
+	}
+	$m add separator
+	$m add command {*}[menu_label [T "&Debugging Log Window"]] -command [list ::potato::errorLogWindow]
+	$m add separator
+	createMenuTask $m about
+	$m add command {*}[menu_label [T "Check for &Updates"]] -command [list ::potato::checkForUpdates]
+	set ver $::potato::potato(version)
+	if { [set changelog [::wikihelp::findTopic $ver]] ne "" || [set changelog [::wikihelp::findTopic [string map [list "." ""] $ver]]] ne "" } {
+		$m add command {*}[menu_label [T "View Changelog"]] -command [list ::wikihelp::help $changelog]
+	}
+	$m add separator
+	$m add command {*}[menu_label [T "&Donate to Potato's Development"]] -command [list ::potato::launchWebPage "http://www.potatomushclient.com/contact/donate"]
+	$m add command {*}[menu_label [T "Visit Potato &Website"]] -command [list ::potato::launchWebPage $::potato::potato(webpage)]
 
-  return;
+	return;
 
 };# ::potato::build_menu_help
 
@@ -8258,42 +8295,42 @@ proc ::potato::build_menu_help {m} {
 #: desc set up the menu in the main window
 #: return nothing
 proc ::potato::setUpMenu {} {
-  variable menu;
+	variable menu;
 
-  set menuname .potatoMainMenu
-  if { [winfo exists $menuname] } {
-       destroy $menuname
-     }
-  menu $menuname -tearoff 0
-  . configure -menu $menuname
-  catch {destroy {*}[winfo children $menuname]}
-  set menu(file,path) [menu $menuname.file -tearoff 0 -postcommand [list ::potato::build_menu_file $menuname.file]]
-  set menu(edit,path) [menu $menuname.edit -tearoff 0 -postcommand [list ::potato::build_menu_edit $menuname.edit]]
-  set menu(edit,convert,path) [menu $menuname.edit.convert -tearoff 0]
-  set menu(connect,path) [menu $menuname.file.connect -tearoff 0 -postcommand [list ::potato::rebuildConnectMenu $menuname.file.connect]]
-  set menu(view,path) [menu $menuname.view -tearoff 0 -postcommand [list ::potato::build_menu_view $menuname.view]]
-  set menu(log,path) [menu $menuname.log -tearoff 0 -postcommand [list ::potato::build_menu_log $menuname.log]]
-  set menu(log,stop,path) [menu $menuname.log.stop -tearoff 0 -postcommand [list ::potato::build_menu_log_stop $menuname.log.stop]]
-  set menu(options,path) [menu $menuname.options -tearoff 0 -postcommand [list ::potato::build_menu_options $menuname.options]]
-  set menu(tools,path) [menu $menuname.tools -tearoff 0 -postcommand [list ::potato::build_menu_tools $menuname.tools]]
-  set menu(help,path) [menu $menuname.help -tearoff 0 -postcommand [list ::potato::build_menu_help $menuname.help]]
+	set menuname .potatoMainMenu
+	if { [winfo exists $menuname] } {
+		destroy $menuname
+	}
+	menu $menuname -tearoff 0
+	. configure -menu $menuname
+	catch {destroy {*}[winfo children $menuname]}
+	set menu(file,path) [menu $menuname.file -tearoff 0 -postcommand [list ::potato::build_menu_file $menuname.file]]
+	set menu(edit,path) [menu $menuname.edit -tearoff 0 -postcommand [list ::potato::build_menu_edit $menuname.edit]]
+	set menu(edit,convert,path) [menu $menuname.edit.convert -tearoff 0]
+	set menu(connect,path) [menu $menuname.file.connect -tearoff 0 -postcommand [list ::potato::rebuildConnectMenu $menuname.file.connect]]
+	set menu(view,path) [menu $menuname.view -tearoff 0 -postcommand [list ::potato::build_menu_view $menuname.view]]
+	set menu(log,path) [menu $menuname.log -tearoff 0 -postcommand [list ::potato::build_menu_log $menuname.log]]
+	set menu(log,stop,path) [menu $menuname.log.stop -tearoff 0 -postcommand [list ::potato::build_menu_log_stop $menuname.log.stop]]
+	set menu(options,path) [menu $menuname.options -tearoff 0 -postcommand [list ::potato::build_menu_options $menuname.options]]
+	set menu(tools,path) [menu $menuname.tools -tearoff 0 -postcommand [list ::potato::build_menu_tools $menuname.tools]]
+	set menu(help,path) [menu $menuname.help -tearoff 0 -postcommand [list ::potato::build_menu_help $menuname.help]]
 
-  $menuname add cascade -menu $menuname.file {*}[menu_label [T "&File"]]
-  set menu(file) [$menuname index end]
-  $menuname add cascade -menu $menuname.edit {*}[menu_label [T "&Edit"]]
-  set menu(edit) [$menuname index end]
-  $menuname add cascade -menu $menuname.view {*}[menu_label [T "&View"]]
-  set menu(view) [$menuname index end]
-  $menuname add cascade -menu $menuname.log {*}[menu_label [T "&Logging"]]
-  set menu(logging) [$menuname index end]
-  $menuname add cascade -menu $menuname.options {*}[menu_label [T "&Options"]]
-  set menu(options) [$menuname index end]
-  $menuname add cascade -menu $menuname.tools {*}[menu_label [T "&Tools"]]
-  set menu(tools) [$menuname index end]
-  $menuname add cascade -menu $menuname.help {*}[menu_label [T "&Help"]]
-  set menu(help) [$menuname index end]
+	$menuname add cascade -menu $menuname.file {*}[menu_label [T "&File"]]
+	set menu(file) [$menuname index end]
+	$menuname add cascade -menu $menuname.edit {*}[menu_label [T "&Edit"]]
+	set menu(edit) [$menuname index end]
+	$menuname add cascade -menu $menuname.view {*}[menu_label [T "&View"]]
+	set menu(view) [$menuname index end]
+	$menuname add cascade -menu $menuname.log {*}[menu_label [T "&Logging"]]
+	set menu(logging) [$menuname index end]
+	$menuname add cascade -menu $menuname.options {*}[menu_label [T "&Options"]]
+	set menu(options) [$menuname index end]
+	$menuname add cascade -menu $menuname.tools {*}[menu_label [T "&Tools"]]
+	set menu(tools) [$menuname index end]
+	$menuname add cascade -menu $menuname.help {*}[menu_label [T "&Help"]]
+	set menu(help) [$menuname index end]
 
-  return;
+	return;
 
 };# ::potato::setUpMenu
 
@@ -8302,54 +8339,54 @@ proc ::potato::setUpMenu {} {
 #: desc Show the window to check to see if an updated version of Potato has been released.
 #: return nothing
 proc ::potato::checkForUpdates {{background 0}} {
-  variable potato;
-  variable update;
+	variable potato;
+	variable update;
 
-  set win .checkForUpdates
-  if { [winfo exists $win] } {
-       reshowWindow $win
-       return;
-     }
-  toplevel $win
-  wm withdraw $win
-  pack [set frame [::ttk::frame $win.f]] -side top -expand 1 -fill both
-  wm title $win [T "Check for Updates - %s" "Potato"]
-  pack [set top [::ttk::frame $frame.top]] -padx 10 -pady 10
-  set labelfont [font actual [::ttk::style lookup TLabel -font]]
-  dict set labelfont -size [expr {round([dict get $labelfont -size] * 1.5)}]
-  pack [::ttk::label $top.l1 -text [T "You are currently running version:"] -font $labelfont -justify center] -side top
-  pack [::ttk::label $top.l2 -textvariable potato::potato(version) -font [concat $labelfont -weight bold] -justify center] -side top
-  pack [::ttk::label $top.l3 -text [T "Checking for updates..."] -font $labelfont -justify center]
+	set win .checkForUpdates
+	if { [winfo exists $win] } {
+		reshowWindow $win
+		return;
+	}
+	toplevel $win
+	wm withdraw $win
+	pack [set frame [::ttk::frame $win.f]] -side top -expand 1 -fill both
+	wm title $win [T "Check for Updates - %s" "Potato"]
+	pack [set top [::ttk::frame $frame.top]] -padx 10 -pady 10
+	set labelfont [font actual [::ttk::style lookup TLabel -font]]
+	dict set labelfont -size [expr {round([dict get $labelfont -size] * 1.5)}]
+	pack [::ttk::label $top.l1 -text [T "You are currently running version:"] -font $labelfont -justify center] -side top
+	pack [::ttk::label $top.l2 -textvariable potato::potato(version) -font [concat $labelfont -weight bold] -justify center] -side top
+	pack [::ttk::label $top.l3 -text [T "Checking for updates..."] -font $labelfont -justify center]
 
-  pack [set progress [::ttk::frame $frame.progress]] -side top -padx 10 -pady 10
-  pack [::ttk::progressbar $progress.bar -orient horizontal -mode indeterminate -length 160]
-  $progress.bar start 5
+	pack [set progress [::ttk::frame $frame.progress]] -side top -padx 10 -pady 10
+	pack [::ttk::progressbar $progress.bar -orient horizontal -mode indeterminate -length 160]
+	$progress.bar start 5
 
-  pack [set btns [::ttk::frame $frame.buttons]] -side top -padx 10 -pady 10
-  pack [::ttk::button $btns.cancel -text [T "Cancel"] -command [list destroy $win] -default active]
+	pack [set btns [::ttk::frame $frame.buttons]] -side top -padx 10 -pady 10
+	pack [::ttk::button $btns.cancel -text [T "Cancel"] -command [list destroy $win] -default active]
 
-  set update(win) $win
-  set update(main) $progress
-  set update(btns) $btns
-  set update(labelfont) $labelfont
-  set update(waiting) 1
+	set update(win) $win
+	set update(main) $progress
+	set update(btns) $btns
+	set update(labelfont) $labelfont
+	set update(waiting) 1
 
-  set url {http://www.potatomushclient.com/potato-version-check}
-  if { [catch {set token [::http::geturl $url -command [list ::potato::checkForUpdatesSub $background]]} err] } {
-       ::potato::checkForUpdatesSub $background {} $err
-       return;
-     }
+	set url {http://www.potatomushclient.com/potato-version-check}
+	if { [catch {set token [::http::geturl $url -command [list ::potato::checkForUpdatesSub $background]]} err] } {
+		::potato::checkForUpdatesSub $background {} $err
+		return;
+	}
 
-  bind $frame <Destroy> [list ::potato::cancelCheckForUpdates]
+	bind $frame <Destroy> [list ::potato::cancelCheckForUpdates]
 
-  if { !$background } {
-       update
-       center $win
-       wm deiconify $win
-       focus $btns.cancel
-     }
+	if { !$background } {
+		update
+		center $win
+		wm deiconify $win
+		focus $btns.cancel
+	}
 
-  return;
+	return;
 
 };# ::potato::checkForUpdates
 
@@ -8360,85 +8397,85 @@ proc ::potato::checkForUpdates {{background 0}} {
 #: desc Updates the UI to show the result.
 #: return nothing
 proc ::potato::checkForUpdatesSub {background token {err ""}} {
-  variable update;
-  variable potato;
+	variable update;
+	variable potato;
 
-  if { ![info exists update(win)] || ![winfo exists $update(win)] || \
-       ![info exists update(waiting)] || !$update(waiting) } {
-       # The update was cancelled
-       catch {::http::cleanup $token}
-       return;
-     }
+	if { ![info exists update(win)] || ![winfo exists $update(win)] || \
+		![info exists update(waiting)] || !$update(waiting) } {
+		# The update was cancelled
+		catch {::http::cleanup $token}
+		return;
+	}
 
-  #set background [expr {[wm state $update(win)] eq "withdrawn"}]
+	#set background [expr {[wm state $update(win)] eq "withdrawn"}]
 
-  # Destroy the progressbar to free up the UI for the result
-  destroy {*}[winfo children $update(main)]
-  destroy {*}[winfo children $update(btns)]
+	# Destroy the progressbar to free up the UI for the result
+	destroy {*}[winfo children $update(main)]
+	destroy {*}[winfo children $update(btns)]
 
-  set font $update(labelfont)
-  pack [set ok [::ttk::button $update(btns).ok -text [T "OK"] -command [list destroy $update(win)] -default active]] -side left -padx 8
+	set font $update(labelfont)
+	pack [set ok [::ttk::button $update(btns).ok -text [T "OK"] -command [list destroy $update(win)] -default active]] -side left -padx 8
 
-  set errorText [T "Sorry, we were unable to check for a new version at this time. Please try again later.\n\nIf the problem persists, please let us know."]
-  if { $token eq "" || [::http::status $token] ne "ok" } {
-       # Something went wrong
-       if { $background } {
-            destroy $update(win)
-          } else {
-            if { $err ne "" } {
-                 append errorText [T "Error: %s" $err]
-               }
-            pack [::ttk::label $update(main).error -text $errorText -font $font]
-            update
-            center $update(win)
-            focus $ok
-          }
-       catch {::http::cleanup $token;}
-       return;
-     }
+	set errorText [T "Sorry, we were unable to check for a new version at this time. Please try again later.\n\nIf the problem persists, please let us know."]
+	if { $token eq "" || [::http::status $token] ne "ok" } {
+		# Something went wrong
+		if { $background } {
+			destroy $update(win)
+		} else {
+			if { $err ne "" } {
+				append errorText [T "Error: %s" $err]
+			}
+			pack [::ttk::label $update(main).error -text $errorText -font $font]
+			update
+			center $update(win)
+			focus $ok
+		}
+		catch {::http::cleanup $token;}
+		return;
+	}
 
-  # Try and parse the result
-  set body [::http::data $token]
-  ::http::cleanup $token
-  if { ![regexp {"(.+)"} $body {} vers] || [catch {package vcompare $vers $potato(version)} difference] } {
-       # Damn
-       if { $background } {
-            destroy $update(win)
-          } else {
-            pack [::ttk::label $update(main).error -text $errorText -font $font]
-            update
-            center $update(win)
-            focus $ok
-          }
-       return;
-     }
+	# Try and parse the result
+	set body [::http::data $token]
+	::http::cleanup $token
+	if { ![regexp {"(.+)"} $body {} vers] || [catch {package vcompare $vers $potato(version)} difference] } {
+		# Damn
+		if { $background } {
+			destroy $update(win)
+		} else {
+			pack [::ttk::label $update(main).error -text $errorText -font $font]
+			update
+			center $update(win)
+			focus $ok
+		}
+		return;
+	}
 
-  if { $difference == 1 } {
-       # New version available!
-       pack [::ttk::label $update(main).new -font $font \
-              -text [T "There is a newer version of Potato (%s) available.\nYou can download it from Potato's website.\nWould you like to do so now?" $vers]]
-       $update(btns).ok configure -text [T "No"] -default normal
-       pack [::ttk::button $update(btns).yes -text [T "Yes"] -default active \
-               -command "[list ::potato::launchWebPage http://www.potatomushclient.com/downloads/] ; [list destroy $update(win)]"] -side left -before $update(btns).ok -padx 8
-       update
-       center $update(win)
-       if { $background } {
-            wm deiconify $update(win)
-            bell -displayof $update(win)
-          }
-       focus $update(btns).yes
-     } else {
-       if { $background } {
-            destroy $update(win)
-          } else {
-            pack [::ttk::label $update(main).uptodate -text [T "You are already using the latest version of Potato."] -font $font]
-            update
-            center $update(win)
-            focus $ok
-          }
-     }
+	if { $difference == 1 } {
+		# New version available!
+		pack [::ttk::label $update(main).new -font $font \
+			-text [T "There is a newer version of Potato (%s) available.\nYou can download it from Potato's website.\nWould you like to do so now?" $vers]]
+		$update(btns).ok configure -text [T "No"] -default normal
+		pack [::ttk::button $update(btns).yes -text [T "Yes"] -default active \
+			-command "[list ::potato::launchWebPage http://www.potatomushclient.com/downloads/] ; [list destroy $update(win)]"] -side left -before $update(btns).ok -padx 8
+		update
+		center $update(win)
+		if { $background } {
+			wm deiconify $update(win)
+			bell -displayof $update(win)
+		}
+		focus $update(btns).yes
+	} else {
+		if { $background } {
+			destroy $update(win)
+		} else {
+			pack [::ttk::label $update(main).uptodate -text [T "You are already using the latest version of Potato."] -font $font]
+			update
+			center $update(win)
+			focus $ok
+		}
+	}
 
-  return;
+	return;
 
 };# ::potato::checkForUpdatesSub
 
@@ -8447,13 +8484,13 @@ proc ::potato::checkForUpdatesSub {background token {err ""}} {
 #: desc Called when the window has been, or is about to be, closed.
 #: return nothing
 proc ::potato::cancelCheckForUpdates {} {
-  variable update;
+	variable update;
 
-  catch {destroy $update(win)}
-  array unset update
-  set update(waiting) 0
+	catch {destroy $update(win)}
+	array unset update
+	set update(waiting) 0
 
-  return;
+	return;
 
 };# ::potato::cancelCheckForUpdates
 
@@ -8465,25 +8502,25 @@ proc ::potato::cancelCheckForUpdates {} {
 #: return nothing
 proc ::potato::appKeyPress {win x y} {
 
-  set withmouse [winfo containing $x $y]
-  if { $win eq "" } {
-       set sendto $withmouse
-     } else {
-       set sendto $withmouse
-       foreach bt [bindtags $win] {
-         if { "<Button-3>" in [bind $bt] } {
-              set sendto $win
-              break;
-            }
-       }
-     }
-  if { $sendto eq $withmouse } {
-       event generate $sendto <Button-3> -rootx $x -rooty $y
-     } else {
-       event generate $sendto <Button-3> -x 4 -y 4
-     }
+	set withmouse [winfo containing $x $y]
+	if { $win eq "" } {
+		set sendto $withmouse
+	} else {
+		set sendto $withmouse
+		foreach bt [bindtags $win] {
+			if { "<Button-3>" in [bind $bt] } {
+				set sendto $win
+				break;
+			}
+		}
+	}
+	if { $sendto eq $withmouse } {
+		event generate $sendto <Button-3> -rootx $x -rooty $y
+	} else {
+		event generate $sendto <Button-3> -x 4 -y 4
+	}
 
-  return;
+	return;
 
 };# ::potato::appKeyPress
 
@@ -8495,29 +8532,29 @@ proc ::potato::appKeyPress {win x y} {
 #: return nothing
 proc ::potato::inputWindowRightClickMenu {input x y} {
 
-  set m .inputWinRCMenu
-  if { [winfo exists $m] } {
-       destroy $m
-     }
-  menu $m -tearoff 0
-  if { [llength [$input tag nextrange sel 1.0]] } {
-       set state normal
-     } else {
-       set state disabled
-     }
-  $m add command {*}[menu_label [T "&Copy"]] -accelerator Ctrl+C -command [list event generate $input <<Copy>>] -state $state
-  $m add command {*}[menu_label [T "C&ut"]] -accelerator Ctrl+X -command [list event generate $input <<Cut>>] -state $state
+	set m .inputWinRCMenu
+	if { [winfo exists $m] } {
+		destroy $m
+	}
+	menu $m -tearoff 0
+	if { [llength [$input tag nextrange sel 1.0]] } {
+		set state normal
+	} else {
+		set state disabled
+	}
+	$m add command {*}[menu_label [T "&Copy"]] -accelerator Ctrl+C -command [list event generate $input <<Copy>>] -state $state
+	$m add command {*}[menu_label [T "C&ut"]] -accelerator Ctrl+X -command [list event generate $input <<Cut>>] -state $state
 
-  if { ![catch {::tk::GetSelection $input CLIPBOARD} txt] && [string length $txt] } {
-       set state normal
-     } else {
-       set state disabled
-     }
-  $m add command {*}[menu_label [T "&Paste"]] -accelerator Ctrl+V -command [list event generate $input <<Paste>>] -state $state
+	if { ![catch {::tk::GetSelection $input CLIPBOARD} txt] && [string length $txt] } {
+		set state normal
+	} else {
+		set state disabled
+	}
+	$m add command {*}[menu_label [T "&Paste"]] -accelerator Ctrl+V -command [list event generate $input <<Paste>>] -state $state
 
-  tk_popup $m $x $y
+	tk_popup $m $x $y
 
-  return;
+	return;
 
 };# ::potato::inputWindowRightClickMenu
 
@@ -8525,191 +8562,209 @@ proc ::potato::inputWindowRightClickMenu {input x y} {
 #: desc set up bindings used throughout Potato, including those for input and output text widgets, and bindings on "." which aren't done elsewhere
 #: return nothing
 proc ::potato::setUpBindings {} {
-  variable potato;
+	variable potato;
 
-  catch {tcl_endOfWord}
-  set ::tcl_wordchars {[a-zA-Z0-9' ]}
-  set ::tcl_nonwordchars {[^a-zA-Z0-9']}
+	catch {tcl_endOfWord}
+	set ::tcl_wordchars {[a-zA-Z0-9' ]}
+	set ::tcl_nonwordchars {[^a-zA-Z0-9']}
 
-  set has86 [package vsatisfies [package require Tk] 8.6-]
+	set has86 [package vsatisfies [package require Tk] 8.6-]
 
-  bind . <FocusIn> [list after idle [list ::potato::focusIn %W]]
-  bind . <Unmap> [list ::potato::minimizeToSystray %W]
+	bind . <FocusIn> [list after idle [list ::potato::focusIn %W]]
+	bind . <Unmap> [list ::potato::minimizeToSystray %W]
 
-  # bindtags:
-  # PotatoOutput displays output from the MUSH, and replaces Text in the bindtags.
-  # PotatoInput is used for entering input, and comes before Text in the bindtags.
-  # PotatoUserBindings have user-defined bindings on, and are included in the bindtags before both the above
+	# bindtags:
+	# PotatoOutput displays output from the MUSH, and replaces Text in the bindtags.
+	# PotatoInput is used for entering input, and comes before Text in the bindtags.
+	# PotatoUserBindings have user-defined bindings on, and are included in the bindtags before both the above
 
-  # Control-<num> shows connection <num>
-  for {set i 1} {$i < 10} {incr i} {
-     bind PotatoInput <Control-Key-$i> [list ::potato::showConn $i]
-  }
+	# Control-<num> shows connection <num>
+	for {set i 1} {$i < 10} {incr i} {
+		bind PotatoInput <Control-Key-$i> [list ::potato::showConn $i]
+	}
 
-  bind PotatoInput <Control-Key-0> [list ::potato::showConn 10]
+	bind PotatoInput <Control-Key-0> [list ::potato::showConn 10]
 
-  bind PotatoInput <Button-3> [list ::potato::inputWindowRightClickMenu %W %X %Y]
-  # The <App> key may not be available on all systems
-  catch {bind PotatoInput <KeyPress-App> [list ::potato::appKeyPress %W %X %Y]}
+	bind PotatoInput <Button-3> [list ::potato::inputWindowRightClickMenu %W %X %Y]
+	# The <App> key may not be available on all systems
+	catch {bind PotatoInput <KeyPress-App> [list ::potato::appKeyPress %W %X %Y]}
 
-  # Stop the user being able to select the last newline in the text widget. When it's selected,
-  # it causes "bleed" of the selection tag if new text is inserted.
-  bind Text <<Selection>> {%W tag remove sel end-1c end}
+	# Stop the user being able to select the last newline in the text widget. When it's selected,
+	# it causes "bleed" of the selection tag if new text is inserted.
+	bind Text <<Selection>> {%W tag remove sel end-1c end}
 
-  # Allow for Insert key to toggle overtype on/off in text widgets
-  bind all <Insert> "[list ::potato::toggleOvertype];break"
-  bind Text <Insert> "[list ::potato::toggleOvertype];break"
-  bind Text <Key> [list ::potato::TextInsert %W %A]
+	# Allow for Insert key to toggle overtype on/off in text widgets
+	bind all <Insert> "[list ::potato::toggleOvertype];break"
+	bind Text <Insert> "[list ::potato::toggleOvertype];break"
+	bind Text <Key> [list ::potato::TextInsert %W %A]
 
-  # The help for the Listbox widget says that it will only take focus on click if -takefocus is true.
-  # It's lying. Let's make it actually do that.
-  bind Listbox <1> {    if {[winfo exists %W]} { tk::ListboxBeginSelect %W [%W index @%x,%y] [string is true [%W cget -takefocus]] }}
+	# The help for the Listbox widget says that it will only take focus on click if -takefocus is true.
+	# It's lying. Let's make it actually do that.
+	bind Listbox <1> {
+		if { [winfo exists %W] } {
+			tk::ListboxBeginSelect %W [%W index @%x,%y] [string is true [%W cget -takefocus]]
+		}
+	};# <1>
 
-  # When "Up" is pressed and we're already at the start, or "Down" is pressed and
-  # we're already at the end, scroll the output window in that direction instead.
-  bind PotatoInput <Up> { if { [%W compare "insert display linestart" == 1.0] } {
-                               [::potato::activeTextWidget] yview scroll -1 units
-                             }
-                   };# up
+	# When "Up" is pressed and we're already at the start, or "Down" is pressed and
+	# we're already at the end, scroll the output window in that direction instead.
+	bind PotatoInput <Up> {
+		if { [%W compare "insert display linestart" == 1.0] } {
+			[::potato::activeTextWidget] yview scroll -1 units
+		}
+	};# up
 
-  bind PotatoInput <Down> { if { [%W compare "insert display lineend" == end-1char] } {
-                                 [::potato::activeTextWidget] yview scroll 1 units
-                               }
-                   };# down
+	bind PotatoInput <Down> {
+		if { [%W compare "insert display lineend" == end-1char] } {
+			[::potato::activeTextWidget] yview scroll 1 units
+		}
+	};# down
 
-  # Remove vars used for cmd history scrolling in this window when it's nuked
-  bind PotatoInput <Destroy> [list array unset ::potato::inputSwap %W,*]
+	# Remove vars used for cmd history scrolling in this window when it's nuked
+	bind PotatoInput <Destroy> [list array unset ::potato::inputSwap %W,*]
 
-  # See beginning/end of output window
-  bind PotatoInput <Control-Alt-Home> {[::potato::activeTextWidget] see 1.0}
-  bind PotatoInput <Control-Shift-Home> {continue}
-  bind PotatoInput <Control-Alt-End> {[::potato::activeTextWidget] see end}
-  bind PotatoInput <Control-Shift-End> {continue}
+	# See beginning/end of output window
+	bind PotatoInput <Control-Alt-Home> {[::potato::activeTextWidget] see 1.0}
+	bind PotatoInput <Control-Shift-Home> {continue}
+	bind PotatoInput <Control-Alt-End> {[::potato::activeTextWidget] see end}
+	bind PotatoInput <Control-Shift-End> {continue}
 
-  # Make "End" show the end of the output window, if we're already at the end of the input window
-  bind PotatoInput <End> {if { [%W compare insert == end-1char] } { if { [::potato::up] == 0 } { [::potato::activeTextWidget] yview moveto 1.0} else {[::potato::activeTextWidget] see end}}}
+	# Make "End" show the end of the output window, if we're already at the end of the input window
+	bind PotatoInput <End> {
+		if { [%W compare insert == end-1char] } {
+			if { [::potato::up] == 0 } {
+				[::potato::activeTextWidget] yview moveto 1.0
+			} else {
+				[::potato::activeTextWidget] see end
+			}
+		}
+	};# <End>
 
-  # Scroll output window by a page
-  bind PotatoInput <Prior> {[::potato::activeTextWidget] yview scroll -1 pages}
-  bind PotatoInput <Next> {[::potato::activeTextWidget] yview scroll 1 pages}
-  bind PotatoInput <Control-Prior> [bind Text <Prior>]
-  bind PotatoInput <Control-Next> [bind Text <Next>]
+	# Scroll output window by a page
+	bind PotatoInput <Prior> {[::potato::activeTextWidget] yview scroll -1 pages}
+	bind PotatoInput <Next> {[::potato::activeTextWidget] yview scroll 1 pages}
+	bind PotatoInput <Control-Prior> [bind Text <Prior>]
+	bind PotatoInput <Control-Next> [bind Text <Next>]
 
 
-  bind PotatoInput <Tab> "[bind Text <Control-Tab>] ; break"
-  bind PotatoInput <Shift-Tab> "[bind Text <Control-Shift-Tab>] ; break"
-  bind PotatoInput <Control-Tab> {::potato::toggleConn 1 ; break}
-  bind PotatoInput <Control-Shift-Tab> {::potato::toggleConn -1 ; break}
-  foreach x [list "" Shift- Control- Control-Shift-] {
-     bind PotatoOutput <${x}Tab> [bind PotatoInput <${x}Tab>]
-  }
+	bind PotatoInput <Tab> "[bind Text <Control-Tab>] ; break"
+	bind PotatoInput <Shift-Tab> "[bind Text <Control-Shift-Tab>] ; break"
+	bind PotatoInput <Control-Tab> {::potato::toggleConn 1 ; break}
+	bind PotatoInput <Control-Shift-Tab> {::potato::toggleConn -1 ; break}
+	foreach x [list "" Shift- Control- Control-Shift-] {
+		bind PotatoOutput <${x}Tab> [bind PotatoInput <${x}Tab>]
+	}
 
-  # Tk 8.6 provides better MouseWheel handling than 8.5, so only use
-  # our custom one if we have to.
-  if { !$has86 } {
-       foreach x [list PotatoInput PotatoOutput Text] {
-         foreach y [list MouseWheel 4 5] {
-           bind $x <$y> {}
-         }
-       }
-       catch {bind all <MouseWheel> [list ::potato::mouseWheel %W %D]}
-       # Some Linuxes use button 4/5 instead of <MouseWheel>. Some don't.
-       catch {bind all <4> [list ::potato::mouseWheel %W 120]}
-       catch {bind all <5> [list ::potato::mouseWheel %W -120]}
-     } else {
-       bind PotatoOutput <MouseWheel> [bind Text <MouseWheel>]
-       bind PotatoOutput <Button-4> [bind Text <Button-4>]
-       bind PotatoOutput <Button-5> [bind Text <Button-5>]
-     }
+	# Tk 8.6 provides better MouseWheel handling than 8.5, so only use
+	# our custom one if we have to.
+	if { !$has86 } {
+		foreach x [list PotatoInput PotatoOutput Text] {
+			foreach y [list MouseWheel 4 5] {
+				bind $x <$y> {}
+			}
+		}
+		catch {bind all <MouseWheel> [list ::potato::mouseWheel %W %D]}
+		# Some Linuxes use button 4/5 instead of <MouseWheel>. Some don't.
+		catch {bind all <4> [list ::potato::mouseWheel %W 120]}
+		catch {bind all <5> [list ::potato::mouseWheel %W -120]}
+	} else {
+		bind PotatoOutput <MouseWheel> [bind Text <MouseWheel>]
+		bind PotatoOutput <Button-4> [bind Text <Button-4>]
+		bind PotatoOutput <Button-5> [bind Text <Button-5>]
+	}
 
-  # Make Control-BackSpace delete the previous word
-  bind Text <Control-BackSpace> {set val [%W index insert]
-           while {$val != 1.0 && [%W get $val-1c $val] eq " "} {
-                  set val [%W index $val-1c]
-                 }
-            if {$val != 1.0 } {set val [tk::TextPrevPos %W $val tcl_wordBreakBefore]}
-            %W delete $val insert
-           }
+	# Make Control-BackSpace delete the previous word
+	bind Text <Control-BackSpace> {
+		set val [%W index insert]
+		while {$val != 1.0 && [%W get $val-1c $val] eq " "} {
+			set val [%W index $val-1c]
+		}
+		if { $val != 1.0 } {
+			set val [tk::TextPrevPos %W $val tcl_wordBreakBefore]
+		}
+		%W delete $val insert
+	};# <Control-BackSpace>
 
-  # These bindings copied from Tk 8.4, because I prefer them to the 8.5/8.6 ones,
-  # with regard to how they move around text with symbols and spaces.
-  set events [list PrevWord NextWord SelectPrevWord SelectNextWord]
-  set bindings [list Control-Left Control-Right Control-Shift-Left Control-Shift-Right]
-  if { !$has86 } {
-       foreach e $events b $bindings {
-         bind Text <$b> [list ::potato::$e %W]
-       }
-     } else {
-       foreach e $events {
-         bind Text <<$e>> [list ::potato::$e %W]
-       }
-     }
+	# These bindings copied from Tk 8.4, because I prefer them to the 8.5/8.6 ones,
+	# with regard to how they move around text with symbols and spaces.
+	set events [list PrevWord NextWord SelectPrevWord SelectNextWord]
+	set bindings [list Control-Left Control-Right Control-Shift-Left Control-Shift-Right]
+	if { !$has86 } {
+		foreach e $events b $bindings {
+			bind Text <$b> [list ::potato::$e %W]
+		}
+	} else {
+		foreach e $events {
+			bind Text <<$e>> [list ::potato::$e %W]
+		}
+	}
 
-  # Use "Control+A" for "select all". Also tweak it to move insert, not select the "end" char, and see end
-  if { !$has86 } {
-       bind Text <Control-a> {%W tag add sel 1.0 end-1c; %W mark set insert end-1c; %W see insert; break}
-     } else {
-       bind Text <<SelectAll>> {%W tag add sel 1.0 end-1c; %W mark set insert end-1c; %W see insert; break}
-       catch {event delete <<LineStart>> <Control-a> <Control-A>}
-       catch {event add <<SelectAll>> <Control-a> <Control-A>}
-     }
+	# Use "Control+A" for "select all". Also tweak it to move insert, not select the "end" char, and see end
+	if { !$has86 } {
+		bind Text <Control-a> {%W tag add sel 1.0 end-1c; %W mark set insert end-1c; %W see insert; break}
+	} else {
+		bind Text <<SelectAll>> {%W tag add sel 1.0 end-1c; %W mark set insert end-1c; %W see insert; break}
+		catch {event delete <<LineStart>> <Control-a> <Control-A>}
+		catch {event add <<SelectAll>> <Control-a> <Control-A>}
+	}
 
-  # stop Tile buttons taking focus when clicked
-  # Actually, let them - it's only toolbar buttons that shouldn't.
-  #option add *TButton.takeFocus 0
+	# stop Tile buttons taking focus when clicked
+	# Actually, let them - it's only toolbar buttons that shouldn't.
+	#option add *TButton.takeFocus 0
 
-  # Make Tile buttons show they have the focus when tabbed into via keyboard.
-  bind TButton <FocusIn> {%W instate !disabled {%W state [list active focus]}}
-  bind TButton <FocusOut> {%W instate !disabled {%W state [list !active !focus]}}
+	# Make Tile buttons show they have the focus when tabbed into via keyboard.
+	bind TButton <FocusIn> {%W instate !disabled {%W state [list active focus]}}
+	bind TButton <FocusOut> {%W instate !disabled {%W state [list !active !focus]}}
 
-  bind Text <<Paste>> [list ::potato::textPaste %W]
+	bind Text <<Paste>> [list ::potato::textPaste %W]
 
-  # Copy some bindings from Text to PotatoOutput, so we can remove the 'Text' bindtags from it.
-  # (safer to copy those we want than block those we don't, as more we don't want might be added later)
-  # Virtual events at the end are new in Tk 8.6 and replace some of the fixed bindings
-  foreach x [list B2-Motion Button-2 Meta-Key-greater Meta-Key-less Meta-f Meta-b Control-t Control-p \
-                  Control-n Control-f Control-e Control-b Control-a Escape Control-Key Alt-Key <Copy> \
-                  Control-backslash Control-slash Shift-Select Control-Shift-End Control-End \
-                  Control-Shift-Home Control-Home Shift-End Shift-Home Home End Next Prior \
-                  Shift-Next Shift-Prior Control-Shift-Up Control-Shift-Left Control-Shift-Right \
-                  Control-Down Control-Up Control-Right Control-Left Up Down Left Right \
-                  Shift-Up Shift-Down Shift-Left Shift-Right Control-Button-1 ButtonRelease-1 B1-Enter B1-Leave \
-                  Triple-Shift-Button-1 Double-Shift-Button-1 Shift-Button-1 Triple-Button-1 Double-Button-1 \
-                  B1-Motion Button-1 <Selection> <SelectNone> <SelectAll> <SelectLineEnd> <LineEnd> <SelectLineStart> \
-                  <LineStart> <SelectNextPara> <SelectPrevPara> <SelectNextWord> <SelectPrevWord> <NextPara> <PrevPara> \
-                  <NextWord> <PrevWord> <SelectNextLine> <SelectPrevLine> <SelectNextChar> <SelectPrevChar> <NextLine> \
-                  <PrevLine> <NextChar> <PrevChar>] {
-     bind PotatoOutput <$x> [bind Text <$x>]
-  }
+	# Copy some bindings from Text to PotatoOutput, so we can remove the 'Text' bindtags from it.
+	# (safer to copy those we want than block those we don't, as more we don't want might be added later)
+	# Virtual events at the end are new in Tk 8.6 and replace some of the fixed bindings
+	foreach x [list \
+		B2-Motion Button-2 Meta-Key-greater Meta-Key-less Meta-f Meta-b Control-t Control-p \
+		Control-n Control-f Control-e Control-b Control-a Escape Control-Key Alt-Key <Copy> \
+		Control-backslash Control-slash Shift-Select Control-Shift-End Control-End \
+		Control-Shift-Home Control-Home Shift-End Shift-Home Home End Next Prior \
+		Shift-Next Shift-Prior Control-Shift-Up Control-Shift-Left Control-Shift-Right \
+		Control-Down Control-Up Control-Right Control-Left Up Down Left Right \
+		Shift-Up Shift-Down Shift-Left Shift-Right Control-Button-1 ButtonRelease-1 B1-Enter B1-Leave \
+		Triple-Shift-Button-1 Double-Shift-Button-1 Shift-Button-1 Triple-Button-1 Double-Button-1 \
+		B1-Motion Button-1 <Selection> <SelectNone> <SelectAll> <SelectLineEnd> <LineEnd> <SelectLineStart> \
+		<LineStart> <SelectNextPara> <SelectPrevPara> <SelectNextWord> <SelectPrevWord> <NextPara> <PrevPara> \
+		<NextWord> <PrevWord> <SelectNextLine> <SelectPrevLine> <SelectNextChar> <SelectPrevChar> <NextLine> \
+		<PrevLine> <NextChar> <PrevChar>] {
+		bind PotatoOutput <$x> [bind Text <$x>]
+	}
 
-  bind PotatoOutput <<Copy>> [list ::potato::textCopy %W]
-  bind PotatoOutput <<Cut>> [list ::potato::textCopy %W]
-  bind PotatoOutput <<Selection>> "+;[list ::potato::selectToCopy %W]"
+	bind PotatoOutput <<Copy>> [list ::potato::textCopy %W]
+	bind PotatoOutput <<Cut>> [list ::potato::textCopy %W]
+	bind PotatoOutput <<Selection>> "+;[list ::potato::selectToCopy %W]"
 
-  bind PotatoOutput <Configure> [list ::potato::connMaybeNAWS]
+	bind PotatoOutput <Configure> [list ::potato::connMaybeNAWS]
 
-  bind PotatoOutput <Motion> [list ::potato::showMessageTimestamp %W %x %y]
+	bind PotatoOutput <Motion> [list ::potato::showMessageTimestamp %W %x %y]
 
-  # Use Return to send text. Inserting a newline is configurable with the insertNewline task
-  bind PotatoInput <Return> "::potato::send_mushage %W 0 ; break"
-  # Make sure the keypad Enter key does the same thing
-  catch {bind PotatoInput <KP_Enter> [bind PotatoInput <Return>]}
+	# Use Return to send text. Inserting a newline is configurable with the insertNewline task
+	bind PotatoInput <Return> "::potato::send_mushage %W 0 ; break"
+	# Make sure the keypad Enter key does the same thing
+	catch {bind PotatoInput <KP_Enter> [bind PotatoInput <Return>]}
 
-  # Counteract the annoying case-sensitiveness of bindings
-  foreach x [list Text PotatoInput PotatoOutput] {
-     foreach y [bind $x] {
-        if { [regexp {^<.+-[a-z]>$} $y] } {
-                  set char [string index $y end-1]
-                  bind $x "[string range $y 0 end-2][string toupper $char]>" [bind $x $y]
-           }
-     }
-  }
+	# Counteract the annoying case-sensitiveness of bindings
+	foreach x [list Text PotatoInput PotatoOutput] {
+		foreach y [bind $x] {
+			if { [regexp {^<.+-[a-z]>$} $y] } {
+				set char [string index $y end-1]
+				bind $x "[string range $y 0 end-2][string toupper $char]>" [bind $x $y]
+			}
+		}
+	}
 
-  # Right-click while resizing a paned window to cancel
-  bind Panedwindow <3> {catch {%W proxy forget} ; unset -nocomplain ::tk::Priv(sash) ::tk::Priv(dx) ::tk::Priv(dy)}
-  setUpUserBindings
+	# Right-click while resizing a paned window to cancel
+	bind Panedwindow <3> {catch {%W proxy forget} ; unset -nocomplain ::tk::Priv(sash) ::tk::Priv(dx) ::tk::Priv(dy)}
+	setUpUserBindings
 
-  return;
+	return;
 
 };# ::potato::setUpBindings
 
@@ -8717,9 +8772,9 @@ proc ::potato::setUpBindings {} {
 #: desc Toggle the overtype function in (all) Text widgets globally
 #: return bool specifying new overtype state.
 proc ::potato::toggleOvertype {} {
-  variable overtype;
+	variable overtype;
 
-  return [set overtype [lindex [list 1 0] $overtype]];
+	return [set overtype [lindex [list 1 0] $overtype]];
 
 };# ::potato::toggleOvertype
 
@@ -8730,36 +8785,36 @@ proc ::potato::toggleOvertype {} {
 #: desc Based heavily on ::tk::TextInsert, with modifications to allow for overtyping.
 #: return nothing
 proc ::potato::TextInsert {win char} {
-  variable overtype;
+	variable overtype;
 
-  if { $char eq "" || [$win cget -state] eq "disabled"} {
-       return;
-     }
-  set compound 0
-  if { [::tk::TextCursorInSelection $win] } {
-       set compound 1
-       set indices [list sel.first sel.last]
-     } elseif { $overtype && [$win get insert] ni [list "" "\r" "\n"] } {
-       set compound 1
-       set indices [list insert]
-     }
+	if { $char eq "" || [$win cget -state] eq "disabled"} {
+		return;
+	}
+	set compound 0
+	if { [::tk::TextCursorInSelection $win] } {
+		set compound 1
+		set indices [list sel.first sel.last]
+	} elseif { $overtype && [$win get insert] ni [list "" "\r" "\n"] } {
+		set compound 1
+		set indices [list insert]
+	}
 
-   if { $compound } {
-        set oldSeparator [$win cget -autoseparators]
-        if { $oldSeparator } {
-             $win configure -autoseparators 0
-             $win edit separator
-           }
-        $win delete {*}$indices
-      }
-   $win insert insert $char
-   $win see insert
-   if { $compound && $oldSeparator } {
-        $win edit separator
-        $win configure -autoseparators 1
-      }
+	if { $compound } {
+		set oldSeparator [$win cget -autoseparators]
+		if { $oldSeparator } {
+			$win configure -autoseparators 0
+			$win edit separator
+		}
+		$win delete {*}$indices
+	}
+	$win insert insert $char
+	$win see insert
+	if { $compound && $oldSeparator } {
+		$win edit separator
+		$win configure -autoseparators 1
+	}
 
-   return;
+	return;
 
 };# ::potato::TextInsert
 
@@ -8769,16 +8824,16 @@ proc ::potato::TextInsert {win char} {
 #: return nothing
 proc ::potato::PrevWord {win} {
 
-  set val [$win index insert]
-  while { $val != 1.0 && [$win get $val-1c $val] eq " " } {
-    set val [$win index $val-1c]
-  }
-  if { $val != 1.0 } {
-       set val [tk::TextPrevPos $win $val tcl_wordBreakBefore]
-     }
-  tk::TextSetCursor $win $val
+	set val [$win index insert]
+	while { $val != 1.0 && [$win get $val-1c $val] eq " " } {
+		set val [$win index $val-1c]
+	}
+	if { $val != 1.0 } {
+		set val [tk::TextPrevPos $win $val tcl_wordBreakBefore]
+	}
+	tk::TextSetCursor $win $val
 
-  return;
+	return;
 };# ::potato::PrevWord
 
 #: proc ::potato::NextWord
@@ -8787,15 +8842,15 @@ proc ::potato::PrevWord {win} {
 #: return nothing
 proc ::potato::NextWord {win} {
 
-  set val [tk::TextNextPos $win insert tcl_wordBreakAfter]
-  set end [$win index end]
-  while { [$win index $val] != $end && [$win get $val $val+1c] eq " " } {
-    set val [$win index $val+1c]
-  }
+	set val [tk::TextNextPos $win insert tcl_wordBreakAfter]
+	set end [$win index end]
+	while { [$win index $val] != $end && [$win get $val $val+1c] eq " " } {
+		set val [$win index $val+1c]
+	}
 
-  tk::TextSetCursor $win $val
+	tk::TextSetCursor $win $val
 
-  return;
+	return;
 };# ::potato::NextWord
 
 #: proc ::potato::SelectPrevWord
@@ -8804,16 +8859,16 @@ proc ::potato::NextWord {win} {
 #: return nothing
 proc ::potato::SelectPrevWord {win} {
 
-  set val [$win index insert]
-  while {$val != 1.0 && [$win get $val-1c $val] eq " "} {
-    set val [$win index $val-1c]
-  }
-  if { $val != 1.0 } {
-       set val [tk::TextPrevPos $win $val tcl_wordBreakBefore]
-     }
-  tk::TextKeySelect $win $val
+	set val [$win index insert]
+	while {$val != 1.0 && [$win get $val-1c $val] eq " "} {
+		set val [$win index $val-1c]
+	}
+	if { $val != 1.0 } {
+		set val [tk::TextPrevPos $win $val tcl_wordBreakBefore]
+	}
+	tk::TextKeySelect $win $val
 
-  return;
+	return;
 };# ::potato::SelectPrevWord
 
 #: proc ::potato::SelectNextWord
@@ -8822,14 +8877,14 @@ proc ::potato::SelectPrevWord {win} {
 #: return nothing
 proc ::potato::SelectNextWord {win} {
 
-  set val [tk::TextNextPos $win insert tcl_wordBreakAfter]
-  set end [$win index end]
-  while { [$win index $val] != $end && [$win get $val $val+1c] eq " " } {
-    set val [$win index $val+1c]
-  }
-  tk::TextKeySelect $win $val
+	set val [tk::TextNextPos $win insert tcl_wordBreakAfter]
+	set end [$win index end]
+	while { [$win index $val] != $end && [$win get $val $val+1c] eq " " } {
+		set val [$win index $val+1c]
+	}
+	tk::TextKeySelect $win $val
 
-  return;
+	return;
 };# ::potato::SelectNextWord
 
 #: proc ::potato::selectToCopy
@@ -8837,15 +8892,15 @@ proc ::potato::SelectNextWord {win} {
 #: desc If Select to Copy is configured for the currently-displayed connection, perform a copy in the given window
 #: return nothing
 proc ::potato::selectToCopy {win} {
-  variable misc;
+	variable misc;
 
-  if { !$misc(selectToCopy) } {
-       return;
-     }
+	if { !$misc(selectToCopy) } {
+		return;
+	}
 
-  textCopy $win
+	textCopy $win
 
-  return;
+	return;
 
 };# ::potato::selectToCopy
 
@@ -8855,12 +8910,12 @@ proc ::potato::selectToCopy {win} {
 #: return nothing
 proc ::potato::textCopy {win} {
 
-  if { ![catch {$win get -displaychars -- sel.first sel.last} data]} {
-       clipboard clear -displayof $win
-       clipboard append -displayof $win $data
-     }
+	if { ![catch {$win get -displaychars -- sel.first sel.last} data]} {
+		clipboard clear -displayof $win
+		clipboard append -displayof $win $data
+	}
 
-  return;
+	return;
 
 };# ::potato::textCopy
 
@@ -8870,22 +8925,22 @@ proc ::potato::textCopy {win} {
 #: return nothing
 proc ::potato::textPaste {win} {
 
-  if { [catch {::tk::GetSelection $win CLIPBOARD} sel] } {
-       return;
-     }
-  set oldSeparator [$win cget -autoseparators]
-  if { $oldSeparator } {
-       $win configure -autoseparators 0
-       $win edit separator
-     }
-  catch {$win delete sel.first sel.last}
-  $win insert insert $sel
-  if { $oldSeparator } {
-       $win edit separator
-       $win configure -autoseparators 1
-     }
+	if { [catch {::tk::GetSelection $win CLIPBOARD} sel] } {
+		return;
+	}
+	set oldSeparator [$win cget -autoseparators]
+	if { $oldSeparator } {
+		$win configure -autoseparators 0
+		$win edit separator
+	}
+	catch {$win delete sel.first sel.last}
+	$win insert insert $sel
+	if { $oldSeparator } {
+		$win edit separator
+		$win configure -autoseparators 1
+	}
 
-  return;
+	return;
 
 };# ::potato::textPaste
 
@@ -8893,9 +8948,9 @@ proc ::potato::textPaste {win} {
 #: desc Return the text widget currently displayed in the main window. We need to ask the skin, as they may be displaying a spawn window instead.
 #: return Path to a text widget
 proc ::potato::activeTextWidget {} {
-  variable potato;
+	variable potato;
 
-  return [::skin::$potato(skin)::activeTextWidget];
+	return [::skin::$potato(skin)::activeTextWidget];
 
 };# potato::activeTextWidget
 
@@ -8905,23 +8960,23 @@ proc ::potato::activeTextWidget {} {
 #: desc Given a text widget path (.foo.text) and a connection id, find the "name" of the text widget (_main or a spawn name).
 #: return Text widget name, or "" if it can't be found
 proc ::potato::textWidgetName {text {c ""}} {
-  variable conn;
+	variable conn;
 
-  if { $c eq "" } {
-       set c [up]
-     }
+	if { $c eq "" } {
+		set c [up]
+	}
 
-  if { $conn($c,textWidget) eq $text } {
-       return "_main";
-     }
+	if { $conn($c,textWidget) eq $text } {
+		return "_main";
+	}
 
-  # Check spawn widgets
-  if { [set pos [lsearch -exact -index 1 $conn($c,spawns) $text]] != -1 } {
-       return [lindex [lindex $conn($c,spawns) $pos] 0];
-     }
+	# Check spawn widgets
+	if { [set pos [lsearch -exact -index 1 $conn($c,spawns) $text]] != -1 } {
+		return [lindex [lindex $conn($c,spawns) $pos] 0];
+	}
 
-  # Can't find it - return empty string as error
-  return "";
+	# Can't find it - return empty string as error
+	return "";
 
 };# ::potato::textWidgetName
 
@@ -8929,88 +8984,88 @@ proc ::potato::textWidgetName {text {c ""}} {
 #: desc Show the window for customizing Keyboard Shortcuts
 #: return nothing
 proc ::potato::keyboardShortcutWin {} {
-  variable tasks;
-  variable keyShorts;
-  variable keyShortsTmp;
+	variable tasks;
+	variable keyShorts;
+	variable keyShortsTmp;
 
-  set win .keyShorts
-  if { [winfo exists $win] } {
-       reshowWindow $win
-       return;
-     }
-  toplevel $win
-  wm title $win [T "Keyboard Shortcuts"]
+	set win .keyShorts
+	if { [winfo exists $win] } {
+		reshowWindow $win
+		return;
+	}
+	toplevel $win
+	wm title $win [T "Keyboard Shortcuts"]
 
-  # The "Mac" key symbol is \u2318
-  # The Mac "option" key symbol is \u2325
+	# The "Mac" key symbol is \u2318
+	# The Mac "option" key symbol is \u2325
 
-  # A frame we don't pack which we set bindings for
-  set bindingsWin [frame $win.bindings]
+	# A frame we don't pack which we set bindings for
+	set bindingsWin [frame $win.bindings]
 
-  unset -nocomplain keyShortsTmp
+	unset -nocomplain keyShortsTmp
 
-  foreach x [array names keyShorts] {
-    set keyShortsTmp($x) $keyShorts($x)
-    if { $keyShorts($x) ne "" } {
-      bind $bindingsWin <$keyShortsTmp($x)> $x
-    }
-  }
+	foreach x [array names keyShorts] {
+		set keyShortsTmp($x) $keyShorts($x)
+		if { $keyShorts($x) ne "" } {
+			bind $bindingsWin <$keyShortsTmp($x)> $x
+		}
+	}
 
-  pack [::ttk::label $win.l -text [T "Select a command, then click a button to edit its binding"]] \
-          -side top -padx 4 -pady 8
+	pack [::ttk::label $win.l -text [T "Select a command, then click a button to edit its binding"]] \
+		-side top -padx 4 -pady 8
 
-  pack [::ttk::frame $win.tree] -side top -anchor nw -expand 1 -fill both
-  set sbX $win.tree.x
-  set sbY $win.tree.y
-  set tree [::ttk::treeview $win.tree.tree -columns [list Command Shortcut] \
-            -selectmode browse -show headings -xscrollcommand [list $sbX set] \
-            -yscrollcommand [list $sbY set]]
-  ::ttk::scrollbar $sbX -orient horizontal -command [list $tree xview]
-  ::ttk::scrollbar $sbY -orient vertical -command [list $tree yview]
-  $tree heading 0 -text [T "Command"]
-  $tree heading 1 -text [T "Keyboard Shortcut"]
+	pack [::ttk::frame $win.tree] -side top -anchor nw -expand 1 -fill both
+	set sbX $win.tree.x
+	set sbY $win.tree.y
+	set tree [::ttk::treeview $win.tree.tree -columns [list Command Shortcut] \
+		-selectmode browse -show headings -xscrollcommand [list $sbX set] \
+		-yscrollcommand [list $sbY set]]
+	::ttk::scrollbar $sbX -orient horizontal -command [list $tree xview]
+	::ttk::scrollbar $sbY -orient vertical -command [list $tree yview]
+	$tree heading 0 -text [T "Command"]
+	$tree heading 1 -text [T "Keyboard Shortcut"]
 
-  grid_with_scrollbars $tree $sbX $sbY
+	grid_with_scrollbars $tree $sbX $sbY
 
-  foreach x [array names tasks *,name] {
-    set task [lindex [split $x ,] 0]
-    lappend allTasks [list [taskLabel $task] $task]
-  }
-  set allTasks [lsort -dictionary -index 0 $allTasks]
-  foreach x $allTasks {
-    foreach {label task} $x {break}
-    if { [info exists keyShortsTmp($task)] && $keyShortsTmp($task) ne "" } {
-         set real $keyShortsTmp($task)
-         set disp [keysymToHuman $real]
-       } else {
-         set real ""
-         set disp ""
-       }
-    $tree insert {} end -id $task -values [list $label $disp $real] -tags [list $task]
-  }
+	foreach x [array names tasks *,name] {
+		set task [lindex [split $x ,] 0]
+		lappend allTasks [list [taskLabel $task] $task]
+	}
+	set allTasks [lsort -dictionary -index 0 $allTasks]
+	foreach x $allTasks {
+		foreach {label task} $x {break}
+		if { [info exists keyShortsTmp($task)] && $keyShortsTmp($task) ne "" } {
+			set real $keyShortsTmp($task)
+			set disp [keysymToHuman $real]
+		} else {
+			set real ""
+			set disp ""
+		}
+		$tree insert {} end -id $task -values [list $label $disp $real] -tags [list $task]
+	}
 
-  $tree selection set [lindex $allTasks 0 1]
+	$tree selection set [lindex $allTasks 0 1]
 
-  set keyShortsTmp(main,win) $win
-  set keyShortsTmp(main,tree) $tree
-  set keyShortsTmp(editWin,win) .keyShortsInput
-  set keyShortsTmp(bindings,win) $bindingsWin
+	set keyShortsTmp(main,win) $win
+	set keyShortsTmp(main,tree) $tree
+	set keyShortsTmp(editWin,win) .keyShortsInput
+	set keyShortsTmp(bindings,win) $bindingsWin
 
-  pack [::ttk::frame $win.btns] -side top -pady 8
-  pack [::ttk::button $win.btns.clear -text [T "Clear"] -width 8 \
-             -command [list ::potato::keyboardShortcutClear]] -side left -padx 4
-  pack [::ttk::button $win.btns.change -text [T "Change"] -width 8 \
-            -command [list ::potato::keyboardShortcutInput]] -side left -padx 4
-  pack [::ttk::button $win.btns.save -text [T "Save"] -width 8 -command [list ::potato::keyboardShortcutWinSave]] -side left -padx 4
-  pack [::ttk::button $win.btns.close -text [T "Cancel"] -width 8 -command [list destroy $win]] -side left -padx 4
+	pack [::ttk::frame $win.btns] -side top -pady 8
+	pack [::ttk::button $win.btns.clear -text [T "Clear"] -width 8 \
+		-command [list ::potato::keyboardShortcutClear]] -side left -padx 4
+	pack [::ttk::button $win.btns.change -text [T "Change"] -width 8 \
+		-command [list ::potato::keyboardShortcutInput]] -side left -padx 4
+	pack [::ttk::button $win.btns.save -text [T "Save"] -width 8 -command [list ::potato::keyboardShortcutWinSave]] -side left -padx 4
+	pack [::ttk::button $win.btns.close -text [T "Cancel"] -width 8 -command [list destroy $win]] -side left -padx 4
 
 
-  bind $win <Destroy> [list destroy $keyShortsTmp(editWin,win)]
+	bind $win <Destroy> [list destroy $keyShortsTmp(editWin,win)]
 
-  reshowWindow $win 0
-  focus $tree;
+	reshowWindow $win 0
+	focus $tree;
 
-  return;
+	return;
 
 };# ::potato::keyboardShortcutWin
 
@@ -9018,21 +9073,21 @@ proc ::potato::keyboardShortcutWin {} {
 #: desc Save the changes to the Keyboard Shortcuts and then destroy the customization window
 #: return nothing
 proc ::potato::keyboardShortcutWinSave {} {
-  variable keyShorts;
-  variable keyShortsTmp;
+	variable keyShorts;
+	variable keyShortsTmp;
 
-  destroy $keyShortsTmp(main,win)
-  array unset keyShortsTmp *,*
+	destroy $keyShortsTmp(main,win)
+	array unset keyShortsTmp *,*
 
-  # Clear off current bindings
-  foreach x [bind PotatoUserBindings] {
-     bind PotatoUserBindings $x ""
-  }
-  array unset keyShorts
-  array set keyShorts [array get keyShortsTmp]
-  setUpUserBindings
+	# Clear off current bindings
+	foreach x [bind PotatoUserBindings] {
+		bind PotatoUserBindings $x ""
+	}
+	array unset keyShorts
+	array set keyShorts [array get keyShortsTmp]
+	setUpUserBindings
 
-  return;
+	return;
 
 };# ::potato::keyboardShortcutWinSave
 
@@ -9040,28 +9095,28 @@ proc ::potato::keyboardShortcutWinSave {} {
 #: desc Prompt the user for comfirmation, then clear the keyboard shortcut for the task selected in the tree
 #: return nothing
 proc ::potato::keyboardShortcutClear {} {
-  variable tasks;
-  variable keyShortsTmp;
+	variable tasks;
+	variable keyShortsTmp;
 
-  set tree $keyShortsTmp(main,tree)
+	set tree $keyShortsTmp(main,tree)
 
-  set task [$tree selection]
-  if { ![info exists keyShortsTmp($task)] || $keyShortsTmp($task) eq "" } {
-       bell -displayof $tree
-       return;
-     }
+	set task [$tree selection]
+	if { ![info exists keyShortsTmp($task)] || $keyShortsTmp($task) eq "" } {
+		bell -displayof $tree
+		return;
+	}
 
-  set ans [tk_messageBox -parent [winfo toplevel $tree] -icon question -title [T "Keyboard Shortcut"] \
-             -type yesno -message [T "Do you really want to clear the Keyboard Shortcut for \"%s\"?" [taskLabel $task]]]
-  if { $ans != "yes" } {
-       return;
-     }
+	set ans [tk_messageBox -parent [winfo toplevel $tree] -icon question -title [T "Keyboard Shortcut"] \
+		-type yesno -message [T "Do you really want to clear the Keyboard Shortcut for \"%s\"?" [taskLabel $task]]]
+	if { $ans != "yes" } {
+		return;
+	}
 
-  bind $keyShortsTmp(bindings,win) <$keyShortsTmp($task)> ""
-  set keyShortsTmp($task) ""
-  $tree item $task -values [list [taskLabel $task] "" ""]
+	bind $keyShortsTmp(bindings,win) <$keyShortsTmp($task)> ""
+	set keyShortsTmp($task) ""
+	$tree item $task -values [list [taskLabel $task] "" ""]
 
-  return;
+	return;
 
 };# ::potato::keyboardShortcutClear
 
@@ -9069,68 +9124,65 @@ proc ::potato::keyboardShortcutClear {} {
 #: desc Show a window allowing the user to edit the keyboard binding for the task currently selected in the tree
 #: return nothing
 proc ::potato::keyboardShortcutInput {} {
-  variable keyShortsTmp;
+	variable keyShortsTmp;
 
-  # We don't reshow, as it's probably presented for a different task,
-  # and we don't want them to not realise it's still shown for that task, not the most-recently-selected
-  set win $keyShortsTmp(editWin,win)
-  if { [winfo exists $win] } {
-        destroy $win
-     }
+	# We don't reshow, as it's probably presented for a different task,
+	# and we don't want them to not realise it's still shown for that task, not the most-recently-selected
+	set win $keyShortsTmp(editWin,win)
+	if { [winfo exists $win] } {
+		destroy $win
+	}
 
-  toplevel $win
-  wm transient $win $keyShortsTmp(main,win)
-  set tree $keyShortsTmp(main,tree)
-  set task [$tree selection]
-  set taskInfo [$tree item $task -values]
-  set taskLabel [lindex $taskInfo 0]
-  set taskBinding(display) [lindex $taskInfo 1]
-  set taskBinding(real) [lindex $taskInfo 2]
-  set keyShortsTmp(editWin,binding) $taskBinding(real)
+	toplevel $win
+	wm transient $win $keyShortsTmp(main,win)
+	set tree $keyShortsTmp(main,tree)
+	set task [$tree selection]
+	set taskInfo [$tree item $task -values]
+	set taskLabel [lindex $taskInfo 0]
+	set taskBinding(display) [lindex $taskInfo 1]
+	set taskBinding(real) [lindex $taskInfo 2]
+	set keyShortsTmp(editWin,binding) $taskBinding(real)
 
-  wm title $win [T "Keyboard Shortcut for \"%s\"" $taskLabel]
-  set keyShorts(editWin,binding) $taskBinding(real)
-  if { $taskBinding(display) eq "" } {
-       set taskBinding(display) "<[T "None"]>"
-     }
+	wm title $win [T "Keyboard Shortcut for \"%s\"" $taskLabel]
+	set keyShorts(editWin,binding) $taskBinding(real)
+	if { $taskBinding(display) eq "" } {
+		set taskBinding(display) "<[T "None"]>"
+	}
 
-  set text [T "Press the desired keyboard shortcut for '%s'.\nWhen the correct shortcut is displayed below, click Accept,\nor click Cancel to keep the current shortcut." $taskLabel]
-  pack [::ttk::label $win.l -text $text] -side top -padx 4 -pady 6
+	set text [T "Press the desired keyboard shortcut for '%s'.\nWhen the correct shortcut is displayed below, click Accept,\nor click Cancel to keep the current shortcut." $taskLabel]
+	pack [::ttk::label $win.l -text $text] -side top -padx 4 -pady 6
 
-  pack [set disp [::ttk::label $win.disp -text "$taskBinding(display)"]] -side top -padx 4 -pady 10
-  set keyShortsTmp(editWin,display) $disp
-  set keyShortsTmp(editWin,task) $task
+	pack [set disp [::ttk::label $win.disp -text "$taskBinding(display)"]] -side top -padx 4 -pady 10
+	set keyShortsTmp(editWin,display) $disp
+	set keyShortsTmp(editWin,task) $task
 
-  pack [set err [::ttk::label $win.error -style "error.TLabel"]] -side top -padx 4 -pady 7
-  set keyShortsTmp(editWin,err) $err
+	pack [set err [::ttk::label $win.error -style "error.TLabel"]] -side top -padx 4 -pady 7
+	set keyShortsTmp(editWin,err) $err
 
-  pack [::ttk::frame $win.btns] -side top -pady 4
-  set cmd {if { [::potato::keyboardShortcutSave] } {destroy %s}}
-  pack [::ttk::button $win.btns.accept -text [T "Accept"] -width 8 \
-                 -command [format $cmd $win]] \
-                 -side left -padx 7
-  pack [::ttk::button $win.btns.cancel -text [T "Cancel"] -width 8 -command [list destroy $win]] -side left -padx 7
+	pack [::ttk::frame $win.btns] -side top -pady 4
+	set cmd {if { [::potato::keyboardShortcutSave] } {destroy %s}}
+	pack [::ttk::button $win.btns.accept -text [T "Accept"] -width 8 \
+		-command [format $cmd $win]] -side left -padx 7
+	pack [::ttk::button $win.btns.cancel -text [T "Cancel"] -width 8 -command [list destroy $win]] -side left -padx 7
 
-  #abc No bindings for the Mac "Command" key yet.
-  #abc No bindings for the Mac "Option" key yet.
-  foreach x {Control Alt Shift Control-Alt Control-Alt-Shift Alt-Shift Control-Shift} {
-    bind $win <$x-KeyPress> "[list ::potato::keyboardShortcutInputProcess "$x-%K" %A] ; break"
-  }
-  bind $win <KeyPress-Shift_L> {break}
-  bind $win <KeyPress-Shift_R> {break}
+	#abc No bindings for the Mac "Command" key yet.
+	#abc No bindings for the Mac "Option" key yet.
+	foreach x {Control Alt Shift Control-Alt Control-Alt-Shift Alt-Shift Control-Shift} {
+		bind $win <$x-KeyPress> "[list ::potato::keyboardShortcutInputProcess "$x-%K" %A] ; break"
+	}
+	bind $win <KeyPress-Shift_L> {break}
+	bind $win <KeyPress-Shift_R> {break}
 
-  bind $win <KeyPress-Control_L> {break}
-  bind $win <KeyPress-Control_R> {break}
+	bind $win <KeyPress-Control_L> {break}
+	bind $win <KeyPress-Control_R> {break}
 
-  bind $win <KeyPress-Alt_L> {break}
-  bind $win <KeyPress-Alt_R> {break}
+	bind $win <KeyPress-Alt_L> {break}
+	bind $win <KeyPress-Alt_R> {break}
 
+	bind $win <KeyPress> [list ::potato::keyboardShortcutInputProcess %K %A]
 
-  bind $win <KeyPress> [list ::potato::keyboardShortcutInputProcess %K %A]
-
-
-  reshowWindow $win 0
-  return;
+	reshowWindow $win 0
+	return;
 
 };# ::potato::keyboardShortcutInput
 
@@ -9142,46 +9194,47 @@ proc ::potato::keyboardShortcutInput {} {
 #: desc Parse the keysym name from $disp's -text. If it's <None>, abort. If the keysym is already inuse by another task, prompt. Else, save it.
 #: return 0 if aborting, 1 if saving
 proc ::potato::keyboardShortcutSave {} {
-  variable keyShortsTmp;
+	variable keyShortsTmp;
 
-  set disp $keyShortsTmp(editWin,display)
-  set task $keyShortsTmp(editWin,task)
-  set tree $keyShortsTmp(main,tree)
-  set bindingsWin $keyShortsTmp(bindings,win)
+	set disp $keyShortsTmp(editWin,display)
+	set task $keyShortsTmp(editWin,task)
+	set tree $keyShortsTmp(main,tree)
+	set bindingsWin $keyShortsTmp(bindings,win)
 
-  set keysym $keyShortsTmp(editWin,binding)
-  set userBind [keysymToHuman $keysym]
-  if { $keysym eq "" } {
-       # Blank - no change
-       return 1;
-     }
+	set keysym $keyShortsTmp(editWin,binding)
+	set userBind [keysymToHuman $keysym]
+	if { $keysym eq "" } {
+		# Blank - no change
+		return 1;
+	}
 
-  if { [string first "?" $keysym] >= 0 } {
-       tk_messageBox -parent [winfo toplevel $disp] -type ok -icon error -title [T "Keyboard Shortcut"] \
-                     -message [T "You cannot bind to that key. Sorry."]
-       return 0;
-     }
+	if { [string first "?" $keysym] >= 0 } {
+		tk_messageBox -parent [winfo toplevel $disp] -type ok -icon error \
+			-title [T "Keyboard Shortcut"] \
+			-message [T "You cannot bind to that key. Sorry."]
+		return 0;
+	}
 
-  set current [bind $bindingsWin "<$keysym>"]
-  if { $current ne "" && $current ne $task } {
-       set message [T "The Keyboard Shortcut '%s' is already in use by the task '%s'. Do you want to override it?" $userBind [taskLabel $current]]
-       set ans [tk_messageBox -parent [winfo toplevel $disp] \
-                   -title [T "Keyboard Shortcut"] -type yesno -icon question -message $message]
-        if { $ans ne "yes" } {
-             return 0;
-           }
-        set keyShortsTmp($current) ""
-        $tree item $current -values [list [taskLabel $current] "" ""]
-     }
+	set current [bind $bindingsWin "<$keysym>"]
+	if { $current ne "" && $current ne $task } {
+		set message [T "The Keyboard Shortcut '%s' is already in use by the task '%s'. Do you want to override it?" $userBind [taskLabel $current]]
+		set ans [tk_messageBox -parent [winfo toplevel $disp] \
+			-title [T "Keyboard Shortcut"] -type yesno -icon question -message $message]
+		if { $ans ne "yes" } {
+			return 0;
+		}
+		set keyShortsTmp($current) ""
+		$tree item $current -values [list [taskLabel $current] "" ""]
+	}
 
-  if { [info exists keyShortsTmp($task)] && $keyShortsTmp($task) ne "" } {
-        bind $bindingsWin <$keyShortsTmp($task)> ""
-     }
-  bind $bindingsWin "<$keysym>" $task
-  set keyShortsTmp($task) $keysym
-  $tree item $task -values [list [taskLabel $task] $userBind $keysym]
+	if { [info exists keyShortsTmp($task)] && $keyShortsTmp($task) ne "" } {
+		bind $bindingsWin <$keyShortsTmp($task)> ""
+	}
+	bind $bindingsWin "<$keysym>" $task
+	set keyShortsTmp($task) $keysym
+	$tree item $task -values [list [taskLabel $task] $userBind $keysym]
 
-  return 1;
+	return 1;
 
 };# ::potato::keyboardShortcutSave
 
@@ -9191,45 +9244,45 @@ proc ::potato::keyboardShortcutSave {} {
 #: desc Process the keypress. This involves checking which modifiers are pressed, validating the keysym, and displaying it if valid.
 #: return nothing
 proc ::potato::keyboardShortcutInputProcess {keyname keydisp} {
-  variable keyShortsTmp;
+	variable keyShortsTmp;
 
-  set warn_any [list Up Down Left Right Home End Prior Next Delete BackSpace Return Tab]
+	set warn_any [list Up Down Left Right Home End Prior Next Delete BackSpace Return Tab]
 
-  set win $keyShortsTmp(editWin,win)
-  set disp $keyShortsTmp(editWin,display)
-  set realBinding ""
+	set win $keyShortsTmp(editWin,win)
+	set disp $keyShortsTmp(editWin,display)
+	set realBinding ""
 
-  set fullkeys [split $keyname -]
-  set keyind [lindex $fullkeys end]
-  set modifiers [lrange $fullkeys 0 end-1]
-    set modified [expr {([llength $modifiers] && "Shift" ni $modifiers) || [llength $modifiers] > 1}]
+	set fullkeys [split $keyname -]
+	set keyind [lindex $fullkeys end]
+	set modifiers [lrange $fullkeys 0 end-1]
+	set modified [expr {([llength $modifiers] && "Shift" ni $modifiers) || [llength $modifiers] > 1}]
 
-  if { [string length $keyind] == 1 } {
-       set keyind [string toupper $keyind]
-     }
+	if { [string length $keyind] == 1 } {
+		set keyind [string toupper $keyind]
+	}
 
-  set realBinding [join [concat $modifiers $keyind] -]
+	set realBinding [join [concat $modifiers $keyind] -]
 
-  set str [keysymToHuman $realBinding]
+	set str [keysymToHuman $realBinding]
 
-  $disp configure -text $str
-  set keyShortsTmp(editWin,binding) $realBinding
+	$disp configure -text $str
+	set keyShortsTmp(editWin,binding) $realBinding
 
-  set err $keyShortsTmp(editWin,err)
-  if { [string first "?" $realBinding] >= 0 } {
-       $err configure -text [T "Sorry, that key is not allowed."]
-     } elseif { (!$modified && [string is print -strict $keydisp]) || $keyname in $warn_any } {
-       $err configure -text [T "Warning! Using that key is not recommended!"]
-     } else {
-       set current [bind $keyShortsTmp(bindings,win) "<$realBinding>"]
-       if { $current ne "" && $current ne $keyShortsTmp(editWin,task) } {
-            $err configure -text [T "Note: Shortcut in use by '%s'." [taskLabel $current]]
-          } else {
-            $err configure -text ""
-          }
-     }
+	set err $keyShortsTmp(editWin,err)
+	if { [string first "?" $realBinding] >= 0 } {
+		$err configure -text [T "Sorry, that key is not allowed."]
+	} elseif { (!$modified && [string is print -strict $keydisp]) || $keyname in $warn_any } {
+		$err configure -text [T "Warning! Using that key is not recommended!"]
+	} else {
+		set current [bind $keyShortsTmp(bindings,win) "<$realBinding>"]
+		if { $current ne "" && $current ne $keyShortsTmp(editWin,task) } {
+			$err configure -text [T "Note: Shortcut in use by '%s'." [taskLabel $current]]
+		} else {
+			$err configure -text ""
+		}
+	}
 
-  return;
+	return;
 
 };# ::potato::keyboardShortcutInputProcess
 
@@ -9241,26 +9294,26 @@ proc ::potato::keyboardShortcutInputProcess {keyname keydisp} {
 #: return The human-readable key name
 proc ::potato::keysymToHuman {keysym {short 0} {joinchar +}} {
 
-  foreach x [split $keysym -] {
-       if { $x in [list "Key" "KeyPress" "KeyRelease"] } {
-            continue;
-          } elseif { $short && $x eq "Control" } {
-            lappend list "Ctrl"
-          } else {
-            lappend list $x
-          }
-     }
-  set last [lindex $list end]
-  array set map [list Prior "Page Up" Next "Page Down" slash "Forward Slash"]
-  if { [info exists map($last)] } {
-       set list [lreplace $list end end $map($last)]
-     } else {
-       set list [lreplace $list end end [string totitle $last]]
-     }
+	foreach x [split $keysym -] {
+		if { $x in [list "Key" "KeyPress" "KeyRelease"] } {
+			continue;
+		} elseif { $short && $x eq "Control" } {
+			lappend list "Ctrl"
+		} else {
+			lappend list $x
+		}
+	}
+	set last [lindex $list end]
+	array set map [list Prior "Page Up" Next "Page Down" slash "Forward Slash"]
+	if { [info exists map($last)] } {
+		set list [lreplace $list end end $map($last)]
+	} else {
+		set list [lreplace $list end end [string totitle $last]]
+	}
 
-  set human [join $list $joinchar]
+	set human [join $list $joinchar]
 
-  return $human;
+	return $human;
 
 };# ::potato::keysymToHuman
 
@@ -9268,39 +9321,39 @@ proc ::potato::keysymToHuman {keysym {short 0} {joinchar +}} {
 #: desc Set up the user-defined key bindings. If there are none, load the defaults first, then set them up.
 #: return nothing
 proc ::potato::setUpUserBindings {} {
-  variable keyShorts;
+	variable keyShorts;
 
-  # Clear off invalid keysyms before loading defaults
-  foreach task [array names keyShorts] {
-     if { [string match "*,*" $task] } {
-          continue;
-        }
-     if { ![taskExists $task] } {
-          unset keyShorts($task)
-          continue;
-        }
-  }
+	# Clear off invalid keysyms before loading defaults
+	foreach task [array names keyShorts] {
+		if { [string match "*,*" $task] } {
+			continue;
+		}
+		if { ![taskExists $task] } {
+			unset keyShorts($task)
+			continue;
+		}
+	}
 
-  loadDefaultUserBindings
+	loadDefaultUserBindings
 
-  foreach task [array names keyShorts] {
-     if { [string match "*,*" $task] } {
-          continue;
-        }
-     if { $keyShorts($task) eq "" } {
-          continue;# no binding
-        }
-     bind PotatoUserBindings <$keyShorts($task)> "[list ::potato::taskRun $task] ; break"
-     set list [split $keyShorts($task) -]
-     set last [lindex $list end]
-     if { [string length $last] == 1 && [set reverse [lsearch -inline -not [list [string toupper $last] [string tolower $last]] $last]] ne "" } {
-          bind PotatoUserBindings \
-                  <[join [lreplace $list end end $reverse] -]> \
-                  "[list ::potato::taskRun $task] ; break"
-        }
-  }
+	foreach task [array names keyShorts] {
+		if { [string match "*,*" $task] } {
+			continue;
+		}
+		if { $keyShorts($task) eq "" } {
+			continue;# no binding
+		}
+		bind PotatoUserBindings <$keyShorts($task)> "[list ::potato::taskRun $task] ; break"
+		set list [split $keyShorts($task) -]
+		set last [lindex $list end]
+		if { [string length $last] == 1 && [set reverse [lsearch -inline -not [list [string toupper $last] [string tolower $last]] $last]] ne "" } {
+			bind PotatoUserBindings \
+				<[join [lreplace $list end end $reverse] -]> \
+				"[list ::potato::taskRun $task] ; break"
+		}
+	}
 
-  return;
+	return;
 
 };# ::potato::setUpUserBindings
 
@@ -9309,68 +9362,68 @@ proc ::potato::setUpUserBindings {} {
 #: desc Load the default user-configurable bindings, when none are set or when the user requests the defaults.
 #: return nothing
 proc ::potato::loadDefaultUserBindings {{clear 0}} {
-  variable keyShorts;
+	variable keyShorts;
 
-  if { $clear } {
-       # Clear off current ones, if any
-       array unset keyShorts;
-       foreach x [bind PotatoUserBindings] {
-          bind PotatoUserBindings $x ""
-       }
-     }
+	if { $clear } {
+		# Clear off current ones, if any
+		array unset keyShorts;
+		foreach x [bind PotatoUserBindings] {
+			bind PotatoUserBindings $x ""
+		}
+	}
 
-  set defaults [list \
-    "close" "Control-KeyPress-F4" \
-    "config" "Control-KeyPress-W" \
-    "disconnect" "Control-Alt-KeyPress-D" \
-    "events" "Control-KeyPress-E" \
-    "exit" "Alt-KeyPress-F4" \
-    "find" "Control-KeyPress-F" \
-    "inputHistory" "Control-KeyPress-H" \
-    "log" "Control-KeyPress-L" \
-    "nextConn" "Control-KeyPress-N" \
-    "prevConn" "Control-KeyPress-P" \
-    "reconnect" "Control-KeyPress-R" \
-    "twoInputWins" "Control-KeyPress-I" \
-    "upload" "Control-KeyPress-U" \
-    "mailWindow" "Control-KeyPress-M" \
-    "prevHistCmd" "Control-KeyPress-Up" \
-    "nextHistCmd" "Control-KeyPress-Down" \
-    "spellcheck" "Control-KeyPress-S" \
-    "help" "F1" \
-    "fcmd2" "F2" \
-    "fcmd3" "F3" \
-    "fcmd4" "F4" \
-    "fcmd5" "F5" \
-    "fcmd6" "F6" \
-    "fcmd7" "F7" \
-    "fcmd8" "F8" \
-    "fcmd9" "F9" \
-    "fcmd10" "F10" \
-    "fcmd11" "F11" \
-    "fcmd12" "F12" \
-    "save2history" "Shift-Escape" \
-    "toggleInputFocus" "Control-KeyPress-O" \
-    "insertNewline" "Control-Return" \
-    "resendLastCmd" "Control-Alt-R" \
-    "toggleSpawns" "Control-Alt-Tab" \
-    "textEd" "Control-Alt-space" \
-    ]
-  foreach {task binding} $defaults {
-    if { ![taskExists $task] } {
-         continue;
-       }
-    if { [info exists keyShorts($task)] } {
-         continue; # already have a binding for this
-       }
-     if { [bind PotatoUserBindings <$binding>] ne "" } {
-          continue;# already bound to this combo
-        }
-     # Good to go
-     set keyShorts($task) $binding
-   }
+	set defaults [list \
+		"close" "Control-KeyPress-F4" \
+		"config" "Control-KeyPress-W" \
+		"disconnect" "Control-Alt-KeyPress-D" \
+		"events" "Control-KeyPress-E" \
+		"exit" "Alt-KeyPress-F4" \
+		"find" "Control-KeyPress-F" \
+		"inputHistory" "Control-KeyPress-H" \
+		"log" "Control-KeyPress-L" \
+		"nextConn" "Control-KeyPress-N" \
+		"prevConn" "Control-KeyPress-P" \
+		"reconnect" "Control-KeyPress-R" \
+		"twoInputWins" "Control-KeyPress-I" \
+		"upload" "Control-KeyPress-U" \
+		"mailWindow" "Control-KeyPress-M" \
+		"prevHistCmd" "Control-KeyPress-Up" \
+		"nextHistCmd" "Control-KeyPress-Down" \
+		"spellcheck" "Control-KeyPress-S" \
+		"help" "F1" \
+		"fcmd2" "F2" \
+		"fcmd3" "F3" \
+		"fcmd4" "F4" \
+		"fcmd5" "F5" \
+		"fcmd6" "F6" \
+		"fcmd7" "F7" \
+		"fcmd8" "F8" \
+		"fcmd9" "F9" \
+		"fcmd10" "F10" \
+		"fcmd11" "F11" \
+		"fcmd12" "F12" \
+		"save2history" "Shift-Escape" \
+		"toggleInputFocus" "Control-KeyPress-O" \
+		"insertNewline" "Control-Return" \
+		"resendLastCmd" "Control-Alt-R" \
+		"toggleSpawns" "Control-Alt-Tab" \
+		"textEd" "Control-Alt-space" \
+	]
+	foreach {task binding} $defaults {
+		if { ![taskExists $task] } {
+			continue;
+		}
+		if { [info exists keyShorts($task)] } {
+			continue; # already have a binding for this
+		}
+		if { [bind PotatoUserBindings <$binding>] ne "" } {
+			continue;# already bound to this combo
+		}
+		# Good to go
+		set keyShorts($task) $binding
+	}
 
-  return;
+	return;
 
 };# ::potato::loadDefaultUserBindings
 
@@ -9379,14 +9432,14 @@ proc ::potato::loadDefaultUserBindings {{clear 0}} {
 #: return nothing
 proc ::potato::insertNewline {} {
 
-  set win [focus -displayof .]
-  if { $win eq "" || [winfo class $win] ne "Text" || "PotatoInput" ni [bindtags $win] } {
-       return;
-     }
+	set win [focus -displayof .]
+	if { $win eq "" || [winfo class $win] ne "Text" || "PotatoInput" ni [bindtags $win] } {
+		return;
+	}
 
-  eval [string map [list "%W" $win] [bind Text <Return>]]
+	eval [string map [list "%W" $win] [bind Text <Return>]]
 
-  return;
+	return;
 
 };# ::potato::insertNewline
 
@@ -9394,102 +9447,102 @@ proc ::potato::insertNewline {} {
 #: desc Show a window allowing the user to configure auto-connects
 #: return nothing
 proc ::potato::autoConnectWindow {} {
-  variable world;
-  variable autoConnectWindow;
+	variable world;
+	variable autoConnectWindow;
 
-  set win .autoConnects
-  if { [winfo exists $win] } {
-       reshowWindow $win
-       return;
-     }
+	set win .autoConnects
+	if { [winfo exists $win] } {
+		reshowWindow $win
+		return;
+	}
 
-  toplevel $win
-  wm withdraw $win
-  wm title $win [T "Potato Auto-Connects"]
+	toplevel $win
+	wm withdraw $win
+	wm title $win [T "Potato Auto-Connects"]
 
-  pack [set frame [::ttk::frame $win.frame]] -side left -anchor nw -expand 1 -fill both
+	pack [set frame [::ttk::frame $win.frame]] -side left -anchor nw -expand 1 -fill both
 
-  pack [set top [::ttk::frame $frame.top]] -side top -anchor nw -expand 1 -fill both -padx 5 -pady 5
-  pack [set btm [::ttk::frame $frame.btm]] -side top -anchor n -expand 0 -fill none -padx 5 -pady 5
+	pack [set top [::ttk::frame $frame.top]] -side top -anchor nw -expand 1 -fill both -padx 5 -pady 5
+	pack [set btm [::ttk::frame $frame.btm]] -side top -anchor n -expand 0 -fill none -padx 5 -pady 5
 
-  pack [set left [::ttk::frame $top.left]] -side left -anchor nw -expand 1 -fill both
-  pack [set mid [::ttk::frame $top.mid]] -side left -anchor center -expand 0 -fill none -padx 6
-  pack [set right [::ttk::frame $top.right]] -side left -anchor nw -expand 1 -fill both
+	pack [set left [::ttk::frame $top.left]] -side left -anchor nw -expand 1 -fill both
+	pack [set mid [::ttk::frame $top.mid]] -side left -anchor center -expand 0 -fill none -padx 6
+	pack [set right [::ttk::frame $top.right]] -side left -anchor nw -expand 1 -fill both
 
-  set nTree [::ttk::treeview $left.tree -show {} -columns Worlds -selectmode extended]
-  set sbX [::ttk::scrollbar $left.sbX -orient horizontal -command [list $nTree xview]]
-  set sbY [::ttk::scrollbar $left.sbY -orient vertical -command [list $nTree yview]]
-  $nTree configure -xscrollcommand [list $sbX set] -yscrollcommand [list $sbY set]
-  grid_with_scrollbars $nTree $sbX $sbY
-  bind $nTree <<TreeviewSelect>> [list ::potato::autoConnectWindowSel nTree]
+	set nTree [::ttk::treeview $left.tree -show {} -columns Worlds -selectmode extended]
+	set sbX [::ttk::scrollbar $left.sbX -orient horizontal -command [list $nTree xview]]
+	set sbY [::ttk::scrollbar $left.sbY -orient vertical -command [list $nTree yview]]
+	$nTree configure -xscrollcommand [list $sbX set] -yscrollcommand [list $sbY set]
+	grid_with_scrollbars $nTree $sbX $sbY
+	bind $nTree <<TreeviewSelect>> [list ::potato::autoConnectWindowSel nTree]
 
-  pack [set btnAdd [::ttk::button $mid.add -text ">" \
-         -command [list ::potato::autoConnectWindowAdd]]] -side top -anchor center -pady 4
-  pack [set btnRemove [::ttk::button $mid.remove -text "<" \
-         -command [list ::potato::autoConnectWindowRemove]]] -side top -anchor center -pady 4
-  pack [set btnUp [::ttk::button $mid.up -text [T "Up"] \
-         -command [list ::potato::autoConnectWindowReorder -1]]] -side top -anchor center -pady 4
-  pack [set btnDown [::ttk::button $mid.down -text [T "Down"] \
-         -command [list ::potato::autoConnectWindowReorder 1]]] -side top -anchor center -pady 4
+	pack [set btnAdd [::ttk::button $mid.add -text ">" \
+		-command [list ::potato::autoConnectWindowAdd]]] -side top -anchor center -pady 4
+	pack [set btnRemove [::ttk::button $mid.remove -text "<" \
+		-command [list ::potato::autoConnectWindowRemove]]] -side top -anchor center -pady 4
+	pack [set btnUp [::ttk::button $mid.up -text [T "Up"] \
+		-command [list ::potato::autoConnectWindowReorder -1]]] -side top -anchor center -pady 4
+	pack [set btnDown [::ttk::button $mid.down -text [T "Down"] \
+		-command [list ::potato::autoConnectWindowReorder 1]]] -side top -anchor center -pady 4
 
-  set yTree [::ttk::treeview $right.tree -show {} -columns Worlds -selectmode extended]
-  set sbX [::ttk::scrollbar $right.sbX -orient horizontal -command [list $yTree xview]]
-  set sbY [::ttk::scrollbar $right.sbY -orient vertical -command [list $yTree yview]]
-  $yTree configure -xscrollcommand [list $sbX set] -yscrollcommand [list $sbY set]
-  grid_with_scrollbars $yTree $sbX $sbY
-  bind $yTree <<TreeviewSelect>> [list ::potato::autoConnectWindowSel yTree]
+	set yTree [::ttk::treeview $right.tree -show {} -columns Worlds -selectmode extended]
+	set sbX [::ttk::scrollbar $right.sbX -orient horizontal -command [list $yTree xview]]
+	set sbY [::ttk::scrollbar $right.sbY -orient vertical -command [list $yTree yview]]
+	$yTree configure -xscrollcommand [list $sbX set] -yscrollcommand [list $sbY set]
+	grid_with_scrollbars $yTree $sbX $sbY
+	bind $yTree <<TreeviewSelect>> [list ::potato::autoConnectWindowSel yTree]
 
-  pack [::ttk::button $btm.save -command ::potato::autoConnectWindowSave -text [T "Save"]] \
-          -side left -anchor n -padx 6
-  pack [::ttk::button $btm.cancel -command [list destroy $win] -text [T "Cancel"]] \
-          -side left -anchor n -padx 6
+	pack [::ttk::button $btm.save -command ::potato::autoConnectWindowSave -text [T "Save"]] \
+		-side left -anchor n -padx 6
+	pack [::ttk::button $btm.cancel -command [list destroy $win] -text [T "Cancel"]] \
+		-side left -anchor n -padx 6
 
-  set autoConnectWindow(toplevel) $win
-  foreach x [list yTree nTree btnAdd btnRemove btnUp btnDown] {
-     set autoConnectWindow($x) [set $x]
-  }
+	set autoConnectWindow(toplevel) $win
+	foreach x [list yTree nTree btnAdd btnRemove btnUp btnDown] {
+		set autoConnectWindow($x) [set $x]
+	}
 
-  set with [list]
-  set without [list]
-  foreach w [worldIDs] {
-    if { $world($w,autoconnect) > -1 } {
-         lappend with [list $w $world($w,name) $world($w,autoconnect)]
-       } else {
-         lappend without [list $w $world($w,name)]
-       }
-  }
+	set with [list]
+	set without [list]
+	foreach w [worldIDs] {
+		if { $world($w,autoconnect) > -1 } {
+			lappend with [list $w $world($w,name) $world($w,autoconnect)]
+		} else {
+			lappend without [list $w $world($w,name)]
+		}
+	}
 
-  set first 1
-  foreach x [lsort -dictionary -index 1 $without] {
-     $nTree insert {} end -id [lindex $x 0] -values [list [lindex $x 1]]
-     if { $first } {
-          $nTree selection set [lindex $x 0]
-          set first 0
-        }
-  }
+	set first 1
+	foreach x [lsort -dictionary -index 1 $without] {
+		$nTree insert {} end -id [lindex $x 0] -values [list [lindex $x 1]]
+		if { $first } {
+			$nTree selection set [lindex $x 0]
+			set first 0
+		}
+	}
 
-  set first 1
-  foreach x [lsort -integer -index 2 $with] {
-     $yTree insert {} end -id [lindex $x 0] -values [list [lindex $x 1]]
-     if { $first } {
-          $yTree selection set [lindex $x 0]
-          set first 0
-        }
-  }
+	set first 1
+	foreach x [lsort -integer -index 2 $with] {
+		$yTree insert {} end -id [lindex $x 0] -values [list [lindex $x 1]]
+		if { $first } {
+			$yTree selection set [lindex $x 0]
+			set first 0
+		}
+	}
 
-  autoConnectWindowSel nTree
-  autoConnectWindowSel yTree
+	autoConnectWindowSel nTree
+	autoConnectWindowSel yTree
 
-  bind $win <Destroy> [list unset -nocomplain ::potato::autoConnectWindow]
+	bind $win <Destroy> [list unset -nocomplain ::potato::autoConnectWindow]
 
-  bind $win <Escape> [list destroy $win]
+	bind $win <Escape> [list destroy $win]
 
-  update idletasks
-  center $win
-  wm deiconify $win
-  reshowWindow $win 0
+	update idletasks
+	center $win
+	wm deiconify $win
+	reshowWindow $win 0
 
-  return;
+	return;
 
 };# ::potato::autoConnectWindow
 
@@ -9498,26 +9551,26 @@ proc ::potato::autoConnectWindow {} {
 #: desc Move an Autoconnect up or down (based on $dir) in the Auto Connect Window
 #: return nothing
 proc ::potato::autoConnectWindowReorder {dir} {
-  variable autoConnectWindow;
+	variable autoConnectWindow;
 
-  set yTree $autoConnectWindow(yTree)
-  set sel [$yTree sel]
-  if { [llength $sel] == 0 } {
-       bell -displayof $yTree
-       return;
-     }
-  set sel [lindex $sel 0]
-  set pos [$yTree index $sel]
-  $yTree move $sel {} [expr {$pos + $dir}]
-  if { $pos == [$yTree index $sel] } {
-       bell -displayof $yTree;# didn't move
-     } else {
-       $yTree see $sel
-     }
+	set yTree $autoConnectWindow(yTree)
+	set sel [$yTree sel]
+	if { [llength $sel] == 0 } {
+		bell -displayof $yTree
+		return;
+	}
+	set sel [lindex $sel 0]
+	set pos [$yTree index $sel]
+	$yTree move $sel {} [expr {$pos + $dir}]
+	if { $pos == [$yTree index $sel] } {
+		bell -displayof $yTree;# didn't move
+	} else {
+		$yTree see $sel
+	}
 
-  autoConnectWindowSel yTree
+	autoConnectWindowSel yTree
 
-  return;
+	return;
 
 };# ::potato::autoConnectWindowReorder
 
@@ -9526,41 +9579,41 @@ proc ::potato::autoConnectWindowReorder {dir} {
 #: desc Update the states of all the buttons appropriately when a selection change is made in one of the trees.
 #: return nothing
 proc ::potato::autoConnectWindowSel {tree} {
-  variable autoConnectWindow;
+	variable autoConnectWindow;
 
-  if { $tree eq "nTree" } {
-       if { [llength [$autoConnectWindow(nTree) selection]] == 0 } {
-            $autoConnectWindow(btnAdd) state disabled
-          } else {
-            $autoConnectWindow(btnAdd) state !disabled
-          }
-     } elseif { $tree eq "yTree" } {
-       set sel [$autoConnectWindow(yTree) selection]
-       if { [llength $sel] == 0 } {
-            $autoConnectWindow(btnRemove) state disabled
-            $autoConnectWindow(btnUp) state disabled
-            $autoConnectWindow(btnDown) state disabled
-          } else {
-            set sel [lindex $sel 0]
-            $autoConnectWindow(btnRemove) state !disabled
-            if { [$autoConnectWindow(yTree) index $sel] == 0 } {
-                 $autoConnectWindow(btnUp) state disabled
-               } else {
-                 $autoConnectWindow(btnUp) state !disabled
-               }
-            set children [llength [$autoConnectWindow(yTree) children {}]]
-            incr children -1
-            if { [$autoConnectWindow(yTree) index $sel] == $children } {
-                 $autoConnectWindow(btnDown) state disabled
-               } else {
-                 $autoConnectWindow(btnDown) state !disabled
-               }
-          }
-     }
+	if { $tree eq "nTree" } {
+		if { [llength [$autoConnectWindow(nTree) selection]] == 0 } {
+			$autoConnectWindow(btnAdd) state disabled
+		} else {
+			$autoConnectWindow(btnAdd) state !disabled
+		}
+	} elseif { $tree eq "yTree" } {
+		set sel [$autoConnectWindow(yTree) selection]
+		if { [llength $sel] == 0 } {
+			$autoConnectWindow(btnRemove) state disabled
+			$autoConnectWindow(btnUp) state disabled
+			$autoConnectWindow(btnDown) state disabled
+		} else {
+			set sel [lindex $sel 0]
+			$autoConnectWindow(btnRemove) state !disabled
+			if { [$autoConnectWindow(yTree) index $sel] == 0 } {
+				$autoConnectWindow(btnUp) state disabled
+			} else {
+				$autoConnectWindow(btnUp) state !disabled
+			}
+			set children [llength [$autoConnectWindow(yTree) children {}]]
+			incr children -1
+			if { [$autoConnectWindow(yTree) index $sel] == $children } {
+				$autoConnectWindow(btnDown) state disabled
+			} else {
+				$autoConnectWindow(btnDown) state !disabled
+			}
+		}
+	}
 
-  $autoConnectWindow($tree) see [lindex [$autoConnectWindow($tree) selection] 0]
+	$autoConnectWindow($tree) see [lindex [$autoConnectWindow($tree) selection] 0]
 
-  return;
+	return;
 
 };# ::potato::autoConnectWindowSel
 
@@ -9568,21 +9621,21 @@ proc ::potato::autoConnectWindowSel {tree} {
 #: desc Update the order of all worlds in the Auto Connect, and destroy the auto connect window
 #: return nothing
 proc ::potato::autoConnectWindowSave {} {
-  variable world;
-  variable autoConnectWindow;
+	variable world;
+	variable autoConnectWindow;
 
-  foreach w [$autoConnectWindow(nTree) children {}] {
-     set world($w,autoconnect) -1
-  }
-  set i 0
-  foreach w [$autoConnectWindow(yTree) children {}] {
-     set world($w,autoconnect) $i
-     incr i
-  }
+	foreach w [$autoConnectWindow(nTree) children {}] {
+		set world($w,autoconnect) -1
+	}
+	set i 0
+	foreach w [$autoConnectWindow(yTree) children {}] {
+		set world($w,autoconnect) $i
+	incr i
+	}
 
-  destroy $autoConnectWindow(toplevel);
+	destroy $autoConnectWindow(toplevel);
 
-  return;
+	return;
 
 };# ::potato::autoConnectWindowSave
 
@@ -9590,33 +9643,33 @@ proc ::potato::autoConnectWindowSave {} {
 #: desc Add the currently selected world to the Autoconnect list, changing the states of the add/remove buttons if necessary.
 #: return nothing
 proc ::potato::autoConnectWindowAdd {} {
-  variable autoConnectWindow;
-  variable world;
+	variable autoConnectWindow;
+	variable world;
 
-  set nTree $autoConnectWindow(nTree)
-  set yTree $autoConnectWindow(yTree)
+	set nTree $autoConnectWindow(nTree)
+	set yTree $autoConnectWindow(yTree)
 
-  set sel [$nTree selection]
-  if { [llength $sel] == 0 } {
-       return;
-     }
+	set sel [$nTree selection]
+	if { [llength $sel] == 0 } {
+		return;
+	}
 
-  foreach w $sel {
-     if { [$nTree next $w] eq "" } {
-          $nTree selection set [$nTree prev $w]
-        } else {
-          $nTree selection set [$nTree next $w]
-        }
-     $nTree delete $w
-     $yTree insert {} end -id $w -values [list $world($w,name)]
-     $yTree selection set $w
-     $yTree see $w
-  }
+	foreach w $sel {
+		if { [$nTree next $w] eq "" } {
+			$nTree selection set [$nTree prev $w]
+		} else {
+			$nTree selection set [$nTree next $w]
+		}
+		$nTree delete $w
+		$yTree insert {} end -id $w -values [list $world($w,name)]
+		$yTree selection set $w
+		$yTree see $w
+	}
 
-  autoConnectWindowSel yTree
-  autoConnectWindowSel nTree
+	autoConnectWindowSel yTree
+	autoConnectWindowSel nTree
 
-  return;
+	return;
 
 };# ::potato::autoConnectWindowAdd
 
@@ -9624,45 +9677,45 @@ proc ::potato::autoConnectWindowAdd {} {
 #: desc Remove the currently selected world from the Autoconnect list, changing the states of the add/remove buttons if necessary.
 #: return nothing
 proc ::potato::autoConnectWindowRemove {} {
-  variable autoConnectWindow;
-  variable world;
+	variable autoConnectWindow;
+	variable world;
 
-  set nTree $autoConnectWindow(nTree)
-  set yTree $autoConnectWindow(yTree)
+	set nTree $autoConnectWindow(nTree)
+	set yTree $autoConnectWindow(yTree)
 
-  set sel [$yTree selection]
-  if { [llength $sel] == 0 } {
-       return;
-     }
+	set sel [$yTree selection]
+	if { [llength $sel] == 0 } {
+		return;
+	}
 
-  foreach w $sel {
-     if { [$yTree next $w] eq "" } {
-          $yTree selection set [$yTree prev $w]
-        } else {
-          $yTree selection set [$yTree next $w]
-        }
-     $yTree delete $w
-     # Figure out where to insert, alphabetically.
-     set items [$nTree children {}]
-     if { [llength $items] == 0 } {
-          set index end
-        } else {
-          set temp [list [list $w $world($w,name)]]
-          foreach x $items {
-            lappend temp [list $x $world($x,name)]
-          }
-          set temp [lsort -dictionary -index 1 $temp]
-          set index [lsearch -index 0 $temp $w]
-        }
-     $nTree insert {} $index -id $w -values [list $world($w,name)]
-     $nTree selection set $w
-     $nTree see $w
-  }
+	foreach w $sel {
+		if { [$yTree next $w] eq "" } {
+			$yTree selection set [$yTree prev $w]
+		} else {
+			$yTree selection set [$yTree next $w]
+		}
+		$yTree delete $w
+		# Figure out where to insert, alphabetically.
+		set items [$nTree children {}]
+		if { [llength $items] == 0 } {
+			set index end
+		} else {
+			set temp [list [list $w $world($w,name)]]
+			foreach x $items {
+				lappend temp [list $x $world($x,name)]
+			}
+			set temp [lsort -dictionary -index 1 $temp]
+			set index [lsearch -index 0 $temp $w]
+		}
+		$nTree insert {} $index -id $w -values [list $world($w,name)]
+		$nTree selection set $w
+		$nTree see $w
+	}
 
-  autoConnectWindowSel yTree
-  autoConnectWindowSel nTree
+	autoConnectWindowSel yTree
+	autoConnectWindowSel nTree
 
-  return;
+	return;
 
 };# ::potato::autoConnectWindowRemove
 
@@ -9670,24 +9723,24 @@ proc ::potato::autoConnectWindowRemove {} {
 #: desc Connect to any worlds we should auto-connect to.
 #: return nothing
 proc ::potato::autoConnect {} {
-  variable world;
-  variable misc;
+	variable world;
+	variable misc;
 
-  if { !$misc(autoConnect) } {
-       return;# auto connects disabled
-     }
+	if { !$misc(autoConnect) } {
+		return;# auto connects disabled
+	}
 
-  set autoconnects [list]
-  foreach w [worldIDs] {
-     if { $world($w,autoconnect) == -1 } {
-          continue;
-        }
-     lappend autoconnects [list $w $world($w,autoconnect)]
-  }
+	set autoconnects [list]
+	foreach w [worldIDs] {
+		if { $world($w,autoconnect) == -1 } {
+			continue;
+		}
+		lappend autoconnects [list $w $world($w,autoconnect)]
+	}
 
-  foreach x [lsort -integer -index 1 $autoconnects] {
-     after 250 [list ::potato::newConnectionDefault [lindex $x 0]]
-  }
+	foreach x [lsort -integer -index 1 $autoconnects] {
+		after 250 [list ::potato::newConnectionDefault [lindex $x 0]]
+	}
 
 };# ::potato::autoConnect
 
@@ -9699,16 +9752,16 @@ proc ::potato::autoConnect {} {
 #: return nothing
 proc ::potato::mouseWheel {widget delta} {
 
-  if { ![string is double -strict $delta] || ![winfo exists $widget] } {
-       return; # For some reason, $delta isn't always set right on MacOS, so be extra safe.
-     }
+	if { ![string is double -strict $delta] || ![winfo exists $widget] } {
+		return; # For some reason, $delta isn't always set right on MacOS, so be extra safe.
+	}
 
-  set over [winfo containing -displayof $widget {*}[winfo pointerxy $widget]]
-  if { $over eq "" || ![mouseWheelScroll $over $delta] } {
-       mouseWheelScroll $widget $delta
-     }
+	set over [winfo containing -displayof $widget {*}[winfo pointerxy $widget]]
+	if { $over eq "" || ![mouseWheelScroll $over $delta] } {
+		mouseWheelScroll $widget $delta
+	}
 
-  return;
+	return;
 
 };# ::potato::mouseWheel
 
@@ -9719,39 +9772,39 @@ proc ::potato::mouseWheel {widget delta} {
 #: return 1 on successful scroll, 0 if unable to scroll
 proc ::potato::mouseWheelScroll {widget delta} {
 
-  if { $widget eq "" || ![winfo exists $widget] } {
-       return 0;
-     }
+	if { $widget eq "" || ![winfo exists $widget] } {
+		return 0;
+	}
 
-  set cmd [list yview scroll]
+	set cmd [list yview scroll]
 
-  switch [winfo class $widget] {
-    Canvas {lappend cmd [expr {($delta / abs($delta)) * -1}] units}
-    Treeview {lappend cmd [expr {-($delta/120)}] units}
-  }
+	switch [winfo class $widget] {
+		Canvas {lappend cmd [expr {($delta / abs($delta)) * -1}] units}
+		Treeview {lappend cmd [expr {-($delta/120)}] units}
+	}
 
-  if { [llength $cmd] == 2 } {
-       if { [up] == 0 } {
-            lappend cmd [expr {($delta / abs($delta)) * -1}] units
-          } elseif { $::tcl_platform(os) eq "Darwin" || [tk windowingsystem] eq "aqua"} {
-            # Better MacOS values
-            set cmd [list yview scroll [expr {-15 * ($delta)}] pixels]
-          } else {
-            if { $delta >= 0 } {
-                 set cmd [list yview scroll [expr {-$delta/3}] pixels]
-               } else {
-                 set cmd [list yview scroll [expr {(2-$delta)/3}] pixels]
-               }
-          }
-       }
+	if { [llength $cmd] == 2 } {
+		if { [up] == 0 } {
+			lappend cmd [expr {($delta / abs($delta)) * -1}] units
+		} elseif { $::tcl_platform(os) eq "Darwin" || [tk windowingsystem] eq "aqua"} {
+			# Better MacOS values
+			set cmd [list yview scroll [expr {-15 * ($delta)}] pixels]
+		} else {
+			if { $delta >= 0 } {
+				set cmd [list yview scroll [expr {-$delta/3}] pixels]
+			} else {
+				set cmd [list yview scroll [expr {(2-$delta)/3}] pixels]
+			}
+		}
+	}
 
-  if { [catch {$widget {*}$cmd} ] } {
-       return 0;
-     } else {
-       return 1;
-     }
+	if { [catch {$widget {*}$cmd} ] } {
+		return 0;
+	} else {
+		return 1;
+	}
 
-  return;
+	return;
 };# ::potato::mouseWheelScroll
 
 #: proc ::potato::send_mushage
@@ -9760,71 +9813,71 @@ proc ::potato::mouseWheelScroll {widget delta} {
 #: desc send the text currently in $window to the connection currently up, parsing for /commands
 #: return nothing
 proc ::potato::send_mushage {window saveonly} {
-  variable inputSwap;
-  variable conn;
-  variable world;
+	variable inputSwap;
+	variable conn;
+	variable world;
 
-  set c [up]
+	set c [up]
 
-  if { $window eq "" } {
-       set window [connInfo $c input3]
-     }
+	if { $window eq "" } {
+		set window [connInfo $c input3]
+	}
 
 
-  if { [$window count -chars 1.0 end-1c] == 0 && $conn($c,connected) == 0 } {
-       reconnect [up]
-       return;
-     }
+	if { [$window count -chars 1.0 end-1c] == 0 && $conn($c,connected) == 0 } {
+		reconnect [up]
+		return;
+	}
 
-  set w $conn($c,world)
+	set w $conn($c,world)
 
-  # Figure out the auto-prefix, if any
-  set windowName [textWidgetName [activeTextWidget] $c]
-  if { $windowName eq "" } {
-       set windows [list _all]
-     } else {
-       set windows [list $windowName _all]
-     }
-  if { $w == 0 } {
-       set worlds [list 0]
-     } else {
-       set worlds [list $w 0]
-     }
-  foreach w $worlds {
-    if { [info exists prefix] } {
-         break;
-       }
-    foreach x $windows {
-      set pos [lsearch -exact -index 0 $world($w,prefixes) $x]
-      if { $pos != -1 } {
-           set entry [lindex $world($w,prefixes) $pos]
-           if { [lindex $entry 2] == 1 } {
-                set prefix [lindex $entry 1]
-                break;
-              }
-         }
-    }
-  }
-  if { ![info exists prefix] } {
-       set prefix ""
-     }
+	# Figure out the auto-prefix, if any
+	set windowName [textWidgetName [activeTextWidget] $c]
+	if { $windowName eq "" } {
+		set windows [list _all]
+	} else {
+		set windows [list $windowName _all]
+	}
+	if { $w == 0 } {
+		set worlds [list 0]
+	} else {
+		set worlds [list $w 0]
+	}
+	foreach w $worlds {
+		if { [info exists prefix] } {
+			break;
+		}
+		foreach x $windows {
+			set pos [lsearch -exact -index 0 $world($w,prefixes) $x]
+			if { $pos != -1 } {
+				set entry [lindex $world($w,prefixes) $pos]
+				if { [lindex $entry 2] == 1 } {
+					set prefix [lindex $entry 1]
+					break;
+				}
+			}
+		}
+	}
+	if { ![info exists prefix] } {
+		set prefix ""
+	}
 
-  set txt [$window get 1.0 end-1char]
-  $window edit separator
-  $window replace 1.0 end ""
+	set txt [$window get 1.0 end-1char]
+	$window edit separator
+	$window replace 1.0 end ""
 
-  set inputSwap($window,count) -1
-  set inputSwap($window,backup) ""
+	set inputSwap($window,count) -1
+	set inputSwap($window,backup) ""
 
-  addToInputHistory $c $txt
+	addToInputHistory $c $txt
 
-  if { $saveonly } {
-       return;
-     }
+	if { $saveonly } {
+		return;
+	}
 
-  send_to $c $txt $prefix
+	send_to $c $txt $prefix
 
-  return;
+	return;
 
 };# ::potato::send_mushage
 
@@ -9835,16 +9888,16 @@ proc ::potato::send_mushage {window saveonly} {
 #: return List of text lines to send to the MUSH
 proc ::potato::process_input {c txt} {
 
-  set txt [string map [list "\r\n" "\n" "\r" "\n"] $txt]
+	set txt [string map [list "\r\n" "\n" "\r" "\n"] $txt]
 
-  set res [list]
-  set counter 0
-  while { [string length $txt] && $counter < 100 } {
-    incr counter
-    lappend res [process_slash_cmd $c txt 0]
-  }
+	set res [list]
+	set counter 0
+	while { [string length $txt] && $counter < 100 } {
+		incr counter
+		lappend res [process_slash_cmd $c txt 0]
+	}
 
-  return $res;
+	return $res;
 
 };# ::potato::process_input
 
@@ -9857,11 +9910,11 @@ proc ::potato::process_input {c txt} {
 #: return nothing
 proc ::potato::send_to {c txt {prefix ""} {echo 1}} {
 
-  foreach x [process_input $c $txt] {
-    send_to_real $c "$prefix$x" $echo
-  }
+	foreach x [process_input $c $txt] {
+		send_to_real $c "$prefix$x" $echo
+	}
 
-  return;
+	return;
 };# ::potato::send_to
 
 #: proc ::potato::send_to_noparse
@@ -9873,13 +9926,13 @@ proc ::potato::send_to {c txt {prefix ""} {echo 1}} {
 #: return nothing
 proc ::potato::send_to_noparse {c txt {prefix ""} {echo 1}} {
 
-  set txt [string map [list "\r\n" "\n" "\r" "\n"] $txt]
+	set txt [string map [list "\r\n" "\n" "\r" "\n"] $txt]
 
-  foreach x [split $txt "\n"] {
-    send_to_real $c "$prefix$x" $echo
-  }
+	foreach x [split $txt "\n"] {
+		send_to_real $c "$prefix$x" $echo
+	}
 
-  return;
+	return;
 };# ::potato::send_to_noparse
 
 #: proc ::potato::send_to_from
@@ -9890,37 +9943,37 @@ proc ::potato::send_to_noparse {c txt {prefix ""} {echo 1}} {
 #: desc Wrapper function. Get all the text (or possibly just selected text) from a text widget and send to the MUSH, possibly parsing for /commands
 #: return nothing
 proc ::potato::send_to_from {c textWidget {parse 0} {selonly 0}} {
-  variable conn;
+	variable conn;
 
-  if { $c eq "" } {
-       set c [up]
-     }
+	if { $c eq "" } {
+		set c [up]
+	}
 
-  if { ![info exists conn($c,id)] || ![winfo exists $textWidget] || [winfo class $textWidget] ne "Text" } {
-       return;
-     }
+	if { ![info exists conn($c,id)] || ![winfo exists $textWidget] || [winfo class $textWidget] ne "Text" } {
+		return;
+	}
 
-   if { $selonly } {
-        if { [llength [set sel [$textWidget tag ranges sel]]] == 0 } {
-             # No selection
-             return;
-           }
-        set text [$textWidget get sel.first sel.last]
-      } else {
-        set text [$textWidget get 1.0 end-1c]
-      }
+	if { $selonly } {
+		if { [llength [set sel [$textWidget tag ranges sel]]] == 0 } {
+			# No selection
+			return;
+		}
+		set text [$textWidget get sel.first sel.last]
+	} else {
+		set text [$textWidget get 1.0 end-1c]
+	}
 
-   if { $text eq "" } {
-        return;
-      }
+	if { $text eq "" } {
+		return;
+	}
 
-   if { $parse } {
-        send_to $c $text
-      } else {
-        send_to_noparse $c $text
-      }
+	if { $parse } {
+		send_to $c $text
+	} else {
+		send_to_noparse $c $text
+	}
 
-  return;
+	return;
 
 };# ::potato::send_to_from
 
@@ -9931,33 +9984,33 @@ proc ::potato::send_to_from {c textWidget {parse 0} {selonly 0}} {
 #: desc send the string $string to connection $c, after protocol escaping. Do not parse for /commands.
 #: return nothing
 proc ::potato::send_to_real {c string {echo 1}} {
-  variable conn;
-  variable world;
+	variable conn;
+	variable world;
 
-  if { $c eq "" } {
-       set c [up]
-     }
+	if { $c eq "" } {
+		set c [up]
+	}
 
-  if { $c == 0 || ![info exists conn($c,connected)] || $conn($c,connected) != 1 } {
-       return;
-     }
+	if { $c == 0 || ![info exists conn($c,connected)] || $conn($c,connected) != 1 } {
+		return;
+	}
 
-  if { [hasProtocol $c telnet] } {
-       set string [::potato::telnet::escape $string]
-     }
+	if { [hasProtocol $c telnet] } {
+		set string [::potato::telnet::escape $string]
+	}
 
-  sendRaw $c $string 0
-  if { $world($conn($c,world),echo) } {
-       if { $echo eq "1" } {
-            outputSystem $c $string [list "echo"]
-            log $c $string "echo"
-          } elseif { $echo ne "0" } {
-            outputSystem $c $echo [list "echo"]
-            log $c $echo "echo"
-          }
-     }
+	sendRaw $c $string 0
+	if { $world($conn($c,world),echo) } {
+		if { $echo eq "1" } {
+			outputSystem $c $string [list "echo"]
+			log $c $string "echo"
+		} elseif { $echo ne "0" } {
+			outputSystem $c $echo [list "echo"]
+			log $c $echo "echo"
+		}
+	}
 
-  return;
+	return;
 
 };# ::potato::send_to_real
 
@@ -9967,24 +10020,24 @@ proc ::potato::send_to_real {c string {echo 1}} {
 #: desc add the given command to the input history for connection $c.
 #: return nothing
 proc ::potato::addToInputHistory {c cmd} {
-  variable conn;
-  variable world;
+	variable conn;
+	variable world;
 
-  if { $c == 0 || ![info exists conn($c,inputHistory)] } {
-       return;
-     }
+	if { $c == 0 || ![info exists conn($c,inputHistory)] } {
+		return;
+	}
 
-  lappend conn($c,inputHistory) [list [incr conn($c,inputHistory,count)] [string map [list \n \b] $cmd]]
+	lappend conn($c,inputHistory) [list [incr conn($c,inputHistory,count)] [string map [list \n \b] $cmd]]
 
-  set limit $world($conn($c,world),inputLimit,to)
+	set limit $world($conn($c,world),inputLimit,to)
 
-  if { $world($conn($c,world),inputLimit,on) && $limit > 0 } {
-       incr limit -1
-       set old $conn($c,inputHistory)
-       set conn($c,inputHistory) [lrange $conn($c,inputHistory) end-$limit end]
-     }
+	if { $world($conn($c,world),inputLimit,on) && $limit > 0 } {
+		incr limit -1
+		set old $conn($c,inputHistory)
+		set conn($c,inputHistory) [lrange $conn($c,inputHistory) end-$limit end]
+	}
 
-  return;
+	return;
 
 };# ::potato::addToInputHistory
 
@@ -9993,94 +10046,91 @@ proc ::potato::addToInputHistory {c cmd} {
 #: desc Show the "find" dialog for connection $c (or the current connection if $c is "")
 #: return nothing
 proc ::potato::findDialog {{c ""}} {
-  variable conn;
+	variable conn;
 
-  if { $c eq "" } {
-       set c [up]
-     }
+	if { $c eq "" } {
+		set c [up]
+	}
 
-  if { $c == 0 } {
-       bell -displayof .
-       return;
-     }
+	if { $c == 0 } {
+		bell -displayof .
+		return;
+	}
 
-  set win .find_in_$c
-  if { [winfo exists $win] } {
-       reshowWindow $win
-       return;
-     }
+	set win .find_in_$c
+	if { [winfo exists $win] } {
+		reshowWindow $win
+		return;
+	}
 
-  toplevel $win
-  registerWindow $c $win
-  wm withdraw $win
-  wm title $win [T "Find..."]
-  wm resizable $win 0 0
-  wm transient $win .
+	toplevel $win
+	registerWindow $c $win
+	wm withdraw $win
+	wm title $win [T "Find..."]
+	wm resizable $win 0 0
+	wm transient $win .
 
-  pack [set frame [::ttk::frame $win.frame]] -side left -expand 1 -fill both -anchor nw
+	pack [set frame [::ttk::frame $win.frame]] -side left -expand 1 -fill both -anchor nw
 
-  pack [::ttk::frame $frame.l] -side left  -expand 1 -fill both -pady 5 -padx 0
-  pack [::ttk::frame $frame.r] -side right -expand 0 -fill both -pady 5 -padx 3
+	pack [::ttk::frame $frame.l] -side left  -expand 1 -fill both -pady 5 -padx 0
+	pack [::ttk::frame $frame.r] -side right -expand 0 -fill both -pady 5 -padx 3
 
-  pack [::ttk::frame $frame.l.top] -side top -padx 3 -fill both
-  ::ttk::label $frame.l.top.l -text [T "Find:"] -width 6 -anchor w -justify left
-  set vcmd {if { [string length %P] } {BTN configure -state normal} else {BTN configure -state disabled} ; return 1}
-  set vcmd [string map [list BTN $frame.r.find] $vcmd]
-  ::ttk::entry $frame.l.top.e -textvariable ::potato::conn($c,find,str) -width 30 \
-          -exportselection 0 -validate key -validatecommand $vcmd
-  pack $frame.l.top.l -padx 3 -side left
-  pack $frame.l.top.e -padx 3 -side left -expand 1 -fill x
+	pack [::ttk::frame $frame.l.top] -side top -padx 3 -fill both
+	::ttk::label $frame.l.top.l -text [T "Find:"] -width 6 -anchor w -justify left
+	set vcmd {if { [string length %P] } {BTN configure -state normal} else {BTN configure -state disabled} ; return 1}
+	set vcmd [string map [list BTN $frame.r.find] $vcmd]
+	::ttk::entry $frame.l.top.e -textvariable ::potato::conn($c,find,str) -width 30 \
+		-exportselection 0 -validate key -validatecommand $vcmd
+	pack $frame.l.top.l -padx 3 -side left
+	pack $frame.l.top.e -padx 3 -side left -expand 1 -fill x
 
-  pack [::ttk::frame $frame.l.mid] -side top -padx 3 -fill x
-  pack [::ttk::frame $frame.l.mid.left] -fill both -side left
+	pack [::ttk::frame $frame.l.mid] -side top -padx 3 -fill x
+	pack [::ttk::frame $frame.l.mid.left] -fill both -side left
 
-  ::ttk::labelframe $frame.l.mid.opt -labelanchor nw -text [T "Options"]
-  ::ttk::checkbutton $frame.l.mid.opt.case -text [T "Case Sensitive?"] \
-                  -variable ::potato::conn($c,find,case)
-  ::ttk::checkbutton $frame.l.mid.opt.regexp -text [T "Regexp Match?"] \
-                  -variable ::potato::conn($c,find,regexp)
-  pack $frame.l.mid.opt.case $frame.l.mid.opt.regexp \
-                  -side top -anchor nw
-  pack $frame.l.mid.opt -side left -ipadx 4 -padx 4 -pady 2
-  set conn($c,find,case) 0
-  set conn($c,find,regexp) 0
+	::ttk::labelframe $frame.l.mid.opt -labelanchor nw -text [T "Options"]
+	::ttk::checkbutton $frame.l.mid.opt.case -text [T "Case Sensitive?"] \
+		-variable ::potato::conn($c,find,case)
+	::ttk::checkbutton $frame.l.mid.opt.regexp -text [T "Regexp Match?"] \
+		-variable ::potato::conn($c,find,regexp)
+	pack $frame.l.mid.opt.case $frame.l.mid.opt.regexp \
+		-side top -anchor nw
+	pack $frame.l.mid.opt -side left -ipadx 4 -padx 4 -pady 2
+	set conn($c,find,case) 0
+	set conn($c,find,regexp) 0
 
-  ::ttk::labelframe $frame.l.mid.dir -labelanchor nw -text [T "Direction"]
-  ::ttk::radiobutton $frame.l.mid.dir.for -text [T "Forwards"] \
-                  -variable ::potato::conn($c,find,dir) -value 1
-  ::ttk::radiobutton $frame.l.mid.dir.back -text [T "Backwards"] \
-                  -variable ::potato::conn($c,find,dir) -value 0
-  pack $frame.l.mid.dir.for $frame.l.mid.dir.back \
-                  -side top -anchor nw
-  pack $frame.l.mid.dir -side right -ipadx 4 -pady 2
-  set conn($c,find,dir) 1
+	::ttk::labelframe $frame.l.mid.dir -labelanchor nw -text [T "Direction"]
+	::ttk::radiobutton $frame.l.mid.dir.for -text [T "Forwards"] \
+		-variable ::potato::conn($c,find,dir) -value 1
+	::ttk::radiobutton $frame.l.mid.dir.back -text [T "Backwards"] \
+		-variable ::potato::conn($c,find,dir) -value 0
+	pack $frame.l.mid.dir.for $frame.l.mid.dir.back -side top -anchor nw
+	pack $frame.l.mid.dir -side right -ipadx 4 -pady 2
+	set conn($c,find,dir) 1
 
-  set command "::potato::findIn $c \$::potato::conn($c,find,str) \
-                    \$::potato::conn($c,find,dir) \
-                    \$::potato::conn($c,find,regexp) \
-                    \$::potato::conn($c,find,case)"
+	set command "::potato::findIn $c \$::potato::conn($c,find,str) \
+		\$::potato::conn($c,find,dir) \
+		\$::potato::conn($c,find,regexp) \
+		\$::potato::conn($c,find,case)"
 
-  ::ttk::button $frame.r.find -text [T "Find Next"] -underline 0 \
-                   -default active -width 11 -state disabled \
-                   -command $command
-  ::ttk::button $frame.r.cancel -text [T "Cancel"] -underline 0  -width 11\
-                     -command [list destroy $win]
-  pack $frame.r.find $frame.r.cancel -side top -pady 5 -padx 3
+	::ttk::button $frame.r.find -text [T "Find Next"] -underline 0 \
+		-default active -width 11 -state disabled -command $command
+	::ttk::button $frame.r.cancel -text [T "Cancel"] -underline 0  -width 11 \
+		-command [list destroy $win]
+	pack $frame.r.find $frame.r.cancel -side top -pady 5 -padx 3
 
-  bind $win <Escape> [list $frame.r.cancel invoke]
-  bind $win <Alt-c> [list $frame.r.cancel invoke]
-  bind $win <Alt-f> [list $frame.r.find invoke]
-  bind $win <Return> [list $frame.r.find invoke]
+	bind $win <Escape> [list $frame.r.cancel invoke]
+	bind $win <Alt-c> [list $frame.r.cancel invoke]
+	bind $win <Alt-f> [list $frame.r.find invoke]
+	bind $win <Return> [list $frame.r.find invoke]
 
+	update
+	::potato::center $win
+	reshowWindow $win 0
+	focus $frame.l.top.e
 
-  update
-  ::potato::center $win
-  reshowWindow $win 0
-  focus $frame.l.top.e
+	bind $win <Destroy> [list ::potato::unregisterWindow $c $win]
 
-  bind $win <Destroy> [list ::potato::unregisterWindow $c $win]
-
-  return;
+	return;
 
 };# ::potato::find
 
@@ -10093,54 +10143,54 @@ proc ::potato::findDialog {{c ""}} {
 #: desc Search the output window for connection $c (or the current connection, if $c is ""), looking for $text.
 #: return nothing
 proc ::potato::findIn {c str dir regexp case} {
-  variable conn;
+	variable conn;
 
-  if { $c eq "" } {
-       set c [up]
-     }
+	if { $c eq "" } {
+		set c [up]
+	}
 
-  if { $c == 0 } {
-       bell -displayof .
-       return;
-     }
+	if { $c == 0 } {
+		bell -displayof .
+		return;
+	}
 
-  if { $str eq "" } {
-       bell -displayof .
-       return;
-     }
+	if { $str eq "" } {
+		bell -displayof .
+		return;
+	}
 
-  set t $conn($c,textWidget)
-  set switches [list]
-  if { $dir } {
-       lappend switches -forwards
-       set start "insert+1c"
-     } else {
-       lappend switches -backwards
-       set start "insert-1c"
-     }
-  if { $regexp } {
-       lappend switches -regexp
-     }
-  if { !$case } {
-       lappend switches -nocase
-     }
+	set t $conn($c,textWidget)
+	set switches [list]
+	if { $dir } {
+		lappend switches -forwards
+		set start "insert+1c"
+	} else {
+		lappend switches -backwards
+		set start "insert-1c"
+	}
+	if { $regexp } {
+		lappend switches -regexp
+	}
+	if { !$case } {
+		lappend switches -nocase
+	}
 
-  set index [$t search {*}$switches -count count -- $str $start]
-  if { $index eq "" } {
-       bell -displayof .
-       return;
-     } else {
-       $t tag remove sel 1.0 end
-       $t tag add sel $index "$index + $count chars"
-       $t see $index
-       if { $dir } {
-            $t mark set insert "$index + $count chars"
-          } else {
-            $t mark set insert $index
-          }
-     }
+	set index [$t search {*}$switches -count count -- $str $start]
+	if { $index eq "" } {
+		bell -displayof .
+		return;
+	} else {
+		$t tag remove sel 1.0 end
+		$t tag add sel $index "$index + $count chars"
+		$t see $index
+		if { $dir } {
+			$t mark set insert "$index + $count chars"
+		} else {
+			$t mark set insert $index
+		}
+	}
 
-  return;
+	return;
 
 };# ::potato::findIn
 
@@ -10152,20 +10202,20 @@ proc ::potato::findIn {c str dir regexp case} {
 #: desc Replace the current contents of the input window $num for connection $c with $text (or append, if $append)
 #: return nothing
 proc ::potato::showInput {c num text append} {
-  variable conn;
+	variable conn;
 
-  set t [connInfo $c input$num]
+	set t [connInfo $c input$num]
 
-  if { !$append } {
-       $t replace 1.0 end $text
-     } else {
-       if { [$t count -chars 1.0 end-1char] } {
-            set text "\n$text"
-          }
-       $t insert end $text
-     }
+	if { !$append } {
+		$t replace 1.0 end $text
+	} else {
+		if { [$t count -chars 1.0 end-1char] } {
+			set text "\n$text"
+		}
+		$t insert end $text
+	}
 
-  return;
+	return;
 
 };# ::potato::showInput
 
@@ -10176,25 +10226,25 @@ proc ::potato::showInput {c num text append} {
 #: desc Attempt to parse $str into a varname and a value, and set a (possibly global) user var. Output an error to conn $c on failure, nothing on success
 #: return 1 on success, 0 on failure
 proc ::potato::setUserVar {c global str} {
-  variable conn;
+	variable conn;
 
-  if { ![regexp {^ *(.+?)=(.+)$} $str -> varName value] } {
-       outputSystem $c [T "Invalid var string"]
-       return 0;
-     }
+	if { ![regexp {^ *(.+?)=(.+)$} $str -> varName value] } {
+		outputSystem $c [T "Invalid var string"]
+		return 0;
+	}
 
-  if { ![regexp {^[a-zA-Z][a-zA-Z0-9_]{1,30}$} $varName] } {
-       outputSystem $c [T "Invalid var name"]
-       return 0;
-     }
+	if { ![regexp {^[a-zA-Z][a-zA-Z0-9_]{1,30}$} $varName] } {
+		outputSystem $c [T "Invalid var name"]
+		return 0;
+	}
 
-  if { $global } {
-       set conn(0,uservar,$varName) $value
-     } else {
-       set conn($c,uservar,$varName) $value
-     }
+	if { $global } {
+		set conn(0,uservar,$varName) $value
+	} else {
+		set conn($c,uservar,$varName) $value
+	}
 
-  return 1;
+	return 1;
 
 };# ::potato::setUserVar
 
@@ -10207,17 +10257,17 @@ proc ::potato::setUserVar {c global str} {
 #: desc Attempting to unset a pre-defined var (ie, one starting with an underscore) is, but we fail silently.
 #: return nothing
 proc ::potato::unsetUserVar {c global varName} {
-  variable conn;
+	variable conn;
 
-  if { [string index $varName 0] eq "_" } {
-       return;
-     }
+	if { [string index $varName 0] eq "_" } {
+		return;
+	}
 
-  if { $global } {
-       set c 0
-     }
+	if { $global } {
+		set c 0
+	}
 
-  unset -nocomplain conn($c,uservar,$varName)
+	unset -nocomplain conn($c,uservar,$varName)
 
 };# ::potato::unsetUserVar
 
@@ -10226,151 +10276,151 @@ proc ::potato::unsetUserVar {c global varName} {
 #: desc Show the window for configure Custom /commands for world $w
 #: return nothing
 proc ::potato::slashConfig {{w ""}} {
-  variable world;
-  variable slashConfig;
+	variable world;
+	variable slashConfig;
 
-  if { $w eq "" } {
-       set w [connInfo [up] world]
-     }
+	if { $w eq "" } {
+		set w [connInfo [up] world]
+	}
 
-  set win .configSlashCmds_w$w
-  if { [winfo exists $win] } {
-       reshowWindow $win
-       return;
-     }
-  if { $w == 0 } {
-       set title [T "Global Custom /commands"]
-     } else {
-       set title [T "Custom /commands for %s" $world($w,name)]
-     }
-  toplevel $win
-  wm withdraw $win
-  wm title $win $title
+	set win .configSlashCmds_w$w
+	if { [winfo exists $win] } {
+		reshowWindow $win
+		return;
+	}
+	if { $w == 0 } {
+		set title [T "Global Custom /commands"]
+	} else {
+		set title [T "Custom /commands for %s" $world($w,name)]
+	}
+	toplevel $win
+	wm withdraw $win
+	wm title $win $title
 
-  set slashConfig($w,win) $win
+	set slashConfig($w,win) $win
 
-  pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both
+	pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both
 
-  pack [set top [::ttk::frame $frame.top]] -side top -expand 1 -fill both -padx 3 -pady 7
-  pack [set treeframe [::ttk::frame $top.tree]] -side top -anchor nw -fill both
-  set tree [::ttk::treeview $treeframe.tree -show [list headings] -columns [list Name Pattern Type] \
-           -yscrollcommand [list $treeframe.sbY set] \
-           -xscrollcommand [list $treeframe.sbX set] -selectmode browse -height 5]
-  set sbX [::ttk::scrollbar $treeframe.sbX -orient horizontal -command [list $tree xview]]
-  set sbY [::ttk::scrollbar $treeframe.sbY -orient vertical -command [list $tree yview]]
-    $tree heading Name -text "  [T "Name"]  "
-    $tree heading Pattern -text "  [T "Pattern"]  "
-    $tree heading Type -text "  [T "Type"]  "
+	pack [set top [::ttk::frame $frame.top]] -side top -expand 1 -fill both -padx 3 -pady 7
+	pack [set treeframe [::ttk::frame $top.tree]] -side top -anchor nw -fill both
+	set tree [::ttk::treeview $treeframe.tree -show [list headings] -columns [list Name Pattern Type] \
+		-yscrollcommand [list $treeframe.sbY set] \
+		-xscrollcommand [list $treeframe.sbX set] -selectmode browse -height 5]
+	set sbX [::ttk::scrollbar $treeframe.sbX -orient horizontal -command [list $tree xview]]
+	set sbY [::ttk::scrollbar $treeframe.sbY -orient vertical -command [list $tree yview]]
+	$tree heading Name -text "  [T "Name"]  "
+	$tree heading Pattern -text "  [T "Pattern"]  "
+	$tree heading Type -text "  [T "Type"]  "
 
-  foreach {x y} [list Name 100 Pattern 100 Type 50] {
-    $tree column $x -width $y
-  }
-  grid_with_scrollbars $tree $sbX $sbY
+	foreach {x y} [list Name 100 Pattern 100 Type 50] {
+		$tree column $x -width $y
+	}
+	grid_with_scrollbars $tree $sbX $sbY
 
-  pack [set btns [::ttk::frame $top.btns]] -side top -anchor nw -fill both -padx 10 -pady 5
-  pack [::ttk::frame $btns.add] -side left -expand 1 -fill x
-  pack [set add [::ttk::button $btns.add.btn -image ::potato::img::event-new \
-          -command [list ::potato::slashConfigAdd $w]]] -side top -anchor center
-  tooltip $add [T "Add /command"]
+	pack [set btns [::ttk::frame $top.btns]] -side top -anchor nw -fill both -padx 10 -pady 5
+	pack [::ttk::frame $btns.add] -side left -expand 1 -fill x
+	pack [set add [::ttk::button $btns.add.btn -image ::potato::img::event-new \
+		-command [list ::potato::slashConfigAdd $w]]] -side top -anchor center
+	tooltip $add [T "Add /command"]
 
-  pack [::ttk::frame $btns.edit] -side left -expand 1 -fill x
-  pack [set edit [::ttk::button $btns.edit.btn -image ::potato::img::event-edit \
-          -command [list ::potato::slashConfigEdit $w]]] -side top -anchor center
-  tooltip $edit [T "Edit /command"]
+	pack [::ttk::frame $btns.edit] -side left -expand 1 -fill x
+	pack [set edit [::ttk::button $btns.edit.btn -image ::potato::img::event-edit \
+		-command [list ::potato::slashConfigEdit $w]]] -side top -anchor center
+	tooltip $edit [T "Edit /command"]
 
-  pack [::ttk::frame $btns.delete] -side left -expand 1 -fill x
-  pack [set delete [::ttk::button $btns.delete.btn -image ::potato::img::event-delete \
-          -command [list ::potato::slashConfigDelete $w]]] -side top -anchor center
-  tooltip $delete [T "Delete /command"]
+	pack [::ttk::frame $btns.delete] -side left -expand 1 -fill x
+	pack [set delete [::ttk::button $btns.delete.btn -image ::potato::img::event-delete \
+		-command [list ::potato::slashConfigDelete $w]]] -side top -anchor center
+	tooltip $delete [T "Delete /command"]
 
-  foreach x [list tree sbX sbY add edit delete] {
-    set slashConfig($w,win,top,$x) [set $x]
-  }
+	foreach x [list tree sbX sbY add edit delete] {
+	set slashConfig($w,win,top,$x) [set $x]
+	}
 
-  ########
-  pack [::ttk::separator $frame.sep -orient horizontal] -side top -fill x -pady 10 -padx 5
+	########
+	pack [::ttk::separator $frame.sep -orient horizontal] -side top -fill x -pady 10 -padx 5
 
-  pack [set bottom [::ttk::frame $frame.bottom]] -side top -expand 1 -fill x -padx 3 -pady 7
+	pack [set bottom [::ttk::frame $frame.bottom]] -side top -expand 1 -fill x -padx 3 -pady 7
 
-  pack [set sub [::ttk::frame $bottom.name]] -side top -fill x -padx 4 -pady 3
-  pack [::ttk::label $sub.l -text [T "/command Name:"] -width 18] -side left -padx 3
-  pack [set name [::ttk::entry $sub.e -textvariable ::potato::slashConfig($w,name) -width 18]] \
-      -side left -fill x -padx 3
-  pack [set enabled [::ttk::checkbutton $sub.enabled -variable ::potato::slashConfig($w,enabled) -text [T "Enabled?"] \
-             -onvalue 1 -offvalue 0]] -side left -padx 3
+	pack [set sub [::ttk::frame $bottom.name]] -side top -fill x -padx 4 -pady 3
+	pack [::ttk::label $sub.l -text [T "/command Name:"] -width 18] -side left -padx 3
+	pack [set name [::ttk::entry $sub.e -textvariable ::potato::slashConfig($w,name) -width 18]] \
+		-side left -fill x -padx 3
+	pack [set enabled [::ttk::checkbutton $sub.enabled -variable ::potato::slashConfig($w,enabled) -text [T "Enabled?"] \
+		-onvalue 1 -offvalue 0]] -side left -padx 3
 
-  pack [set sub [::ttk::frame $bottom.pattern]] -side top -fill x -padx 4 -pady 3
-  pack [::ttk::label $sub.l -text [T "Argument Pattern:"] -width 18] -side left -padx 3
-  pack [set pattern [::ttk::entry $sub.e -textvariable ::potato::slashConfig($w,pattern) -width 35]] \
-     -side left -fill x -padx 3
+	pack [set sub [::ttk::frame $bottom.pattern]] -side top -fill x -padx 4 -pady 3
+	pack [::ttk::label $sub.l -text [T "Argument Pattern:"] -width 18] -side left -padx 3
+	pack [set pattern [::ttk::entry $sub.e -textvariable ::potato::slashConfig($w,pattern) -width 35]] \
+		-side left -fill x -padx 3
 
-  pack [set sub [::ttk::frame $bottom.misc]] -side top -fill x -padx 4 -pady 3
-  pack [::ttk::label $sub.l -text [T "Pattern Type:"] -width 18] -side left -padx 3
-  pack [set patternType [::ttk::combobox $sub.type -textvariable ::potato::slashConfig($w,patternType) \
-             -values [list Wildcard Regexp] -width 15 -state readonly]] -side left -padx 3
-  pack [set case [::ttk::checkbutton $sub.case -variable ::potato::slashConfig($w,case) -text [T "Case?"] \
-             -onvalue 1 -offvalue 0]] -side left -padx 3
+	pack [set sub [::ttk::frame $bottom.misc]] -side top -fill x -padx 4 -pady 3
+	pack [::ttk::label $sub.l -text [T "Pattern Type:"] -width 18] -side left -padx 3
+	pack [set patternType [::ttk::combobox $sub.type -textvariable ::potato::slashConfig($w,patternType) \
+		-values [list Wildcard Regexp] -width 15 -state readonly]] -side left -padx 3
+	pack [set case [::ttk::checkbutton $sub.case -variable ::potato::slashConfig($w,case) -text [T "Case?"] \
+		-onvalue 1 -offvalue 0]] -side left -padx 3
 
-  pack [set sub [::ttk::frame $bottom.send]] -side top -fill x -padx 4 -pady 3
-  pack [::ttk::label $sub.l -text [T "Send to MUSH:"] -width 18] -side left -padx 3
-  pack [set send [::ttk::entry $sub.e -textvariable ::potato::slashConfig($w,send) -width 35]] -side left -padx 3
+	pack [set sub [::ttk::frame $bottom.send]] -side top -fill x -padx 4 -pady 3
+	pack [::ttk::label $sub.l -text [T "Send to MUSH:"] -width 18] -side left -padx 3
+	pack [set send [::ttk::entry $sub.e -textvariable ::potato::slashConfig($w,send) -width 35]] -side left -padx 3
 
-  pack [set btns [::ttk::frame $bottom.btns]] -side top -fill x -padx 4 -pady 3
-  pack [set sub [::ttk::frame $btns.save]] -side left -expand 1 -fill x
-  pack [set save [::ttk::button $sub.btn -text [T "Save"] -command [list ::potato::slashConfigSave $w]]]
+	pack [set btns [::ttk::frame $bottom.btns]] -side top -fill x -padx 4 -pady 3
+	pack [set sub [::ttk::frame $btns.save]] -side left -expand 1 -fill x
+	pack [set save [::ttk::button $sub.btn -text [T "Save"] -command [list ::potato::slashConfigSave $w]]]
 
-  pack [set sub [::ttk::frame $btns.discard]] -side left -expand 1 -fill x
-  pack [set discard [::ttk::button $sub.btn -text [T "Discard"] -command [list ::potato::slashConfigDiscard $w]]]
+	pack [set sub [::ttk::frame $btns.discard]] -side left -expand 1 -fill x
+	pack [set discard [::ttk::button $sub.btn -text [T "Discard"] -command [list ::potato::slashConfigDiscard $w]]]
 
-  foreach x [list name enabled pattern patternType case send save discard] {
-    set slashConfig($w,win,bottom,$x) [set $x]
-  }
+	foreach x [list name enabled pattern patternType case send save discard] {
+		set slashConfig($w,win,bottom,$x) [set $x]
+	}
 
-  ########
+	########
 
-  set slashConfig($w,name) ""
-  set slashConfig($w,enabled) 0
-  set slashConfig($w,pattern) ""
-  set slashConfig($w,patternType) ""
-  set slashConfig($w,case) 0
-  set slashConfig($w,send) ""
+	set slashConfig($w,name) ""
+	set slashConfig($w,enabled) 0
+	set slashConfig($w,pattern) ""
+	set slashConfig($w,patternType) ""
+	set slashConfig($w,case) 0
+	set slashConfig($w,send) ""
 
-  bind $tree <<TreeviewSelect>> [list ::potato::slashConfigSelect $w]
-  bind $tree <Double-ButtonPress-1> [list ::potato::slashConfigEdit $w]
+	bind $tree <<TreeviewSelect>> [list ::potato::slashConfigSelect $w]
+	bind $tree <Double-ButtonPress-1> [list ::potato::slashConfigEdit $w]
 
-  # Disabled bottom (editing) widgets, leave top (listing) widgets enabled
-  foreach x [array names slashConfig $w,win,bottom,*] {
-     $slashConfig($x) state disabled
-  }
+	# Disabled bottom (editing) widgets, leave top (listing) widgets enabled
+	foreach x [array names slashConfig $w,win,bottom,*] {
+		$slashConfig($x) state disabled
+	}
 
-  # Set vars for tracking current state. editing says if we're configuring something now, and "which" is the tree -id of
-  # the /command we're editing, or "" if we're adding a new one. "lastsel" stores the previously selected item in the
-  # tree when we add a new /command
-  set slashConfig($w,editing) 0
-  set slashConfig($w,editing,which) ""
-  set slashConfig($w,editing,lastsel) ""
+	# Set vars for tracking current state. editing says if we're configuring something now, and "which" is the tree -id of
+	# the /command we're editing, or "" if we're adding a new one. "lastsel" stores the previously selected item in the
+	# tree when we add a new /command
+	set slashConfig($w,editing) 0
+	set slashConfig($w,editing,which) ""
+	set slashConfig($w,editing,lastsel) ""
 
-  bind $win <Escape> [list destroy $win];#abc edit this to "discard" if currently editing, and "destroy" if not
-  # Bind this to the tree, not the toplevel, or we get a fire for every child widget too. Feh.
-  bind $slashConfig($w,win,top,tree) <Destroy> "[list ::potato::slashConfigClose $w] ; [list array unset ::potato::slashConfig $w,*]"
+	bind $win <Escape> [list destroy $win];#abc edit this to "discard" if currently editing, and "destroy" if not
+	# Bind this to the tree, not the toplevel, or we get a fire for every child widget too. Feh.
+	bind $slashConfig($w,win,top,tree) <Destroy> "[list ::potato::slashConfigClose $w] ; [list array unset ::potato::slashConfig $w,*]"
 
-  # Propagate the list. We use the array elements, to include disabled slash commands
-  set count 0
-  foreach x [lsort -dictionary [removePrefix [arraySubelem world $w,slashcmd] $w,slashcmd]] {
-    set slashConfig($w,slashcmd,slash$count) $x
-    set slashConfig($w,slashcmd,slash$count,pattern) $world($w,slashcmd,$x)
-    set slashConfig($w,slashcmd,slash$count,patternType) $world($w,slashcmd,$x,type)
-    set slashConfig($w,slashcmd,slash$count,case) $world($w,slashcmd,$x,case)
-    set slashConfig($w,slashcmd,slash$count,send) $world($w,slashcmd,$x,send)
-    set slashConfig($w,slashcmd,slash$count,enabled) [expr {$x in $world($w,slashcmd)}]
-    incr count
-  }
-  set slashConfig($w,count) $count
+	# Propagate the list. We use the array elements, to include disabled slash commands
+	set count 0
+	foreach x [lsort -dictionary [removePrefix [arraySubelem world $w,slashcmd] $w,slashcmd]] {
+		set slashConfig($w,slashcmd,slash$count) $x
+		set slashConfig($w,slashcmd,slash$count,pattern) $world($w,slashcmd,$x)
+		set slashConfig($w,slashcmd,slash$count,patternType) $world($w,slashcmd,$x,type)
+		set slashConfig($w,slashcmd,slash$count,case) $world($w,slashcmd,$x,case)
+		set slashConfig($w,slashcmd,slash$count,send) $world($w,slashcmd,$x,send)
+		set slashConfig($w,slashcmd,slash$count,enabled) [expr {$x in $world($w,slashcmd)}]
+		incr count
+	}
+	set slashConfig($w,count) $count
 
-  slashConfigUpdateTree $w
-  center $win
-  reshowWindow $win 0
-  return;
+	slashConfigUpdateTree $w
+	center $win
+	reshowWindow $win 0
+	return;
 
 };# ::potato::slashConfig
 
@@ -10379,52 +10429,52 @@ proc ::potato::slashConfig {{w ""}} {
 #: desc A custom slash command is being edited (or added), and "Save" has been clicked; try and save the changes.
 #: return nothing
 proc ::potato::slashConfigSave {w} {
-  variable slashConfig;
+	variable slashConfig;
 
-  # Command we use for reporting errors here, to avoid repetition
-  set error [list tk_messageBox -icon error -title [T "Custom /command Config"] \
-                   -parent $slashConfig($w,win) -type ok -message]
+	# Command we use for reporting errors here, to avoid repetition
+	set error [list tk_messageBox -icon error -title [T "Custom /command Config"] \
+		-parent $slashConfig($w,win) -type ok -message]
 
-  set name $slashConfig($w,name)
+	set name $slashConfig($w,name)
 
-  # Check for valid name
-  if { ![regexp -nocase {^[a-z][a-z0-9]{0,49}$} $name] } {
-       {*}$error [T "That is not a valid name."]
-       return;
-     }
-  # And check for name already in use
-  foreach x [removePrefix [arraySubelem slashConfig $w,slashcmd] $w,slashcmd] {
-     if { $name eq $slashConfig($w,slashcmd,$x) && $x ne $slashConfig($w,editing,which) } {
-          {*}$error [T "That name is already in use."]
-          return;
-        }
-  }
-  # We don't check for existing global /commands with the name. Maybe we should?
+	# Check for valid name
+	if { ![regexp -nocase {^[a-z][a-z0-9]{0,49}$} $name] } {
+		{*}$error [T "That is not a valid name."]
+		return;
+	}
+	# And check for name already in use
+	foreach x [removePrefix [arraySubelem slashConfig $w,slashcmd] $w,slashcmd] {
+		if { $name eq $slashConfig($w,slashcmd,$x) && $x ne $slashConfig($w,editing,which) } {
+			{*}$error [T "That name is already in use."]
+			return;
+		}
+	}
+	# We don't check for existing global /commands with the name. Maybe we should?
 
-  # The name is the only bit we need to validate; now we save it.
-  if { $slashConfig($w,editing,which) eq "" } {
-       # We're saving a new one
-       set id "slash$slashConfig($w,count)"
-       incr slashConfig($w,count)
-     } else {
-       # Editing an existing one
-       set id $slashConfig($w,editing,which)
-     }
-  foreach x [list enabled pattern patternType case send] {
-     set slashConfig($w,slashcmd,$id,$x) $slashConfig($w,$x)
-  }
-  set slashConfig($w,slashcmd,$id) $slashConfig($w,name)
+	# The name is the only bit we need to validate; now we save it.
+	if { $slashConfig($w,editing,which) eq "" } {
+		# We're saving a new one
+		set id "slash$slashConfig($w,count)"
+		incr slashConfig($w,count)
+	} else {
+		# Editing an existing one
+		set id $slashConfig($w,editing,which)
+	}
+	foreach x [list enabled pattern patternType case send] {
+		set slashConfig($w,slashcmd,$id,$x) $slashConfig($w,$x)
+	}
+	set slashConfig($w,slashcmd,$id) $slashConfig($w,name)
 
-  # Now we reset the window
-  slashConfigDiscard $w
+	# Now we reset the window
+	slashConfigDiscard $w
 
-  # And now we need to update the treeview widget, as we may have a new name for a /command, or a new /command altogether
-  slashConfigUpdateTree $w
+	# And now we need to update the treeview widget, as we may have a new name for a /command, or a new /command altogether
+	slashConfigUpdateTree $w
 
-  # Now make sure we select the right id
-  $slashConfig($w,win,top,tree) selection set $id
+	# Now make sure we select the right id
+	$slashConfig($w,win,top,tree) selection set $id
 
-  return;
+	return;
 
 };# ::potato::slashConfigSave
 
@@ -10434,32 +10484,32 @@ proc ::potato::slashConfigSave {w} {
 #: desc we don't want to because "Discard" was clicked), so clear them out and set up for tree selection again.
 #: return nothing
 proc ::potato::slashConfigDiscard {w} {
-  variable slashConfig;
+	variable slashConfig;
 
-  # Clear the basics
-  set slashConfig($w,name) ""
-  set slashConfig($w,enabled) 0
-  set slashConfig($w,pattern) ""
-  set slashConfig($w,patternType) ""
-  set slashConfig($w,case) 0
-  set slashConfig($w,send) ""
+	# Clear the basics
+	set slashConfig($w,name) ""
+	set slashConfig($w,enabled) 0
+	set slashConfig($w,pattern) ""
+	set slashConfig($w,patternType) ""
+	set slashConfig($w,case) 0
+	set slashConfig($w,send) ""
 
-  # Adjust the active widgets
-  foreach x [array names slashConfig $w,win,top,*] {
-     $slashConfig($x) state !disabled
-  }
-  foreach x [array names slashConfig $w,win,bottom,*] {
-     $slashConfig($x) state disabled
-  }
+	# Adjust the active widgets
+	foreach x [array names slashConfig $w,win,top,*] {
+	$slashConfig($x) state !disabled
+	}
+	foreach x [array names slashConfig $w,win,bottom,*] {
+	$slashConfig($x) state disabled
+	}
 
-  # Set the treeview's selection
-  $slashConfig($w,win,top,tree) selection set $slashConfig($w,editing,lastsel)
+	# Set the treeview's selection
+	$slashConfig($w,win,top,tree) selection set $slashConfig($w,editing,lastsel)
 
-  set slashConfig($w,editing) 0
-  set slashConfig($w,editing,which) ""
-  set slashConfig($w,editing,lastsel) ""
+	set slashConfig($w,editing) 0
+	set slashConfig($w,editing,which) ""
+	set slashConfig($w,editing,lastsel) ""
 
-  return;
+	return;
 
 };# ::potato::slashConfigDiscard
 
@@ -10468,25 +10518,25 @@ proc ::potato::slashConfigDiscard {w} {
 #: desc The slashConfig window for world $w is being closed. Update world $w's stored slash commands from it, and clear the vars created for the window
 #: return nothing
 proc ::potato::slashConfigClose {w} {
-  variable slashConfig;
-  variable world;
+	variable slashConfig;
+	variable world;
 
-  array unset world $w,slashcmd,*
-  set world($w,slashcmd) [list]
-  foreach x [arraySubelem slashConfig $w,slashcmd] {
-    set name $slashConfig($x)
-    set world($w,slashcmd,$name) $slashConfig($x,pattern)
-    set world($w,slashcmd,$name,type) $slashConfig($x,patternType)
-    set world($w,slashcmd,$name,case) $slashConfig($x,case)
-    set world($w,slashcmd,$name,send) $slashConfig($x,send)
-    if { $slashConfig($x,enabled) } {
-         lappend world($w,slashcmd) $name
-       }
-  }
+	array unset world $w,slashcmd,*
+	set world($w,slashcmd) [list]
+	foreach x [arraySubelem slashConfig $w,slashcmd] {
+		set name $slashConfig($x)
+		set world($w,slashcmd,$name) $slashConfig($x,pattern)
+		set world($w,slashcmd,$name,type) $slashConfig($x,patternType)
+		set world($w,slashcmd,$name,case) $slashConfig($x,case)
+		set world($w,slashcmd,$name,send) $slashConfig($x,send)
+		if { $slashConfig($x,enabled) } {
+			lappend world($w,slashcmd) $name
+		}
+	}
 
-  array unset slashConfig $w,*
+	array unset slashConfig $w,*
 
-  return;
+	return;
 
 };# ::potato::slashConfigClose
 
@@ -10495,19 +10545,19 @@ proc ::potato::slashConfigClose {w} {
 #: desc Delete the selected /command in the slashconfig window for world $w
 #: return nothing
 proc ::potato::slashConfigDelete {w} {
-  variable slashConfig;
+	variable slashConfig;
 
-  set sel [$slashConfig($w,win,top,tree) selection]
-  if { ![llength $sel] } {
-       return;
-     }
+	set sel [$slashConfig($w,win,top,tree) selection]
+	if { ![llength $sel] } {
+		return;
+	}
 
-  array unset slashConfig $w,slashcmd,$sel,*
-  unset slashConfig($w,slashcmd,$sel)
+	array unset slashConfig $w,slashcmd,$sel,*
+	unset slashConfig($w,slashcmd,$sel)
 
-  slashConfigUpdateTree $w
+	slashConfigUpdateTree $w
 
-  return;
+	return;
 
 };# ::potato::slashConfigDelete
 
@@ -10519,33 +10569,33 @@ proc ::potato::slashConfigDelete {w} {
 #: desc do need to record that we're now editing, and which.
 #: return nothing
 proc ::potato::slashConfigEdit {w} {
-  variable slashConfig;
+	variable slashConfig;
 
-  if { ![info exists slashConfig($w,win)] || ![winfo exists $slashConfig($w,win)] } {
-       return; # window doesn't exist
-     }
+	if { ![info exists slashConfig($w,win)] || ![winfo exists $slashConfig($w,win)] } {
+		return; # window doesn't exist
+	}
 
-  if { $slashConfig($w,editing) } {
-       return;# already editing
-     }
+	if { $slashConfig($w,editing) } {
+		return;# already editing
+	}
 
-  set tree $slashConfig($w,win,top,tree)
+	set tree $slashConfig($w,win,top,tree)
 
-  set slashConfig($w,editing) 1
-  set slashConfig($w,editing,which) [$tree selection]
-  set slashConfig($w,editing,lastsel) $slashConfig($w,editing,which)
+	set slashConfig($w,editing) 1
+	set slashConfig($w,editing,which) [$tree selection]
+	set slashConfig($w,editing,lastsel) $slashConfig($w,editing,which)
 
-  foreach x [array names slashConfig $w,win,top,*] {
-     $slashConfig($x) state disabled
-  }
+	foreach x [array names slashConfig $w,win,top,*] {
+		$slashConfig($x) state disabled
+	}
 
-  foreach x [array names slashConfig $w,win,bottom,*] {
-     $slashConfig($x) state !disabled
-  }
+	foreach x [array names slashConfig $w,win,bottom,*] {
+		$slashConfig($x) state !disabled
+	}
 
-  focus $slashConfig($w,win,bottom,name)
+	focus $slashConfig($w,win,bottom,name)
 
-  return;
+	return;
 
 };# ::potato::slashConfigEdit
 
@@ -10555,40 +10605,40 @@ proc ::potato::slashConfigEdit {w} {
 #: desc set default values for the /command, and set vars to show we're editing a new /command
 #: return nothing
 proc ::potato::slashConfigAdd {w} {
-  variable slashConfig;
+	variable slashConfig;
 
-  if { ![info exists slashConfig($w,win)] || ![winfo exists $slashConfig($w,win)] } {
-       return; # window doesn't exist
-     }
+	if { ![info exists slashConfig($w,win)] || ![winfo exists $slashConfig($w,win)] } {
+		return; # window doesn't exist
+	}
 
-  if { $slashConfig($w,editing) } {
-       return;# already editing
-     }
+	if { $slashConfig($w,editing) } {
+		return;# already editing
+	}
 
-  set tree $slashConfig($w,win,top,tree)
+	set tree $slashConfig($w,win,top,tree)
 
-  set slashConfig($w,editing) 1
-  set slashConfig($w,editing,which) ""
-  set slashConfig($w,editing,lastsel) [$tree selection];# so we can restore
-  $tree selection set ""
+	set slashConfig($w,editing) 1
+	set slashConfig($w,editing,which) ""
+	set slashConfig($w,editing,lastsel) [$tree selection];# so we can restore
+	$tree selection set ""
 
-  foreach x [array names slashConfig $w,win,top,*] {
-     $slashConfig($x) state disabled
-  }
-  foreach x [array names slashConfig $w,win,bottom,*] {
-     $slashConfig($x) state !disabled
-  }
+	foreach x [array names slashConfig $w,win,top,*] {
+		$slashConfig($x) state disabled
+	}
+	foreach x [array names slashConfig $w,win,bottom,*] {
+		$slashConfig($x) state !disabled
+	}
 
-  set slashConfig($w,name) ""
-  set slashConfig($w,enabled) 1
-  set slashConfig($w,pattern) ""
-  set slashConfig($w,patternType) "Regexp"
-  set slashConfig($w,case) 0
-  set slashConfig($w,send) ""
+	set slashConfig($w,name) ""
+	set slashConfig($w,enabled) 1
+	set slashConfig($w,pattern) ""
+	set slashConfig($w,patternType) "Regexp"
+	set slashConfig($w,case) 0
+	set slashConfig($w,send) ""
 
-  focus $slashConfig($w,win,bottom,name)
+	focus $slashConfig($w,win,bottom,name)
 
-  return;
+	return;
 
 };# ::potato::slashConfigAdd
 
@@ -10597,53 +10647,53 @@ proc ::potato::slashConfigAdd {w} {
 #: desc Update the tree of /commands in world $w's slashConfig window
 #: return nothing
 proc ::potato::slashConfigUpdateTree {w} {
-  variable slashConfig;
+	variable slashConfig;
 
-  if { ![info exists slashConfig($w,win)] || ![winfo exists $slashConfig($w,win)] } {
-       return; # window doesn't exist
-     }
+	if { ![info exists slashConfig($w,win)] || ![winfo exists $slashConfig($w,win)] } {
+		return; # window doesn't exist
+	}
 
-  set tree $slashConfig($w,win,top,tree)
+	set tree $slashConfig($w,win,top,tree)
 
-  # Get the current selection
-  set sel [$tree selection]
-  set index [$tree index $sel]
+	# Get the current selection
+	set sel [$tree selection]
+	set index [$tree index $sel]
 
-  # Now empty the tree
-  $tree delete [$tree children {}]
+	# Now empty the tree
+	$tree delete [$tree children {}]
 
-  # And now reinsert everything in the correct order
-  foreach id [lsort -dictionary [removePrefix [arraySubelem slashConfig $w,slashcmd] $w,slashcmd]] {
-    $tree insert {} end -id "$id" \
-          -values [list $slashConfig($w,slashcmd,$id) $slashConfig($w,slashcmd,$id,pattern) \
-                        $slashConfig($w,slashcmd,$id,patternType)]
-  }
+	# And now reinsert everything in the correct order
+	foreach id [lsort -dictionary [removePrefix [arraySubelem slashConfig $w,slashcmd] $w,slashcmd]] {
+		$tree insert {} end -id "$id" \
+			-values [list $slashConfig($w,slashcmd,$id) $slashConfig($w,slashcmd,$id,pattern) \
+			$slashConfig($w,slashcmd,$id,patternType)]
+	}
 
-  # Now try and select the right item
-  if { ![llength $sel] } {
-       # No original selection, just select the first item
-       $tree selection set [lindex [$tree children {}] 0]
-     } elseif { ![catch {$tree index $sel}] } {
-       # Previously selected item is still present
-       $tree selection set $sel
-     } else {
-       # Not present, try and select the next item down
-       set children [$tree children {}]
-       set lchildren [llength $children]
-       if { $lchildren == 0 } {
-            # Nothing to select
-          } else {
-            if { $index >= $lchildren } {
-                 set index [expr {$lchildren-1}]
-               }
-            $tree selection set [lindex $children $index]
-          }
-     }
+	# Now try and select the right item
+	if { ![llength $sel] } {
+		# No original selection, just select the first item
+		$tree selection set [lindex [$tree children {}] 0]
+	} elseif { ![catch {$tree index $sel}] } {
+		# Previously selected item is still present
+		$tree selection set $sel
+	} else {
+		# Not present, try and select the next item down
+		set children [$tree children {}]
+		set lchildren [llength $children]
+		if { $lchildren == 0 } {
+			# Nothing to select
+		} else {
+			if { $index >= $lchildren } {
+				set index [expr {$lchildren-1}]
+			}
+			$tree selection set [lindex $children $index]
+		}
+	}
 
-  # Now do the necessary stuff when the selection changes
-  slashConfigSelect $w
+	# Now do the necessary stuff when the selection changes
+	slashConfigSelect $w
 
-  return;
+	return;
 
 };# ::potato::slashConfigUpdateTree
 
@@ -10652,40 +10702,40 @@ proc ::potato::slashConfigUpdateTree {w} {
 #: desc Process the selection of a /command in the tree for world $w's /command config window, and activate buttons/show settings as appropriate.
 #: return nothing
 proc ::potato::slashConfigSelect {w} {
-  variable slashConfig;
+	variable slashConfig;
 
-  if { ![info exists slashConfig($w,win)] || ![winfo exists $slashConfig($w,win)] } {
-       return;
-     }
+	if { ![info exists slashConfig($w,win)] || ![winfo exists $slashConfig($w,win)] } {
+		return;
+	}
 
-  if { $slashConfig($w,editing) } {
-       return; # already editing the current selection
-     }
+	if { $slashConfig($w,editing) } {
+		return; # already editing the current selection
+	}
 
-  set tree $slashConfig($w,win,top,tree)
-  set sel [$tree selection]
-  if { ![llength $sel] } {
-       $slashConfig($w,win,top,edit) state disabled
-       $slashConfig($w,win,top,delete) state disabled
-       # Clear vars to show no selection
-         foreach x [list pattern patternType case send enabled] {
-            set slashConfig($w,$x) ""
-         }
-         set slashConfig($w,name) ""
-       return;
-     }
+	set tree $slashConfig($w,win,top,tree)
+	set sel [$tree selection]
+	if { ![llength $sel] } {
+		$slashConfig($w,win,top,edit) state disabled
+		$slashConfig($w,win,top,delete) state disabled
+		# Clear vars to show no selection
+		foreach x [list pattern patternType case send enabled] {
+			set slashConfig($w,$x) ""
+		}
+		set slashConfig($w,name) ""
+		return;
+	}
 
-  # Re-enable buttons that work on current selection
-  $slashConfig($w,win,top,edit) state !disabled
-  $slashConfig($w,win,top,delete) state !disabled
+	# Re-enable buttons that work on current selection
+	$slashConfig($w,win,top,edit) state !disabled
+	$slashConfig($w,win,top,delete) state !disabled
 
-  # Set vars to show setting of currently selected item
-  foreach x [list pattern patternType case send enabled] {
-    set slashConfig($w,$x) $slashConfig($w,slashcmd,$sel,$x)
-  }
-  set slashConfig($w,name) $slashConfig($w,slashcmd,$sel)
+	# Set vars to show setting of currently selected item
+	foreach x [list pattern patternType case send enabled] {
+		set slashConfig($w,$x) $slashConfig($w,slashcmd,$sel,$x)
+	}
+	set slashConfig($w,name) $slashConfig($w,slashcmd,$sel)
 
-  return;
+	return;
 
 };# ::potato::slashConfigSelect
 
@@ -10697,132 +10747,132 @@ proc ::potato::slashConfigSelect {w} {
 #: desc process $str as a slash command and perform the necessary action. If we're recursing, return the result, otherwise output it on screen.
 #: return [list <error?> <result>] for nested invocations, or the text to send to the MUSH for non-nested invocations.
 proc ::potato::process_slash_cmd {c _str mode {_vars ""}} {
-  variable conn;
-  variable world;
+	variable conn;
+	variable world;
 
-  array set modes [list default 0 recursing 1 field 2]
-  upvar 1 $_str str;
-  if { ![info exists str] } {
-       return;
-     }
-  if { $_vars ne "" } {
-       upvar 1 $_vars vars;
-     }
+	array set modes [list default 0 recursing 1 field 2]
+	upvar 1 $_str str;
+	if { ![info exists str] } {
+		return;
+	}
+	if { $_vars ne "" } {
+		upvar 1 $_vars vars;
+	}
 
-  if { $c eq "" } {
-       set c [up]
-     }
+	if { $c eq "" } {
+		set c [up]
+	}
 
-  if { $c != 0 && ![info exists conn($c,id)] } {
-       return; # Running a /command for a closed connection - maybe on a timer that didn't cancel?
-     }
+	if { $c != 0 && ![info exists conn($c,id)] } {
+		return; # Running a /command for a closed connection - maybe on a timer that didn't cancel?
+	}
 
-  # This while loop is a crude go-to to avoid the need for repeating
-  # the checks for $recursing
-  while { ![info exists working] } {
-    set working 1
+	# This while loop is a crude go-to to avoid the need for repeating
+	# the checks for $recursing
+	while { ![info exists working] } {
+		set working 1
 
-    set parsed [parse_slash_cmd $c str $mode vars]
-    set wascmd [lindex $parsed 0]
-    set cmd [lindex $parsed 1]
-    set cmdArgs [lindex $parsed 2]
-    if { !$wascmd } {
-         # Not a /command, just literal text
-         if { $mode == $modes(recursing) } {
-              return [list 1 $cmd];
-            } else {
-              return $cmd;
-            }
-       }
-    set cmd [string range $cmd 1 end]
-    # Add 20 chars to the length for the "::potato::slash_cmd_" command prefix
-    set len [expr {[string length $cmd]+20}]
-    set partial [list]
-    set w $conn($c,world)
-    foreach x [info procs ::potato::slash_cmd_*] {
-       if { [string equal -nocase ::potato::slash_cmd_$cmd $x] } {
-            set exact $x
-            break;
-          } elseif { [info exists world($w,slashcmd)] && [lsearch -exact -nocase $world($w,slashcmd) $cmd] > -1 } {
-            set exact $cmd
-            set custom $w
-          } elseif { $w != 0 && [info exists world(0,slashcmd)] && \
-                     [lsearch -exact -nocase $world(0,slashcmd) $cmd] > -1 } {
-            set exact $cmd
-            set custom 0
-          } elseif { [string equal -nocase -length $len ::potato::slash_cmd_$cmd $x] } {
-            lappend partial $x
-          }
-    }
-    if { [info exists exact] } {
-         if { [info exists custom] } {
-              # Custom /command
-              set ret [customSlashCommand $c $custom $exact $cmdArgs]
-            } else {
-              # Built-in /command
-              set ret [$exact $c 1 $mode $cmdArgs vars]
-            }
-         break;
-       } elseif { [llength $partial] == 1 } {
-         set ret [[lindex $partial 0] $c 0 $mode $cmdArgs vars]
-         break;
-       } elseif { [llength $partial] == 0 } {
-         # Check for unique abbreviations of custom /commands.
-         if { [info exists world($w,slashcmd)] } {
-              foreach x $world($w,slashcmd) {
-                 if { [string equal -nocase -length [string length $cmd] $cmd $x] } {
-                      lappend partial $x
-                      set custom $w
-                    }
-              }
-            }
-         if { $w != 0 && [info exists world(0,slashcmd)] } {
-              foreach x $world(0,slashcmd) {
-                 if { [string equal -nocase -length [string length $cmd] $cmd $x] } {
-                      lappend partial $x
-                      set custom -1
-                    }
-              }
-            }
-         if { [llength $partial] == 0 } {
-              set ret [list 0 [T "Unknown /command \"%s\". Use /slash for a list. Use //command to send directly to MU*." $cmd]]
-              break;
-            } elseif { [llength $partial] > 1 } {
-              set ret [list 0 [T "Ambiguous /command \"%s\"." $cmd]]
-              break;
-            }
-         set ret [customSlashCommand $c $custom [lindex $partial 0] $mode $cmdArgs vars]
-       } else {
-         set ret [list 0 [T "Ambiguous /command \"%s\"." $cmd]]
-         break;
-       }
-    break;
-  }
+		set parsed [parse_slash_cmd $c str $mode vars]
+		set wascmd [lindex $parsed 0]
+		set cmd [lindex $parsed 1]
+		set cmdArgs [lindex $parsed 2]
+		if { !$wascmd } {
+			# Not a /command, just literal text
+			if { $mode == $modes(recursing) } {
+				return [list 1 $cmd];
+			} else {
+				return $cmd;
+			}
+		}
+		set cmd [string range $cmd 1 end]
+		# Add 20 chars to the length for the "::potato::slash_cmd_" command prefix
+		set len [expr {[string length $cmd]+20}]
+		set partial [list]
+		set w $conn($c,world)
+		foreach x [info procs ::potato::slash_cmd_*] {
+			if { [string equal -nocase ::potato::slash_cmd_$cmd $x] } {
+				set exact $x
+				break;
+			} elseif { [info exists world($w,slashcmd)] && [lsearch -exact -nocase $world($w,slashcmd) $cmd] > -1 } {
+				set exact $cmd
+				set custom $w
+			} elseif { $w != 0 && [info exists world(0,slashcmd)] && \
+				[lsearch -exact -nocase $world(0,slashcmd) $cmd] > -1 } {
+				set exact $cmd
+				set custom 0
+			} elseif { [string equal -nocase -length $len ::potato::slash_cmd_$cmd $x] } {
+				lappend partial $x
+			}
+		}
+		if { [info exists exact] } {
+			if { [info exists custom] } {
+				# Custom /command
+				set ret [customSlashCommand $c $custom $exact $cmdArgs]
+			} else {
+				# Built-in /command
+				set ret [$exact $c 1 $mode $cmdArgs vars]
+			}
+			break;
+		} elseif { [llength $partial] == 1 } {
+			set ret [[lindex $partial 0] $c 0 $mode $cmdArgs vars]
+			break;
+		} elseif { [llength $partial] == 0 } {
+			# Check for unique abbreviations of custom /commands.
+			if { [info exists world($w,slashcmd)] } {
+				foreach x $world($w,slashcmd) {
+					if { [string equal -nocase -length [string length $cmd] $cmd $x] } {
+						lappend partial $x
+						set custom $w
+					}
+				}
+			}
+			if { $w != 0 && [info exists world(0,slashcmd)] } {
+				foreach x $world(0,slashcmd) {
+					if { [string equal -nocase -length [string length $cmd] $cmd $x] } {
+						lappend partial $x
+						set custom -1
+					}
+				}
+			}
+			if { [llength $partial] == 0 } {
+				set ret [list 0 [T "Unknown /command \"%s\". Use /slash for a list. Use //command to send directly to MU*." $cmd]]
+				break;
+			} elseif { [llength $partial] > 1 } {
+				set ret [list 0 [T "Ambiguous /command \"%s\"." $cmd]]
+				break;
+			}
+			set ret [customSlashCommand $c $custom [lindex $partial 0] $mode $cmdArgs vars]
+		} else {
+			set ret [list 0 [T "Ambiguous /command \"%s\"." $cmd]]
+			break;
+		}
+		break;
+	}
 
-  if { ![info exists ret] } {
-       # Shouldn't happen
-       set ret [list 1 ""]
-     }
+	if { ![info exists ret] } {
+		# Shouldn't happen
+		set ret [list 1 ""]
+	}
 
-  if { $mode == $modes(recursing) } {
-       return $ret;
-     } elseif { $ret eq "" || [catch {lindex $ret 0} retFirst] || $retFirst ni [list 0 1] } {
-       # Malformed return value
-       return [list 1 ""];
-     } elseif { $mode == $modes(field) } {
-       return [lindex $ret 1];
-     } elseif { ![lindex $ret 0]} {
-       bell -displayof .
-       if { $c != 0 } {
-            if { [llength $ret] > 1 && [string length [lindex $ret 1]] } {
-                 outputSystem $c [T "Error: %s" [lindex $ret 1]]
-               }
-          }
-     } elseif { $c != 0 && [llength $ret] > 1 && [string length [lindex $ret 1]]} {
-       outputSystem $c [lindex $ret 1]
-     }
+	if { $mode == $modes(recursing) } {
+		return $ret;
+	} elseif { $ret eq "" || [catch {lindex $ret 0} retFirst] || $retFirst ni [list 0 1] } {
+		# Malformed return value
+		return [list 1 ""];
+	} elseif { $mode == $modes(field) } {
+		return [lindex $ret 1];
+	} elseif { ![lindex $ret 0]} {
+		bell -displayof .
+		if { $c != 0 } {
+			if { [llength $ret] > 1 && [string length [lindex $ret 1]] } {
+				outputSystem $c [T "Error: %s" [lindex $ret 1]]
+			}
+		}
+	} elseif { $c != 0 && [llength $ret] > 1 && [string length [lindex $ret 1]]} {
+		outputSystem $c [lindex $ret 1]
+	}
 
-  return;
+	return;
 
 };# ::potato::process_slash_cmd
 
@@ -10834,88 +10884,88 @@ proc ::potato::process_slash_cmd {c _str mode {_vars ""}} {
 #: desc Parse a string as the args of a slash command; do variable expansion, parse nested /commands, etc
 #: return result of parsing the string.
 proc ::potato::parse_slash_cmd {c _str mode _vars} {
-  upvar 1 $_str str;
+	upvar 1 $_str str;
 
-  if { $str eq "" } {
-       return [list 0 "" ""];
-     }
+	if { $str eq "" } {
+		return [list 0 "" ""];
+	}
 
-  # Copied from process_slash_command. Really shouldn't be copied, but defined somewhere it can be reused.
-  array set modes [list default 0 recursing 1 field 2]
+	# Copied from process_slash_command. Really shouldn't be copied, but defined somewhere it can be reused.
+	array set modes [list default 0 recursing 1 field 2]
 
-  set cmd ""
-  set cmdArgs ""
-  set appendTo cmd
-  set esc 0
-  set cmd_found 0
-  upvar 1 $_vars vars;
+	set cmd ""
+	set cmdArgs ""
+	set appendTo cmd
+	set esc 0
+	set cmd_found 0
+	upvar 1 $_vars vars;
 
-  if { $mode == $modes(field) } {
-       if { [string index $str 0] eq "\[" } {
-            set str [string range $str 1 end]
-            set mode $modes(recursing)
-          } else {
-            if { [string index $str 0] eq "\\" } {
-                 set copy [string range $str 1 end]
-               } else {
-                 set copy $str
-               }
-            set str ""
-            return [list 0 $copy ""];
-          }
-     }
+	if { $mode == $modes(field) } {
+		if { [string index $str 0] eq "\[" } {
+			set str [string range $str 1 end]
+			set mode $modes(recursing)
+		} else {
+			if { [string index $str 0] eq "\\" } {
+				set copy [string range $str 1 end]
+			} else {
+				set copy $str
+			}
+			set str ""
+			return [list 0 $copy ""];
+		}
+	}
 
-  if { [string index $str 0] eq "/" } {
-       if { [string index $str 1] eq "/" } {
-            set str [string range $str 1 end]
-            set cmd_present 0
-          } else {
-            set cmd_present 1
-            set cmd "/"
-            set str [string range $str 1 end]
-          }
-     } else {
-       set cmd_present 0
-     }
+	if { [string index $str 0] eq "/" } {
+		if { [string index $str 1] eq "/" } {
+			set str [string range $str 1 end]
+			set cmd_present 0
+		} else {
+			set cmd_present 1
+			set cmd "/"
+			set str [string range $str 1 end]
+		}
+	} else {
+		set cmd_present 0
+	}
 
-  while { [string length $str] } {
-    set x [string index $str 0]
-    set str [string range $str 1 end]
-    if { $cmd_present && !$cmd_found && $x eq " " } {
-         set cmd_found 1
-         set appendTo cmdArgs
-         continue;
-       }
-    if { ($mode == $modes(default)) && !$cmd_present } {
-         if { $x in [list "\n" "\r"] } {
-              # We're done
-              break;
-            } else {
-              append $appendTo $x
-              continue;
-            }
-       } elseif { ($mode == $modes(field)) && $x eq "\]" } {
-         # We're done
-         break;
-       }
-    if { $esc } {
-         set esc 0
-         append $appendTo $x
-         continue;
-       } elseif { $x eq "\\" } {
-         set esc 1
-         continue;
-       } elseif { $x eq "\[" } {
-         append $appendTo [lindex [process_slash_cmd $c str 1 vars] 1]
-       } elseif { $x eq ($mode == $modes(recursing) ? "\]" : "\n") } {
-         # We're done.
-         break;
-       } else {
-         # Normal char
-         append $appendTo $x
-       }
-  }
-  return [list $cmd_present $cmd $cmdArgs];
+	while { [string length $str] } {
+		set x [string index $str 0]
+		set str [string range $str 1 end]
+		if { $cmd_present && !$cmd_found && $x eq " " } {
+			set cmd_found 1
+			set appendTo cmdArgs
+			continue;
+		}
+		if { ($mode == $modes(default)) && !$cmd_present } {
+			if { $x in [list "\n" "\r"] } {
+				# We're done
+				break;
+			} else {
+				append $appendTo $x
+				continue;
+			}
+		} elseif { ($mode == $modes(field)) && $x eq "\]" } {
+			# We're done
+			break;
+		}
+		if { $esc } {
+			set esc 0
+			append $appendTo $x
+			continue;
+		} elseif { $x eq "\\" } {
+			set esc 1
+			continue;
+		} elseif { $x eq "\[" } {
+			append $appendTo [lindex [process_slash_cmd $c str 1 vars] 1]
+		} elseif { $x eq ($mode == $modes(recursing) ? "\]" : "\n") } {
+			# We're done.
+			break;
+		} else {
+			# Normal char
+			append $appendTo $x
+		}
+	}
+	return [list $cmd_present $cmd $cmdArgs];
 
 };# ::potato::parse_slash_cmd
 
@@ -10926,14 +10976,14 @@ proc ::potato::parse_slash_cmd {c _str mode _vars} {
 #: return nothing.
 proc ::potato::define_slash_cmd {cmd code} {
 
-  # c = connection id
-  # full = was the command name typed in full?
-  # recursing = is this a nested /command?
-  # str = the arg given to the /command
-  # _vars = name of var to uplevel for array of options
-  proc ::potato::slash_cmd_$cmd {c full recursing str _vars} "$code\n;return \[list 1\]";
+	# c = connection id
+	# full = was the command name typed in full?
+	# recursing = is this a nested /command?
+	# str = the arg given to the /command
+	# _vars = name of var to uplevel for array of options
+	proc ::potato::slash_cmd_$cmd {c full recursing str _vars} "$code\n;return \[list 1\]";
 
-  return;
+	return;
 
 };# ::potato::define_slash_cmd
 
@@ -10944,23 +10994,23 @@ proc ::potato::define_slash_cmd {cmd code} {
 #: return 1 on success, 0 on failure
 proc ::potato::alias_slash_cmd {orig new} {
 
-  set slashcmds [info commands ::potato::slash_cmd_*]
-  if { "::potato::slash_cmd_$orig" ni $slashcmds || "::potato::slash_cmd_$new" in $slashcmds } {
-       return 0; # orig doesn't exist, or new already does
-     }
+	set slashcmds [info commands ::potato::slash_cmd_*]
+	if { "::potato::slash_cmd_$orig" ni $slashcmds || "::potato::slash_cmd_$new" in $slashcmds } {
+		return 0; # orig doesn't exist, or new already does
+	}
 
-  set cmdstring [list proc ::potato::slash_cmd_$new]
-  set args [list]
-  foreach x [info args ::potato::slash_cmd_$orig] {
-    if { [info default ::potato::slash_cmd_$orig $x default] } {
-         lappend args [list $x $default]
-       } else {
-         lappend args [list $x]
-       }
-  }
-  proc ::potato::slash_cmd_$new $args [info body ::potato::slash_cmd_$orig]
+	set cmdstring [list proc ::potato::slash_cmd_$new]
+	set args [list]
+	foreach x [info args ::potato::slash_cmd_$orig] {
+		if { [info default ::potato::slash_cmd_$orig $x default] } {
+			lappend args [list $x $default]
+		} else {
+			lappend args [list $x]
+		}
+	}
+	proc ::potato::slash_cmd_$new $args [info body ::potato::slash_cmd_$orig]
 
-  return 1;
+	return 1;
 
 };# ::potato::alias_slash_cmd
 
@@ -10973,33 +11023,33 @@ proc ::potato::alias_slash_cmd {orig new} {
 #: desc $w rather than checking $c's world b/c the command might be defined in 0
 #: return nothing
 proc ::potato::customSlashCommand {c w cmd str} {
-  variable conn;
-  variable world;
+	variable conn;
+	variable world;
 
-  if { $world($w,slashcmd,$cmd,type) in [list "regexp" "Regexp"] } {
-       set pattern $world($w,slashcmd,$cmd)
-     } else {
-       set pattern [glob2Regexp $world($w,slashcmd,$cmd)]
-     }
+	if { $world($w,slashcmd,$cmd,type) in [list "regexp" "Regexp"] } {
+		set pattern $world($w,slashcmd,$cmd)
+	} else {
+		set pattern [glob2Regexp $world($w,slashcmd,$cmd)]
+	}
 
-  set regexpArgs [list]
-  if { !$world($w,slashcmd,$cmd,case) } {
-       lappend regexpArgs -nocase
-     }
-  lappend regexpArgs -- $pattern $str -> a(0) a(1) a(2) a(3) a(4) a(5) a(6) a(7) a(8) a(9)
-  if { [catch {regexp {*}$regexpArgs} retval] || !$retval } {
-       # Cmd input is invalid, doesn't match pattern
-       bell -displayof .
-       return [list 0];
-     }
+	set regexpArgs [list]
+	if { !$world($w,slashcmd,$cmd,case) } {
+		lappend regexpArgs -nocase
+	}
+	lappend regexpArgs -- $pattern $str -> a(0) a(1) a(2) a(3) a(4) a(5) a(6) a(7) a(8) a(9)
+	if { [catch {regexp {*}$regexpArgs} retval] || !$retval } {
+		# Cmd input is invalid, doesn't match pattern
+		bell -displayof .
+		return [list 0];
+	}
 
-  set send $world($w,slashcmd,$cmd,send)
-  set send [string map [list %% % %0 $a(0) %1 $a(1) %2 $a(2) %3 $a(3) %4 $a(4) \
-                             %5 $a(5) %6 $a(6) %7 $a(7) %8 $a(8) %9 $a(9)] $send]
+	set send $world($w,slashcmd,$cmd,send)
+	set send [string map [list %% % %0 $a(0) %1 $a(1) %2 $a(2) %3 $a(3) %4 $a(4) \
+						%5 $a(5) %6 $a(6) %7 $a(7) %8 $a(8) %9 $a(9)] $send]
 
-  send_to_real $c $send
+	send_to_real $c $send
 
-  return [list 1];
+	return [list 1];
 
 };# ::potato::customSlashCommand
 
@@ -11010,38 +11060,38 @@ proc ::potato::customSlashCommand {c w cmd str} {
 #: desc potato.exe -world $str option
 #: return 1 if we're connecting, 0 if no matches, -1 if ambiguous
 proc ::potato::parseConnectRequest {str} {
-  variable world;
-  variable misc;
+	variable world;
+	variable misc;
 
-  set str [string trim $str]
-  set len [string length $str]
+	set str [string trim $str]
+	set len [string length $str]
 
-  if { $len == 0 } {
-       return 0;
-     }
+	if { $len == 0 } {
+		return 0;
+	}
 
-  set partial [list]
-  foreach w [worldIDs] {
-     if { [string equal -nocase $world($w,name) $str] } {
-          set exact $w
-          break;
-        } elseif { [string equal -nocase -length $len $world($w,name) $str] } {
-          lappend partial [list $w $world($w,name)]
-        }
-  }
+	set partial [list]
+	foreach w [worldIDs] {
+		if { [string equal -nocase $world($w,name) $str] } {
+			set exact $w
+			break;
+		} elseif { [string equal -nocase -length $len $world($w,name) $str] } {
+			lappend partial [list $w $world($w,name)]
+		}
+	}
 
-  set partial [lsort -dictionary -index 1 $partial]
-  if { [info exists exact] } {
-       newConnectionDefault $exact
-       return 1;
-     } elseif { [llength $partial] == 0 } {
-       return 0;
-     } elseif { [llength $partial] == 1 || $misc(partialWorldMatch) } {
-       newConnectionDefault [lindex $partial 0 0]
-       return 1;
-     } else {
-       return -1;
-     }
+	set partial [lsort -dictionary -index 1 $partial]
+	if { [info exists exact] } {
+		newConnectionDefault $exact
+		return 1;
+	} elseif { [llength $partial] == 0 } {
+		return 0;
+	} elseif { [llength $partial] == 1 || $misc(partialWorldMatch) } {
+		newConnectionDefault [lindex $partial 0 0]
+		return 1;
+	} else {
+		return -1;
+	}
 };# ::potato::parseConnectRequest
 
 #: proc ::potato::clearOutputWindow
@@ -11050,35 +11100,35 @@ proc ::potato::parseConnectRequest {str} {
 #: desc For conn $c, empty the text widget $t. If it's the main output window, re-print the current connection status and leave the prompt.
 #: return nothing
 proc ::potato::clearOutputWindow {c t} {
-  variable conn;
+	variable conn;
 
-  if { $c eq "" } {
-       set c [up]
-     }
+	if { $c eq "" } {
+		set c [up]
+	}
 
-  if { $c == 0 || ![winfo exists $t] || [winfo class $t] ne "Text" } {
-       return;
-     }
+	if { $c == 0 || ![winfo exists $t] || [winfo class $t] ne "Text" } {
+		return;
+	}
 
-  if { [llength [$conn($c,textWidget) tag ranges prompt]] } {
-       $t delete 1.0 prompt.first
-     } else {
-       $t delete 1.0 end
-     }
-  if { $t eq $conn($c,textWidget) } {
-       if { $conn($c,connected) == 1 } {
-            set status [T "Connected."]
-          } elseif { $conn($c,connected) == -1 } {
-            set status [T "Reconnecting..."]
-          } elseif { [connInfo $c autoreconnect] && [connInfo $c autoreconnect,time] > 0 } {
-            set status [T "Disconnected. Auto-reconnect in %s." [timeFmt [connInfo $c autoreconnect,time] 0]]
-          } else {
-            set status [T "Disconnected."]
-          }
-       outputSystem $c $status
-     }
+	if { [llength [$conn($c,textWidget) tag ranges prompt]] } {
+		$t delete 1.0 prompt.first
+	} else {
+		$t delete 1.0 end
+	}
+	if { $t eq $conn($c,textWidget) } {
+		if { $conn($c,connected) == 1 } {
+			set status [T "Connected."]
+		} elseif { $conn($c,connected) == -1 } {
+			set status [T "Reconnecting..."]
+		} elseif { [connInfo $c autoreconnect] && [connInfo $c autoreconnect,time] > 0 } {
+			set status [T "Disconnected. Auto-reconnect in %s." [timeFmt [connInfo $c autoreconnect,time] 0]]
+		} else {
+			set status [T "Disconnected."]
+		}
+		outputSystem $c $status
+	}
 
-  return;
+	return;
 };# ::potato::clearOutputWindow
 
 #: proc ::potato::cleanup_afters
@@ -11086,22 +11136,22 @@ proc ::potato::clearOutputWindow {c t} {
 #: desc Cleanup the after IDs for conn $c's userAfterIDs var
 #: return nothing
 proc ::potato::cleanup_afters {c} {
-  variable conn;
+	variable conn;
 
-  if { ![info exists conn($c,userAfterIDs)] } {
-       return;
-     }
+	if { ![info exists conn($c,userAfterIDs)] } {
+		return;
+	}
 
-  set new [list]
-  set all [after info]
-  foreach x $conn($c,userAfterIDs) {
-    if { $x in $all } {
-         lappend new $x
-       }
-  }
-  set conn($c,userAfterIDs) $new
+	set new [list]
+	set all [after info]
+	foreach x $conn($c,userAfterIDs) {
+	if { $x in $all } {
+			lappend new $x
+		}
+	}
+	set conn($c,userAfterIDs) $new
 
-  return;
+	return;
 
 };# ::potato::cleanup_afters
 
@@ -11110,54 +11160,54 @@ proc ::potato::cleanup_afters {c} {
 #: desc Return a TinyURL'd/shortened version of $url, using the website specified in settings (like tinyurl.com)
 #: return shortened url, or -error and error message on failure
 proc ::potato::TinyURL {url} {
-  variable misc;
-  variable tinyurl;
+	variable misc;
+	variable tinyurl;
 
-  set type $misc(tinyurlProvider)
+	set type $misc(tinyurlProvider)
 
-  if { ![info exists tinyurl($type,field)] } {
-       set type "TinyURL"
-     }
+	if { ![info exists tinyurl($type,field)] } {
+		set type "TinyURL"
+	}
 
-  if { [catch {package present http}] } {
-       return -code error [T "Unable to create TinyURL: %s" [T "http package not available"]]
-     }
+	if { [catch {package present http}] } {
+		return -code error [T "Unable to create TinyURL: %s" [T "http package not available"]]
+	}
 
-  set field $tinyurl($type,field)
-  set address $tinyurl($type,address)
-  set regexp $tinyurl($type,regexp)
+	set field $tinyurl($type,field)
+	set address $tinyurl($type,address)
+	set regexp $tinyurl($type,regexp)
 
-  if { $tinyurl($type,method) eq "post" } {
-       set token [::http::geturl $address -query [::http::formatQuery $field $url]]
-     } else {
-       append address "?[::http::formatQuery $field $url]"
-       set token [http::geturl $address]
-     }
+	if { $tinyurl($type,method) eq "post" } {
+		set token [::http::geturl $address -query [::http::formatQuery $field $url]]
+	} else {
+		append address "?[::http::formatQuery $field $url]"
+		set token [http::geturl $address]
+	}
 
-  if { [::http::ncode $token] != 200 } {
-       set errmsg [T "Unable to create TinyURL: %s" [::http::error $token]]
-       catch {::http::cleanup $token}
-       return -code error $errmsg;
-     }
-  if { ![regexp $regexp [::http::data $token] -> turl] } {
-       catch {::http::cleanup $token}
-       return -code error [T "Unable to create TinyURL: %s" [T "Unable to parse results."]];
-    }
-  if { [info exists tinyurl($type,mime)] } {
-       upvar #0 $token state;
-       if { $state(type) ne $tinyurl($type,mime) } {
-            catch {::http::cleanup $token}
-            return -code error [T "Unable to create TinyURL: %s" [T "Unable to parse results."]];
-          }
-     }
+	if { [::http::ncode $token] != 200 } {
+		set errmsg [T "Unable to create TinyURL: %s" [::http::error $token]]
+		catch {::http::cleanup $token}
+		return -code error $errmsg;
+	}
+	if { ![regexp $regexp [::http::data $token] -> turl] } {
+		catch {::http::cleanup $token}
+		return -code error [T "Unable to create TinyURL: %s" [T "Unable to parse results."]];
+	}
+	if { [info exists tinyurl($type,mime)] } {
+		upvar #0 $token state;
+		if { $state(type) ne $tinyurl($type,mime) } {
+			catch {::http::cleanup $token}
+			return -code error [T "Unable to create TinyURL: %s" [T "Unable to parse results."]];
+		}
+	}
 
-  ::http::cleanup $token
+	::http::cleanup $token
 
-  if { [string length $url] <= [string length $turl] } {
-       return $url;
-     } else {
-       return $turl;
-     }
+	if { [string length $url] <= [string length $turl] } {
+		return $url;
+	} else {
+		return $turl;
+	}
 
 };# ::potato::TinyURL
 
@@ -11168,15 +11218,15 @@ proc ::potato::TinyURL {url} {
 #: return Joined string
 proc ::potato::itemize {list {join "and"}} {
 
-  set num [llength $list]
-  if { $num == 1 } {
-       return [lindex $list 0]
-     } elseif { $num == 2 } {
-       return [join $list " $join "]
-     } else {
-       set list [lreplace $list end end "$join [lindex $list end]"]
-       return [join $list ", "]
-     }
+	set num [llength $list]
+	if { $num == 1 } {
+		return [lindex $list 0]
+	} elseif { $num == 2 } {
+		return [join $list " $join "]
+	} else {
+		set list [lreplace $list end end "$join [lindex $list end]"]
+		return [join $list ", "]
+	}
 
 };# ::potato::itemize
 
@@ -11186,48 +11236,48 @@ proc ::potato::itemize {list {join "and"}} {
 #: desc format a number of seconds into days, hours, minutes and seconds
 #: return formatted result
 proc ::potato::timeFmt {seconds full} {
-  set timeList [list]
-  if { $full } {
-       # Each [T] must be on its own line, or the template-generator won't pick them all up
-       set singles [list \
-                     [T "day"] \
-                     [T "hour"] \
-                     [T "minute"] \
-                     [T "second"]\
-                   ]
-       set plurals [list \
-                     [T "days"] \
-                     [T "hours"] \
-                     [T "minutes"] \
-                     [T "seconds"] \
-                   ]
-     } else {
-       set singles [list \
-                      [T "d"] \
-                      [T "h"] \
-                      [T "m"] \
-                      [T "s"] \
-                    ]
-       set plurals $singles
-     }
-  foreach div {86400 3600 60 1} mod {0 24 60 60} single $singles plural $plurals {
-     set n [expr {$seconds / $div}]
-     if {$mod > 0} {
-         set n [expr {$n % $mod}]
-        }
-     if { $n > 0 } {
-          if { $full } {
-               append n " "
-             }
-          if { $n > 1 } {
-               append n $plural
-             } else {
-               append n $single
-             }
-          lappend timeList "$n"
-        }
-  }
-  return [join $timeList " "];
+	set timeList [list]
+	if { $full } {
+		# Each [T] must be on its own line, or the template-generator won't pick them all up
+		set singles [list \
+			[T "day"] \
+			[T "hour"] \
+			[T "minute"] \
+			[T "second"]\
+		]
+		set plurals [list \
+			[T "days"] \
+			[T "hours"] \
+			[T "minutes"] \
+			[T "seconds"] \
+		]
+	} else {
+		set singles [list \
+			[T "d"] \
+			[T "h"] \
+			[T "m"] \
+			[T "s"] \
+		]
+		set plurals $singles
+	}
+	foreach div {86400 3600 60 1} mod {0 24 60 60} single $singles plural $plurals {
+		set n [expr {$seconds / $div}]
+		if {$mod > 0} {
+			set n [expr {$n % $mod}]
+		}
+		if { $n > 0 } {
+			if { $full } {
+				append n " "
+			}
+			if { $n > 1 } {
+				append n $plural
+			} else {
+				append n $single
+			}
+			lappend timeList "$n"
+		}
+	}
+	return [join $timeList " "];
 
 };# ::potato::timeFmt
 
@@ -11235,9 +11285,9 @@ proc ::potato::timeFmt {seconds full} {
 #: desc Return the id of the connection currently being shown
 #: return connection id
 proc ::potato::up {} {
-  variable potato;
+	variable potato;
 
-  return $potato(up);
+	return $potato(up);
 
 };# ::potato::up
 
@@ -11245,48 +11295,48 @@ proc ::potato::up {} {
 #: desc Show an 'about' window, showing a small amount of info about the program
 #: return nothing
 proc ::potato::about {} {
-  variable potato;
-  global tcl_platform;
+	variable potato;
+	global tcl_platform;
 
-  set win .aboutPotato
-  catch {destroy $win}
-  toplevel $win
-  wm withdraw $win
-  wm title $win [T "About %s" $potato(name)]
+	set win .aboutPotato
+	catch {destroy $win}
+	toplevel $win
+	wm withdraw $win
+	wm title $win [T "About %s" $potato(name)]
 
-  pack [set frame [::ttk::frame $win.frame]] -side left -expand 1 -fill both -anchor nw
+	pack [set frame [::ttk::frame $win.frame]] -side left -expand 1 -fill both -anchor nw
 
-  pack [::ttk::frame $frame.top] -side top -padx 15 -pady 15
-  pack [::ttk::frame $frame.btm] -side top -padx 15 -pady 12
+	pack [::ttk::frame $frame.top] -side top -padx 15 -pady 15
+	pack [::ttk::frame $frame.btm] -side top -padx 15 -pady 12
 
-  set str [T "%s Version %s.\nA MU* Client written in Tcl/Tk by\nMike Griffiths (%s)" $potato(name) $potato(version) $potato(contact)]
+	set str [T "%s Version %s.\nA MU* Client written in Tcl/Tk by\nMike Griffiths (%s)" $potato(name) $potato(version) $potato(contact)]
 
-  pack [::ttk::label $frame.top.img -image ::potato::img::logoSmall] -side left -padx 15
+	pack [::ttk::label $frame.top.img -image ::potato::img::logoSmall] -side left -padx 15
 
-  pack [::ttk::frame $frame.top.right] -side right -padx 5
+	pack [::ttk::frame $frame.top.right] -side right -padx 5
 
-  set font [list {*}[font actual "TkDefaultFont"] -size 12]
-  set lfont [list {*}$font -underline 1]
-  pack [::ttk::label $frame.top.right.txt -text $str -justify center -font $font] -side top
-  pack [::ttk::label $frame.top.right.web -text $potato(webpage) -justify center -font $lfont -foreground blue] -side top -pady 10
+	set font [list {*}[font actual "TkDefaultFont"] -size 12]
+	set lfont [list {*}$font -underline 1]
+	pack [::ttk::label $frame.top.right.txt -text $str -justify center -font $font] -side top
+	pack [::ttk::label $frame.top.right.web -text $potato(webpage) -justify center -font $lfont -foreground blue] -side top -pady 10
 
-  bind $frame.top.right.web <Enter> [list %W configure -foreground red -cursor hand2]
-  bind $frame.top.right.web <Leave> [list %W configure -foreground blue -cursor {}]
-  bind $frame.top.right.web <ButtonRelease-1> [list ::potato::launchWebPage $potato(webpage)]
+	bind $frame.top.right.web <Enter> [list %W configure -foreground red -cursor hand2]
+	bind $frame.top.right.web <Leave> [list %W configure -foreground blue -cursor {}]
+	bind $frame.top.right.web <ButtonRelease-1> [list ::potato::launchWebPage $potato(webpage)]
 
-  pack [::ttk::button $frame.btm.close -text [T "Close"] -width 8 \
-             -command [list destroy $win] -default active -takefocus 1] -side left -padx 5
-  pack [::ttk::button $frame.btm.packages -text [T "Show Package Info"] \
-             -command [list ::potato::showPackageInfo] -takefocus 1] -side left -padx 5
+	pack [::ttk::button $frame.btm.close -text [T "Close"] -width 8 \
+		-command [list destroy $win] -default active -takefocus 1] -side left -padx 5
+	pack [::ttk::button $frame.btm.packages -text [T "Show Package Info"] \
+		-command [list ::potato::showPackageInfo] -takefocus 1] -side left -padx 5
 
-  center $win
-  wm resizable $win 0 0
-  wm deiconify $win
-  wm transient $win .
-  focus $frame.btm.close
-  bind $win <Escape> [list $frame.btm.close invoke]
+	center $win
+	wm resizable $win 0 0
+	wm deiconify $win
+	wm transient $win .
+	focus $frame.btm.close
+	bind $win <Escape> [list $frame.btm.close invoke]
 
-  return;
+	return;
 
 };# ::potato::about
 
@@ -11294,75 +11344,75 @@ proc ::potato::about {} {
 #: desc Show info on the packages loaded and their versions
 #: return nothing
 proc ::potato::showPackageInfo {} {
-  variable potato;
-  global tcl_platform;
+	variable potato;
+	global tcl_platform;
 
-  set win .pkgInfo
+	set win .pkgInfo
 
-  if { [winfo exists $win] } {
-       reshowWindow $win
-       return;
-     }
+	if { [winfo exists $win] } {
+		reshowWindow $win
+		return;
+	}
 
-  toplevel $win
-  wm withdraw $win
-  wm title $win [T "Package Info"]
+	toplevel $win
+	wm withdraw $win
+	wm title $win [T "Package Info"]
 
-  pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both
+	pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both
 
-  pack [set top [::ttk::frame $frame.top]] -expand 1 -fill both
+	pack [set top [::ttk::frame $frame.top]] -expand 1 -fill both
 
-  set t [text $top.t -wrap word -height 15 -width 45]
-  $t tag config bolded -font [dict replace [font actual [$t cget -font]] -weight bold]
-  $t tag config title -font [dict replace [font actual [$t cget -font]] -weight bold -slant italic]
-  $t tag config unavailable -foreground red
-  $t insert end "Potato:" bolded " $potato(version)\n"
-  $t insert end "Tcl:" bolded " [info patchlevel]\n"
-  $t insert end "Tk:" bolded " $::tk_patchLevel\n"
+	set t [text $top.t -wrap word -height 15 -width 45]
+	$t tag config bolded -font [dict replace [font actual [$t cget -font]] -weight bold]
+	$t tag config title -font [dict replace [font actual [$t cget -font]] -weight bold -slant italic]
+	$t tag config unavailable -foreground red
+	$t insert end "Potato:" bolded " $potato(version)\n"
+	$t insert end "Tcl:" bolded " [info patchlevel]\n"
+	$t insert end "Tk:" bolded " $::tk_patchLevel\n"
 
-  $t insert end "\n"
-  $t insert end "System Info:\n" title
-  $t insert end "Platform:" bolded " $tcl_platform(platform)\n"
-  $t insert end "OS:" bolded " $tcl_platform(os) ($tcl_platform(osVersion))\n"
-  $t insert end "Machine:" bolded " $tcl_platform(machine) ([checkbits]-bit)\n"
-  $t insert end "Windowing System:" bolded " [tk windowingsystem]\n"
+	$t insert end "\n"
+	$t insert end "System Info:\n" title
+	$t insert end "Platform:" bolded " $tcl_platform(platform)\n"
+	$t insert end "OS:" bolded " $tcl_platform(os) ($tcl_platform(osVersion))\n"
+	$t insert end "Machine:" bolded " $tcl_platform(machine) ([checkbits]-bit)\n"
+	$t insert end "Windowing System:" bolded " [tk windowingsystem]\n"
 
-  $t insert end "\n"
-  $t insert end "Additional Packages:\n" title
+	$t insert end "\n"
+	$t insert end "Additional Packages:\n" title
 
-  set windows [list Winico potato-winflash]
-  set linux [list potato-linflash linflash]
-  set mac [list tkdock]
-  set generic [list tls potato-flash]
-  foreach {var os} [list generic "All Platforms" windows Windows linux Linux mac "MacOS X"] {
-    $t insert end "$os:\n" title
-    foreach x [set $var] {
-      $t insert end "$x:" bolded " "
-      if { [catch {package present $x} vers] } {
-        $t insert end "Not Present" unavailable \n
-      } else {
-        $t insert end "$vers\n"
-      }
-    }
-    $t insert end "\n"
-  }
+	set windows [list Winico potato-winflash]
+	set linux [list potato-linflash linflash]
+	set mac [list tkdock]
+	set generic [list tls potato-flash]
+	foreach {var os} [list generic "All Platforms" windows Windows linux Linux mac "MacOS X"] {
+		$t insert end "$os:\n" title
+		foreach x [set $var] {
+			$t insert end "$x:" bolded " "
+			if { [catch {package present $x} vers] } {
+				$t insert end "Not Present" unavailable \n
+			} else {
+				$t insert end "$vers\n"
+			}
+		}
+		$t insert end "\n"
+	}
 
-  $t configure -state disabled
+	$t configure -state disabled
 
-  set x [ttk::scrollbar $top.x -orient horizontal -command [list $t xview]]
-  set y [ttk::scrollbar $top.y -orient vertical -command [list $t yview]]
-  $t configure -xscrollcommand [list $x set] -yscrollcommand [list $y set]
-  grid_with_scrollbars $t $x $y
+	set x [ttk::scrollbar $top.x -orient horizontal -command [list $t xview]]
+	set y [ttk::scrollbar $top.y -orient vertical -command [list $t yview]]
+	$t configure -xscrollcommand [list $x set] -yscrollcommand [list $y set]
+	grid_with_scrollbars $t $x $y
 
-  pack [set btm [::ttk::frame $frame.btm]] -expand 0 -fill y -padx 10 -pady 10
-  pack [::ttk::button $btm.close -text [T "Close"] -command [list destroy $win] -default active -takefocus 1] -side left -padx 8
-  pack [::ttk::button $btm.copy -text [T "Copy to Clipboard"] -command [list ::potato::copyAllTextToClipboard $t] -takefocus 1] -side left -padx 8
+	pack [set btm [::ttk::frame $frame.btm]] -expand 0 -fill y -padx 10 -pady 10
+	pack [::ttk::button $btm.close -text [T "Close"] -command [list destroy $win] -default active -takefocus 1] -side left -padx 8
+	pack [::ttk::button $btm.copy -text [T "Copy to Clipboard"] -command [list ::potato::copyAllTextToClipboard $t] -takefocus 1] -side left -padx 8
 
-  center $win
-  wm deiconify $win
-  focus $btm.close
+	center $win
+	wm deiconify $win
+	focus $btm.close
 
-  return;
+	return;
 
 };# ::potato::showPackageInfo
 
@@ -11372,9 +11422,9 @@ proc ::potato::showPackageInfo {} {
 #: return nothing
 proc ::potato::copyAllTextToClipboard {t} {
 
-  clipboard clear -displayof $t
-  clipboard append -displayof $t [$t get 1.0 end-1char]
-  return;
+	clipboard clear -displayof $t
+	clipboard append -displayof $t [$t get 1.0 end-1char]
+	return;
 
 };# ::potato::copyAllTextToClipboard
 
@@ -11383,8 +11433,8 @@ proc ::potato::copyAllTextToClipboard {t} {
 #: return nothing
 proc ::potato::ddeStart {} {
 
-  dde servername -handler [list ::potato::handleOutsideRequest dde] -- potatoMUClient
-  return;
+	dde servername -handler [list ::potato::handleOutsideRequest dde] -- potatoMUClient
+	return;
 
 };# ::potato::ddeStart
 
@@ -11395,11 +11445,11 @@ proc ::potato::ddeStart {} {
 #: return [list $host $port] on success, or empty [list] on failure
 proc ::potato::parseTelnetAddress {addr} {
 
-  if { [regexp -nocase -- {^ *(?:telnet://)?(.+)[: ]+([0-9]+)/? *$} $addr -> host port] } {
-       return [list $host $port];
-     } else {
-       return [list];
-     }
+	if { [regexp -nocase -- {^ *(?:telnet://)?(.+)[: ]+([0-9]+)/? *$} $addr -> host port] } {
+		return [list $host $port];
+	} else {
+		return [list];
+	}
 
 };# ::potato::parseTelnetAddress
 
@@ -11411,68 +11461,68 @@ proc ::potato::parseTelnetAddress {addr} {
 #: desc Attempt to do so, respecting the potato::misc(outsideRequestMethod) var
 #: return nothing
 proc ::potato::handleOutsideRequest {src addr {isWorld 0}} {
-  variable world;
-  variable misc;
-  variable potato;
+	variable world;
+	variable misc;
+	variable potato;
 
-  # If $isWorld is 1, $addr is a world name. Else, it's either telnet://host:port, host:port or "host port".
-  if { $isWorld } {
-       # This is basically identical to using "/connect <world>", so we'll just trigger that.
-       parseConnectRequest $addr
-       return;
-     }
+	# If $isWorld is 1, $addr is a world name. Else, it's either telnet://host:port, host:port or "host port".
+	if { $isWorld } {
+		# This is basically identical to using "/connect <world>", so we'll just trigger that.
+		parseConnectRequest $addr
+		return;
+	}
 
-  if { [string length $addr] < 3 } {
-       # Too short to be useful. Probably a "-" from DDE when a telnet://
-       # link is clicked and Potato wasn't open. Ignore silently.
-       return;
-     }
+	if { [string length $addr] < 3 } {
+		# Too short to be useful. Probably a "-" from DDE when a telnet://
+		# link is clicked and Potato wasn't open. Ignore silently.
+		return;
+	}
 
-  # OK, let's do it the hard way...
+	# OK, let's do it the hard way...
 
-  # Let's see if what we have is a valid host and port
-  set hostAndPort [parseTelnetAddress $addr]
-  if { [llength $hostAndPort] == 0 } {
-       errorLog "Invalid address '$addr' from '$src'"
-       bell -displayof .
-       return;
-     }
+	# Let's see if what we have is a valid host and port
+	set hostAndPort [parseTelnetAddress $addr]
+	if { [llength $hostAndPort] == 0 } {
+		errorLog "Invalid address '$addr' from '$src'"
+		bell -displayof .
+		return;
+	}
 
-  foreach {host port} $hostAndPort {break}
+	foreach {host port} $hostAndPort {break}
 
-  set conn2World 0
-  if { $misc(outsideRequestMethod) == 0 } {
-       # We do a quick-connect, even if a world exists with this host/port, so don't bother checking
-     } else {
-       # Check and see if we have a world that matches
-       foreach w [worldIDs] {
-          if { ![string equal -nocase $host $world($w,host)] } {
-               continue;
-             }
-          if { $port != $world($w,port) } {
-               continue;
-             }
-          set conn2World $w
-          break;
-       }
-     }
+	set conn2World 0
+	if { $misc(outsideRequestMethod) == 0 } {
+		# We do a quick-connect, even if a world exists with this host/port, so don't bother checking
+	} else {
+		# Check and see if we have a world that matches
+		foreach w [worldIDs] {
+			if { ![string equal -nocase $host $world($w,host)] } {
+				continue;
+				}
+			if { $port != $world($w,port) } {
+				continue;
+				}
+			set conn2World $w
+			break;
+		}
+	}
 
-  if { $conn2World > 0 && $misc(outsideRequestMethod) == 2 } {
-       set ans [tk_messageBox -title $potato(name) -type yesno -message \
-           [T "Would you like to use the settings for \[%s. %s\], rather than quick-connecting?" $conn2World $world($conn2World,name)]]
-       if { $ans ne "yes" } {
-            set conn2World 0
-          }
-     }
+	if { $conn2World > 0 && $misc(outsideRequestMethod) == 2 } {
+		set ans [tk_messageBox -title $potato(name) -type yesno -message \
+			[T "Would you like to use the settings for \[%s. %s\], rather than quick-connecting?" $conn2World $world($conn2World,name)]]
+		if { $ans ne "yes" } {
+			set conn2World 0
+		}
+	}
 
-  if { $conn2World == 0 } {
-       # Do a quick-connect
-       newConnection [addNewWorld $host:$port $host $port 1]
-     } else {
-       newConnectionDefault $conn2World
-     }
+	if { $conn2World == 0 } {
+		# Do a quick-connect
+		newConnection [addNewWorld $host:$port $host $port 1]
+	} else {
+		newConnectionDefault $conn2World
+	}
 
-  return;
+	return;
 
 };# ::potato::handleOutsideRequest
 
@@ -11483,23 +11533,23 @@ proc ::potato::handleOutsideRequest {src addr {isWorld 0}} {
 #: return nothing
 proc ::potato::parseCommandLine {argList argCount} {
 
-  foreach {opt value} $argList {
-    if { $opt eq "" || $value eq "" } {
-         continue;
-       }
-    if { [set length [string length $opt]] < 2 } {
-         bell -displayof .
-         continue;
-       }
-    if { [string equal -nocase -length $length $opt "-world"] } {
-         handleOutsideRequest clP $value 1
-       } elseif { [string equal -nocase -length $length $opt "-address"] } {
-         handleOutsideRequest clP $value 0
-       } else {
-         bell -displayof . ;# unknown option
-         continue
-       }
-  }
+	foreach {opt value} $argList {
+		if { $opt eq "" || $value eq "" } {
+			continue;
+		}
+		if { [set length [string length $opt]] < 2 } {
+			bell -displayof .
+			continue;
+		}
+		if { [string equal -nocase -length $length $opt "-world"] } {
+			handleOutsideRequest clP $value 1
+		} elseif { [string equal -nocase -length $length $opt "-address"] } {
+			handleOutsideRequest clP $value 0
+		} else {
+			bell -displayof . ;# unknown option
+			continue
+		}
+	}
 
 };# ::potato::parseCommandLine
 
@@ -11509,13 +11559,13 @@ proc ::potato::parseCommandLine {argList argCount} {
 #: desc Connection the window/widget $win to connection $c, so that it's destroyed when the connection to $c is closed
 #: return nothing
 proc ::potato::registerWindow {c win} {
-  variable conn;
+	variable conn;
 
-  if { $win ni $conn($c,widgets) } {
-       lappend conn($c,widgets) $win
-     }
+	if { $win ni $conn($c,widgets) } {
+		lappend conn($c,widgets) $win
+	}
 
-  return;
+	return;
 
 };# ::potato::registerWindow
 
@@ -11525,15 +11575,15 @@ proc ::potato::registerWindow {c win} {
 #: desc Remove the connection between the window/widget $win and connection $c, so that $win will not be auto-destroyed when connection $c is closed
 #: return nothing
 proc ::potato::unregisterWindow {c win} {
-  variable conn;
+	variable conn;
 
-  if { $win ni $conn($c,widgets) } {
-       return;
-     }
+	if { $win ni $conn($c,widgets) } {
+		return;
+	}
 
-  set pos [lsearch -exact $conn($c,widgets) $win]
-  set conn($c,widgets) [lreplace $conn($c,widgets) $pos $pos]
-  return;
+	set pos [lsearch -exact $conn($c,widgets) $win]
+	set conn($c,widgets) [lreplace $conn($c,widgets) $pos $pos]
+	return;
 
 };# ::potato::unregisterWindow
 
@@ -11544,118 +11594,118 @@ proc ::potato::unregisterWindow {c win} {
 #: desc Launch a text editor window for connection $c (or current connection if $c is "")
 #: return 1 on success, 0 or failure
 proc ::potato::textEditor {{c ""} {edname ""} {initialtext ""}} {
-  variable potato;
-  variable conn;
-  variable world;
+	variable potato;
+	variable conn;
+	variable world;
 
-  if { $c == "" } {
-       set c [up]
-     }
+	if { $c == "" } {
+		set c [up]
+	}
 
-  if { $edname eq "" } {
-       set edname 1
-       for {set edname 1} {$edname < 1000 && [winfo exists [set win .textEditor_${c}_$edname]]} {incr edname} {
-         continue;
-       }
-     } else {
-       set win .textEditor_${c}_$edname
-     }
+	if { $edname eq "" } {
+		set edname 1
+		for {set edname 1} {$edname < 1000 && [winfo exists [set win .textEditor_${c}_$edname]]} {incr edname} {
+			continue;
+		}
+	} else {
+		set win .textEditor_${c}_$edname
+	}
 
-  if { [string first . $edname] != -1 } {
-       outputSystem $c [T "Invalid editor name '%s'." $edname]
-       return;
-     }
+	if { [string first . $edname] != -1 } {
+		outputSystem $c [T "Invalid editor name '%s'." $edname]
+		return;
+	}
 
-  if { [winfo exists $win] } {
-       # Append text to existing editor
-       if { $initialtext ne "" } {
-            set text $win.frame.main.text
-            if { [$text count -chars 1.0 end] > 1 } {
-                 $text insert end "\n"
-               }
-            $text insert end $initialtext
-          }
-       reshowWindow $win 0
-       return;
-     }
+	if { [winfo exists $win] } {
+		# Append text to existing editor
+		if { $initialtext ne "" } {
+			set text $win.frame.main.text
+			if { [$text count -chars 1.0 end] > 1 } {
+				$text insert end "\n"
+			}
+			$text insert end $initialtext
+		}
+		reshowWindow $win 0
+		return;
+	}
 
-  if { [catch {toplevel $win}] } {
-       outputSystem $c [T "Invalid editor name '%s'." $edname]
-       return;
-     }
-  registerWindow $c $win
-  wm withdraw $win
-  if { $c == 0 } {
-       wm title $win "TextEd $edname ($potato(name))"
-     } else {
-       wm title $win "TextEd $edname \[$c. $world($conn($c,world),name)\]"
-     }
+	if { [catch {toplevel $win}] } {
+		outputSystem $c [T "Invalid editor name '%s'." $edname]
+		return;
+	}
+	registerWindow $c $win
+	wm withdraw $win
+	if { $c == 0 } {
+		wm title $win "TextEd $edname ($potato(name))"
+	} else {
+		wm title $win "TextEd $edname \[$c. $world($conn($c,world),name)\]"
+	}
 
-  pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both -side left -anchor nw
+	pack [set frame [::ttk::frame $win.frame]] -expand 1 -fill both -side left -anchor nw
 
-  pack [::ttk::frame $frame.main -relief sunken -borderwidth 2] -expand 1 -fill both -padx 1 -pady 1
-  set text [text $frame.main.text -width 40 -height 20 -wrap word -undo 1]
-  set sbY [::ttk::scrollbar $frame.main.sbY -orient vertical -command [list $text yview]]
-  set sbX [::ttk::scrollbar $frame.main.sbX -orient horizontal -command [list $text xview]]
-  $text configure -yscrollcommand [list $sbY set] -xscrollcommand [list $sbX set]
-  grid_with_scrollbars $text $sbX $sbY
+	pack [::ttk::frame $frame.main -relief sunken -borderwidth 2] -expand 1 -fill both -padx 1 -pady 1
+	set text [text $frame.main.text -width 40 -height 20 -wrap word -undo 1]
+	set sbY [::ttk::scrollbar $frame.main.sbY -orient vertical -command [list $text yview]]
+	set sbX [::ttk::scrollbar $frame.main.sbX -orient horizontal -command [list $text xview]]
+	$text configure -yscrollcommand [list $sbY set] -xscrollcommand [list $sbX set]
+	grid_with_scrollbars $text $sbX $sbY
 
-  set menu [menu $win.menu -tearoff 0]
-  $win configure -menu $menu
-  set actionMenu [menu $menu.action -tearoff 0]
-  set editMenu [menu $menu.edit -tearoff 0]
-  # set menuColour [menu $menu.colour -tearoff 0]
-  # set menuColourBG [menu $menu.colourBG -tearoff 1]
-  # set menuColourFG [menu $menu.colourFG -tearoff 1]
-  $menu add cascade {*}[menu_label [T "&Action"]] -menu $actionMenu
-  $menu add cascade {*}[menu_label [T "&Edit"]] -menu $editMenu
+	set menu [menu $win.menu -tearoff 0]
+	$win configure -menu $menu
+	set actionMenu [menu $menu.action -tearoff 0]
+	set editMenu [menu $menu.edit -tearoff 0]
+	# set menuColour [menu $menu.colour -tearoff 0]
+	# set menuColourBG [menu $menu.colourBG -tearoff 1]
+	# set menuColourFG [menu $menu.colourFG -tearoff 1]
+	$menu add cascade {*}[menu_label [T "&Action"]] -menu $actionMenu
+	$menu add cascade {*}[menu_label [T "&Edit"]] -menu $editMenu
 
-  set allTxt [format {[%s get 1.0 end-1char]} $text]
-  $actionMenu add command {*}[menu_label [T "Send to &World"]] -accelerator "Ctrl+S" \
-          -command [list ::potato::send_to_from $c $text]
-  $actionMenu add command {*}[menu_label [T "Send &Selection to World"]] -accelerator "Ctrl+Alt+S" \
-          -command [list ::potato::send_to_from $c $text 0 1]
-  $actionMenu add command {*}[menu_label [T "Place in &Top Input Window"]] \
-          -command [format {::potato::showInput %s 1 %s 1} $c $allTxt]
-  $actionMenu add command {*}[menu_label [T "Place in &Bottom Input Window"]] \
-          -command [format {::potato::showInput %s 2 %s 1} $c $allTxt]
-  $actionMenu add separator
-  set actionMenuConvert [menu $actionMenu.convert -tearoff 0]
-  $actionMenu add cascade {*}[menu_label [T "&Convert..."]] -menu $actionMenuConvert
-  # $actionMenu add cascade {*}[menu_label [T "&ANSI Colour..."] -menu $menuColour]
-  $actionMenu add separator
-  $actionMenu add command {*}[menu_label [T "&Open..."]] -command [list ::potato::textEditorOpen $text]
-  $actionMenu add command {*}[menu_label [T "&Save As..."]] -command [list ::potato::textEditorSave $text]
+	set allTxt [format {[%s get 1.0 end-1char]} $text]
+	$actionMenu add command {*}[menu_label [T "Send to &World"]] -accelerator "Ctrl+S" \
+		-command [list ::potato::send_to_from $c $text]
+	$actionMenu add command {*}[menu_label [T "Send &Selection to World"]] -accelerator "Ctrl+Alt+S" \
+		-command [list ::potato::send_to_from $c $text 0 1]
+	$actionMenu add command {*}[menu_label [T "Place in &Top Input Window"]] \
+		-command [format {::potato::showInput %s 1 %s 1} $c $allTxt]
+	$actionMenu add command {*}[menu_label [T "Place in &Bottom Input Window"]] \
+		-command [format {::potato::showInput %s 2 %s 1} $c $allTxt]
+	$actionMenu add separator
+	set actionMenuConvert [menu $actionMenu.convert -tearoff 0]
+	$actionMenu add cascade {*}[menu_label [T "&Convert..."]] -menu $actionMenuConvert
+	# $actionMenu add cascade {*}[menu_label [T "&ANSI Colour..."] -menu $menuColour]
+	$actionMenu add separator
+	$actionMenu add command {*}[menu_label [T "&Open..."]] -command [list ::potato::textEditorOpen $text]
+	$actionMenu add command {*}[menu_label [T "&Save As..."]] -command [list ::potato::textEditorSave $text]
 
-  $actionMenuConvert add command {*}[menu_label [T "&Returns to %r"]] -command [list ::potato::escapeChars $text 0 1 0] -accelerator Ctrl+R
-  $actionMenuConvert add command {*}[menu_label [T "Spaces to %&b"]] -command [list ::potato::escapeChars $text 0 0 1] -accelerator Ctrl+B
-  $actionMenuConvert add command {*}[menu_label [T "&Escape Special Characters"]] -command [list ::potato::escapeChars $text] -accelerator Ctrl+E
+	$actionMenuConvert add command {*}[menu_label [T "&Returns to %r"]] -command [list ::potato::escapeChars $text 0 1 0] -accelerator Ctrl+R
+	$actionMenuConvert add command {*}[menu_label [T "Spaces to %&b"]] -command [list ::potato::escapeChars $text 0 0 1] -accelerator Ctrl+B
+	$actionMenuConvert add command {*}[menu_label [T "&Escape Special Characters"]] -command [list ::potato::escapeChars $text] -accelerator Ctrl+E
 
-  # $actionMenuConvert add comand {*}[menu_label [T "&ANSI Colours to Tags"]] -command [list ::potato::textEditorConvertANSI $text]
+	# $actionMenuConvert add comand {*}[menu_label [T "&ANSI Colours to Tags"]] -command [list ::potato::textEditorConvertANSI $text]
 
-  # Allow for saving to a file, including hard-wrapping and auto-indenting! #abc
-  # Do ANSI Colour conversion stuff! #abc
+	# Allow for saving to a file, including hard-wrapping and auto-indenting! #abc
+	# Do ANSI Colour conversion stuff! #abc
 
-  $editMenu add command {*}[menu_label [T "&Copy"]] -command [list event generate $text <<Copy>>] -accelerator Ctrl+C
-  $editMenu add command {*}[menu_label [T "C&ut"]] -command [list event generate $text <<Cut>>] -accelerator Ctrl+X
-  $editMenu add command {*}[menu_label [T "&Paste"]] -command [list event generate $text <<Paste>>] -accelerator Ctrl+V
-  $editMenu configure -postcommand [list ::potato::editMenuCXV $editMenu 0 1 2 $text]
+	$editMenu add command {*}[menu_label [T "&Copy"]] -command [list event generate $text <<Copy>>] -accelerator Ctrl+C
+	$editMenu add command {*}[menu_label [T "C&ut"]] -command [list event generate $text <<Cut>>] -accelerator Ctrl+X
+	$editMenu add command {*}[menu_label [T "&Paste"]] -command [list event generate $text <<Paste>>] -accelerator Ctrl+V
+	$editMenu configure -postcommand [list ::potato::editMenuCXV $editMenu 0 1 2 $text]
 
-  bind $text <Control-r> "[list ::potato::escapeChars $text 0 1 0] ; break"
-  bind $text <Control-b> "[list ::potato::escapeChars $text 0 0 1] ; break"
-  bind $text <Control-e> "[list ::potato::escapeChars $text] ; break"
+	bind $text <Control-r> "[list ::potato::escapeChars $text 0 1 0] ; break"
+	bind $text <Control-b> "[list ::potato::escapeChars $text 0 0 1] ; break"
+	bind $text <Control-e> "[list ::potato::escapeChars $text] ; break"
 
-  bind $text <Control-s> "[list $actionMenu invoke 0] ; break"
-  bind $text <Control-Alt-s> "[list $actionMenu invoke 1] ; break"
+	bind $text <Control-s> "[list $actionMenu invoke 0] ; break"
+	bind $text <Control-Alt-s> "[list $actionMenu invoke 1] ; break"
 
-  $text insert end $initialtext
+	$text insert end $initialtext
 
-  update idletasks
-  center $win
-  reshowWindow $win 0
-  focus $text
+	update idletasks
+	center $win
+	reshowWindow $win 0
+	focus $text
 
-  return;
+	return;
 
 };# ::potato::textEditor
 
@@ -11666,19 +11716,19 @@ proc ::potato::textEditor {{c ""} {edname ""} {initialtext ""}} {
 proc ::potato::textEditorOpen {text} {
 
 
-  set file [tk_getOpenFile -filetypes [list {{Text Files} {*.txt}} {{All Files} {*.*}}] -parent $text]
-  if { $file eq "" } {
-       return;
-     }
-  if { [catch {open $file r} fid] } {
-       tk_messageBox -icon error -title [T "Open File"] -type ok -parent $text \
-         -message [T "Unable to open \"%s\": %s" $file $fid]
-       return;
-     }
-  $text replace 1.0 end [read $fid]
-  close $fid
+	set file [tk_getOpenFile -filetypes [list {{Text Files} {*.txt}} {{All Files} {*.*}}] -parent $text]
+	if { $file eq "" } {
+		return;
+	}
+	if { [catch {open $file r} fid] } {
+		tk_messageBox -icon error -title [T "Open File"] -type ok -parent $text \
+			-message [T "Unable to open \"%s\": %s" $file $fid]
+		return;
+	}
+	$text replace 1.0 end [read $fid]
+	close $fid
 
-  return;
+	return;
 
 };# ::potato::textEditorOpen
 
@@ -11688,24 +11738,24 @@ proc ::potato::textEditorOpen {text} {
 #: return nothing
 proc ::potato::textEditorSave {text} {
 
-  if { $::tcl_platform(platform) eq "windows" } {
-       set de ".txt"
-     } else {
-       set de ""
-     }
-  set file [tk_getSaveFile -filetypes  [list {{Text Files} {*.txt}} {{All Files} {*.*}}] -defaultextension $de -parent $text]
-  if { $file eq "" } {
-       return;
-     }
-  if { [catch {open $file w} fid] } {
-       tk_messageBox -icon error -title [T "Save File"] -type ok -parent $text \
-         -message [T "Unable to save to \"%s\": %s" $file $fid]
-       return;
-     }
-  puts -nonewline $fid [$text get 1.0 end-1char]
-  close $fid
+	if { $::tcl_platform(platform) eq "windows" } {
+		set de ".txt"
+	} else {
+		set de ""
+	}
+	set file [tk_getSaveFile -filetypes  [list {{Text Files} {*.txt}} {{All Files} {*.*}}] -defaultextension $de -parent $text]
+	if { $file eq "" } {
+		return;
+	}
+	if { [catch {open $file w} fid] } {
+		tk_messageBox -icon error -title [T "Save File"] -type ok -parent $text \
+			-message [T "Unable to save to \"%s\": %s" $file $fid]
+		return;
+	}
+	puts -nonewline $fid [$text get 1.0 end-1char]
+	close $fid
 
-  return;
+	return;
 
 };# ::potato::textEditorSave
 
@@ -11717,30 +11767,30 @@ proc ::potato::textEditorSave {text} {
 #: return nothing
 proc ::potato::escapeChars {win {specials 1} {newlines 0} {spaces 0}} {
 
-  set charmap [list]
+	set charmap [list]
 
-  if { $specials } {
-       foreach x [list 37 59 91 93 40 41 44 94 36 123 125 92] {
-         lappend charmap [format %c $x] "\\[format %c $x]"
-       }
-       lappend charmap "\t" "%t"
-     }
+	if { $specials } {
+		foreach x [list 37 59 91 93 40 41 44 94 36 123 125 92] {
+			lappend charmap [format %c $x] "\\[format %c $x]"
+		}
+		lappend charmap "\t" "%t"
+	}
 
-  if { $newlines } {
-       lappend charmap "\n" "%r"
-     }
+	if { $newlines } {
+		lappend charmap "\n" "%r"
+	}
 
-  if { $spaces } {
-       lappend charmap "  " " %b"
-     }
+	if { $spaces } {
+		lappend charmap "  " " %b"
+	}
 
-  if { $win eq "" } {
-       set win [connInfo "" input3]
-     }
+	if { $win eq "" } {
+		set win [connInfo "" input3]
+	}
 
-  textFindAndReplace $win $charmap
+	textFindAndReplace $win $charmap
 
-  return;
+	return;
 
 };# ::potato::escapeChars
 
@@ -11751,9 +11801,9 @@ proc ::potato::escapeChars {win {specials 1} {newlines 0} {spaces 0}} {
 #: return nothing
 proc ::potato::textFindAndReplace {win chars} {
 
-  $win replace 1.0 end [string map $chars [$win get 1.0 end-1char]]
+	$win replace 1.0 end [string map $chars [$win get 1.0 end-1char]]
 
-  return;
+	return;
 
 };# ::potato::textFindAndReplace
 
@@ -11763,17 +11813,17 @@ proc ::potato::textFindAndReplace {win chars} {
 #: return nothing
 proc ::potato::textSquishReturns {{win ""}} {
 
-  if { $win eq "" } {
-       set win [connInfo "" input3]
-     }
+	if { $win eq "" } {
+		set win [connInfo "" input3]
+	}
 
-  set text [$win get 1.0 end-1c]
-  set text [regsub -all {(^\n+|\n+$)} $text ""]
-  set text [regsub -all {\n\n+} $text \n]
+	set text [$win get 1.0 end-1c]
+	set text [regsub -all {(^\n+|\n+$)} $text ""]
+	set text [regsub -all {\n\n+} $text \n]
 
-  $win replace 1.0 end $text
+	$win replace 1.0 end $text
 
-  return;
+	return;
 
 };# ::potato::textSquishReturns
 
@@ -11783,18 +11833,18 @@ proc ::potato::textSquishReturns {{win ""}} {
 #: return nothing
 proc ::potato::textStripReturns {{win ""}} {
 
-  if { $win eq "" } {
-       set win [connInfo "" input3]
-     }
+	if { $win eq "" } {
+		set win [connInfo "" input3]
+	}
 
-  textFindAndReplace $win [list "\n" ""]
-  set text [$win get 1.0 end-1c]
-  set text [regsub -all {(^\n+|\n+$)} $text ""]
-  set text [regsub -all {\n\n+} $text \n]
+	textFindAndReplace $win [list "\n" ""]
+	set text [$win get 1.0 end-1c]
+	set text [regsub -all {(^\n+|\n+$)} $text ""]
+	set text [regsub -all {\n\n+} $text \n]
 
-  $win replace 1.0 end $text
+	$win replace 1.0 end $text
 
-  return;
+	return;
 
 };# ::potato::textStripReturns
 
@@ -11804,19 +11854,19 @@ proc ::potato::textStripReturns {{win ""}} {
 #: desc Toggle between 1 and 2 input windows for connection $c (or currently displayed conn, if $c is ""). If $toggle is true, alter the conn($c,twoInputWindows) variable first.
 #: return nothing
 proc ::potato::toggleInputWindows {{c ""} {toggle 1}} {
-  variable conn;
-  variable potato;
+	variable conn;
+	variable potato;
 
-  if { $c eq "" } {
-       set c [up]
-     }
+	if { $c eq "" } {
+		set c [up]
+	}
 
-  if { $toggle } {
-       set conn($c,twoInputWindows) [lindex [list 1 0] $conn($c,twoInputWindows)]
-     }
-  ::skin::$potato(skin)::inputWindows $c [expr {$conn($c,twoInputWindows) + 1}]
+	if { $toggle } {
+		set conn($c,twoInputWindows) [lindex [list 1 0] $conn($c,twoInputWindows)]
+	}
+	::skin::$potato(skin)::inputWindows $c [expr {$conn($c,twoInputWindows) + 1}]
 
-  return;
+	return;
 
 };# ::potato::toggleInputWindows
 
@@ -11826,14 +11876,14 @@ proc ::potato::toggleInputWindows {{c ""} {toggle 1}} {
 #: desc Post the "Connect To.." menu at the given coordinates (or at cursor if both are 0)
 #: return nothing
 proc ::potato::connectMenuPost {{x 0} {y 0}} {
-  variable menu;
+	variable menu;
 
-  $menu(connect,path) unpost
+	$menu(connect,path) unpost
 
-  if { $x == 0 && $y == 0 } {
-       foreach {x y} [winfo pointerxy .] {break}
-     }
-  catch {tk_popup $menu(connect,path) $x $y}
+	if { $x == 0 && $y == 0 } {
+		foreach {x y} [winfo pointerxy .] {break}
+	}
+	catch {tk_popup $menu(connect,path) $x $y}
 
 };# ::potato::connectMenuPost
 
@@ -11842,50 +11892,50 @@ proc ::potato::connectMenuPost {{x 0} {y 0}} {
 #: desc Rebuild menu $m with commands for connecting to each world. Called when menu is posted.
 #: return nothing
 proc ::potato::rebuildConnectMenu {m} {
-  variable world;
+	variable world;
 
-  $m delete 0 end
-  destroy {*}[winfo children $m]
+	$m delete 0 end
+	destroy {*}[winfo children $m]
 
-  foreach w [worldIDs] {
-     if { [llength $world($w,groups)] == 0 } {
-          lappend noGroups [list $w $world($w,name)]
-        } else {
-          foreach y $world($w,groups) {
-            lappend group($y) [list $w $world($w,name)]
-          }
-        }
-  }
+	foreach w [worldIDs] {
+		if { [llength $world($w,groups)] == 0 } {
+			lappend noGroups [list $w $world($w,name)]
+		} else {
+			foreach y $world($w,groups) {
+				lappend group($y) [list $w $world($w,name)]
+			}
+		}
+	}
 
-  set sep 0
+	set sep 0
 
-  if { [array exists group] } {
-       set sep 1
-       set i 0
-       foreach x [lsort -dictionary [array names group]] {
-          $m add cascade -label $x -menu [set sub [menu $m.sub$i -tearoff 0]]
-          foreach y [lsort -dictionary -index 1 $group($x)] {
-             foreach {w name} $y {break}
-             rebuildConnectMenuSub $w $name $sub
-          }
-          incr i
-       }
-     }
-  if { [info exists noGroups] } {
-       set sep 1
-       foreach x [lsort -dictionary -index 1 $noGroups] {
-          foreach {w name} $x {break}
-          rebuildConnectMenuSub $w $name $m
-       }
-     }
+	if { [array exists group] } {
+		set sep 1
+		set i 0
+		foreach x [lsort -dictionary [array names group]] {
+			$m add cascade -label $x -menu [set sub [menu $m.sub$i -tearoff 0]]
+			foreach y [lsort -dictionary -index 1 $group($x)] {
+				foreach {w name} $y {break}
+				rebuildConnectMenuSub $w $name $sub
+			}
+			incr i
+		}
+	}
+	if { [info exists noGroups] } {
+		set sep 1
+		foreach x [lsort -dictionary -index 1 $noGroups] {
+			foreach {w name} $x {break}
+			rebuildConnectMenuSub $w $name $m
+		}
+	}
 
-  if { $sep } {
-       $m add separator
-     }
+	if { $sep } {
+		$m add separator
+	}
 
-  $m add command -label [T "Quick Connect"] -command [list ::potato::newWorld 1]
+	$m add command -label [T "Quick Connect"] -command [list ::potato::newWorld 1]
 
-  return;
+	return;
 
 };# ::potato::rebuildConnectMenu
 
@@ -11896,25 +11946,25 @@ proc ::potato::rebuildConnectMenu {m} {
 #: desc Add a menu to $m which either connects to world $w (if it has no chars defined), or cascades to a menu of chars (if it does)
 #: return nothing
 proc ::potato::rebuildConnectMenuSub {w name m} {
-  variable world;
+	variable world;
 
-  if { [llength $world($w,charList)] } {
-       $m add cascade -label $name -menu [set sub [menu $m.$w -tearoff 0]]
-       set def $world($w,charDefault)
-       if { $def eq "" } {
-            set def [T "None"]
-          }
-       $sub add command {*}[menu_label [T "&Default Character (%s)" $def]] -command [list ::potato::newConnectionDefault $w]
-       $sub add command {*}[menu_label [T "&No Character"]] -command [list ::potato::newConnection $w]
-       $sub add separator
-       foreach x [lsort -dictionary -index 0 $world($w,charList)] {
-         set char [lindex $x 0]
-         $sub add command -label $char -command [list ::potato::newConnection $w $char]
-       }
-     } else {
-       $m add command -label $name -command [list ::potato::newConnection $w]
-     }
-  return;
+	if { [llength $world($w,charList)] } {
+		$m add cascade -label $name -menu [set sub [menu $m.$w -tearoff 0]]
+		set def $world($w,charDefault)
+		if { $def eq "" } {
+			set def [T "None"]
+		}
+		$sub add command {*}[menu_label [T "&Default Character (%s)" $def]] -command [list ::potato::newConnectionDefault $w]
+		$sub add command {*}[menu_label [T "&No Character"]] -command [list ::potato::newConnection $w]
+		$sub add separator
+		foreach x [lsort -dictionary -index 0 $world($w,charList)] {
+			set char [lindex $x 0]
+			$sub add command -label $char -command [list ::potato::newConnection $w $char]
+		}
+	} else {
+		$m add command -label $name -command [list ::potato::newConnection $w]
+	}
+	return;
 };# ::poato::rebuildConnectMenuSub
 
 #: proc ::potato::fcmd
@@ -11923,26 +11973,26 @@ proc ::potato::rebuildConnectMenuSub {w name m} {
 #: desc Send the stored F-command $num to connection $c (or the current connection if $c is ""). If $c's world has no command for F$num, use the global
 #: return nothing
 proc ::potato::fcmd {num {c ""}} {
-  variable conn;
-  variable world;
+	variable conn;
+	variable world;
 
-  if { $c eq "" } {
-       set c [up]
-     }
+	if { $c eq "" } {
+		set c [up]
+	}
 
-  set w $conn($c,world)
-  if { [set cmd $world($w,fcmd,$num)] ne "" } {
-       # continue, this world has an
-     } elseif { $w != 0 && [string trim [set cmd $world(0,fcmd,$num)]] ne "" } {
-       # continue, use 0's command
-     } else {
-       return; # no command
-     }
+	set w $conn($c,world)
+	if { [set cmd $world($w,fcmd,$num)] ne "" } {
+		# continue, this world has an
+	} elseif { $w != 0 && [string trim [set cmd $world(0,fcmd,$num)]] ne "" } {
+		# continue, use 0's command
+	} else {
+		return; # no command
+	}
 
-  addToInputHistory $c $cmd
-  send_to $c $cmd
+	addToInputHistory $c $cmd
+	send_to $c $cmd
 
-  return;
+	return;
 
 };# ::potato::fcmd
 
@@ -11950,186 +12000,184 @@ proc ::potato::fcmd {num {c ""}} {
 #: desc Initialise the list of tasks which can be keyboard-bound, appear in menus, etc.
 #: return Nothing
 proc ::potato::tasksInit {} {
-  variable tasks;
+	variable tasks;
 
-  # Set map of task names and commands
-  array set tasks [list \
-       inputHistory,name   [X "Show Input &History Window"] \
-       inputHistory,cmd    "::potato::history" \
-       inputHistory,state  notZero \
-       goNorth,name        [X "Go &North"] \
-       goNorth,cmd         [list ::potato::send_to_real {} north] \
-       goNorth,state       connected \
-       goSouth,name        [X "Go &South"] \
-       goSouth,cmd         [list ::potato::send_to_real {} south] \
-       goSouth,state       connected \
-       goEast,name         [X "Go &East"] \
-       goEast,cmd          [list ::potato::send_to_real {} east] \
-       goEast,state        connected \
-       goWest,name         [X "Go &West"] \
-       goWest,cmd          [list ::potato::send_to_real {} west] \
-       goWest,state        connected \
-       find,name           [X "&Find"] \
-       find,cmd            "::potato::findDialog" \
-       find,state          notZero \
-       disconnect,name     [X "&Disconnect"] \
-       disconnect,cmd      "::potato::disconnect" \
-       disconnect,state    {$c != 0 && ($conn($c,connected) != 0 || ($conn($c,connected) == 0 && $conn($c,reconnectId) ne ""))} \
-       reconnect,name      [X "&Reconnect"] \
-       reconnect,cmd       "::potato::reconnect" \
-       reconnect,state     {$c != 0 && $conn($c,connected) == 0} \
-       reconnectAll,name   [X "Reconnect All"] \
-       reconnectAll,cmd    "::potato::reconnectAll" \
-       reconnectAll,state  {[llength [connIDs]] != 0} \
-       close,name          [X "&Close Connection"] \
-       close,cmd           "::potato::closeConn" \
-       close,state         notZero \
-       nextConn,name       [X "&Next Connection"] \
-       nextConn,cmd        [list ::potato::toggleConn 1] \
-       nextConn,state      {[llength [connIDs]] > 1} \
-       prevConn,name       [X "&Previous Connection"] \
-       prevConn,cmd        [list ::potato::toggleConn -1] \
-       prevConn,state      {[llength [connIDs]] > 1} \
-       config,name         [X "Configure &World"] \
-       config,cmd          "::potato::configureWorld" \
-       config,state        notZero \
-       programConfig,name  [X "Configure Program &Settings"] \
-       programConfig,cmd   [list ::potato::configureWorld 0] \
-       programConfig,state always \
-       events,name         [X "Configure &Events"] \
-       events,cmd          "::potato::eventConfig" \
-       events,state        notZero \
-       globalEvents,name   [X "&Global Events"] \
-       globalEvents,cmd    [list ::potato::eventConfig 0] \
-       globalEvents,state  always \
-       slashCmds,name      [X "Customise &Slash Commands"] \
-       slashCmds,cmd       "::potato::slashConfig" \
-       slashCmds,state     notZero \
-       globalSlashCmds,name [X "Global S&lash Commands"] \
-       globalSlashCmds,cmd [list ::potato::slashConfig 0] \
-       globalSlashCmds,state always \
-       log,name            [X "Show &Log Window"] \
-       log,cmd             "::potato::logWindow" \
-       log,state           notZero \
-       logStop,name        [X "Close &All Logs"] \
-       logStop,cmd         "::potato::stopLog" \
-       logStop,state       {[llength [array names ::potato::conn $c,log,*]] > 0} \
-       upload,name         [X "&Upload File"] \
-       upload,cmd          "::potato::uploadWindow" \
-       upload,state        always \
-       help,name           [X "Show &Helpfiles"] \
-       help,cmd            "::wikihelp::help" \
-       help,state          always \
-       about,name          [X "&About Potato"] \
-       about,cmd           "::potato::about" \
-       about,state         always \
-       exit,name           [X "E&xit"] \
-       exit,cmd            "::potato::chk_exit" \
-       exit,state          always \
-       textEd,name         [X "&Text Editor"] \
-       textEd,cmd          "::potato::textEditor" \
-       textEd,state        always \
-       twoInputWins,name   [X "Show Two Input Windows?"] \
-       twoInputWins,cmd    "::potato::toggleInputWindows" \
-       twoInputWins,state  always \
-       connectMenu,name    [X "&Connect To..."] \
-       connectMenu,cmd     "::potato::connectMenuPost" \
-       connectMenu,state   always \
-       customKeyboard,name [X "Customise Keyboard Shortcuts"] \
-       customKeyboard,cmd  "::potato::keyboardShortcutWin" \
-       customKeyboard,state always \
-       mailWindow,name     [X "Open &Mail Window"] \
-       mailWindow,cmd      "::potato::mailWindow" \
-       mailWindow,state    notZero \
-       prevHistCmd,name    [X "Previous History Command"] \
-       prevHistCmd,cmd     "::potato::inputHistoryScroll -1" \
-       prevHistCmd,state   always \
-       nextHistCmd,name    [X "Next History Command"] \
-       nextHistCmd,cmd     "::potato::inputHistoryScroll 1" \
-       nextHistCmd,state   always \
-       escHistCmd,name     [X "Clear History Command"] \
-       escHistCmd,cmd      "::potato::inputHistoryReset" \
-       escHistCmd,state    always \
-       manageWorlds,name   [X "&Address Book"] \
-       manageWorlds,cmd    "::potato::manageWorlds" \
-       manageWorlds,state  always \
-       autoConnects,name   [X "Manage &Auto-Connects"] \
-       autoConnects,cmd    "::potato::autoConnectWindow" \
-       autoConnects,state  always \
-       fcmd2,name          [X "Run F2 Command"] \
-       fcmd2,state         always \
-       fcmd2,cmd           "::potato::fcmd 2" \
-       fcmd3,name          [X "Run F3 Command"] \
-       fcmd3,state         always \
-       fcmd3,cmd           "::potato::fcmd 3" \
-       fcmd4,name          [X "Run F4 Command"] \
-       fcmd4,state         always \
-       fcmd4,cmd           "::potato::fcmd 4" \
-       fcmd5,name          [X "Run F5 Command"] \
-       fcmd5,state         always \
-       fcmd6,name          [X "Run F6 Command"] \
-       fcmd5,cmd           "::potato::fcmd 5" \
-       fcmd6,state         always \
-       fcmd6,cmd           "::potato::fcmd 6" \
-       fcmd7,name          [X "Run F7 Command"] \
-       fcmd7,state         always \
-       fcmd7,cmd           "::potato::fcmd 7" \
-       fcmd8,name          [X "Run F8 Command"] \
-       fcmd8,state         always \
-       fcmd8,cmd           "::potato::fcmd 8" \
-       fcmd9,name          [X "Run F9 Command"] \
-       fcmd9,state         always \
-       fcmd9,cmd           "::potato::fcmd 9" \
-       fcmd10,name         [X "Run F10 Command"] \
-       fcmd10,state        always \
-       fcmd10,cmd          "::potato::fcmd 10" \
-       fcmd11,name         [X "Run F11 Command"] \
-       fcmd11,state        always \
-       fcmd11,cmd          "::potato::fcmd 11" \
-       fcmd12,name         [X "Run F12 Command"] \
-       fcmd12,state        always \
-       fcmd12,cmd          "::potato::fcmd 12" \
-       spellcheck,name     [X "Check &Spelling"] \
-       spellcheck,cmd      "::potato::spellcheck" \
-       spellcheck,state    {[file exists $::potato::misc(aspell)]} \
-       macroWindow,name    [X "&Macro Window"] \
-       macroWindow,cmd     "::potato::macroWindow" \
-       macroWindow,state   notZero \
-       globalMacros,name   [X "Global &Macro Window"] \
-       globalMacros,cmd    "::potato::macroWindow 0" \
-       globalMacros,state  always \
-       convertNewlines,name [X "Convert &Returns to %r"] \
-       convertNewlines,cmd  [list ::potato::escapeChars "" 0 1 0] \
-       convertNewlines,state always \
-       convertSpaces,name  [X "Convert &Spaces to %b"] \
-       convertSpaces,cmd   [list ::potato::escapeChars "" 0 0 1] \
-       convertSpaces,state always \
-       convertChars,name   [X "&Escape Special Chars"] \
-       convertChars,cmd    [list ::potato::escapeChars ""] \
-       convertChars,state  always \
-       save2history,name   [X "Save to Input History"] \
-       save2history,cmd    [list ::potato::send_mushage "" 1] \
-       save2history,state  notZero \
-       toggleInputFocus,name   [X "Toggle &Input Windows"] \
-       toggleInputFocus,cmd    [list ::potato::toggleInputFocus] \
-       toggleInputFocus,state  always \
-       insertNewline,name  [X "Insert Newline"] \
-       insertNewline,cmd   [list ::potato::insertNewline] \
-       insertNewline,state always \
-       pickLocale,name     [X "Change &Language"] \
-       pickLocale,cmd      [list ::potato::pickLocale] \
-       pickLocale,state    always \
-       resendLastCmd,name  [X "&Resend Last Command"] \
-       resendLastCmd,cmd   [list ::potato::resendLastCmd] \
-       resendLastCmd,state connected \
-       toggleSpawn,name    [X "Toggle Spawn Windows"] \
-       toggleSpawn,cmd     [list ::potato::toggleSpawns] \
-       toggleSpawn,state   {[llength [potato::connInfo $c spawns]]} \
+	# Set map of task names and commands
+	array set tasks [list \
+		inputHistory,name   [X "Show Input &History Window"] \
+		inputHistory,cmd    "::potato::history" \
+		inputHistory,state  notZero \
+		goNorth,name        [X "Go &North"] \
+		goNorth,cmd         [list ::potato::send_to_real {} north] \
+		goNorth,state       connected \
+		goSouth,name        [X "Go &South"] \
+		goSouth,cmd         [list ::potato::send_to_real {} south] \
+		goSouth,state       connected \
+		goEast,name         [X "Go &East"] \
+		goEast,cmd          [list ::potato::send_to_real {} east] \
+		goEast,state        connected \
+		goWest,name         [X "Go &West"] \
+		goWest,cmd          [list ::potato::send_to_real {} west] \
+		goWest,state        connected \
+		find,name           [X "&Find"] \
+		find,cmd            "::potato::findDialog" \
+		find,state          notZero \
+		disconnect,name     [X "&Disconnect"] \
+		disconnect,cmd      "::potato::disconnect" \
+		disconnect,state    {$c != 0 && ($conn($c,connected) != 0 || ($conn($c,connected) == 0 && $conn($c,reconnectId) ne ""))} \
+		reconnect,name      [X "&Reconnect"] \
+		reconnect,cmd       "::potato::reconnect" \
+		reconnect,state     {$c != 0 && $conn($c,connected) == 0} \
+		reconnectAll,name   [X "Reconnect All"] \
+		reconnectAll,cmd    "::potato::reconnectAll" \
+		reconnectAll,state  {[llength [connIDs]] != 0} \
+		close,name          [X "&Close Connection"] \
+		close,cmd           "::potato::closeConn" \
+		close,state         notZero \
+		nextConn,name       [X "&Next Connection"] \
+		nextConn,cmd        [list ::potato::toggleConn 1] \
+		nextConn,state      {[llength [connIDs]] > 1} \
+		prevConn,name       [X "&Previous Connection"] \
+		prevConn,cmd        [list ::potato::toggleConn -1] \
+		prevConn,state      {[llength [connIDs]] > 1} \
+		config,name         [X "Configure &World"] \
+		config,cmd          "::potato::configureWorld" \
+		config,state        notZero \
+		programConfig,name  [X "Configure Program &Settings"] \
+		programConfig,cmd   [list ::potato::configureWorld 0] \
+		programConfig,state always \
+		events,name         [X "Configure &Events"] \
+		events,cmd          "::potato::eventConfig" \
+		events,state        notZero \
+		globalEvents,name   [X "&Global Events"] \
+		globalEvents,cmd    [list ::potato::eventConfig 0] \
+		globalEvents,state  always \
+		slashCmds,name      [X "Customise &Slash Commands"] \
+		slashCmds,cmd       "::potato::slashConfig" \
+		slashCmds,state     notZero \
+		globalSlashCmds,name [X "Global S&lash Commands"] \
+		globalSlashCmds,cmd [list ::potato::slashConfig 0] \
+		globalSlashCmds,state always \
+		log,name            [X "Show &Log Window"] \
+		log,cmd             "::potato::logWindow" \
+		log,state           notZero \
+		logStop,name        [X "Close &All Logs"] \
+		logStop,cmd         "::potato::stopLog" \
+		logStop,state       {[llength [array names ::potato::conn $c,log,*]] > 0} \
+		upload,name         [X "&Upload File"] \
+		upload,cmd          "::potato::uploadWindow" \
+		upload,state        always \
+		help,name           [X "Show &Helpfiles"] \
+		help,cmd            "::wikihelp::help" \
+		help,state          always \
+		about,name          [X "&About Potato"] \
+		about,cmd           "::potato::about" \
+		about,state         always \
+		exit,name           [X "E&xit"] \
+		exit,cmd            "::potato::chk_exit" \
+		exit,state          always \
+		textEd,name         [X "&Text Editor"] \
+		textEd,cmd          "::potato::textEditor" \
+		textEd,state        always \
+		twoInputWins,name   [X "Show Two Input Windows?"] \
+		twoInputWins,cmd    "::potato::toggleInputWindows" \
+		twoInputWins,state  always \
+		connectMenu,name    [X "&Connect To..."] \
+		connectMenu,cmd     "::potato::connectMenuPost" \
+		connectMenu,state   always \
+		customKeyboard,name [X "Customise Keyboard Shortcuts"] \
+		customKeyboard,cmd  "::potato::keyboardShortcutWin" \
+		customKeyboard,state always \
+		mailWindow,name     [X "Open &Mail Window"] \
+		mailWindow,cmd      "::potato::mailWindow" \
+		mailWindow,state    notZero \
+		prevHistCmd,name    [X "Previous History Command"] \
+		prevHistCmd,cmd     "::potato::inputHistoryScroll -1" \
+		prevHistCmd,state   always \
+		nextHistCmd,name    [X "Next History Command"] \
+		nextHistCmd,cmd     "::potato::inputHistoryScroll 1" \
+		nextHistCmd,state   always \
+		escHistCmd,name     [X "Clear History Command"] \
+		escHistCmd,cmd      "::potato::inputHistoryReset" \
+		escHistCmd,state    always \
+		manageWorlds,name   [X "&Address Book"] \
+		manageWorlds,cmd    "::potato::manageWorlds" \
+		manageWorlds,state  always \
+		autoConnects,name   [X "Manage &Auto-Connects"] \
+		autoConnects,cmd    "::potato::autoConnectWindow" \
+		autoConnects,state  always \
+		fcmd2,name          [X "Run F2 Command"] \
+		fcmd2,state         always \
+		fcmd2,cmd           "::potato::fcmd 2" \
+		fcmd3,name          [X "Run F3 Command"] \
+		fcmd3,state         always \
+		fcmd3,cmd           "::potato::fcmd 3" \
+		fcmd4,name          [X "Run F4 Command"] \
+		fcmd4,state         always \
+		fcmd4,cmd           "::potato::fcmd 4" \
+		fcmd5,name          [X "Run F5 Command"] \
+		fcmd5,state         always \
+		fcmd6,name          [X "Run F6 Command"] \
+		fcmd5,cmd           "::potato::fcmd 5" \
+		fcmd6,state         always \
+		fcmd6,cmd           "::potato::fcmd 6" \
+		fcmd7,name          [X "Run F7 Command"] \
+		fcmd7,state         always \
+		fcmd7,cmd           "::potato::fcmd 7" \
+		fcmd8,name          [X "Run F8 Command"] \
+		fcmd8,state         always \
+		fcmd8,cmd           "::potato::fcmd 8" \
+		fcmd9,name          [X "Run F9 Command"] \
+		fcmd9,state         always \
+		fcmd9,cmd           "::potato::fcmd 9" \
+		fcmd10,name         [X "Run F10 Command"] \
+		fcmd10,state        always \
+		fcmd10,cmd          "::potato::fcmd 10" \
+		fcmd11,name         [X "Run F11 Command"] \
+		fcmd11,state        always \
+		fcmd11,cmd          "::potato::fcmd 11" \
+		fcmd12,name         [X "Run F12 Command"] \
+		fcmd12,state        always \
+		fcmd12,cmd          "::potato::fcmd 12" \
+		spellcheck,name     [X "Check &Spelling"] \
+		spellcheck,cmd      "::potato::spellcheck" \
+		spellcheck,state    {[file exists $::potato::misc(aspell)]} \
+		macroWindow,name    [X "&Macro Window"] \
+		macroWindow,cmd     "::potato::macroWindow" \
+		macroWindow,state   notZero \
+		globalMacros,name   [X "Global &Macro Window"] \
+		globalMacros,cmd    "::potato::macroWindow 0" \
+		globalMacros,state  always \
+		convertNewlines,name [X "Convert &Returns to %r"] \
+		convertNewlines,cmd  [list ::potato::escapeChars "" 0 1 0] \
+		convertNewlines,state always \
+		convertSpaces,name  [X "Convert &Spaces to %b"] \
+		convertSpaces,cmd   [list ::potato::escapeChars "" 0 0 1] \
+		convertSpaces,state always \
+		convertChars,name   [X "&Escape Special Chars"] \
+		convertChars,cmd    [list ::potato::escapeChars ""] \
+		convertChars,state  always \
+		save2history,name   [X "Save to Input History"] \
+		save2history,cmd    [list ::potato::send_mushage "" 1] \
+		save2history,state  notZero \
+		toggleInputFocus,name   [X "Toggle &Input Windows"] \
+		toggleInputFocus,cmd    [list ::potato::toggleInputFocus] \
+		toggleInputFocus,state  always \
+		insertNewline,name  [X "Insert Newline"] \
+		insertNewline,cmd   [list ::potato::insertNewline] \
+		insertNewline,state always \
+		pickLocale,name     [X "Change &Language"] \
+		pickLocale,cmd      [list ::potato::pickLocale] \
+		pickLocale,state    always \
+		resendLastCmd,name  [X "&Resend Last Command"] \
+		resendLastCmd,cmd   [list ::potato::resendLastCmd] \
+		resendLastCmd,state connected \
+		toggleSpawn,name    [X "Toggle Spawn Windows"] \
+		toggleSpawn,cmd     [list ::potato::toggleSpawns] \
+		toggleSpawn,state   {[llength [potato::connInfo $c spawns]]} \
+	]
 
-
-  ]
-
-  return;
+	return;
 
 };# ::potato::tasksInit
 
@@ -12138,13 +12186,13 @@ proc ::potato::tasksInit {} {
 #: desc Does the given task exist?
 #: return 1 or 0
 proc ::potato::taskExists {task} {
-  variable tasks;
+	variable tasks;
 
-  if { [info exists tasks($task,state)] && [info exists tasks($task,name)] && [info exists tasks($task,state)] } {
-       return 1;
-     } else {
-       return 0;
-     }
+	if { [info exists tasks($task,state)] && [info exists tasks($task,name)] && [info exists tasks($task,state)] } {
+		return 1;
+	} else {
+		return 0;
+	}
 
 };# ::potato::taskExists
 
@@ -12153,13 +12201,13 @@ proc ::potato::taskExists {task} {
 #: desc Return the accelerator (ie, human-readable short-form keyboart shortcut) for $task
 #: return Accelerator string
 proc ::potato::taskAccelerator {task} {
-  variable keyShorts;
+	variable keyShorts;
 
-  if { [info exists keyShorts($task)] && $keyShorts($task) ne "" } {
-       return [keysymToHuman $keyShorts($task) 1];
-     } else {
-       return "";
-     }
+	if { [info exists keyShorts($task)] && $keyShorts($task) ne "" } {
+		return [keysymToHuman $keyShorts($task) 1];
+	} else {
+		return "";
+	}
 
 };# ::potato::taskAccelerator
 
@@ -12168,13 +12216,13 @@ proc ::potato::taskAccelerator {task} {
 #: desc If $task has vars associated with it (ie, is a boolean-var'd task), return them.
 #: return A list of the task details, if they exist, or an empty string
 proc ::potato::taskVars {task} {
-  variable tasks;
+	variable tasks;
 
-  if { [info exists tasks($task,vars)] } {
-       return $tasks($task,vars);
-     } else {
-       return;
-     }
+	if { [info exists tasks($task,vars)] } {
+		return $tasks($task,vars);
+	} else {
+		return;
+	}
 
 };# ::potato::taskVars
 
@@ -12184,23 +12232,23 @@ proc ::potato::taskVars {task} {
 #: desc Return the current state of $task for connection $c.
 #: return The state of $task
 proc ::potato::taskState {task {c ""}} {
-  variable tasks;
-  variable conn;
+	variable tasks;
+	variable conn;
 
-  if { $c eq "" } {
-       set c [up]
-     }
+	if { $c eq "" } {
+		set c [up]
+	}
 
-  if { ![taskExists $task] } {
-       return 0; # unknown task
-     }
+	if { ![taskExists $task] } {
+		return 0; # unknown task
+	}
 
-  switch $tasks($task,state) {
-     always    {return 1;}
-     notZero   {return [expr {$c != 0}];}
-     connected {return [expr {$c != 0 && $conn($c,connected) == 1}];}
-     default   {return [expr $tasks($task,state)];}
-  }
+	switch $tasks($task,state) {
+		always    {return 1;}
+		notZero   {return [expr {$c != 0}];}
+		connected {return [expr {$c != 0 && $conn($c,connected) == 1}];}
+		default   {return [expr $tasks($task,state)];}
+	}
 
 };# ::potato::taskState
 
@@ -12211,18 +12259,18 @@ proc ::potato::taskState {task {c ""}} {
 #: desc Run the command associated with the task $task for connection $c, or the currently viewed connection if $c is ""
 #: return The return value of running the command.
 proc ::potato::taskRun {task {c ""} args} {
-  variable tasks;
+	variable tasks;
 
-  if { ![taskExists $task] } {
-       return;# invalid task
-     }
+	if { ![taskExists $task] } {
+		return;# invalid task
+	}
 
-  if { ![taskState $task $c] } {
-       bell;
-       return;
-     }
+	if { ![taskState $task $c] } {
+		bell;
+		return;
+	}
 
-  return [uplevel 1 $tasks($task,cmd) $args];
+	return [uplevel 1 $tasks($task,cmd) $args];
 
 };# ::potato::taskRun
 
@@ -12232,17 +12280,17 @@ proc ::potato::taskRun {task {c ""} args} {
 #: desc Return the text label for task $task. If $menu, include the & to show which letter to underline in a menu entry.
 #: return The task label
 proc ::potato::taskLabel {task {menu 0}} {
-  variable tasks;
+	variable tasks;
 
-  if { ![taskExists $task] } {
-       return;
-     }
+	if { ![taskExists $task] } {
+		return;
+	}
 
-  if { $menu } {
-       return [T $tasks($task,name)];
-     } else {
-       return [string map [list & ""] [T $tasks($task,name)]];
-     }
+	if { $menu } {
+		return [T $tasks($task,name)];
+	} else {
+		return [string map [list & ""] [T $tasks($task,name)]];
+	}
 
 };# ::potato::taskLabel
 
@@ -12251,20 +12299,20 @@ proc ::potato::taskLabel {task {menu 0}} {
 #: desc Toggle between the two input windows for connection $c, or the current connection if "". If neither currently has focus, move to input 1.
 #: return nothing
 proc ::potato::toggleInputFocus {{c ""}} {
-  variable conn;
+	variable conn;
 
-  if { $c eq "" } {
-       set c [up]
-     }
+	if { $c eq "" } {
+		set c [up]
+	}
 
-  if { [focus -displayof $conn($c,input1)] eq $conn($c,input1) } {
-       set new $conn($c,input2)
-     } else {
-       set new $conn($c,input1)
-     }
-   focus $new;
+	if { [focus -displayof $conn($c,input1)] eq $conn($c,input1) } {
+		set new $conn($c,input2)
+	} else {
+		set new $conn($c,input1)
+	}
+	focus $new;
 
-   return;
+	return;
 
 };# ::potato::toggleInputFocus
 
@@ -12274,16 +12322,16 @@ proc ::potato::toggleInputFocus {{c ""}} {
 #: return nothing
 proc ::potato::spellcheck {} {
 
-  set widget [connInfo [up] input3]
-  set text [$widget get 1.0 end-1c]
-  if { [string trim $text] eq "" } {
-       bell -displayof .
-       return;
-     }
-  set result [::potato::spellcheck::spellcheck $text]
-  if { [lindex $result 0] } {
-       $widget replace 1.0 end-1c [lindex $result 1]
-     }
+	set widget [connInfo [up] input3]
+	set text [$widget get 1.0 end-1c]
+	if { [string trim $text] eq "" } {
+		bell -displayof .
+		return;
+	}
+	set result [::potato::spellcheck::spellcheck $text]
+	if { [lindex $result 0] } {
+		$widget replace 1.0 end-1c [lindex $result 1]
+	}
 
 };# ::potato::spellcheck
 
@@ -12292,20 +12340,20 @@ proc ::potato::spellcheck {} {
 #: desc Toggle through the spawns (and main window) for conn $c
 #: return nothing
 proc ::potato::toggleSpawns {{c ""}} {
-  variable conn;
-  variable potato;
+	variable conn;
+	variable potato;
 
-  if { $c eq "" } {
-       set c [up]
-     }
+	if { $c eq "" } {
+		set c [up]
+	}
 
-  if { $c == 0 } {
-       return;
-     }
+	if { $c == 0 } {
+		return;
+	}
 
-  catch {::skin::$potato(skin)::nextSpawn $c}
+	catch {::skin::$potato(skin)::nextSpawn $c}
 
-  return;
+	return;
 
 };# ::potato::toggleSpawns
 
@@ -12315,10 +12363,10 @@ proc ::potato::toggleSpawns {{c ""}} {
 #: return A regexp
 proc ::potato::glob2Regexp {pattern} {
 
-  regsub -all {([^a-zA-Z0-9?*])} $pattern {\\\1} temp
-  set temp [string map [list "?" "(.)" "*" "(.*?)"] $temp]
+	regsub -all {([^a-zA-Z0-9?*])} $pattern {\\\1} temp
+	set temp [string map [list "?" "(.)" "*" "(.*?)"] $temp]
 
-  return "^$temp\$";
+	return "^$temp\$";
 
 };# ::potato::glob2Regexp
 
@@ -12328,7 +12376,7 @@ proc ::potato::glob2Regexp {pattern} {
 #: return A regexp
 proc ::potato::str2Regexp {str} {
 
-  return [regsub -all {([^a-zA-Z0-9])} $str {\\\1}];
+	return [regsub -all {([^a-zA-Z0-9])} $str {\\\1}];
 
 };# ::potato::str2Regexp
 
@@ -12337,25 +12385,25 @@ proc ::potato::str2Regexp {str} {
 #: desc Resend the last command from the command history for conn $c to the MUSH
 #: return 1 on success, 0 on failure
 proc ::potato::resendLastCmd {{c ""}} {
-  variable conn;
+	variable conn;
 
-  if { $c eq "" } {
-       set c [up]
-     }
+	if { $c eq "" } {
+		set c [up]
+	}
 
-  if { $c == 0 } {
-       return 0;
-     }
+	if { $c == 0 } {
+		return 0;
+	}
 
-  if { ![info exists conn($c,inputHistory)] || $conn($c,inputHistory,count) == 0 || \
-       [llength $conn($c,inputHistory)] == 0 } {
-       return 0;
-     }
+	if { ![info exists conn($c,inputHistory)] || $conn($c,inputHistory,count) == 0 || \
+		[llength $conn($c,inputHistory)] == 0 } {
+		return 0;
+	}
 
-  set cmd [lindex $conn($c,inputHistory) end 1]
-  send_to $c $cmd
+	set cmd [lindex $conn($c,inputHistory) end 1]
+	send_to $c $cmd
 
-  return 1;
+	return 1;
 
 };# ::potato::resendLastCmd
 
@@ -12366,59 +12414,59 @@ proc ::potato::resendLastCmd {{c ""}} {
 #: desc prev/next input history command. If window with focus isn't an input window, do nothing
 #: return nothing
 proc ::potato::inputHistoryScroll {dir {win ""}} {
-  variable conn;
-  variable inputSwap;
+	variable conn;
+	variable inputSwap;
 
-  if { $win eq "" } {
-       set win [focus -displayof .]
-     }
-  if { $win eq "" ||  "PotatoInput" ni [bindtags $win] } {
-       bell -displayof $win
-       return;
-     }
-  if { ![info exists inputSwap($win,conn)] } {
-       # bell -displayof .
-       return;
-     }
-  set c $inputSwap($win,conn)
-  if { ![info exists conn($c,inputHistory)] || $conn($c,inputHistory,count) == 0 || \
-       [llength $conn($c,inputHistory)] == 0 } {
-       bell -displayof $win
-       return;
-     }
+	if { $win eq "" } {
+		set win [focus -displayof .]
+	}
+	if { $win eq "" ||  "PotatoInput" ni [bindtags $win] } {
+		bell -displayof $win
+		return;
+	}
+	if { ![info exists inputSwap($win,conn)] } {
+		# bell -displayof .
+		return;
+	}
+	set c $inputSwap($win,conn)
+	if { ![info exists conn($c,inputHistory)] || $conn($c,inputHistory,count) == 0 || \
+		[llength $conn($c,inputHistory)] == 0 } {
+		bell -displayof $win
+		return;
+	}
 
-  # Find the new input history we want.
-  if { $inputSwap($win,count) == -1 } {
-       if { $dir == 1 } {
-            bell -displayof $win
-            return;
-          } else {
-            foreach {index cmd} [lindex $conn($c,inputHistory) end] {break}
-            set cmd [string map [list \b \n] $cmd]
-          }
-     } elseif { $dir == 1 && [lindex $conn($c,inputHistory) end 0] == $inputSwap($win,count) } {
-       set index -1
-       set cmd $inputSwap($win,backup)
-     } else {
-       set index [expr {$inputSwap($win,count) + $dir}]
-       if { [set pos [lsearch -exact -integer -sorted -index 0 $conn($c,inputHistory) $index]] == -1 } {
-            bell -displayof $win
-            return;
-          }
-       foreach {index cmd} [lindex $conn($c,inputHistory) $pos] {break}
-       set cmd [string map [list \b \n] $cmd]
-     }
+	# Find the new input history we want.
+	if { $inputSwap($win,count) == -1 } {
+		if { $dir == 1 } {
+			bell -displayof $win
+			return;
+		} else {
+			foreach {index cmd} [lindex $conn($c,inputHistory) end] {break}
+			set cmd [string map [list \b \n] $cmd]
+		}
+	} elseif { $dir == 1 && [lindex $conn($c,inputHistory) end 0] == $inputSwap($win,count) } {
+		set index -1
+		set cmd $inputSwap($win,backup)
+	} else {
+		set index [expr {$inputSwap($win,count) + $dir}]
+		if { [set pos [lsearch -exact -integer -sorted -index 0 $conn($c,inputHistory) $index]] == -1 } {
+			bell -displayof $win
+			return;
+		}
+		foreach {index cmd} [lindex $conn($c,inputHistory) $pos] {break}
+		set cmd [string map [list \b \n] $cmd]
+	}
 
-  if { $inputSwap($win,count) == -1 } {
-       set inputSwap($win,backup) [$win get 1.0 end-1char]
-     } elseif { $index == -1 } {
-       set inputSwap($win,backup) ""
-     }
-  $win replace 1.0 end $cmd
-  after idle [list $win mark set insert end-1c]
-  set inputSwap($win,count) $index
+	if { $inputSwap($win,count) == -1 } {
+		set inputSwap($win,backup) [$win get 1.0 end-1char]
+	} elseif { $index == -1 } {
+		set inputSwap($win,backup) ""
+	}
+	$win replace 1.0 end $cmd
+	after idle [list $win mark set insert end-1c]
+	set inputSwap($win,count) $index
 
-  return;
+	return;
 
 };# ::potato::inputHistoryScroll
 
@@ -12428,23 +12476,23 @@ proc ::potato::inputHistoryScroll {dir {win ""}} {
 #: desc cmd, reset it to the stored cmd. If window with focus isn't an input window, do nothing
 #: return nothing
 proc ::potato::inputHistoryReset {{win ""}} {
-  variable inputSwap;
+	variable inputSwap;
 
-  if { $win eq "" } {
-       set win [focus -displayof .]
-     }
-  if { ![info exists inputSwap($win,conn)] } {
-       $win delete 1.0 end
-       return;
-     }
-  if { $inputSwap($win,count) == -1 } {
-       $win delete 1.0 end
-       return;
-     }
-  $win replace 1.0 end $inputSwap($win,backup)
-  set inputSwap($win,count) -1
+	if { $win eq "" } {
+		set win [focus -displayof .]
+	}
+	if { ![info exists inputSwap($win,conn)] } {
+		$win delete 1.0 end
+		return;
+	}
+	if { $inputSwap($win,count) == -1 } {
+		$win delete 1.0 end
+		return;
+	}
+	$win replace 1.0 end $inputSwap($win,backup)
+	set inputSwap($win,count) -1
 
-  return;
+	return;
 
 };# ::potato::inputHistoryReset
 
@@ -12454,47 +12502,47 @@ proc ::potato::inputHistoryReset {{win ""}} {
 #: desc Set the prompt for a connection
 #: return nothing
 proc ::potato::setPrompt {c prompt} {
-  variable conn;
+	variable conn;
 
-  # ANSI-less version
-  set hasAnsi [regsub -all {\x1B.*?m} $prompt "" noAnsi]
-  if { $noAnsi eq "" } {
-       set conn($c,prompt) ""
-     } else {
-       set conn($c,prompt) "  -   $noAnsi"
-     }
-  set existing [llength [$conn($c,textWidget) tag ranges prompt]]
-  set t $conn($c,textWidget)
-  if { $prompt eq "" } {
-       if { $existing } {
-            $t delete prompt.first prompt.last
-          }
-     } else {
-       set aE [atEnd $t]
-       if { $hasAnsi } {
-            # We need to parse out the ANSI. Le sigh
-            set ansi($c,ansi,fg) fg
-            set ansi($c,ansi,bg) bg
-            set ansi($c,ansi,flash) 0
-            set ansi($c,ansi,underline) 0
-            set ansi($c,ansi,highlight) 0
-            set ansi($c,ansi,inverse) 0
-            set inserts [flattenParsedANSI [parseANSI $prompt ansi $c] [list prompt margins]]
-          } else {
-            set inserts [list "$prompt" [list prompt margins]]
-          }
-       set inserts [concat [list "\n> " [list prompt margins]] $inserts [list [clock seconds] [list prompt timestamp]]]
-       if { $existing } {
-            $t replace prompt.first prompt.last {*}$inserts
-          } else {
-            $t insert end {*}$inserts
-          }
-       if { $aE } {
-            $t see end
-          }
-     }
+	# ANSI-less version
+	set hasAnsi [regsub -all {\x1B.*?m} $prompt "" noAnsi]
+	if { $noAnsi eq "" } {
+		set conn($c,prompt) ""
+	} else {
+		set conn($c,prompt) "  -   $noAnsi"
+	}
+	set existing [llength [$conn($c,textWidget) tag ranges prompt]]
+	set t $conn($c,textWidget)
+	if { $prompt eq "" } {
+		if { $existing } {
+			$t delete prompt.first prompt.last
+		}
+	} else {
+		set aE [atEnd $t]
+		if { $hasAnsi } {
+			# We need to parse out the ANSI. Le sigh
+			set ansi($c,ansi,fg) fg
+			set ansi($c,ansi,bg) bg
+			set ansi($c,ansi,flash) 0
+			set ansi($c,ansi,underline) 0
+			set ansi($c,ansi,highlight) 0
+			set ansi($c,ansi,inverse) 0
+			set inserts [flattenParsedANSI [parseANSI $prompt ansi $c] [list prompt margins]]
+		} else {
+			set inserts [list "$prompt" [list prompt margins]]
+		}
+		set inserts [concat [list "\n> " [list prompt margins]] $inserts [list [clock seconds] [list prompt timestamp]]]
+		if { $existing } {
+			$t replace prompt.first prompt.last {*}$inserts
+		} else {
+			$t insert end {*}$inserts
+		}
+		if { $aE } {
+			$t see end
+		}
+	}
 
-  return;
+	return;
 
 };# ::potato::setPrompt
 
@@ -12505,16 +12553,16 @@ proc ::potato::setPrompt {c prompt} {
 #: return A localized string
 proc ::potato::T {msgformat args} {
 
-  if { [catch {::msgcat::mc $msgformat {*}$args} i18n] } {
-       errorLog "Unable to format message for translation: $i18n" error
-       if { [llength $args] && ![catch {format $msgformat {*}$args} formatted] } {
-            return $formatted;
-          } else {
-            return $msgformat;
-          }
-     } else {
-       return $i18n;
-     }
+	if { [catch {::msgcat::mc $msgformat {*}$args} i18n] } {
+		errorLog "Unable to format message for translation: $i18n" error
+		if { [llength $args] && ![catch {format $msgformat {*}$args} formatted] } {
+			return $formatted;
+		} else {
+			return $msgformat;
+		}
+	} else {
+		return $i18n;
+	}
 
 };# ::potato::T
 
@@ -12524,89 +12572,88 @@ proc ::potato::T {msgformat args} {
 #: returns $msgformat
 proc ::potato::X {msgformat} {
 
-  return $msgformat;
+	return $msgformat;
 
 };# ::potato::X
 
 namespace eval ::potato {
-  namespace export T
-  namespace export X
+	namespace export T
+	namespace export X
 }
 
 #: proc ::potato::basic_reqs
 #: desc Load the basic requirements for Potato - ensure we have a sufficient Tcl and Tk version, required packages, etc
 #: return nothing
 proc ::potato::basic_reqs {} {
-  variable potato;
+	variable potato;
 
-  if { [catch {package require Tk 8.5-}] } {
-       if { ![package present Tk] } {
-            # No Tk -at all-
-            puts "WARNING! Potato is a graphical client, and requires Tk version 8.5 or 8.6."
-            puts "Please install Tk before trying to run Potato, or download a binary of Potato"
-            puts "from the website at $potato(webpage)"
-          } else {
-            # We have Tk, but not a good enough version
-            set msg "WARNING! Potato requires Tk 8.5 or 8.6 to run (you only have Tk [package version Tk]).\n"
-            append msg "Please install a newer version of Tk, or download a binary of Potato from\n"
-            append msg "the website ($potato(webpage)) which includes everything you need."
-            tk_messageBox -icon error -title "Potato" -message $msg -type ok
-          }
-        exit;
-     }
+	if { [catch {package require Tk 8.5-}] } {
+		if { ![package present Tk] } {
+			# No Tk -at all-
+			puts "WARNING! Potato is a graphical client, and requires Tk version 8.5 or 8.6."
+			puts "Please install Tk before trying to run Potato, or download a binary of Potato"
+			puts "from the website at $potato(webpage)"
+		} else {
+			# We have Tk, but not a good enough version
+			set msg "WARNING! Potato requires Tk 8.5 or 8.6 to run (you only have Tk [package version Tk]).\n"
+			append msg "Please install a newer version of Tk, or download a binary of Potato from\n"
+			append msg "the website ($potato(webpage)) which includes everything you need."
+			tk_messageBox -icon error -title "Potato" -message $msg -type ok
+		}
+		exit;
+	}
 
-  if { [catch {package require Tcl 8.5-}] } {
-       puts "WARNING! You need to be using at least Tcl 8.5 to run Potato (you only have [package version Tcl]). "
-       puts "Please download a newer version of Tcl (www.activestate.com), "
-       puts "or download a binary of Potato from the website "
-       puts "($potato(webpage)) which includes everything you need."
-       exit;
-     }
+	if { [catch {package require Tcl 8.5-}] } {
+		puts "WARNING! You need to be using at least Tcl 8.5 to run Potato (you only have [package version Tcl]). "
+		puts "Please download a newer version of Tcl (www.activestate.com), "
+		puts "or download a binary of Potato from the website "
+		puts "($potato(webpage)) which includes everything you need."
+		exit;
+	}
 
-  # OK, that's Tcl and Tk sorted. Now let's load in the other parts of Potato from separate
-  # files. These really shouldn't be an issue....
+	# OK, that's Tcl and Tk sorted. Now let's load in the other parts of Potato from separate
+	# files. These really shouldn't be an issue....
 
-  set files [list telnet proxy wikihelp spell encoding config events slash]
+	set files [list telnet proxy wikihelp spell encoding config events slash]
 
-  set packages \
-    [list \
-      [list treeviewUtils] \
-    ]
+	set packages [list \
+		[list treeviewUtils] \
+	]
 
-  if { ![package vsatisfies [package present Tk] 8.6-] } {
-       # On Tk 8.6, we use [tk fontchooser]. Before that, we need the
-       # potato-font package to provide our own dialog.
-       lappend files font
-     }
-  set dir [file dirname [info script]]
-  foreach x $files {
-    if { [catch {source [file join $dir "potato-$x.tcl"]} err] } {
-         set msg "WARNING! Your Potato installation appears to be corrupt or incomplete -\n"
-         append msg "you are missing part of the Potato code (potato-$x.tcl).\n"
-         append msg "Please re-download Potato from the website\n"
-         append msg "($potato(webpage)), and contact the author if you\n"
-         append msg "have any further problems."
-         tk_messageBox -icon error -title "Potato" -type ok -message $msg
-         tk_messageBox -icon error -title "Potato" -type ok -message "Error: $err"
-         exit;
-       }
-  }
+	if { ![package vsatisfies [package present Tk] 8.6-] } {
+		# On Tk 8.6, we use [tk fontchooser]. Before that, we need the
+		# potato-font package to provide our own dialog.
+		lappend files font
+	}
+	set dir [file dirname [info script]]
+	foreach x $files {
+		if { [catch {source [file join $dir "potato-$x.tcl"]} err] } {
+			set msg "WARNING! Your Potato installation appears to be corrupt or incomplete -\n"
+			append msg "you are missing part of the Potato code (potato-$x.tcl).\n"
+			append msg "Please re-download Potato from the website\n"
+			append msg "($potato(webpage)), and contact the author if you\n"
+			append msg "have any further problems."
+			tk_messageBox -icon error -title "Potato" -type ok -message $msg
+			tk_messageBox -icon error -title "Potato" -type ok -message "Error: $err"
+			exit;
+		}
+	}
 
-  foreach x $packages {
-    if { [catch {package require {*}$x} err] } {
-         set msg "Required package [lindex $x 0] is missing.\n"
-         append msg "Please re-download Potato from the website\n"
-         append msg "($potato(webpage)), and contact the author if you\n"
-         append msg "have any further problems."
-         tk_messageBox -icon error -title "Potato" -type ok -message $msg
-         tk_messageBox -icon error -title "Potato" -type ok -message "Error: $err"
-         exit;
-       }
-  }
+	foreach x $packages {
+		if { [catch {package require {*}$x} err] } {
+			set msg "Required package [lindex $x 0] is missing.\n"
+			append msg "Please re-download Potato from the website\n"
+			append msg "($potato(webpage)), and contact the author if you\n"
+			append msg "have any further problems."
+			tk_messageBox -icon error -title "Potato" -type ok -message $msg
+			tk_messageBox -icon error -title "Potato" -type ok -message "Error: $err"
+			exit;
+		}
+	}
 
-  # Hooray, all good.
+	# Hooray, all good.
 
-  return;
+	return;
 
 };# ::potato::basic_reqs
 
@@ -12616,11 +12663,11 @@ proc ::potato::basic_reqs {} {
 #: return widget path
 proc ::potato::pspinbox {args} {
 
-  if { [catch {::ttk::spinbox {*}$args} sb] } {
-       return [spinbox {*}$args];
-     } else {
-       return $sb;
-     }
+	if { [catch {::ttk::spinbox {*}$args} sb] } {
+		return [spinbox {*}$args];
+	} else {
+		return $sb;
+	}
 }
 
 #########################
@@ -12629,16 +12676,16 @@ proc ::potato::pspinbox {args} {
 # "ffe [<connection>]" fixes the fileevent for <connection> when it's automatically disabled due to get_mushage throwing an error.
 proc ffe {{c ""}} {
 
-  if { $c eq "" } {
-       set c [::potato::up]
-     }
-  fileevent $potato::conn($c,id) readable [list ::potato::get_mushage $c]
+	if { $c eq "" } {
+		set c [::potato::up]
+	}
+	fileevent $potato::conn($c,id) readable [list ::potato::get_mushage $c]
 
 };# ffe
 
 proc winover {} {
 
-  return [winfo containing {*}[winfo pointerxy .]];
+	return [winfo containing {*}[winfo pointerxy .]];
 
 }
 
@@ -12648,8 +12695,8 @@ proc winover {} {
 # Run it!
 
 if { [info exists ::potato::running] && $potato::running } {
-     return;
-   }
+	return;
+}
 
 ::potato::main
 
@@ -12657,33 +12704,33 @@ if { [info exists ::potato::running] && $potato::running } {
 #########################
 proc parray {a args} {
 
-  set nargs [llength $args]
-  if { $nargs > 2 } {
-       return -code error "Wrong # of arguments. Should be parray array ?type? ?pattern?"
-     }
-  upvar 1 $a array
-  if { ![array exists array] } {
-       error "\"$a\" isn't an array"
-     }
-  set maxl 0
-  set names [lsort [array names array {*}$args]]
-  foreach name $names {
-    if { [string length $name] > $maxl } {
-         set maxl [string length $name]
-       }
-  }
-  set maxl [expr {$maxl + [string length $a] + 2}]
-  foreach name $names {
-    set nameString [format %s(%s) $a $name]
-    puts stdout [format "%-*s = %s" $maxl $nameString $array($name)]
-  }
+	set nargs [llength $args]
+	if { $nargs > 2 } {
+		return -code error "Wrong # of arguments. Should be parray array ?type? ?pattern?"
+	}
+	upvar 1 $a array
+	if { ![array exists array] } {
+		error "\"$a\" isn't an array"
+	}
+	set maxl 0
+	set names [lsort [array names array {*}$args]]
+	foreach name $names {
+		if { [string length $name] > $maxl } {
+			set maxl [string length $name]
+		}
+	}
+	set maxl [expr {$maxl + [string length $a] + 2}]
+	foreach name $names {
+		set nameString [format %s(%s) $a $name]
+		puts stdout [format "%-*s = %s" $maxl $nameString $array($name)]
+	}
 
 }
 
 if { $tcl_platform(platform) eq "windows" } {
-     parray potato::world -regexp {^[1-9][0-9]*,name$}
-     if { !$::potato::potato(wrapped) && [info exists ::potato::systray(mainico)] && [file exists $::potato::systray(mainico)] } {
-          wm iconbitmap . -default $::potato::systray(mainico)
-        }
-     catch {console eval [list wm iconbitmap . $::potato::systray(mainico)]}
-   }
+	parray potato::world -regexp {^[1-9][0-9]*,name$}
+	if { !$::potato::potato(wrapped) && [info exists ::potato::systray(mainico)] && [file exists $::potato::systray(mainico)] } {
+		wm iconbitmap . -default $::potato::systray(mainico)
+	}
+	catch {console eval [list wm iconbitmap . $::potato::systray(mainico)]}
+}
