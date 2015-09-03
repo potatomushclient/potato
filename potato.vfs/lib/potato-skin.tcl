@@ -1547,7 +1547,8 @@ proc ::skin::potato::spawnBar {{c ""}} {
 
 	foreach x [lsort -dictionary -index 0 [::potato::connInfo $c spawns]] {
 		set name [lindex $x 0]
-		set btn $widgets(spawnbar).spawn_$name
+		set name64 [::base64::encode $name]
+		set btn $widgets(spawnbar).spawn_$name64
 		ttk::button $btn -text $name -command [list ::skin::potato::showSpawn $c $name] -style Toolbutton -compound left -takefocus 0
 		if { [info exists disp($c)] && $disp($c) eq $name } {
 			$btn configure -image ::skin::potato::img::spawnbarUp
@@ -1591,7 +1592,7 @@ proc ::skin::potato::spawnUpdate {c spawn} {
 		return;
 	}
 
-	$widgets(spawnbar).spawn_$spawn configure -image ::skin::potato::img::worldbarNewact
+	$widgets(spawnbar).spawn_[::base64::encode $spawn] configure -image ::skin::potato::img::worldbarNewact
 	set spawns($c,$spawn) 1
 
 	return;
@@ -1614,7 +1615,7 @@ proc ::skin::potato::delSpawn {c name} {
 	if { [info exists ::potato::conn($c,spawns,$name)] } {
 		bind $::potato::conn($c,spawns,$name) <Button-3> {}
 	}
-	catch {destroy $widgets(spawnbar).spawn_$name}
+	catch {destroy "$widgets(spawnbar).spawn_[::base64::encode $name]"}
 	if { [::potato::up] == $c } {
 		spawnBar $c
 	}
@@ -1647,11 +1648,13 @@ proc ::skin::potato::showSpawn {c spawn} {
 		set t [activeTextWidget $c]
 		pack forget $t
 		$t configure -yscrollcommand {}
-		if { $disp($c) ne "" && [winfo exists $widgets(spawnbar).spawn_$disp($c)] } {
-			$widgets(spawnbar).spawn_$disp($c) configure -image ::skin::potato::img::spawnbarNormal
+		set disp64 [::base64::encode $disp($c)]
+		if { $disp($c) ne "" && [winfo exists $widgets(spawnbar).spawn_$disp64] } {
+			$widgets(spawnbar).spawn_$disp64 configure -image ::skin::potato::img::spawnbarNormal
 		}
 	}
 
+	set spawn64 [::base64::encode $spawn]
 	set disp($c) $spawn
 	unset -nocomplain spawns($c,$spawn)
 	set t [activeTextWidget $c]
@@ -1659,8 +1662,8 @@ proc ::skin::potato::showSpawn {c spawn} {
 	raise $t
 	$t configure -yscrollcommand [list $widgets(conn,$c,txtframe,sb) set]
 	$widgets(conn,$c,txtframe,sb) configure -command [list $t yview]
-	if { $disp($c) ne ""  && [winfo exists $widgets(spawnbar).spawn_$disp($c)] } {
-		$widgets(spawnbar).spawn_$disp($c) configure -image ::skin::potato::img::spawnbarUp
+	if { $disp($c) ne ""  && [winfo exists $widgets(spawnbar).spawn_$spawn64] } {
+		$widgets(spawnbar).spawn_$spawn64 configure -image ::skin::potato::img::spawnbarUp
 	}
 
 	return;

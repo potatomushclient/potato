@@ -4004,13 +4004,13 @@ proc ::potato::validSpawnName {name {onlyspawns 0}} {
 		return "";
 	}
 
-	set name [string tolower $name]
+	set lname [string tolower $name]
 
-	if { [string index $name 0] eq "_" } {
+	if { [string index $lname 0] eq "_" } {
 		if { $onlyspawns } {
 			return "";
 		}
-		if { $name ni [list "_main" "_all" "_none"] } {
+		if { $lname ni [list "_main" "_all" "_none"] } {
 			return "";
 		}
 		return $name;
@@ -12618,6 +12618,7 @@ proc ::potato::basic_reqs {} {
 
 	set packages [list \
 		[list treeviewUtils] \
+		[list base64] \
 	]
 
 	if { ![package vsatisfies [package present Tk] 8.6-] } {

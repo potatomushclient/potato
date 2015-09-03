@@ -1,5 +1,7 @@
 potato.vfs/lib/help
 skins
 worlds
-potato.*
+potato.ini
+potato.custom
+potato.dev
 *.lnk
