@@ -1139,6 +1139,13 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
 	# to be able to nuke them at will. The OK button will only be destroyed with the main window.
 	bind $inner.btm.button.ok <Destroy> [list ::potato::configureWorldCancel $w $win]
 	bind $win <Escape> [list destroy $win]
+	
+	foreach x [getChildrenRecursive $canvas] {
+		bindtags $x [linsert [bindtags $x] end-2 "ConfigureWorldCanvas"]
+	}
+	bind ConfigureWorldCanvas <MouseWheel> [list ::potato::mouseWheel $canvas %D]
+	catch {bind ConfigureWorldCanvas <4> [list ::potato::mouseWheel $canvas 120]}
+	catch {bind ConfigureWorldCanvas <5> [list ::potato::mouseWheel $canvas -120]}
 
 	if { $autosave } {
 		$inner.btm.button.ok invoke
@@ -1150,6 +1157,23 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
 	return;
 
 };# ::potato::configureWorld
+
+#: proc ::potato::getChildrenRecursive
+#: args win widget path
+#: desc Return a list containing $win and all of its children, grandchildren, etc
+#: return list of widgets
+proc ::potato::getChildrenRecursive {win} {
+
+	if { ![winfo exists $win] } {
+		return;
+	}
+	set ret [list $win]
+	foreach x [winfo children $win] {
+		set ret [concat $ret [getChildrenRecursive $x]]
+	}
+	
+	return $ret;
+}
 
 #: proc ::potato::configureWorldCharsLBUpdate
 #: arg w world id
@@ -2053,7 +2077,7 @@ proc ::potato::configureFrame {canvas title} {
 
 	set num [llength [winfo children $canvas]]
 	set outer [::ttk::frame $canvas.sub_$num]
-	set inner [::ttk::frame $canvas.sub_$num.inner]
+	set inner [::ttk::frame $outer.inner]
 	pack $inner -padx 4 -pady 8 -expand 1 -fill both
 
 	set label [::ttk::label $inner.internal_title_label -text $title]
