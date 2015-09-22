@@ -6620,6 +6620,8 @@ proc ::potato::main {} {
 	set path(log) $path(homedir)
 	set path(upload) $path(homedir)
 
+	lappend ::auto_path [file join $path(lib) app-potato crossplatform]
+	
 	basic_reqs
 
 	after idle [list ::potato::center [errorLogWindow]];# create a window for displaying error log messages
@@ -6695,7 +6697,7 @@ proc ::potato::main {} {
 	}
 	catch {file mkdir $paths(world)}
 	lappend ::auto_path $path(userlib)
-	lappend ::auto_path [file join $path(lib) app-potato crossplatform]
+
 	if { $::tcl_platform(platform) eq "windows" } {
 		lappend ::auto_path [file join $path(lib) app-potato windows]
 	} elseif { $::tcl_platform(os) eq "Darwin" } {
