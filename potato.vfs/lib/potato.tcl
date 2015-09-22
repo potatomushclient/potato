@@ -6695,6 +6695,7 @@ proc ::potato::main {} {
 	}
 	catch {file mkdir $paths(world)}
 	lappend ::auto_path $path(userlib)
+	lappend ::auto_path [file join $path(lib) app-potato crossplatform]
 	if { $::tcl_platform(platform) eq "windows" } {
 		lappend ::auto_path [file join $path(lib) app-potato windows]
 	} elseif { $::tcl_platform(os) eq "Darwin" } {
