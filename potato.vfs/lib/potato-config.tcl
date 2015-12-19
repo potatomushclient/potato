@@ -1173,7 +1173,7 @@ proc ::potato::getChildrenRecursive {win} {
 	}
 	
 	return $ret;
-}
+};# ::potato::getChildrenRecursive
 
 #: proc ::potato::configureWorldCharsLBUpdate
 #: arg w world id
