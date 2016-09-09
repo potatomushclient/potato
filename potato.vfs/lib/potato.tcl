@@ -10851,7 +10851,7 @@ proc ::potato::process_slash_cmd {c _str mode {_vars ""}} {
 				set ret [list 0 [T "Unknown /command \"%s\". Use /slash for a list. Use //command to send directly to MU*." $cmd]]
 				break;
 			} elseif { [llength $partial] > 1 } {
-				set ret [list 0 [T "Ambiguous /command \"%s\"." $cmd]]
+				set ret [list 0 [T "Ambiguous /command \"%s\".  Use /slash for a list. Use //command to send directly to MU*." $cmd]]
 				break;
 			}
 			set ret [customSlashCommand $c $custom [lindex $partial 0] $mode $cmdArgs vars]
