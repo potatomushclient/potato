@@ -1930,8 +1930,14 @@ proc ::potato::selectFile {var win save {basetypes ""}} {
 		set filetypes [concat $filetypes $basetypes]
 	}
 	lappend filetypes {{All Files}        *             }
+
+	if { [os] eq "windows" } {
+		set defaultextension ".txt"
+	} else {
+		set defaultextension ""
+	}
 	set file [$cmd -parent $win -initialdir $basedir -initialfile $basefile \
-		-filetypes $filetypes]
+		-filetypes $filetypes -defaultextension $defaultextension]
 
 	if { $file eq "" } {
 		return;
