@@ -2276,40 +2276,7 @@ proc ::potato::configureTextWidget {c t} {
 	$t tag configure timestamp -elide 1
 
 	# XTerm / FANSI Colors
-	set XTerm [list \
-		#000000 #AA0000 #00AA00 #AA5500 #0000AA #AA00AA #00AAAA #AAAAAA \
-		#555555 #FF5555 #55FF55 #FFFF55 #5555FF #FF55FF #55FFFF #FFFFFF \
-		#000000 #00005F #000087 #0000AF #0000D7 #0000FF #005F00 #005F5F \
-		#005F87 #005FAF #005FD7 #005FFF #008700 #00875F #008787 #0087AF \
-		#0087D7 #0087FF #00AF00 #00AF5F #00AF87 #00AFAF #00AFD7 #00AFFF \
-		#00D700 #00D75F #00D787 #00D7AF #00D7D7 #00D7FF #00FF00 #00FF5F \
-		#00FF87 #00FFAF #00FFD7 #00FFFF #5F0000 #5F005F #5F0087 #5F00AF \
-		#5F00D7 #5F00FF #5F5F00 #5F5F5F #5F5F87 #5F5FAF #5F5FD7 #5F5FFF \
-		#5F8700 #5F875F #5F8787 #5F87AF #5F87D7 #5F87FF #5FAF00 #5FAF5F \
-		#5FAF87 #5FAFAF #5FAFD7 #5FAFFF #5FD700 #5FD75F #5FD787 #5FD7AF \
-		#5FD7D7 #5FD7FF #5FFF00 #5FFF5F #5FFF87 #5FFFAF #5FFFD7 #5FFFFF \
-		#870000 #87005F #870087 #8700AF #8700D7 #8700FF #875F00 #875F5F \
-		#875F87 #875FAF #875FD7 #875FFF #878700 #87875F #878787 #8787AF \
-		#8787D7 #8787FF #87AF00 #87AF5F #87AF87 #87AFAF #87AFD7 #87AFFF \
-		#87D700 #87D75F #87D787 #87D7AF #87D7D7 #87D7FF #87FF00 #87FF5F \
-		#87FF87 #87FFAF #87FFD7 #87FFFF #AF0000 #AF005F #AF0087 #AF00AF \
-		#AF00D7 #AF00FF #AF5F00 #AF5F5F #AF5F87 #AF5FAF #AF5FD7 #AF5FFF \
-		#AF8700 #AF875F #AF8787 #AF87AF #AF87D7 #AF87FF #AFAF00 #AFAF5F \
-		#AFAF87 #AFAFAF #AFAFD7 #AFAFFF #AFD700 #AFD75F #AFD787 #AFD7AF \
-		#AFD7D7 #AFD7FF #AFFF00 #AFFF5F #AFFF87 #AFFFAF #AFFFD7 #AFFFFF \
-		#D70000 #D7005F #D70087 #D700AF #D700D7 #D700FF #D75F00 #D75F5F \
-		#D75F87 #D75FAF #D75FD7 #D75FFF #D78700 #D7875F #D78787 #D787AF \
-		#D787D7 #D787FF #D7AF00 #D7AF5F #D7AF87 #D7AFAF #D7AFD7 #D7AFFF \
-		#D7D700 #D7D75F #D7D787 #D7D7AF #D7D7D7 #D7D7FF #D7FF00 #D7FF5F \
-		#D7FF87 #D7FFAF #D7FFD7 #D7FFFF #FF0000 #FF005F #FF0087 #FF00AF \
-		#FF00D7 #FF00FF #FF5F00 #FF5F5F #FF5F87 #FF5FAF #FF5FD7 #FF5FFF \
-		#FF8700 #FF875F #FF8787 #FF87AF #FF87D7 #FF87FF #FFAF00 #FFAF5F \
-		#FFAF87 #FFAFAF #FFAFD7 #FFAFFF #FFD700 #FFD75F #FFD787 #FFD7AF \
-		#FFD7D7 #FFD7FF #FFFF00 #FFFF5F #FFFF87 #FFFFAF #FFFFD7 #FFFFFF \
-		#000000 #121212 #1C1C1C #262626 #303030 #3A3A3A #444444 #4E4E4E \
-		#585858 #626262 #6C6C6C #767676 #808080 #8A8A8A #949494 #9E9E9E \
-		#A8A8A8 #B2B2B2 #BCBCBC #C6C6C6 #D0D0D0 #DADADA #E4E4E4 #EEEEEE \
-	]
+	set XTerm [xtermColours]
 	for {set i 0} {$i < 256} {incr i} {
 		$t tag configure ANSI_fg_xterm$i -foreground [lindex $XTerm $i]
 		$t tag configure ANSI_bg_xterm$i -background [lindex $XTerm $i]
@@ -2318,6 +2285,50 @@ proc ::potato::configureTextWidget {c t} {
 	return;
 
 };# ::potato::configureTextWidget
+
+#: proc ::potato::xtermColours
+#: desc Returns a list of 256 XTerm colours. These are not currently
+#: desc configurable; overriding this proc is the only way to alter them
+#: return list of xterm colours.
+proc ::potato::xtermColours {} {
+
+	set XTerm [list \
+		#000000 #800000 #008000 #808000 #000080 #800080 #008080 #c0c0c0 \
+		#808080 #ff0000 #00ff00 #ffff00 #0000ff #ff00ff #00ffff #ffffff \
+		#000000 #00005f #000087 #0000af #0000d7 #0000ff #005f00 #005f5f \
+		#005f87 #005faf #005fd7 #005fff #008700 #00875f #008787 #0087af \
+		#0087d7 #0087ff #00af00 #00af5f #00af87 #00afaf #00afd7 #00afff \
+		#00d700 #00d75f #00d787 #00d7af #00d7d7 #00d7ff #00ff00 #00ff5f \
+		#00ff87 #00ffaf #00ffd7 #00ffff #5f0000 #5f005f #5f0087 #5f00af \
+		#5f00d7 #5f00ff #5f5f00 #5f5f5f #5f5f87 #5f5faf #5f5fd7 #5f5fff \
+		#5f8700 #5f875f #5f8787 #5f87af #5f87d7 #5f87ff #5faf00 #5faf5f \
+		#5faf87 #5fafaf #5fafd7 #5fafff #5fd700 #5fd75f #5fd787 #5fd7af \
+		#5fd7d7 #5fd7ff #5fff00 #5fff5f #5fff87 #5fffaf #5fffd7 #5fffff \
+		#870000 #87005f #870087 #8700af #8700d7 #8700ff #875f00 #875f5f \
+		#875f87 #875faf #875fd7 #875fff #878700 #87875f #878787 #8787af \
+		#8787d7 #8787ff #87af00 #87af5f #87af87 #87afaf #87afd7 #87afff \
+		#87d700 #87d75f #87d787 #87d7af #87d7d7 #87d7ff #87ff00 #87ff5f \
+		#87ff87 #87ffaf #87ffd7 #87ffff #af0000 #af005f #af0087 #af00af \
+		#af00d7 #af00ff #af5f00 #af5f5f #af5f87 #af5faf #af5fd7 #af5fff \
+		#af8700 #af875f #af8787 #af87af #af87d7 #af87ff #afaf00 #afaf5f \
+		#afaf87 #afafaf #afafd7 #afafff #afd700 #afd75f #afd787 #afd7af \
+		#afd7d7 #afd7ff #afff00 #afff5f #afff87 #afffaf #afffd7 #afffff \
+		#d70000 #d7005f #d70087 #d700af #d700d7 #d700ff #d75f00 #d75f5f \
+		#d75f87 #d75faf #d75fd7 #d75fff #d78700 #d7875f #d78787 #d787af \
+		#d787d7 #d787ff #d7af00 #d7af5f #d7af87 #d7afaf #d7afd7 #d7afff \
+		#d7d700 #d7d75f #d7d787 #d7d7af #d7d7d7 #d7d7ff #d7ff00 #d7ff5f \
+		#d7ff87 #d7ffaf #d7ffd7 #d7ffff #ff0000 #ff005f #ff0087 #ff00af \
+		#ff00d7 #ff00ff #ff5f00 #ff5f5f #ff5f87 #ff5faf #ff5fd7 #ff5fff \
+		#ff8700 #ff875f #ff8787 #ff87af #ff87d7 #ff87ff #ffaf00 #ffaf5f \
+		#ffaf87 #ffafaf #ffafd7 #ffafff #ffd700 #ffd75f #ffd787 #ffd7af \
+		#ffd7d7 #ffd7ff #ffff00 #ffff5f #ffff87 #ffffaf #ffffd7 #ffffff \
+		#080808 #121212 #1c1c1c #262626 #303030 #3a3a3a #444444 #4e4e4e \
+		#585858 #606060 #666666 #767676 #808080 #8a8a8a #949494 #9e9e9e \
+		#a8a8a8 #b2b2b2 #bcbcbc #c6c6c6 #d0d0d0 #dadada #e4e4e4 #eeeeee \
+	]
+
+	return $XTerm;
+};# ::potato::xtermColours
 
 #: proc ::potato::createOutputTags
 #: arg t text widget to create tags for
