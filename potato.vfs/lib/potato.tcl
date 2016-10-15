@@ -492,7 +492,7 @@ proc ::potato::prefixWindow {{w ""}} {
 
 	if { [llength [$tree children {}]] } {
 		set first [lindex [$tree children {}] 0]
-		$tree selection set $first
+		$tree selection set [list $first]
 		$tree focus $first
 		set state "!disabled"
 	} else {
@@ -572,7 +572,7 @@ proc ::potato::prefixWindowUpdate {w {sel ""}} {
 			-image [list [lindex $images $enabled]]
 	}
 	if { $sel ne "" } {
-		$tree selection set $sel
+		$tree selection set [list $sel]
 		$tree focus $sel
 	}
 
