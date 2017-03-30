@@ -3038,8 +3038,11 @@ proc ::potato::connect {c first} {
 			# more in-depth checks of the certificate, passing self-signed by default
 			# (And fix the error message below to only give the 'make sure port is enabled' message if we
 			# have an error, instead of a validation failure)
+			# The '1' below used to be checking for TLS >= 1.6, but I don't recall what changed between 1.5 and 1.6
+			# to necessitate it. Since we now require at least 1.6.7, it's left in like this, with those note so I
+			# remember to look it up later.
 			if { [catch {::tls::import $fid -command ::potato::connectVerifySSL -request 0 -cipher "ALL"} import] || \
-				($potato(hasTLS1.6) && [catch {fconfigure $fid -blocking 0 -buffering none} fconfig]) || \
+				(1 && [catch {fconfigure $fid -blocking 0 -buffering none} fconfig]) || \
 				[catch {::tls::handshake $fid} handshake] } {
 				set sslError "Unknown SSL Error";# do not translate
 				foreach errs [list import fconfig handshake] {
@@ -6716,7 +6719,8 @@ proc ::potato::main {} {
 	lappend ::auto_path $path(userlib)
 
 	if { $::tcl_platform(platform) eq "windows" } {
-		lappend ::auto_path [file join $path(lib) app-potato windows]
+		#lappend ::auto_path [file join $path(lib) app-potato windows]
+		set ::auto_path [concat [list [file join $path(lib) app-potato windows]] $::auto_path]
 	} elseif { $::tcl_platform(os) eq "Darwin" } {
 		lappend ::auto_path [file join $path(lib) app-potato macosx]
 	} else {
@@ -6740,9 +6744,8 @@ proc ::potato::main {} {
 	tasksInit
 
 	# Load TLS if available, for SSL connections
-	if { [catch {package require tls 1.5-} reqtls errdict] } {
+	if { [catch {package require tls 1.6.7-} reqtls errdict] } {
 		set potato(hasTLS) 0
-		set potato(hasTLS1.6) 0
 		set tlserr "Unable to load TLS for SSL connections: $reqtls"
 		if { $::tcl_platform(platform) eq "linux" } {
 			append tlserr "  (You may need to install the 'tcl-tls' package from your package manager.)"
@@ -6752,11 +6755,11 @@ proc ::potato::main {} {
 		set potato(hasTLS) 1
 		# For some reason, some TLS 1.5.0s in Linux apparantly report themselves as
 		# TLS 1.50. Lying bastards.
-		if { [package vsatisfies $reqtls 1.6-] && ![package vsatisfies $reqtls 1.50-1.59] } {
-			set potato(hasTLS1.6) 1
-		} else {
-			set potato(hasTLS1.6) 0
-			errorLog "TLS 1.6 or higher is recommended, but you only have TLS $reqtls. Consider upgrading." warning
+		if { [package vsatisfies $reqtls 1.6-] && [package vsatisfies $reqtls 1.50-1.59] } {
+			set potato(hasTLS) 0
+			set errmsg "TLS 1.6.7 or higher is required, but you only have TLS $reqtls. Please upgrade."
+			append errmsg " You can download the latest version from https://core.tcl.tk/tcltls/index"
+			errorLog $errmsg error
 		}
 	}
 

@@ -1,7 +1,5 @@
-if { $::tcl_platform(platform) ne "windows" } {
-     return;
-   }
 
-package ifneeded tls 1.6.3 \
-    "[list source [file join $dir tls.tcl]] ; \
-     [list tls::initlib $dir tls163.dll]"
+switch -exact [::potato::checkbits] {
+	"32" {package ifneeded tls 1.6.7.1  "[list source [file join $dir tls.tcl]] ;  [list tls::initlib $dir tls1671_32bit.dll]"}
+	"64" {package ifneeded tls 1.6.7.1  "[list source [file join $dir tls.tcl]] ;  [list tls::initlib $dir tls1671_64bit.dll]"}
+}
