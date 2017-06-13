@@ -7823,7 +7823,7 @@ proc ::potato::historySub {c top lb key} {
 		send_to $c $cmd
 	} elseif { $key == 4 } {
 		clipboard clear -displayof $top
-		clipboard append -displayof $top $cmd $cmd]
+		clipboard append -displayof $top $cmd
 		bell -displayof $top
 	}
 
