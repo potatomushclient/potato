@@ -6557,7 +6557,7 @@ proc ::potato::os {} {
 		return "windows";
 	} elseif { $tcl_platform(os) eq "Darwin" } {
 		return "macosx";
-	} elseif { [package present borg] } {
+	} elseif { ![catch {package present borg}] } {
 		return "android";
 	} else {
 		return "linux";
@@ -12610,7 +12610,7 @@ proc ::potato::basic_reqs {} {
 	variable potato;
 
 	if { [catch {package require Tk 8.5-}] } {
-		if { ![package present Tk] } {
+		if { [catch {package present Tk}] } {
 			# No Tk -at all-
 			puts "WARNING! Potato is a graphical client, and requires Tk version 8.5 or 8.6."
 			puts "Please install Tk before trying to run Potato, or download a binary of Potato"
