@@ -10853,7 +10853,7 @@ proc ::potato::process_slash_cmd {c _str mode {_vars ""}} {
 				foreach x $world(0,slashcmd) {
 					if { [string equal -nocase -length [string length $cmd] $cmd $x] } {
 						lappend partial $x
-						set custom -1
+						set custom 0
 					}
 				}
 			}
@@ -10864,7 +10864,7 @@ proc ::potato::process_slash_cmd {c _str mode {_vars ""}} {
 				set ret [list 0 [T "Ambiguous /command \"%s\".  Use /slash for a list. Use //command to send directly to MU*." $cmd]]
 				break;
 			}
-			set ret [customSlashCommand $c $custom [lindex $partial 0] $mode $cmdArgs vars]
+			set ret [customSlashCommand $c $custom [lindex $partial 0] $cmdArgs]
 		} else {
 			set ret [list 0 [T "Ambiguous /command \"%s\"." $cmd]]
 			break;
