@@ -7311,7 +7311,8 @@ proc ::potato::tooltipShow {widget {text ""} {x ""} {y ""}} {
 	$top configure -borderwidth 1 -background black
 	wm overrideredirect $top 1
 	pack [message $top.txt -aspect 10000 -background lightyellow \
-		-font {"" 8} -text $text -padx 1 -pady 0]
+		-foreground black -font {"" 8} -text " $text " -padx 2 -pady 1]
+
 	bind $top <ButtonPress-1> [list catch [list destroy $tooltip(widget)]]
 	if { $x eq "" } {
 		set wmx [winfo pointerx $widget]
