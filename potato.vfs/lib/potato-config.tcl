@@ -1141,11 +1141,11 @@ proc ::potato::configureWorld {{w ""} {autosave 0}} {
 	bind $win <Escape> [list destroy $win]
 	
 	foreach x [getChildrenRecursive $canvas] {
-		bindtags $x [linsert [bindtags $x] end-2 "ConfigureWorldCanvas"]
+		bindtags $x [linsert [bindtags $x] end-2 "ConfigureWorldCanvas$w"]
 	}
-	bind ConfigureWorldCanvas <MouseWheel> [list ::potato::mouseWheel $canvas %D]
-	catch {bind ConfigureWorldCanvas <4> [list ::potato::mouseWheel $canvas 120]}
-	catch {bind ConfigureWorldCanvas <5> [list ::potato::mouseWheel $canvas -120]}
+	bind ConfigureWorldCanvas$w <MouseWheel> [list ::potato::mouseWheel $canvas %D]
+	bind ConfigureWorldCanvas$w <Button-4> [list ::potato::mouseWheel $canvas 120]
+	bind ConfigureWorldCanvas$w <Button-5> [list ::potato::mouseWheel $canvas -120]
 
 	if { $autosave } {
 		$inner.btm.button.ok invoke

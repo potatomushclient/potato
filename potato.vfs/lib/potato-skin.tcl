@@ -1408,8 +1408,10 @@ proc ::skin::potato::import {c} {
 	pack $widgets(conn,$c,txtframe,sb) -side right -fill y -anchor ne
 
 	bind $widgets(conn,$c,txtframe) <MouseWheel> [list ::skin::potato::scrollActiveTextWidget $c %D]
-	bind $widgets(conn,$c,txtframe) <Button-3> [list ::skin::potato::rightclickOutput $c "" %x %y %X %Y]
+	bind $widgets(conn,$c,txtframe) <Button-4> [list ::skin::potato::scrollActiveTextWidget $c 120]
+	bind $widgets(conn,$c,txtframe) <Button-5> [list ::skin::potato::scrollActiveTextWidget $c -120]
 
+	bind $widgets(conn,$c,txtframe) <Button-3> [list ::skin::potato::rightclickOutput $c "" %x %y %X %Y]
 	bind $t <Button-3> [list ::skin::potato::rightclickOutput $c $t %x %y %X %Y]
 
 	foreach x [::potato::connInfo $c spawns] {

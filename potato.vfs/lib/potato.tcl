@@ -2514,9 +2514,9 @@ proc ::potato::connZero {} {
 	$canvas bind clickable <Enter> "[list %W addtag hoverTag withtag current] ; [list %W itemconfig hoverTag -fill red] ; [list %W configure -cursor hand2]"
 	set leave "[list %W itemconfig hoverTag -fill $linkcol] ; [list %W dtag hoverTag] ; [list %W configure -cursor {}]"
 	$canvas bind hoverTag <Leave> $leave
-	bind $canvas <MouseWheel> "[list ::potato::mouseWheel %W %D] ; $leave"
-	catch {bind $canvas <4> "[list ::potato::mouseWheel %W 120] ; $leave"}
-	catch {bind $canvas <5> "[list ::potato::mouseWheel %W -120 ; $leave"}
+	bind $canvas <MouseWheel> "[list ::potato::mouseWheel %W %D];$leave"
+	bind $canvas <Button-4> "[list ::potato::mouseWheel %W 120];$leave"
+	bind $canvas <Button-5> "[list ::potato::mouseWheel %W -120];$leave"
 	$canvas bind clickable <ButtonRelease-1> [list ::potato::connZeroClick %W %x %y]
 
 	$canvas create image $x $y -anchor nw -image $logo -tags [list logo]
@@ -8686,10 +8686,9 @@ proc ::potato::setUpBindings {} {
 				bind $x <$y> {}
 			}
 		}
-		catch {bind all <MouseWheel> [list ::potato::mouseWheel %W %D]}
-		# Some Linuxes use button 4/5 instead of <MouseWheel>. Some don't.
-		catch {bind all <4> [list ::potato::mouseWheel %W 120]}
-		catch {bind all <5> [list ::potato::mouseWheel %W -120]}
+		bind all <MouseWheel> [list ::potato::mouseWheel %W %D]
+		bind all <Button-4> [list ::potato::mouseWheel %W 120]
+		bind all <Button-5> [list ::potato::mouseWheel %W -120]
 	} else {
 		bind PotatoOutput <MouseWheel> [bind Text <MouseWheel>]
 		bind PotatoOutput <Button-4> [bind Text <Button-4>]
@@ -8739,7 +8738,7 @@ proc ::potato::setUpBindings {} {
 	bind TButton <FocusIn> {%W instate !disabled {%W state [list active focus]}}
 	bind TButton <FocusOut> {%W instate !disabled {%W state [list !active !focus]}}
 
-	bind Text <<Paste>> [list ::potato::textPaste %W]
+	bind Text <<Paste>> "[list ::potato::textPaste %W];break"
 
 	# Copy some bindings from Text to PotatoOutput, so we can remove the 'Text' bindtags from it.
 	# (safer to copy those we want than block those we don't, as more we don't want might be added later)
