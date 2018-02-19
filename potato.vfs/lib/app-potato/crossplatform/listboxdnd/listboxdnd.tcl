@@ -3,7 +3,7 @@ namespace eval ::ListboxDnD {
 }
 
 bind ListboxDnD <1> [list ::ListboxDnD::start %W %x %y]
-bind ListboxDnD <Escape> [list ::ListboxDnD::cancel %W %x %y]
+bind ListboxDnD <Escape> "[list ::ListboxDnD::cancel %W %x %y];break"
 bind ListboxDnD <B1-Motion> [list ::ListboxDnD::drag %W %x %y]
 bind ListboxDnD <ButtonRelease-1> [list ::ListboxDnD::stop %W %x %y]
 
