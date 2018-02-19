@@ -249,6 +249,7 @@ proc ::potato::eventConfig {{w ""}} {
 		-yscrollcommand [list $frame.left.top.sbY set] \
 		-listvariable potato::eventConfig($w,conf,displayList) -font [list Courier 9]\
 		-selectmode single -height 10 -width 25]
+	catch {::ListboxDnD::enable $lb}
 	lappend leftList $lb
 	set sbX [::ttk::scrollbar $frame.left.top.sbX -orient horizontal -command [list $lb xview]]
 	set sbY [::ttk::scrollbar $frame.left.top.sbY -orient vertical -command [list $lb yview]]

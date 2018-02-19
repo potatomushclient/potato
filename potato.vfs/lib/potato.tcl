@@ -6766,6 +6766,10 @@ proc ::potato::main {} {
 			errorLog $errmsg error
 		}
 	}
+	
+	if { [catch {package require ListboxDnD 1.0} err errdict] } {
+		errorLog "ListboxDnD package failed to load: $err" warning [errorTrace $errdict]
+	}
 
 	# Set the ttk theme to use
 	setTheme
