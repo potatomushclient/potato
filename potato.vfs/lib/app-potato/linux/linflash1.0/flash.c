@@ -26,7 +26,8 @@
 // Include the header file
 #include "flash.h"
 
-
+int setUrgencyHint(Display *display, Window window, int flash);
+int demands_attention(Display *display, Window root, Window window, int flash);
 /*
   Function : Tk_FlashWindow
 

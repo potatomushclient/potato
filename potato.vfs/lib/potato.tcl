@@ -1580,12 +1580,16 @@ proc ::potato::doLog {c file append buffer leave timestamps html echo} {
 	} elseif { $buffer in [list "_main" "Main Window" "main window"] } {
 		set t $conn($c,textWidget)
 	} elseif { [set pos [findSpawn $c $buffer]] != -1 } {
-		set t [lindex [lindex $conn($c,spawns) $pos] 0]
+		set t [lindex $conn($c,spawns) $pos 1]
 	} else {
 		set t ""
 	}
 
-	if { !$leave && $t eq "" } {
+	if { $html } {
+		set leave 0;# not currently supported
+	}
+	
+	if { !$leave && ($t eq "" || ![winfo exists $t]) } {
 		outputSystem $c [T "Log what?"]
 		return;
 	}
@@ -1599,10 +1603,6 @@ proc ::potato::doLog {c file append buffer leave timestamps html echo} {
 	set enc $conn($c,id,encoding)
 	if { [string match -nocase {iso[0-9]*} $enc] } {
 		set enc [string replace $enc 0 2 iso-]
-	}
-
-	if { $html } {
-		set leave 0;# not currently supported
 	}
 
 	if { $html } {
@@ -1991,7 +1991,7 @@ proc ::potato::makeTextFrames {c} {
 	}
 
 	foreach x [list input1 input2] {
-		set $x [text .conn_${c}_${x}_$count -wrap word -undo 1 -height 1 \
+		set $x [text .conn_${c}_${x}_$count -wrap word -undo 1 -height 1 -width 1 \
 			-background $world($w,bottom,bg) -font $world($w,bottom,font,created) \
 			-foreground $world($w,bottom,fg) -insertbackground [reverseColour $world($w,bottom,bg)]]
 		bindtags [set $x] [linsert [bindtags [set $x]] 0 PotatoUserBindings PotatoInput]
@@ -6731,6 +6731,10 @@ proc ::potato::main {} {
 	catch {package require potato-systray 1.0}
 
 	catch {::tcl::tm::path add $path(userlib)}
+	
+	set encdirs [encoding dirs]
+	lappend encdirs [file join $path(lib) app-potato enc]
+	catch {encoding dirs $encdirs}
 
 	# We need to set the prefs before we load anything...
 	setPrefs 1
@@ -10227,6 +10231,9 @@ proc ::potato::showInput {c num text append} {
 	variable conn;
 
 	set t [connInfo $c input$num]
+	if { $t eq "" } {
+		return;
+	}
 
 	if { !$append } {
 		$t replace 1.0 end $text
