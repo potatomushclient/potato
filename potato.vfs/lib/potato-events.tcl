@@ -249,7 +249,7 @@ proc ::potato::eventConfig {{w ""}} {
 		-yscrollcommand [list $frame.left.top.sbY set] \
 		-listvariable potato::eventConfig($w,conf,displayList) -font [list Courier 9]\
 		-selectmode single -height 10 -width 25]
-	catch {::ListboxDnD::enable $lb}
+	catch {::ListboxDnD::enable $lb -command [list ::potato::eventListboxDragged $w %s %c]}
 	lappend leftList $lb
 	set sbX [::ttk::scrollbar $frame.left.top.sbX -orient horizontal -command [list $lb xview]]
 	set sbY [::ttk::scrollbar $frame.left.top.sbY -orient vertical -command [list $lb yview]]
@@ -499,6 +499,30 @@ proc ::potato::eventMove {w dir} {
 	return;
 
 };# ::potato::eventMove
+
+#: proc ::potato::eventListboxDragged
+#: arg w world id
+#: arg orig original position
+#: arg new new position
+#: desc An item in the event listbox for world $w has just been dragged from $orig to $new; handle
+#: return nothing
+proc ::potato::eventListboxDragged {w orig new} {
+	variable eventConfig;
+	variable world;
+
+	set elem [lindex $eventConfig($w,conf,internalList) $orig]
+	if { $orig > $new || 1 } {
+		set eventConfig($w,conf,internalList) [lreplace $eventConfig($w,conf,internalList) $orig $orig]
+		set eventConfig($w,conf,internalList) [linsert $eventConfig($w,conf,internalList) $new $elem]
+	} else {
+		set eventConfig($w,conf,internalList) [linsert $eventConfig($w,conf,internalList) $new $elem]
+		set eventConfig($w,conf,internalList) [lreplace $eventConfig($w,conf,internalList) $orig $orig]
+	}
+	set world($w,events) $eventConfig($w,conf,internalList)
+	eventListboxSelect $w
+	
+	return;
+};# ::potato::eventListboxDragged
 
 #: proc ::potato::eventDelete
 #: arg w world id
