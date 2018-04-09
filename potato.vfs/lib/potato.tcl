@@ -8612,9 +8612,11 @@ proc ::potato::setUpBindings {} {
 	# Control-<num> shows connection <num>
 	for {set i 1} {$i < 10} {incr i} {
 		bind PotatoInput <Control-Key-$i> [list ::potato::showConn $i]
+		catch {bind PotatoInput <Control-Key-KP_$i> [list ::potato::showConn $i]}
 	}
 
 	bind PotatoInput <Control-Key-0> [list ::potato::showConn 10]
+	catch {bind PotatoInput <Control-Key-KP_0> [list ::potato::showConn 10]}
 
 	bind PotatoInput <Button-3> [list ::potato::inputWindowRightClickMenu %W %X %Y]
 	# The <App> key may not be available on all systems
