@@ -10,7 +10,13 @@
 &Strip Empty Lines
 -
 
+Abort Telnet after 90 seconds?
+-
+
 Address Book
+-
+
+Ambiguous /command \"%s\".  Use /slash for a list. Use //command to send directly to MU*.
 -
 
 Connect To World
@@ -32,6 +38,9 @@ Package Info
 -
 
 Persist Prompts?
+-
+
+Prefix:
 -
 
 Remove &All Carriage Returns
@@ -58,6 +67,9 @@ Spawn already exists.
 The Graphical MU* Client for Windows, Linux and MacOS X
 -
 
+There is a newer version of Potato (%s) available.\nYou can download it from Potato's website.\nWould you like to do so now?
+-
+
 Toggle Spawn Windows
 -
 
@@ -65,6 +77,9 @@ Unable to open \"%s\": %s
 -
 
 Unable to save to \"%s\": %s
+-
+
+View Changelog
 -
 
 You cannot delete that group.
@@ -77,6 +92,9 @@ Hantera världar
 
 The Graphical MU* Client for Windows and Linux
 Den grafiska MU*-klienten för Windows och Linux
+
+There is a newer version of Potato (%s) available.\nYou can download it from Potato's Google Code site.\nWould you like to do so now?
+Det finns en nyare version av Potato (%s).\nDu kan ladda ner den från Potatos Google Code sida.\nVill du göra det nu?
 
 # Existing translations:
 
@@ -1636,9 +1654,6 @@ Det namnet används redan.
 
 The Keyboard Shortcut '%s' is already in use by the task '%s'. Do you want to override it?
 Kortkommandot '%s' används redan av uppgiften '%s'. Vill du skriva över det?
-
-There is a newer version of Potato (%s) available.\nYou can download it from Potato's Google Code site.\nWould you like to do so now?
-Det finns en nyare version av Potato (%s).\nDu kan ladda ner den från Potatos Google Code sida.\nVill du göra det nu?
 
 There is already a character with that name. Overwrite?
 Det finns redan en rollperson med det namnet. Skriv över?

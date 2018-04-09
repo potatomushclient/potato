@@ -4,7 +4,22 @@
 &Strip Empty Lines
 -
 
+Abort Telnet after 90 seconds?
+-
+
+Ambiguous /command \"%s\".  Use /slash for a list. Use //command to send directly to MU*.
+-
+
+Prefix:
+-
+
 Remove &All Carriage Returns
+-
+
+There is a newer version of Potato (%s) available.\nYou can download it from Potato's website.\nWould you like to do so now?
+-
+
+View Changelog
 -
 
 # Obsolete strings:
@@ -14,6 +29,9 @@ Podesi Svjetove
 
 The Graphical MU* Client for Windows and Linux
 Grafički MU* Klijent za Windowse i Linux
+
+There is a newer version of Potato (%s) available.\nYou can download it from Potato's Google Code site.\nWould you like to do so now?
+Dostupna je novija verzija Potatoa (%s).\nMožeš je downloadati s Potatovog sitea na Google Codeu.\nŽeliš li to sada učiniti?
 
 # Existing translations:
 
@@ -1624,9 +1642,6 @@ Grafički MU* Klijent za Windowse, Linux i MacOS X
 
 The Keyboard Shortcut '%s' is already in use by the task '%s'. Do you want to override it?
 Tipkovničnu prečicu '%s' već koristi proces '%s'. Želiš li ga spriječiti?
-
-There is a newer version of Potato (%s) available.\nYou can download it from Potato's Google Code site.\nWould you like to do so now?
-Dostupna je novija verzija Potatoa (%s).\nMožeš je downloadati s Potatovog sitea na Google Codeu.\nŽeliš li to sada učiniti?
 
 There is already a character with that name. Overwrite?
 Već postoji lik s tim imenom. Da ga prebrišem?

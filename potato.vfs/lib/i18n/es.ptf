@@ -127,6 +127,9 @@
 A Macro with that name already exists. Override?
 -
 
+Abort Telnet after 90 seconds?
+-
+
 Add /command
 -
 
@@ -152,6 +155,9 @@ Allow Auto-Connects?
 -
 
 Ambiguous /command \"%s\".
+-
+
+Ambiguous /command \"%s\".  Use /slash for a list. Use //command to send directly to MU*.
 -
 
 Ambiguous character name \"%s\"
@@ -607,6 +613,9 @@ Potato Debugging Log
 Prefix
 -
 
+Prefix:
+-
+
 Prefixes for %s
 -
 
@@ -778,7 +787,7 @@ Tcl Code &Console
 The Graphical MU* Client for Windows, Linux and MacOS X
 -
 
-There is a newer version of Potato (%s) available.\nYou can download it from Potato's Google Code site.\nWould you like to do so now?
+There is a newer version of Potato (%s) available.\nYou can download it from Potato's website.\nWould you like to do so now?
 -
 
 There is already a prefix for \"%s\". Override?
@@ -866,6 +875,9 @@ Variable
 -
 
 Version %s. Written by Mike Griffiths (%s)
+-
+
+View Changelog
 -
 
 View helpfile '%s'

@@ -22,7 +22,7 @@
 %s - Help
 -
 
-# potato-slash.tcl (line 756)
+# potato-slash.tcl (line 758)
 %s reloaded successfully.
 -
 
@@ -294,7 +294,7 @@
 /command Name:
 -
 
-# potato-slash.tcl (line 1043), potato-slash.tcl (line 1046)
+# potato-slash.tcl (line 1048), potato-slash.tcl (line 1051)
 /history: Invalid position
 -
 
@@ -320,6 +320,10 @@ A Macro with that name already exists. Override?
 
 # potato-font.tcl (::font::choose)
 AaBbYyZz
+-
+
+# potato-config.tcl (::potato::configureWorld)
+Abort Telnet after 90 seconds?
 -
 
 # potato.tcl (::potato::about)
@@ -430,15 +434,19 @@ Allow Partial Names?
 Ambiguous /command \"%s\".
 -
 
-# potato-slash.tcl (line 986)
+# potato.tcl (::potato::process_slash_cmd)
+Ambiguous /command \"%s\".  Use /slash for a list. Use //command to send directly to MU*.
+-
+
+# potato-slash.tcl (line 991)
 Ambiguous character name \"%s\"
 -
 
-# potato-slash.tcl (line 867)
+# potato-slash.tcl (line 872)
 Ambiguous option \"%s\"
 -
 
-# potato-slash.tcl (line 932)
+# potato-slash.tcl (line 937)
 Ambiguous world name \"%s\".
 -
 
@@ -654,7 +662,7 @@ Click a misspelled word to begin
 Clock Format:
 -
 
-# potato-skin.tcl (::skin::potato::init), potato.tcl (::potato::manageWorlds), potato.tcl (::potato::errorLogWindow), potato.tcl (::potato::showStats), potato.tcl (::potato::history), potato.tcl (::potato::about), potato.tcl (::potato::showPackageInfo)
+# potato-skin.tcl (::skin::potato::init), potato.tcl (::potato::manageWorlds), potato.tcl (::potato::errorLogWindow), potato.tcl (::potato::showStats), potato.tcl (::potato::about), potato.tcl (::potato::showPackageInfo)
 Close
 -
 
@@ -1042,7 +1050,7 @@ Enter the connection information\nfor the new world below.
 Enter the name for the new Group, and click Add.
 -
 
-# potato-slash.tcl (line 768)
+# potato-slash.tcl (line 770)
 Error (%d): %s
 -
 
@@ -1302,7 +1310,7 @@ Invalid %s pattern \"%s\": %s
 Invalid /at ID.
 -
 
-# potato-slash.tcl (line 992)
+# potato-slash.tcl (line 997)
 Invalid connection id/character name
 -
 
@@ -1322,7 +1330,7 @@ Invalid name.
 Invalid option \"%s\" to /limit
 -
 
-# potato-slash.tcl (line 878)
+# potato-slash.tcl (line 883)
 Invalid setting \"%s\" for \"%s\"
 -
 
@@ -1330,7 +1338,7 @@ Invalid setting \"%s\" for \"%s\"
 Invalid Spawn Name
 -
 
-# potato-slash.tcl (line 785)
+# potato-slash.tcl (line 787)
 Invalid speedwalk command
 -
 
@@ -1394,11 +1402,11 @@ Log
 Log as HTML?
 -
 
-# potato-slash.tcl (line 828)
+# potato-slash.tcl (line 833)
 Log file \"%s\" is ambiguous.
 -
 
-# potato-slash.tcl (line 826)
+# potato-slash.tcl (line 831)
 Log file \"%s\" not found.
 -
 
@@ -1570,7 +1578,7 @@ No of Connections
 No such macro \"%s\".
 -
 
-# potato-slash.tcl (line 931)
+# potato-slash.tcl (line 936)
 No such world \"%s\". Use \"/quick host port\" to connect to a world that isn't in the address book.
 -
 
@@ -1706,6 +1714,10 @@ Potato Debugging Log
 Prefix
 -
 
+# potato.tcl (::potato::uploadWindowStart)
+Prefix:
+-
+
 # potato.tcl (::potato::prefixWindowSave)
 Prefixes
 -
@@ -1802,7 +1814,7 @@ Report Errors?
 Restore
 -
 
-# potato-slash.tcl (line 774)
+# potato-slash.tcl (line 776)
 Return (%d): %s
 -
 
@@ -2151,7 +2163,7 @@ The Keyboard Shortcut '%s' is already in use by the task '%s'. Do you want to ov
 -
 
 # potato.tcl (::potato::checkForUpdatesSub)
-There is a newer version of Potato (%s) available.\nYou can download it from Potato's Google Code site.\nWould you like to do so now?
+There is a newer version of Potato (%s) available.\nYou can download it from Potato's website.\nWould you like to do so now?
 -
 
 # potato-config.tcl (::potato::configureWorldCharsFinish)
@@ -2286,7 +2298,7 @@ Ungrouped
 Unknown /command \"%s\". Use /slash for a list. Use //command to send directly to MU*.
 -
 
-# potato-slash.tcl (line 863)
+# potato-slash.tcl (line 868)
 Unknown option \"%s\"
 -
 
@@ -2336,6 +2348,10 @@ Variable
 
 # potato.tcl (::potato::connZero)
 Version %s. Written by Mike Griffiths (%s)
+-
+
+# potato.tcl (::potato::build_menu_help)
+View Changelog
 -
 
 # potato-wikihelp.tcl (::wikihelp::linkHover)

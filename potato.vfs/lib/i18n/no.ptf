@@ -1,23 +1,20 @@
 
 # Untranslated strings:
 
-&Donate to Potato's Development
-&Doner til Potatos utvikler
+Abort Telnet after 90 seconds?
+-
 
-&Strip Empty Lines
-&Fjern tomme linjer
+Ambiguous /command \"%s\".  Use /slash for a list. Use //command to send directly to MU*.
+-
 
-Remove &All Carriage Returns
-Fjern &Alle nylinjer
+Prefix:
+-
 
-Show Message Timestamps?
-Vis meldingstidsstempel?
+There is a newer version of Potato (%s) available.\nYou can download it from Potato's website.\nWould you like to do so now?
+-
 
-The Graphical MU* Client for Windows, Linux and MacOS X
-Den grafiske MU* klienten for Windows, Linux og MacOS X
-
-You cannot delete that group.
-Du kan ikke slette den gruppen.
+View Changelog
+-
 
 # Obsolete strings:
 
@@ -26,6 +23,9 @@ Håndtere verdener
 
 The Graphical MU* Client for Windows and Linux
 Den grafiske MU* klienten for Windows og Linux
+
+There is a newer version of Potato (%s) available.\nYou can download it from Potato's Google Code site.\nWould you like to do so now?
+Det fins en nyere versjon av Potato (%s).\nDu kan laste den ned fra Potatos Google Code side.\nVil du gjøre dette nå?
 
 # Existing translations:
 
@@ -116,6 +116,9 @@ Den grafiske MU* klienten for Windows og Linux
 &Disconnect
 &Koble fra
 
+&Donate to Potato's Development
+&Doner til Potatos utvikler
+
 &Edit
 &Editer
 
@@ -199,6 +202,9 @@ Den grafiske MU* klienten for Windows og Linux
 
 &Stop Logging
 &Avslutt logging
+
+&Strip Empty Lines
+&Fjern tomme linjer
 
 &Text Editor
 &Tekstredigeringsprogram
@@ -1358,6 +1364,9 @@ Kobler til på nytt...
 Regexp Match?
 Regexp matching?
 
+Remove &All Carriage Returns
+Fjern &Alle nylinjer
+
 Replace
 Erstatt
 
@@ -1523,6 +1532,9 @@ Vis vindu for &Inndatahistorikk
 Show Input Wins on Startup?
 Vis inndata vindu ved oppstart?
 
+Show Message Timestamps?
+Vis meldingstidsstempel?
+
 Show Package Info
 Vis pakkeinfo
 
@@ -1625,11 +1637,11 @@ Det er ikke et gyldig navn.
 That name is already in use.
 Det navnet er allerede i bruk.
 
+The Graphical MU* Client for Windows, Linux and MacOS X
+Den grafiske MU* klienten for Windows, Linux og MacOS X
+
 The Keyboard Shortcut '%s' is already in use by the task '%s'. Do you want to override it?
 Tastatursnarveien '%s' benyttes allerede av oppgaven '%s'. Vil du overskrive?
-
-There is a newer version of Potato (%s) available.\nYou can download it from Potato's Google Code site.\nWould you like to do so now?
-Det fins en nyere versjon av Potato (%s).\nDu kan laste den ned fra Potatos Google Code side.\nVil du gjøre dette nå?
 
 There is already a character with that name. Overwrite?
 Det finnes allerede en rolleperson med det navnet. Overskriv?
@@ -1816,6 +1828,9 @@ Du kjører denne versjonen:
 
 You cannot bind to that key. Sorry.
 Du kan ikke binde til den tasten. Beklager.
+
+You cannot delete that group.
+Du kan ikke slette den gruppen.
 
 You don't have any worlds defined yet! Use one of the links above to add a world.
 Du har ikke laget noen verdener enda! Bruk en av lenkene ovenfor for å legge til en verden.
