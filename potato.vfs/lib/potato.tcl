@@ -6959,6 +6959,7 @@ proc ::potato::i18nPotato {} {
 		map,es      "Espa\u00f1ol (Spanish)" \
 		map,se      "Svenska (Swedish)" \
 		map,no      "Norwegian" \
+		map,de_de   "Deutsch (German)" \
 	]
 
 	set loclist [lsearch -all -inline -not -regexp $loclist {^(.*,.*)?$}]
