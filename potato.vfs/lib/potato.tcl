@@ -7032,6 +7032,21 @@ proc ::potato::setLocale {} {
 
 };# ::potato::setLocale
 
+#: ::potato::getLocale
+#: arg human Display the locale in human-readable form? Defaults to 0.
+#: desc Get the locale Potato is currently running in.
+#: return Current locale, in internal (en, en_GB) or human-readable (English) form
+proc ::potato::getLocale {{human 0}} {
+	variable potato;
+	variable locales;
+	
+	if { !$human || ![info exists locales($potato(locale))] } {
+		return $potato(locale);
+	} else {
+		return $locales($potato(locale));
+	}
+};# ::potato::getLocale
+
 #: ::potato::loadTranslationFile
 #: arg file The filename to load
 #: desc Load translation strings from the file $file

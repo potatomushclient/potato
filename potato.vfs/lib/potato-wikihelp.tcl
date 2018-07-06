@@ -267,7 +267,19 @@ proc ::wikihelp::showTopic {topic} {
 		return 0;
 	}
 
-	if { [catch {open [file join $info(filepath) $topic.md] r} fid] } {
+	set locale [split [getLocale] "_"]
+	set open 0
+	while { [llength $locale] } {
+		set templocale [join $locale "_"]
+		set i18nfile [file join $info(filepath) $topic.$templocale.md]
+		if { [file exists $i18nfile] && ![catch {open $i18nfile r} fid] } {
+			set open 1
+			break;
+		}
+		set locale [lrange $locale 0 end-1]
+	}
+
+	if { !$open && [catch {open [file join $info(filepath) $topic.md] r} fid] } {
 		return 0;# can't open file
 	}
 
@@ -726,3 +738,10 @@ proc ::wikihelp::index {} {
 	return;
 
 };# ::wikihelp::index
+
+#: proc ::wikihelp::getLocale
+#: desc Get the current locale to display wikihelp pages in
+#: return locale name (en, en_gb)
+proc ::wikihelp::getLocale {} {
+	return [::potato::getLocale];
+};# ::wikihelp::getLocale
