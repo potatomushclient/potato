@@ -8706,18 +8706,91 @@ proc ::potato::setUpBindings {} {
 		bind PotatoOutput <Button-5> [bind Text <Button-5>]
 	}
 
-	# Make Control-BackSpace delete the previous word
+	# Make Control-BackSpace delete the previous word, and Control-Delete delete the next word
 	bind Text <Control-BackSpace> {
-		set val [%W index insert]
-		while {$val != 1.0 && [%W get $val-1c $val] eq " "} {
-			set val [%W index $val-1c]
+		set spaceafter 0
+		set delto [%W index insert]
+		set searchfrom $delto
+
+		while { [%W get $delto $delto+1c] eq " " && [%W compare $delto < end] } {
+			set delto [%W index $delto+1c]
+			set spaceafter 1
 		}
-		if { $val != 1.0 } {
-			set val [tk::TextPrevPos %W $val tcl_wordBreakBefore]
+		while { [%W get $searchfrom-1c $searchfrom] eq " " && [%W compare $searchfrom-1c > 1.0] } {
+			set searchfrom [%W index $searchfrom-1c]
+			set spaceafter 1
 		}
-		%W delete $val insert
+		set spacebefore 0
+		if { [%W compare $searchfrom == 1.0] } {
+			set delfrom 1.0
+		} else {
+			set delfrom [::tk::TextPrevPos %W $searchfrom tcl_wordBreakBefore]
+			while { [%W get $delfrom-1c $delfrom] eq " " } {
+				set delfrom [%W index $delfrom-1c]
+				set spacebefore 1
+			}
+		}
+		if { [%W compare $delfrom < "insert linestart"] } {
+			set delfrom [%W index "insert linestart"]
+		}
+		if { [%W compare $delto > "insert lineend"] } {
+			set delto [%W index "insert lineend"]
+		}
+		if { ( $spacebefore || $spaceafter ) && 
+			[%W compare $delfrom > 1.0] && [%W get $delfrom-1c $delfrom] ne "\n" &&
+			[%W compare $delto < end] && [%W get $delto $delto+1c] ne "\n" } {
+			if { $spacebefore } {
+				set delfrom [%W index $delfrom+1c]
+			} else {
+				set delto [%W index $delto-1c]
+			}
+		}
+		%W delete $delfrom $delto
 	};# <Control-BackSpace>
 
+	
+	bind Text <Control-Delete> {
+		set spacebefore 0
+		set delfrom [%W index insert]
+		while { [%W get $delfrom-1c $delfrom] eq " " && [%W compare $delfrom > 1.0] } {
+			set delfrom [%W index $delfrom-1c]
+			set spacebefore 1
+		}
+		set searchfrom $delfrom
+		while { [%W get $searchfrom $searchfrom+1c] eq " " && [%W compare $searchfrom+1c < end] } {
+			set searchfrom [%W index $searchfrom+1c]
+			set spacebefore 1
+		}
+		set spaceafter 0
+		if { [%W compare $searchfrom == end] } {
+			set delto end
+		} else {
+			set delto [::tk::TextNextPos %W $searchfrom tcl_wordBreakAfter]
+			while { [%W get $delto $delto+1c] eq " " } {
+				set delto [%W index $delto+1c]
+				set spaceafter 1
+			}
+		}
+		puts "$delfrom $delto"
+		if { [%W compare $delfrom < "insert linestart"] } {
+			set delfrom [%W index "insert linestart"]
+		}
+		if { [%W compare $delto > "insert lineend"] } {
+			set delto [%W index "insert lineend"]
+		}
+		if { ( $spacebefore || $spaceafter ) && 
+			[%W compare $delfrom > 1.0] && [%W get $delfrom-1c $delfrom] ne "\n" &&
+			[%W compare $delto < end] && [%W get $delto $delto+1c] ne "\n" } {
+			if { $spacebefore } {
+				puts "delfrom up"
+				set delfrom [%W index $delfrom+1c]
+			} else {
+				set delto [%W index $delto-1c]
+			}
+		}
+		%W delete $delfrom $delto
+	};# <Control-Delete>
+	
 	# These bindings copied from Tk 8.4, because I prefer them to the 8.5/8.6 ones,
 	# with regard to how they move around text with symbols and spaces.
 	set events [list PrevWord NextWord SelectPrevWord SelectNextWord]
