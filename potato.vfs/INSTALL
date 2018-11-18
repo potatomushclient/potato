@@ -16,7 +16,7 @@ Installing Potato MU* Client
 ---------------------
 The latest release of Potato's source can be downloaded from 
 
-https://github.com/talvo/potato
+https://github.com/potatomushclient/potato
 
 You can also check out the source via Git for the latest changes.
 
@@ -92,7 +92,7 @@ If you have any problems installing or running Potato, please email me
 at mike at keyboardzombie dot com
 
 If you find a bug or would like to request a feature, please open a ticket
-on the issue tracker at https://github.com/talvo/potato/issues
+on the issue tracker at https://github.com/potatomushclient/potato/issues
 
 Thanks for downloading Potato, and I hope you find it useful!
 
