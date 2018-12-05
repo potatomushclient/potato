@@ -8428,10 +8428,13 @@ proc ::potato::checkForUpdates {{background 0}} {
 	bind $frame <Destroy> [list ::potato::cancelCheckForUpdates]
 
 	if { !$background } {
-		update
-		center $win
-		wm deiconify $win
-		focus $btns.cancel
+		# Catch in case the callback has already triggered
+		catch {
+			update
+			center $win
+			wm deiconify $win
+			focus $btns.cancel
+		}
 	}
 
 	return;
@@ -8470,7 +8473,7 @@ proc ::potato::checkForUpdatesSub {background token {err ""}} {
 			destroy $update(win)
 		} else {
 			if { $err ne "" } {
-				append errorText [T "Error: %s" $err]
+				append errorText " " [T "Error: %s" $err]
 			}
 			pack [::ttk::label $update(main).error -text $errorText -font $font]
 			update
