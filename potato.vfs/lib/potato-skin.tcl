@@ -685,6 +685,11 @@ proc ::skin::potato::showStatusBar {} {
 
 	if { $opts(statusbar) } {
 		pack $widgets(statusbar) -in $widgets(main) -side bottom -expand 0 -fill x -anchor s -padx 1 -ipady 1
+		# the below two lines stops the status bar from disappearing when you shrink the window; this is hacky,
+		# and I should dig into packing order and whatnot and find out exactly why this works and how to do it
+		# better without having to remove/re-add another widget #abc
+		pack forget $widgets(pane);
+		pack $widgets(pane) -expand 1 -fill both
 	} else {
 		pack forget $widgets(statusbar)
 	}
