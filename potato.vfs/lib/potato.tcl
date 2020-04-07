@@ -12288,6 +12288,9 @@ proc ::potato::tasksInit {} {
 		convertSpaces,name  [X "Convert &Spaces to %b"] \
 		convertSpaces,cmd   [list ::potato::escapeChars "" 0 0 1] \
 		convertSpaces,state always \
+		convertSpacesAndNL,name   [X "Convert Spaces and Returns"] \
+		convertSpacesAndNL,cmd    [list ::potato::escapeChars "" 0 1 1] \
+		convertSpacesAndNL,state  always \
 		convertChars,name   [X "&Escape Special Chars"] \
 		convertChars,cmd    [list ::potato::escapeChars ""] \
 		convertChars,state  always \
