@@ -12618,6 +12618,9 @@ proc ::potato::inputHistoryReset {{win ""}} {
 	if { $win eq "" } {
 		set win [focus -displayof .]
 	}
+	if { "PotatoInput" ni [bindtags $win] } {
+		return;
+	}
 	if { ![info exists inputSwap($win,conn)] } {
 		$win delete 1.0 end
 		return;
