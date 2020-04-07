@@ -8789,7 +8789,7 @@ proc ::potato::setUpBindings {} {
 				set spaceafter 1
 			}
 		}
-		puts "$delfrom $delto"
+		#puts "$delfrom $delto"
 		if { [%W compare $delfrom < "insert linestart"] } {
 			set delfrom [%W index "insert linestart"]
 		}
@@ -8800,7 +8800,7 @@ proc ::potato::setUpBindings {} {
 			[%W compare $delfrom > 1.0] && [%W get $delfrom-1c $delfrom] ne "\n" &&
 			[%W compare $delto < end] && [%W get $delto $delto+1c] ne "\n" } {
 			if { $spacebefore } {
-				puts "delfrom up"
+				#puts "delfrom up"
 				set delfrom [%W index $delfrom+1c]
 			} else {
 				set delto [%W index $delto-1c]
@@ -9947,13 +9947,16 @@ proc ::potato::send_mushage {window saveonly} {
 		set window [connInfo $c input3]
 	}
 
-
-	if { [$window count -chars 1.0 end-1c] == 0 && $conn($c,connected) == 0 } {
-		reconnect [up]
-		return;
-	}
-
 	set w $conn($c,world)
+
+	if { [set count [$window count -chars 1.0 end-1c]] == 0 } {
+		if { $conn($c,connected) == 0 } {
+			reconnect [up]
+			return;
+		} elseif { !$world($w,blanklines) } {
+			return;
+		}
+	}
 
 	# Figure out the auto-prefix, if any
 	set windowName [textWidgetName [activeTextWidget] $c]
@@ -9999,7 +10002,11 @@ proc ::potato::send_mushage {window saveonly} {
 		return;
 	}
 
-	send_to $c $txt $prefix
+	if { !$count } {
+		send_to_real $c "$prefix$txt"
+	} else {
+		send_to $c $txt $prefix
+	}
 
 	return;
 

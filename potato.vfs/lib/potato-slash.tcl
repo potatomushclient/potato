@@ -390,7 +390,6 @@
 		if { ($invert ? $match : !$match) } {
 			if { [info exists sout] } {
 				# Copy to new spawn window
-				puts "Copying $line"
 				set dump [$t dump -text -tag $i.0 "$i.0 lineend+1char"]
 				set tags [$t tag names $i.0]
 				foreach {type data pos} $dump {
