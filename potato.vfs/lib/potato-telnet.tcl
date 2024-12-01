@@ -40,6 +40,7 @@ proc ::potato::telnet::init {} {
 			[list MCP 86 0 ???] \
 			[list MSP 90 0 ???] \
 			[list MXP 91 0 ???] \
+			[list GMCP 201 0 ???] \
 		] {
 		foreach {name int will rfc} $x {break}
 		set tOpt($int) $name

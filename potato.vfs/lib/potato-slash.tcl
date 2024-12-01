@@ -127,7 +127,7 @@
 	# Validate window name
 	if { $window eq "" } {
 		set window [textWidgetName [activeTextWidget] $c]
-	} elseif { [set window [validSpawnName $c $window]] ne "" } {
+	} elseif { [set window [validSpawnName $window 1]] eq "" } {
 		bell -displayof .
 		return [list 0];
 	}
