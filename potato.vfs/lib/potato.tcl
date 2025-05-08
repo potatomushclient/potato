@@ -8902,6 +8902,29 @@ proc ::potato::toggleOvertype {} {
 
 };# ::potato::toggleOvertype
 
+#: proc ::potato::scrollToLastActivity
+#: arg c connection id of currently displayed connection
+#: desc Scroll the current output window to the last activity marker, if present, or to the end, if not
+#: return nothing
+proc ::potato::scrollToLastActivity {{c ""}} {
+
+	set win [activeTextWidget]
+	
+	if { $win eq "" || ![winfo exists $win] } {
+		return;
+	}
+	
+	set index "newact.last"
+	if { [catch {$win index $index}] } {
+		set index "end"
+	}
+	
+	$win see $index
+	
+	return;
+
+};# ::potato::scrollToLastActivity
+
 #: proc ::potato::TextInsert
 #: arg win text widget
 #: arg char character/string to insert
@@ -12312,6 +12335,9 @@ proc ::potato::tasksInit {} {
 		toggleSpawn,name    [X "Toggle Spawn Windows"] \
 		toggleSpawn,cmd     [list ::potato::toggleSpawns] \
 		toggleSpawn,state   {[llength [potato::connInfo $c spawns]]} \
+		scroll2Activity,name [X "&Scroll to Last Activity"] \
+		scroll2Activity,cmd [list ::potato::scrollToLastActivity] \
+		scroll2Activity,state notZero \
 	]
 
 	return;
