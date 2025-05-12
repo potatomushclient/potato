@@ -7,6 +7,9 @@
 &Donate to Potato's Development
 -
 
+&Scroll to Last Activity
+-
+
 &Strip Empty Lines
 -
 
@@ -28,6 +31,9 @@ Connection attempt cancelled. - %s
 Connection cancelled.
 -
 
+Convert Spaces and Returns
+-
+
 Log input?
 -
 
@@ -47,6 +53,9 @@ Remove &All Carriage Returns
 -
 
 Report Errors?
+-
+
+Send blank lines?
 -
 
 Send null-byte keepalives?

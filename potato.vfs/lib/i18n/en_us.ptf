@@ -160,6 +160,9 @@
 &Save As...
 -
 
+&Scroll to Last Activity
+-
+
 &Show Connection Stats
 -
 
@@ -578,6 +581,9 @@ Convert NBSPs?
 -
 
 Convert returns?
+-
+
+Convert Spaces and Returns
 -
 
 Convert To:
@@ -1421,6 +1427,9 @@ Send after Login info:
 -
 
 Send before Login info:
+-
+
+Send blank lines?
 -
 
 Send Client Info?

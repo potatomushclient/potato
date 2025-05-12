@@ -1,6 +1,9 @@
 
 # Untranslated strings:
 
+&Scroll to Last Activity
+-
+
 &Strip Empty Lines
 -
 
@@ -10,10 +13,16 @@ Abort Telnet after 90 seconds?
 Ambiguous /command \"%s\".  Use /slash for a list. Use //command to send directly to MU*.
 -
 
+Convert Spaces and Returns
+-
+
 Prefix:
 -
 
 Remove &All Carriage Returns
+-
+
+Send blank lines?
 -
 
 There is a newer version of Potato (%s) available.\nYou can download it from Potato's website.\nWould you like to do so now?
