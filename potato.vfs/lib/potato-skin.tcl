@@ -788,19 +788,28 @@ proc ::skin::potato::toolbarLabels {} {
 	variable widgets;
 	variable opts;
 
-	if { $opts(toolbarLabels) } {
-		set compound "top"
-		set padx 3
-	} else {
-		set compound "none"
-		set padx 1
-	}
-	foreach x [array names widgets toolbar,*] {
-		if { [winfo class $widgets($x)] ni [list "Button" "TButton"] } {
+	# Display options when labels are on
+	set compound(1) "top"
+	set padx(1) 3
+	
+	# Display options when labels are off
+	set compound(0) "none"
+	set padx(0) 1
+	
+	foreach win [array names widgets toolbar,*] {
+		if { [winfo class $widgets($win)] ni [list "Button" "TButton" "TMenubutton"] } {
+			# Only affects certain widget types
 			continue;
 		}
-		$widgets($x) configure -compound $compound
-		pack $widgets($x) -padx $padx
+		if { [catch {$widgets($win) cget -text} text] || $text eq "" } {
+			# If the button has no label, never attempted to show it
+			set currOpt 0
+		} else {
+			# Defer to current user preference
+			set currOpt $opts(toolbarLabels)
+		}
+		$widgets($win) configure -compound $compound($currOpt)
+		pack $widgets($win) -padx $padx($currOpt)
 	}
 
 	return;
